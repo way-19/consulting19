@@ -10,12 +10,20 @@ type AuthValue = {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+};
+  user: User | null;
+  session: Session | null; 
+  profile: Profile | null; 
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -75,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!isMounted) return;
         
         setUser(session?.user ?? null);
+        setUser(session?.user ?? null);
         setSession(session ?? null);
         
         if (session?.user) {
@@ -106,11 +115,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === 'SIGNED_OUT') {
         console.log('🚪 User signed out, clearing state');
         setUser(null);
+        setUser(null);
         setSession(null);
         setProfile(null);
         return;
       }
       
+      setUser(session?.user || null);
       setUser(session?.user || null);
       setSession(session ?? null);
       if (session?.user) {
@@ -156,6 +167,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const value = useMemo(() => ({ 
+    user, 
+    session, 
+    profile, 
+    loading, 
+    signIn, 
+    signOut 
+  }), [user, session, profile, loading]);
     user, 
     session, 
     profile, 

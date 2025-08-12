@@ -30,25 +30,25 @@ const roleHome = (role?: string) => {
 };
 
 function NavigationHandler() {
-  const { session, profile, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    console.log('🔄 NavigationHandler effect:', { 
-      loading, 
-      session: !!session, 
-      profile: profile?.role, 
+    console.log('🔄 NavigationHandler effect:', {
+      loading,
+      user: !!user,
+      profile: profile?.role,
       path: location.pathname,
-      profileLoaded: !!profile 
+      profileLoaded: !!profile
     });
     
     if (loading) return;
 
     const path = location.pathname;
     
-    // If not logged in, redirect to login (except for public pages)
-    if (!session) {
+    // If not logged in, redirect to login (except for public pages)  
+    if (!user) {
       const publicPaths = ['/', '/login', '/signup', '/about', '/contact', '/countries', '/services'];
       const isPublicPath = publicPaths.includes(path) || path.startsWith('/countries/') || path.startsWith('/services/');
       
@@ -61,7 +61,7 @@ function NavigationHandler() {
 
     // If logged in but profile not loaded yet, wait
     if (!profile) {
-      console.log('⏳ Session exists but profile not loaded yet, waiting...');
+      console.log('⏳ User exists but profile not loaded yet, waiting...');
       return;
     }
 
@@ -74,7 +74,7 @@ function NavigationHandler() {
     }
     
     console.log('✅ Navigation check complete, staying on:', path);
-  }, [session, profile, loading, location.pathname, navigate]);
+  }, [user, profile, loading, location.pathname, navigate]);
 
   return null;
 }
