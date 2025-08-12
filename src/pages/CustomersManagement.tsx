@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import MultilingualChat from '../components/MultilingualChat';
+import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import { 
   ArrowLeft, 
   Search, 
@@ -30,7 +31,8 @@ import {
   MoreVertical,
   UserPlus,
   Building,
-  Globe
+  Globe,
+  X
 } from 'lucide-react';
 
 interface AssignedClient {
@@ -84,6 +86,7 @@ const CustomersManagement = () => {
   const [selectedClient, setSelectedClient] = useState<AssignedClient | null>(null);
   const [showClientModal, setShowClientModal] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showMailboxModal, setShowMailboxModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
   const [stats, setStats] = useState<ClientStats>({
@@ -707,6 +710,16 @@ const CustomersManagement = () => {
                             <button
                               onClick={() => {
                                 setSelectedClient(client);
+                                setShowMailboxModal(true);
+                              }}
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              title="Mailbox"
+                            >
+                              <Mail className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedClient(client);
                                 setShowClientModal(true);
                               }}
                               className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
@@ -807,6 +820,37 @@ const CustomersManagement = () => {
           currentUserRole="consultant"
           targetUserId={selectedClient.profile_id}
         />
+      )}
+
+      {/* Virtual Mailbox Modal */}
+      {showMailboxModal && selectedClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Virtual Mailbox - {selectedClient.company_name || selectedClient.profile?.full_name}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowMailboxModal(false);
+                    setSelectedClient(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <VirtualMailboxManager 
+                clientId={selectedClient.id}
+                viewMode="consultant"
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Client Detail Modal */}
@@ -932,6 +976,16 @@ const CustomersManagement = () => {
                 >
                   <MessageSquare className="h-5 w-5" />
                   <span>Send Message</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowClientModal(false);
+                    setShowMailboxModal(true);
+                  }}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                >
+                  <Mail className="h-5 w-5" />
+                  <span>Mailbox</span>
                 </button>
                 <button className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2">
                   <FileText className="h-5 w-5" />

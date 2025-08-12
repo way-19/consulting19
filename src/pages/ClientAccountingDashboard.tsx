@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import { 
   FileText, 
   Calendar, 
@@ -78,7 +79,7 @@ const ClientAccountingDashboard = () => {
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -342,7 +343,8 @@ const ClientAccountingDashboard = () => {
                 { key: 'overview', label: 'Overview', icon: Eye },
                 { key: 'documents', label: 'Documents', icon: FileText, count: documents.length },
                 { key: 'invoices', label: 'Invoices', icon: DollarSign, count: invoices.length },
-                { key: 'messages', label: 'Messages', icon: MessageSquare, count: unreadMessages }
+                { key: 'messages', label: 'Messages', icon: MessageSquare, count: unreadMessages },
+                { key: 'mailbox', label: 'Virtual Mailbox', icon: Package, count: 0 }
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -618,6 +620,12 @@ const ClientAccountingDashboard = () => {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'mailbox' && (
+              <div>
+                <VirtualMailboxManager viewMode="client" />
               </div>
             )}
           </div>
