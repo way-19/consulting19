@@ -25,7 +25,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [initialized, setInitialized] = useState(false)
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -38,9 +37,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('❌ Error fetching profile:', error.message, error.code)
-        if (error.code === 'PGRST116') {
-          console.log('⚠️ Profile not found, this might be expected for new users')
-        }
         return null
       }
 
@@ -66,10 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   useEffect(() => {
-    if (initialized) return
-    
     console.log('🚀 AuthProvider initializing...')
-    setInitialized(true)
     
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -78,8 +71,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         console.log('👤 User found in session:', session.user.email)
         fetchProfile(session.user.id).then(setProfile)
-      } else {
-        console.log('❌ No user in session')
       }
       setLoading(false)
     })
@@ -102,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     })
 
     return () => subscription.unsubscribe()
-  }, [initialized])
+  }, [])
 
   const signIn = async (email: string, password: string) => {
     console.log('🔐 Attempting sign in for:', email)

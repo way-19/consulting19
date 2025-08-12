@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -76,6 +78,7 @@ const NavigationHandler = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
   useEffect(() => {
     if (!loading && user && profile) {
       console.log('🎯 NavigationHandler: User logged in, redirecting based on role:', profile.role);
