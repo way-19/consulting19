@@ -196,7 +196,7 @@ const ClientAccountingDashboard = () => {
           email
         )
       `)
-      .eq('client_id', accountingClientData.id)
+      .eq('recipient_id', profile?.id)
       .order('created_at', { ascending: false });
 
     if (error) {
