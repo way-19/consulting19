@@ -785,3 +785,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 };
 
 export default VirtualMailboxManager;
+
+
+export default VirtualMailboxManager
