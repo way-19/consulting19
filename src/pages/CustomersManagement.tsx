@@ -164,10 +164,6 @@ const CustomersManagement = () => {
         consultant:consultant_id (
           full_name,
           email
-        ),
-        client:client_id (
-          full_name,
-          email
         )
       `)
       .eq('consultant_id', profile?.id)
@@ -182,7 +178,7 @@ const CustomersManagement = () => {
       .from('legacy_orders')
       .select(`
         *,
-        consultant:consultant_id (
+        target_consultant:consultant_id (
           full_name,
           email
         )
@@ -205,7 +201,7 @@ const CustomersManagement = () => {
         )
       `)
       .eq('consultant_id', profile?.id)
-      .eq('status', 'completed')
+      .not('notes', 'is', null)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -240,22 +236,23 @@ const CustomersManagement = () => {
     
     try {
       const orderData = {
-        consultant_id: newOrderForm.target_consultant_id,
-        country: newOrderForm.target_country,
+        source_consultant_id: profile?.id,
+        target_consultant_id: newOrderForm.target_consultant_id,
+        source_country: profile?.country || 'Georgia',
+        target_country: newOrderForm.target_country,
+        client_name: newOrderForm.client_name,
+        client_email: newOrderForm.client_email,
+        client_phone: newOrderForm.client_phone,
         service_type: newOrderForm.service_type,
+        service_details: newOrderForm.service_details,
         total_amount: newOrderForm.total_amount,
-        status: 'pending',
-        client_details: {
-          name: newOrderForm.client_name,
-          email: newOrderForm.client_email,
-          referred_by: profile?.id,
-          description: newOrderForm.notes
-        },
-        notes: `Referred by ${profile?.full_name || profile?.email}`
+        priority: newOrderForm.priority,
+        estimated_completion_days: newOrderForm.estimated_completion_days,
+        notes: newOrderForm.notes
       };
 
       const { error } = await supabase
-        .from('legacy_orders')
+        .from('cross_country_orders')
         .insert([orderData]);
 
       if (error) throw error;
@@ -286,8 +283,11 @@ const CustomersManagement = () => {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const { error } = await supabase
-        .from('legacy_orders')
-        .update({ status: newStatus })
+        .from('cross_country_orders')
+        .update({ 
+          status: newStatus,
+          actual_completion_date: newStatus === 'completed' ? new Date().toISOString() : null
+        })
         .eq('id', orderId);
 
       if (error) throw error;
@@ -581,11 +581,11 @@ const CustomersManagement = () => {
                   receivedOrders
                     .filter(order => {
                       const matchesSearch = 
-                        order.client_details?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.client_details?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
+                        order.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        order.client_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        order.order_number.toLowerCase().includes(searchTerm.toLowerCase());
                       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-                      const matchesCountry = countryFilter === 'all' || order.country === countryFilter;
+                      const matchesCountry = countryFilter === 'all' || order.source_country === countryFilter;
                       return matchesSearch && matchesStatus && matchesCountry;
                     })
                     .map((order) => (
@@ -598,28 +598,26 @@ const CustomersManagement = () => {
                                 <ArrowRight className="h-5 w-5 text-blue-600 rotate-180" />
                               </div>
                               <div>
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                  {order.client_details?.name || 'Unknown Client'}
-                                </h3>
+                                <h3 className="text-lg font-semibold text-gray-900">{order.order_number}</h3>
                                 <p className="text-sm text-gray-500">
-                                  {order.client_details?.email || 'No email'} • {order.country}
+                                  From {order.source_country} • {new Date(order.created_at).toLocaleDateString()}
                                 </p>
                               </div>
                             </div>
 
                             <div className="space-y-2">
                               <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-600">Service:</span>
-                                <span className="text-sm font-medium">{order.service_type.replace('_', ' ').toUpperCase()}</span>
+                                <Building className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-700">{order.client_name}</span>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-600">Value:</span>
-                                <span className="text-sm font-medium">${order.total_amount?.toLocaleString()}</span>
+                                <Mail className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-700">{order.client_email}</span>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-600">Priority:</span>
-                                <span className={`text-sm font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-800`}>
-                                  MEDIUM
+                                <FileText className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-700">
+                                  {serviceTypes.find(s => s.value === order.service_type)?.label}
                                 </span>
                               </div>
                             </div>
@@ -745,11 +743,11 @@ const CustomersManagement = () => {
                   sentOrders
                     .filter(order => {
                       const matchesSearch = 
-                        order.client_details?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.client_details?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
+                        order.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        order.client_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        order.order_number.toLowerCase().includes(searchTerm.toLowerCase());
                       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-                      const matchesCountry = countryFilter === 'all' || order.country === countryFilter;
+                      const matchesCountry = countryFilter === 'all' || order.target_country === countryFilter;
                       return matchesSearch && matchesStatus && matchesCountry;
                     })
                     .map((order) => (
@@ -762,30 +760,27 @@ const CustomersManagement = () => {
                                 <ArrowRight className="h-5 w-5 text-green-600" />
                               </div>
                               <div>
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                  {order.client_details?.name || 'Unknown Client'}
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                  {order.client_details?.email || 'No email'} • {order.country}
-                                </p>
+                                <h3 className="text-lg font-semibold text-gray-900">{order.order_number}</h3>
                                 <p className="text-sm text-gray-500">
-                                  To: {order.consultant?.full_name || 'Unknown Consultant'}
+                                  To {order.target_country} • {new Date(order.created_at).toLocaleDateString()}
                                 </p>
                               </div>
                             </div>
 
                             <div className="space-y-2">
                               <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-600">Service:</span>
-                                <span className="text-sm font-medium">{order.service_type.replace('_', ' ').toUpperCase()}</span>
+                                <Building className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-700">{order.client_name}</span>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-600">Value:</span>
-                                <span className="text-sm font-medium">${order.total_amount?.toLocaleString()}</span>
+                                <Mail className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-700">{order.client_email}</span>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-600">Commission:</span>
-                                <span className="text-sm font-medium text-green-600">${order.consultant_commission?.toLocaleString()}</span>
+                                <Users className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-700">
+                                  {order.client?.profile?.full_name || 'Unknown Client'}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -868,9 +863,7 @@ const CustomersManagement = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-4 mb-2">
-                              <h3 className="text-lg font-semibold text-gray-900">
-                                {referral.client_details?.name || 'Unknown Client'}
-                              </h3>
+                              <h3 className="text-lg font-semibold text-gray-900">{referral.client_email}</h3>
                               <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(referral.status)}`}>
                                 {referral.status.toUpperCase()}
                               </span>
@@ -878,22 +871,14 @@ const CustomersManagement = () => {
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                               <div>
-                                <span className="font-medium">To:</span> {referral.consultant?.full_name || 'Unknown Consultant'}
+                                <span className="font-medium">Service:</span> {referral.service_type.replace('_', ' ')}
                               </div>
                               <div>
-                                <span className="font-medium">Commission:</span> ${referral.consultant_commission?.toLocaleString()}
+                                <span className="font-medium">Referral Fee:</span> ${referral.referral_fee.toLocaleString()}
                               </div>
                               <div>
-                                <span className="font-medium">Status:</span>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ml-2 ${getStatusColor(referral.status)}`}>
-                                  {referral.status.toUpperCase()}
-                                </span>
+                                <span className="font-medium">Date:</span> {new Date(referral.created_at).toLocaleDateString()}
                               </div>
-                            </div>
-                            
-                            <div className="flex items-center space-x-2">
-                              <span className="text-sm text-gray-600">Date:</span>
-                              <span className="text-sm font-medium">{new Date(referral.created_at).toLocaleDateString('en-US')}</span>
                             </div>
                           </div>
                         </div>
@@ -1202,4 +1187,133 @@ const CustomersManagement = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                
+                <h2 className="text-xl font-bold text-gray-900">Order Details - {selectedOrder.order_number}</h2>
+                <button
+                  onClick={() => setShowOrderModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Order Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Client Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600">Client Name:</span>
+                      <p className="font-medium">{selectedOrder.client_name}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Email:</span>
+                      <p className="font-medium">{selectedOrder.client_email}</p>
+                    </div>
+                    {selectedOrder.client_phone && (
+                      <div>
+                        <span className="text-sm text-gray-600">Phone:</span>
+                        <p className="font-medium">{selectedOrder.client_phone}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600">Service Type:</span>
+                      <p className="font-medium">
+                        {serviceTypes.find(s => s.value === selectedOrder.service_type)?.label}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Countries:</span>
+                      <p className="font-medium">{selectedOrder.source_country} → {selectedOrder.target_country}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Priority:</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ml-2 ${
+                        selectedOrder.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                        selectedOrder.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                        selectedOrder.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {selectedOrder.priority.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Breakdown */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Financial Breakdown</h3>
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-gray-900">${selectedOrder.total_amount.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600">Total Amount</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-orange-600">${selectedOrder.referral_commission.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600">Referral Fee (10%)</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-600">${selectedOrder.consultant_commission.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600">Consultant Fee (55%)</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-purple-600">${selectedOrder.platform_fee.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600">Platform Fee (35%)</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Details */}
+              {selectedOrder.service_details && Object.keys(selectedOrder.service_details).length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Requirements</h3>
+                  <div className="bg-blue-50 rounded-lg p-4 space-y-2">
+                    {Object.entries(selectedOrder.service_details).map(([key, value]) => (
+                      <div key={key} className="flex justify-between">
+                        <span className="text-sm text-blue-700 capitalize">{key.replace('_', ' ')}:</span>
+                        <span className="text-sm text-blue-900 font-medium">{value as string}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {selectedOrder.notes && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Notes</h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-700">{selectedOrder.notes}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Multilingual Chat Modal */}
+      <MultilingualChat
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        chatType="consultant-client"
+        currentUserId={profile?.id || 'consultant-1'}
+        currentUserRole="consultant"
+      />
+    </div>
+  );
+};
+
+export default CustomersManagement;
+
+export default CustomersManagement
