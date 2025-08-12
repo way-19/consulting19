@@ -37,19 +37,21 @@ const ConsultantDashboard = () => {
 
   const fetchAssignedClients = async () => {
     try {
-      console.log('Fetching clients for consultant:', profile?.id);
+      console.log('🔍 Fetching clients for consultant:', profile?.id, profile?.email);
       
       const { data, error } = await supabase
         .from('clients')
         .select(`
           id,
           profile_id,
+          assigned_consultant_id,
           company_name,
           status,
           priority,
           progress,
           created_at,
           profile:profile_id (
+            id,
             email,
             full_name,
             country
@@ -59,13 +61,14 @@ const ConsultantDashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching assigned clients:', error);
+        console.error('❌ Error fetching assigned clients:', error);
       } else {
-        console.log('Fetched clients:', data);
+        console.log('✅ Fetched clients:', data?.length || 0, 'clients found');
+        console.log('📊 Client data:', data);
         setAssignedClients(data || []);
       }
     } catch (error) {
-      console.error('Error in fetchAssignedClients:', error);
+      console.error('💥 Error in fetchAssignedClients:', error);
     } finally {
       setLoadingClients(false);
     }
