@@ -85,17 +85,20 @@ const ClientAccountingDashboard = () => {
 
   useEffect(() => {
     if (profile?.id) {
+      console.log('🔍 ClientAccountingDashboard: Starting data fetch for profile:', profile.id, profile.email)
       fetchData();
     }
   }, [profile]);
 
   const fetchData = async () => {
     try {
+      console.log('📊 Starting comprehensive data fetch...')
       // First fetch accounting profile
       await fetchAccountingProfile();
       
       // Then fetch other data after profile is loaded
       setTimeout(async () => {
+        console.log('📋 Fetching additional data...')
         await Promise.all([
           fetchDocuments(),
           fetchInvoices(),
@@ -103,14 +106,14 @@ const ClientAccountingDashboard = () => {
         ]);
       }, 500);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('💥 Error in fetchData:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const fetchAccountingProfile = async () => {
-    console.log('🔍 Fetching accounting profile for user:', profile?.id, profile?.email)
+    console.log('🔍 Step 1: Fetching accounting profile for user:', profile?.id, profile?.email)
     
     // First get the client record
     const { data: clientData } = await supabase
@@ -119,9 +122,12 @@ const ClientAccountingDashboard = () => {
       .eq('profile_id', profile?.id)
       .maybeSingle();
 
-    console.log('📋 Client record found:', clientData)
+    console.log('📋 Step 2: Client record lookup result:', clientData)
 
-    if (!clientData) return;
+    if (!clientData) {
+      console.log('⚠️ No client record found for profile:', profile?.id)
+      return;
+    }
 
     const { data, error } = await supabase
       .from('accounting_clients')
@@ -135,11 +141,15 @@ const ClientAccountingDashboard = () => {
       .eq('client_id', clientData.id)
       .maybeSingle();
 
-    console.log('💼 Accounting profile found:', data)
+    console.log('💼 Step 3: Accounting profile lookup result:', data)
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching accounting profile:', error);
+      console.error('❌ Error fetching accounting profile:', error.message, error.code);
       return;
+    }
+
+    if (!data) {
+      console.log('⚠️ No accounting profile found for client:', clientData.id)
     }
 
     setAccountingProfile(data);
