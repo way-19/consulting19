@@ -18,6 +18,8 @@ import AboutPage from './pages/AboutPage';
 import ConsultantServices from './pages/ConsultantServices';
 import ClientServices from './pages/ClientServices';
 import LegacyOrders from './pages/LegacyOrders';
+import AccountingManagement from './pages/AccountingManagement';
+import ClientAccountingDashboard from './pages/ClientAccountingDashboard';
 
 // Placeholder pages for routes
 const GetStartedPage = () => (
@@ -136,10 +138,26 @@ function App() {
                 } 
               />
               <Route 
+                path="/accounting-management" 
+                element={
+                  <ProtectedRoute requiredRole="consultant">
+                    <AccountingManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
                 path="/client-services" 
                 element={
                   <ProtectedRoute requiredRole="client">
                     <ClientServices />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/client-accounting" 
+                element={
+                  <ProtectedRoute requiredRole="client">
+                    <ClientAccountingDashboard />
                   </ProtectedRoute>
                 } 
               />
@@ -160,7 +178,7 @@ function App() {
                 path="/client-dashboard" 
                 element={
                   <ProtectedRoute requiredRole="client">
-                    <ClientServices />
+                    <ClientAccountingDashboard />
                   </ProtectedRoute>
                 } 
               />
