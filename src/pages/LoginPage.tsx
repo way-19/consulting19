@@ -155,27 +155,94 @@ const LoginPage = () => {
             Production users are created automatically. Login with:
           </p>
           <div className="space-y-2">
-            <button
-              onClick={() => quickLogin('admin@consulting19.com', 'SecureAdmin2025!')}
-              className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              disabled={loading || authLoading}
-            >
-              👑 Admin Panel - admin@consulting19.com / SecureAdmin2025!
-            </button>
-            <button
-              onClick={() => quickLogin('georgia@consulting19.com', 'GeorgiaConsult2025!')}
-              className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading || authLoading} 
-            >
-              🇬🇪 Georgia Consultant - georgia@consulting19.com / GeorgiaConsult2025!
-            </button>
-            <button
-              onClick={() => quickLogin('client.georgia@consulting19.com', 'ClientGeorgia2025!')}
-              className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading || authLoading}
-            >
-              👤 Test Client - client.georgia@consulting19.com / ClientGeorgia2025!
-            </button>
+            <div className="space-y-3">
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <span>👑</span>
+                  <span className="font-medium text-gray-900">Admin Panel</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-600 w-12">Email:</span>
+                    <input 
+                      type="text" 
+                      value="admin@consulting19.com" 
+                      readOnly 
+                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
+                      onClick={(e) => e.currentTarget.select()}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-600 w-12">Pass:</span>
+                    <input 
+                      type="text" 
+                      value="SecureAdmin2025!" 
+                      readOnly 
+                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
+                      onClick={(e) => e.currentTarget.select()}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <span>🇬🇪</span>
+                  <span className="font-medium text-gray-900">Georgia Consultant</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-600 w-12">Email:</span>
+                    <input 
+                      type="text" 
+                      value="georgia@consulting19.com" 
+                      readOnly 
+                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
+                      onClick={(e) => e.currentTarget.select()}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-600 w-12">Pass:</span>
+                    <input 
+                      type="text" 
+                      value="GeorgiaConsult2025!" 
+                      readOnly 
+                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
+                      onClick={(e) => e.currentTarget.select()}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <span>👤</span>
+                  <span className="font-medium text-gray-900">Test Client</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-600 w-12">Email:</span>
+                    <input 
+                      type="text" 
+                      value="client.georgia@consulting19.com" 
+                      readOnly 
+                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
+                      onClick={(e) => e.currentTarget.select()}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-600 w-12">Pass:</span>
+                    <input 
+                      type="text" 
+                      value="ClientGeorgia2025!" 
+                      readOnly 
+                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
+                      onClick={(e) => e.currentTarget.select()}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
