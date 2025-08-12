@@ -25,6 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -65,7 +66,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   useEffect(() => {
+    if (initialized) return
+    
     console.log('🚀 AuthProvider initializing...')
+    setInitialized(true)
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('📋 Initial session check:', session ? 'Session found' : 'No session')
@@ -97,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [initialized])
 
   const signIn = async (email: string, password: string) => {
     console.log('🔐 Attempting sign in for:', email)

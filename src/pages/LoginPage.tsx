@@ -56,11 +56,8 @@ const LoginPage = () => {
         }
       } else {
         console.log('✅ Login successful, waiting for profile...')
-        // Wait a bit for profile to load, then navigate
-        setTimeout(() => {
-          console.log('🔄 Navigating to home page...')
-          navigate('/')
-        }, 1000)
+        // Don't navigate here - let the auth state change handle it
+        console.log('✅ Login successful, auth state will handle navigation')
       }
     } catch (err) {
       console.error('💥 Unexpected login error:', err)
@@ -90,11 +87,8 @@ const LoginPage = () => {
         }
       } else {
         console.log('✅ Quick login successful, waiting for profile...')
-        // Wait a bit for profile to load, then navigate
-        setTimeout(() => {
-          console.log('🔄 Navigating to home page...')
-          navigate('/')
-        }, 1000)
+        // Don't navigate here - let the auth state change handle it
+        console.log('✅ Quick login successful, auth state will handle navigation')
       }
     } catch (err) {
       console.error('💥 Unexpected quick login error:', err)

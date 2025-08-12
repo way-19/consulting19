@@ -71,11 +71,47 @@ const AIAssistantPage = () => (
   </div>
 );
 
+// Navigation handler component
+const NavigationHandler = () => {
+  const { user, profile, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && user && profile) {
+      console.log('🎯 NavigationHandler: User logged in, redirecting based on role:', profile.role);
+      
+      // Only redirect if we're on login page
+      if (window.location.pathname === '/login') {
+        switch (profile.role) {
+          case 'admin':
+            console.log('🔄 Redirecting admin to admin dashboard');
+            navigate('/admin-dashboard');
+            break;
+          case 'consultant':
+            console.log('🔄 Redirecting consultant to consultant dashboard');
+            navigate('/consultant-dashboard');
+            break;
+          case 'client':
+            console.log('🔄 Redirecting client to accounting dashboard');
+            navigate('/client-accounting');
+            break;
+          default:
+            console.log('🔄 Redirecting to home page');
+            navigate('/');
+        }
+      }
+    }
+  }, [user, profile, loading, navigate]);
+
+  return null;
+};
+
 function App() {
   return (
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-white">
+          <NavigationHandler />
           <Navbar />
           <main>
             <Routes>
