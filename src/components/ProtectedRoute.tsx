@@ -1,31 +1,29 @@
-import React from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode
-  requiredRole?: 'admin' | 'consultant' | 'client' | 'legal_reviewer'
-  requiredCountry?: string
+  children: React.ReactNode;
+  requiredRole?: 'admin' | 'consultant' | 'client';
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredRole,
-  requiredCountry 
+  requiredRole
 }) => {
-  const { user, profile, loading } = useAuth()
-  const location = useLocation()
+  const { loading, user, profile, profileLoaded } = useAuth();
+  const location = useLocation();
 
-  if (loading) {
+  if (loading || !profileLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (!profile) {
@@ -36,7 +34,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           <p className="text-gray-600">Please wait while we load your profile.</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (requiredRole && profile.role !== requiredRole) {
@@ -45,13 +43,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600">You don't have permission to access this page.</p>
-          <Navigate to="/" replace />
         </div>
       </div>
-    )
+    );
   }
 
-  return <>{children}</>
-}
+  return <>{children}</>;
+};
 
-export default ProtectedRoute
+export default ProtectedRoute;

@@ -1,104 +1,144 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { Globe, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
-
-const roleHome = (role?: string) => {
-  if (role === 'admin') return '/admin-dashboard';
-  if (role === 'consultant') return '/consultant-dashboard';
-  if (role === 'client') return '/client-accounting';
-  return '/';
-};
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { Globe, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   
-  const { signIn, user, profile, loading: authLoading } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
+  const { signIn, user, profile, profileLoaded, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   // Redirect if already signed in
   useEffect(() => {
-    console.log('🔍 LoginPage useEffect:', { user: !!user, profile: profile?.role, authLoading });
-    if (user && profile && !authLoading) {
-      console.log('🔄 Already logged in, redirecting to:', roleHome(profile?.role));
-      navigate(roleHome(profile.role), { replace: true });
+    console.log('🔍 LoginPage useEffect:', { 
+      user: !!user, 
+      profile: profile?.role, 
+      authLoading, 
+      profileLoaded 
+    });
+    
+    if (user && profile && profileLoaded && !authLoading) {
+      console.log('🔄 Already logged in, showing dashboard button');
     }
-  }, [user, profile, authLoading, navigate]);
+  }, [user, profile, authLoading, profileLoaded]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (user && profile) {
-      console.log('⚠️ Already logged in, preventing re-login');
+    e.preventDefault();
+    
+    // Prevent double submission
+    if (loading || (user && profile && profileLoaded)) {
+      console.log('⚠️ Already logged in or loading, preventing submission');
       return;
     }
     
-    setError('')
-    setLoading(true)
+    setError('');
+    setLoading(true);
 
     try {
-      console.log('🔐 Login attempt for:', email)
-      const { error } = await signIn(email, password)
-      
-      if (error) {
-        console.error('❌ Login error:', error.message)
-        if (error.message === 'Invalid login credentials') {
-          setError('Invalid email or password. Please check your credentials or create the user in Supabase Dashboard first.')
-        } else {
-          setError(error.message)
-        }
+      console.log('🔐 Login attempt for:', email);
+      await signIn(email, password);
+      console.log('✅ Login successful, NavigationHandler will handle redirect');
+      // Clear form to prevent resubmission
+      setEmail('');
+      setPassword('');
+    } catch (err: any) {
+      console.error('❌ Login error:', err.message);
+      if (err.message === 'Invalid login credentials') {
+        setError('Invalid email or password. Please check your credentials.');
       } else {
-        console.log('✅ Login successful, NavigationHandler will handle redirect')
-        // Clear form to prevent resubmission
-        setEmail('')
-        setPassword('')
+        setError(err.message);
       }
-    } catch (err) {
-      console.error('💥 Unexpected login error:', err)
-      setError('An unexpected error occurred')
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // Quick login buttons for testing
   const quickLogin = async (userEmail: string, userPassword: string) => {
-    if (user && profile) {
-      console.log('⚠️ Already logged in, preventing quick re-login');
+    // Prevent double submission
+    if (loading || (user && profile && profileLoaded)) {
+      console.log('⚠️ Already logged in or loading, preventing quick login');
       return;
     }
     
-    // Otomatik olarak email ve şifre alanlarını doldur
-    setEmail(userEmail)
-    setPassword(userPassword)
-    
-    setError('')
-    setLoading(true)
+    setEmail(userEmail);
+    setPassword(userPassword);
+    setError('');
+    setLoading(true);
 
     try {
-      console.log('⚡ Quick login attempt for:', userEmail)
-      const { error } = await signIn(userEmail, userPassword)
-      
-      if (error) {
-        console.error('❌ Quick login error:', error.message)
-        if (error.message === 'Invalid login credentials') {
-          setError(`User ${userEmail} not found in Supabase. Please create this user in your Supabase Dashboard → Authentication → Users first.`)
-        } else {
-          setError(error.message)
-        }
+      console.log('⚡ Quick login attempt for:', userEmail);
+      await signIn(userEmail, userPassword);
+      console.log('✅ Quick login successful, AuthContext will handle redirect');
+    } catch (err: any) {
+      console.error('❌ Quick login error:', err.message);
+      if (err.message === 'Invalid login credentials') {
+        setError(`User ${userEmail} not found. Please create this user in your Supabase Dashboard.`);
       } else {
-        console.log('✅ Quick login successful, AuthContext will handle redirect')
+        setError(err.message);
       }
-    } catch (err) {
-      console.error('💥 Unexpected quick login error:', err)
-      setError('An unexpected error occurred')
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
+  };
+
+  const goToDashboard = () => {
+    const role = profile?.role;
+    if (role === 'admin') {
+      navigate('/admin-dashboard');
+    } else if (role === 'consultant') {
+      navigate('/consultant-dashboard');
+    } else if (role === 'client') {
+      navigate('/client-accounting');
+    }
+  };
+
+  // If already logged in, show dashboard button
+  if (user && profile && profileLoaded && !authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <Link to="/" className="inline-flex items-center space-x-2 mb-6">
+              <img 
+                src="/image.png" 
+                alt="Consulting19 Logo" 
+                className="h-20 w-40"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <Globe className="h-20 w-40 text-purple-600 hidden" />
+            </Link>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back!</h2>
+            <p className="text-gray-600">You are already logged in as {profile.role}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 text-center">
+            <div className="mb-6">
+              <p className="text-lg font-medium text-gray-900 mb-2">
+                {profile.full_name || profile.email}
+              </p>
+              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                {profile.role}
+              </span>
+            </div>
+            
+            <button
+              onClick={goToDashboard}
+              className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -112,7 +152,6 @@ const LoginPage = () => {
               alt="Consulting19 Logo" 
               className="h-20 w-40"
               onError={(e) => {
-                // Fallback to icon if logo fails to load
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
               }}
@@ -151,15 +190,6 @@ const LoginPage = () => {
             >
               👤 Test Client - client.georgia@consulting19.com
             </button>
-          </div>
-          <div className="mt-3 p-3 bg-green-100 rounded text-xs text-green-800">
-            <strong>PRODUCTION READY:</strong><br/>
-            <div className="mt-2 space-y-1">
-              <div>1. Database migration: <code>complete_system_setup.sql</code></div>
-              <div>2. Set environment variables in <code>.env</code></div>
-              <div>3. Users created automatically via SQL migration</div>
-              <div className="font-bold text-green-900 mt-2">✅ Complete admin/consultant/client system ready!</div>
-            </div>
           </div>
         </div>
 
@@ -265,7 +295,7 @@ const LoginPage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LoginPage
+export default LoginPage;
