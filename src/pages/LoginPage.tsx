@@ -160,21 +160,21 @@ const LoginPage = () => {
               className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               disabled={loading || authLoading}
             >
-              👑 Admin Panel - admin@consulting19.com
+              👑 Admin Panel - admin@consulting19.com / SecureAdmin2025!
             </button>
             <button
               onClick={() => quickLogin('georgia@consulting19.com', 'GeorgiaConsult2025!')}
               className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading || authLoading} 
             >
-              🇬🇪 Georgia Consultant - georgia@consulting19.com
+              🇬🇪 Georgia Consultant - georgia@consulting19.com / GeorgiaConsult2025!
             </button>
             <button
               onClick={() => quickLogin('client.georgia@consulting19.com', 'ClientGeorgia2025!')}
               className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading || authLoading}
             >
-              👤 Test Client - client.georgia@consulting19.com
+              👤 Test Client - client.georgia@consulting19.com / ClientGeorgia2025!
             </button>
           </div>
         </div>
