@@ -1,13 +1,15 @@
-/* __backup__ 2025-08-12 15:02 */
+/* __backup__ 2025-08-12 15:30 */
 // import { createContext, useContext, useEffect, useState } from 'react';
 // import type { User } from '@supabase/supabase-js';
 // import { supabase } from '../lib/supabase';
 // 
-// type Profile = {
+// type Role = 'admin' | 'consultant' | 'client';
+// 
+// export type Profile = {
 //   id: string;
 //   auth_user_id: string;
 //   email: string;
-//   role: 'admin' | 'consultant' | 'client';
+//   role: Role;
 //   country?: string | null;
 //   full_name?: string | null;
 // };
@@ -29,8 +31,7 @@
 // 
 //   async function fetchProfile(u: User) {
 //     try {
-//       console.log('🔍 Fetching profile for:', u.email);
-//       
+//       console.log('🔍 Fetching profile for:', u.id);
 //       const { data, error } = await supabase
 //         .from('profiles')
 //         .select('*')
@@ -43,7 +44,7 @@
 //         return;
 //       }
 // 
-//       console.log('✅ Profile found:', data.email, data.role);
+//       console.log('✅ Profile found:', data.role);
 //       setProfile(data as Profile);
 //     } catch (e) {
 //       console.error('💥 Profile fetch failed:', e);
@@ -53,38 +54,32 @@
 // 
 //   useEffect(() => {
 //     let mounted = true;
-//     
+// 
 //     async function initAuth() {
-//       try {
-//         const { data: { session } } = await supabase.auth.getSession();
-//         
-//         if (!mounted) return;
-//         
-//         if (session?.user) {
-//           setUser(session.user);
-//           await fetchProfile(session.user);
-//         } else {
-//           setUser(null);
-//           setProfile(null);
-//         }
-//       } catch (error) {
-//         console.error('❌ Auth init error:', error);
+//       const { data: { session } } = await supabase.auth.getSession();
+// 
+//       if (!mounted) return;
+// 
+//       if (session?.user) {
+//         console.log('✅ Session user:', session.user.id);
+//         setUser(session.user);
+//         await fetchProfile(session.user);
+//       } else {
+//         console.log('🔍 No session found');
 //         setUser(null);
 //         setProfile(null);
-//       } finally {
-//         if (mounted) {
-//           setLoading(false);
-//         }
 //       }
+// 
+//       setLoading(false);
 //     }
 // 
 //     initAuth();
 // 
 //     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
 //       if (!mounted) return;
-//       
+// 
 //       console.log('🔔 Auth state changed:', event);
-//       
+// 
 //       if (session?.user) {
 //         setUser(session.user);
 //         await fetchProfile(session.user);
@@ -92,10 +87,10 @@
 //         setUser(null);
 //         setProfile(null);
 //       }
-//       
+// 
 //       setLoading(false);
 //     });
-//     
+// 
 //     return () => {
 //       mounted = false;
 //       subscription.unsubscribe();
@@ -125,6 +120,7 @@
 //   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
 //   return ctx;
 // };
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';

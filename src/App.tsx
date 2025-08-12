@@ -1,215 +1,112 @@
-/* __backup__ 2025-08-12 15:02 */
-// import React, { useEffect } from 'react'
-// import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
-// import { useAuth } from './contexts/AuthContext'
-// import ProtectedRoute from './components/ProtectedRoute'
-// import Navbar from './components/Navbar'
-// import Footer from './components/Footer'
-// import HomePage from './pages/HomePage'
-// import CountriesPage from './pages/CountriesPage'
-// import CountryDetailPage from './pages/CountryDetailPage'
-// import ServicesPage from './pages/ServicesPage'
-// import ServiceDetailPage from './pages/ServiceDetailPage'
-// import CountryServiceDetailPage from './pages/CountryServiceDetailPage'
-// import ConsultantDashboard from './pages/ConsultantDashboard'
-// import ContactPage from './pages/ContactPage'
-// import LoginPage from './pages/LoginPage'
-// import SignupPage from './pages/SignupPage'
-// import AboutPage from './pages/AboutPage'
-// import ConsultantServices from './pages/ConsultantServices'
-// import ClientServices from './pages/ClientServices'
-// import LegacyOrders from './pages/LegacyOrders'
-// import AccountingManagement from './pages/AccountingManagement'
-// import ClientAccountingDashboard from './pages/ClientAccountingDashboard'
-// import CustomersManagement from './pages/CustomersManagement'
-// 
-// function NavigationHandler() {
-//   const { loading, user, profile } = useAuth();
-//   const navigate = useNavigate();
-//   const { pathname } = useLocation();
-// 
-//   // Simplified navigation - no automatic redirects
-//   // Let each page handle its own logic
-// 
-//   return null;
-// }
-// 
-// // Placeholder pages for routes that don't exist yet
-// const GetStartedPage = () => (
-//   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-50">
-//     <div className="text-center">
-//       <h1 className="text-4xl font-bold text-gray-900 mb-4">Get Started</h1>
-//       <p className="text-lg text-gray-600 mb-8">Begin your international business journey</p>
-//       <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 max-w-md mx-auto">
-//         <p className="text-gray-600">Coming soon - Application form and consultation booking</p>
-//       </div>
-//     </div>
-//   </div>
-// )
-// 
-// const BlogPage = () => (
-//   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-//     <div className="text-center">
-//       <h1 className="text-4xl font-bold text-gray-900 mb-4">Global Insights</h1>
-//       <p className="text-lg text-gray-600 mb-8">Latest updates from our country specialists</p>
-//       <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 max-w-md mx-auto">
-//         <p className="text-gray-600">Coming soon - Country-specific insights and updates</p>
-//       </div>
-//     </div>
-//   </div>
-// )
-// 
-// const ConsultationPage = () => (
-//   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
-//     <div className="text-center">
-//       <h1 className="text-4xl font-bold text-gray-900 mb-4">Free Consultation</h1>
-//       <p className="text-lg text-gray-600 mb-8">Schedule a call with our experts</p>
-//       <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 max-w-md mx-auto">
-//         <p className="text-gray-600">Coming soon - Consultation scheduling system</p>
-//       </div>
-//     </div>
-//   </div>
-// )
-// 
-// const AIAssistantPage = () => (
-//   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
-//     <div className="text-center">
-//       <h1 className="text-4xl font-bold text-gray-900 mb-4">AI Assistant</h1>
-//       <p className="text-lg text-gray-600 mb-8">Intelligent business guidance</p>
-//       <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 max-w-md mx-auto">
-//         <p className="text-gray-600">Coming soon - AI chat interface integration</p>
-//       </div>
-//     </div>
-//   </div>
-// )
-// 
-// const AdminDashboard = () => (
-//   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
-//     <div className="text-center">
-//       <h1 className="text-4xl font-bold text-gray-900 mb-4">Admin Dashboard</h1>
-//       <p className="text-lg text-gray-600 mb-8">Platform administration</p>
-//       <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 max-w-md mx-auto">
-//         <p className="text-gray-600">Coming soon - Admin panel interface</p>
-//       </div>
-//     </div>
-//   </div>
-// )
+/* __backup__ 2025-08-12 15:30 */
+// import { Routes, Route, Navigate } from 'react-router-dom';
+// import Navbar from './components/Navbar';
+// import Footer from './components/Footer';
+// import ProtectedRoute from './components/ProtectedRoute';
+// import HomePage from './pages/HomePage';
+// import CountriesPage from './pages/CountriesPage';
+// import CountryDetailPage from './pages/CountryDetailPage';
+// import ServicesPage from './pages/ServicesPage';
+// import ServiceDetailPage from './pages/ServiceDetailPage';
+// import CountryServiceDetailPage from './pages/CountryServiceDetailPage';
+// import AboutPage from './pages/AboutPage';
+// import ContactPage from './pages/ContactPage';
+// import LoginPage from './pages/LoginPage';
+// import SignupPage from './pages/SignupPage';
+// import ConsultantDashboard from './pages/ConsultantDashboard';
+// import ClientAccountingDashboard from './pages/ClientAccountingDashboard';
+// import CustomersManagement from './pages/CustomersManagement';
+// import LegacyOrders from './pages/LegacyOrders';
+// import ConsultantServices from './pages/ConsultantServices';
+// import ClientServices from './pages/ClientServices';
+// import AccountingManagement from './pages/AccountingManagement';
 // 
 // export default function App() {
 //   return (
-//     <div>
-//       <NavigationHandler />
+//     <>
 //       <Navbar />
-//       <main>
-//         <Routes>
-//           {/* Public Routes */}
-//           <Route path="/" element={<HomePage />} />
-//           <Route path="/countries" element={<CountriesPage />} />
-//           <Route path="/countries/:slug" element={<CountryDetailPage />} />
-//           <Route path="/services" element={<ServicesPage />} />
-//           <Route path="/services/:slug" element={<ServiceDetailPage />} />
-//           <Route path="/countries/:countrySlug/services/:serviceSlug" element={<CountryServiceDetailPage />} />
-//           <Route path="/about" element={<AboutPage />} />
-//           <Route path="/blog" element={<BlogPage />} />
-//           <Route path="/contact" element={<ContactPage />} />
-//           <Route path="/ai-assistant" element={<AIAssistantPage />} />
-//           
-//           {/* Auth Routes */}
-//           <Route path="/login" element={<LoginPage />} />
-//           <Route path="/signup" element={<SignupPage />} />
-//           
-//           {/* Protected Routes */}
-//           <Route 
-//             path="/get-started" 
-//             element={
-//               <ProtectedRoute>
-//                 <GetStartedPage />
-//               </ProtectedRoute>
-//             } 
-//           />
-//           <Route 
-//             path="/consultation" 
-//             element={
-//               <ProtectedRoute>
-//                 <ConsultationPage />
-//               </ProtectedRoute>
-//             } 
-//           />
-//           
-//           {/* Role-based Protected Routes */}
-//           <Route 
-//             path="/admin-dashboard" 
-//             element={
-//               <ProtectedRoute requiredRole="admin">
-//                 <AdminDashboard />
-//               </ProtectedRoute>
-//             } 
-//           />
-//           <Route 
-//             path="/consultant-dashboard" 
-//             element={
-//               <ProtectedRoute requiredRole="consultant">
-//                 <ConsultantDashboard />
-//               </ProtectedRoute>
-//             } 
-//           />
-//           <Route 
-//             path="/consultant-services" 
-//             element={
-//               <ProtectedRoute requiredRole="consultant">
-//                 <ConsultantServices />
-//               </ProtectedRoute>
-//             } 
-//           />
-//           <Route 
-//             path="/legacy-orders" 
-//             element={
-//               <ProtectedRoute requiredRole="consultant">
-//                 <LegacyOrders />
-//               </ProtectedRoute>
-//             } 
-//           />
-//           <Route 
-//             path="/accounting-management" 
-//             element={
-//               <ProtectedRoute requiredRole="consultant">
-//                 <AccountingManagement />
-//               </ProtectedRoute>
-//             } 
-//           />
-//           <Route 
-//             path="/customers-management" 
-//             element={
-//               <ProtectedRoute requiredRole="consultant">
-//                 <CustomersManagement />
-//               </ProtectedRoute>
-//             } 
-//           />
-//           <Route 
-//             path="/client-accounting" 
-//             element={
-//               <ProtectedRoute requiredRole="client">
-//                 <ClientAccountingDashboard />
-//               </ProtectedRoute>
-//             } 
-//           />
-//           <Route 
-//             path="/client-services" 
-//             element={
-//               <ProtectedRoute requiredRole="client">
-//                 <ClientServices />
-//               </ProtectedRoute>
-//             } 
-//           />
-//           
-//           {/* Catch all */}
-//           <Route path="*" element={<Navigate to="/login" replace />} />
-//         </Routes>
-//       </main>
+//       <Routes>
+//         <Route path="/" element={<HomePage />} />
+//         <Route path="/countries" element={<CountriesPage />} />
+//         <Route path="/country/:code" element={<CountryDetailPage />} />
+//         <Route path="/country/:code/service/:slug" element={<CountryServiceDetailPage />} />
+//         <Route path="/services" element={<ServicesPage />} />
+//         <Route path="/services/:slug" element={<ServiceDetailPage />} />
+//         <Route path="/about" element={<AboutPage />} />
+//         <Route path="/contact" element={<ContactPage />} />
+//         <Route path="/login" element={<LoginPage />} />
+//         <Route path="/signup" element={<SignupPage />} />
+//         <Route
+//           path="/admin-dashboard"
+//           element={
+//             <ProtectedRoute requiredRole="admin">
+//               <CustomersManagement />
+//             </ProtectedRoute>
+//           }
+//         />
+//         <Route
+//           path="/consultant-dashboard"
+//           element={
+//             <ProtectedRoute requiredRole="consultant">
+//               <ConsultantDashboard />
+//             </ProtectedRoute>
+//           }
+//         />
+//         <Route
+//           path="/consultant-services"
+//           element={
+//             <ProtectedRoute requiredRole="consultant">
+//               <ConsultantServices />
+//             </ProtectedRoute>
+//           }
+//         />
+//         <Route
+//           path="/legacy-orders"
+//           element={
+//             <ProtectedRoute requiredRole="consultant">
+//               <LegacyOrders />
+//             </ProtectedRoute>
+//           }
+//         />
+//         <Route
+//           path="/accounting-management"
+//           element={
+//             <ProtectedRoute requiredRole="consultant">
+//               <AccountingManagement />
+//             </ProtectedRoute>
+//           }
+//         />
+//         <Route
+//           path="/customers"
+//           element={
+//             <ProtectedRoute requiredRole="consultant">
+//               <CustomersManagement />
+//             </ProtectedRoute>
+//           }
+//         />
+//         <Route
+//           path="/client-accounting"
+//           element={
+//             <ProtectedRoute requiredRole="client">
+//               <ClientAccountingDashboard />
+//             </ProtectedRoute>
+//           }
+//         />
+//         <Route
+//           path="/client-services"
+//           element={
+//             <ProtectedRoute requiredRole="client">
+//               <ClientServices />
+//             </ProtectedRoute>
+//           }
+//         />
+//         <Route path="*" element={<Navigate to="/" />} />
+//       </Routes>
 //       <Footer />
-//     </div>
-//   )
+//     </>
+//   );
 // }
+
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -237,6 +134,7 @@ export default function App() {
     <>
       <Navbar />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/countries" element={<CountriesPage />} />
         <Route path="/country/:code" element={<CountryDetailPage />} />
@@ -247,6 +145,8 @@ export default function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        
+        {/* Protected Routes */}
         <Route
           path="/admin-dashboard"
           element={
@@ -311,6 +211,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        
+        {/* Catch all */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <Footer />
