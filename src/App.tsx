@@ -20,6 +20,7 @@ import ClientServices from './pages/ClientServices';
 import LegacyOrders from './pages/LegacyOrders';
 import AccountingManagement from './pages/AccountingManagement';
 import ClientAccountingDashboard from './pages/ClientAccountingDashboard';
+import CustomersManagement from './pages/CustomersManagement';
 
 // Placeholder pages for routes
 const GetStartedPage = () => (
@@ -142,6 +143,14 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="consultant">
                     <AccountingManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/customers-management" 
+                element={
+                  <ProtectedRoute requiredRole="consultant">
+                    <CustomersManagement />
                   </ProtectedRoute>
                 } 
               />
