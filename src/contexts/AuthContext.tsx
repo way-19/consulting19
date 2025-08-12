@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    if (didInit.current) {
       return;
     }
     didInit.current = true;
