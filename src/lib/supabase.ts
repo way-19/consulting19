@@ -23,11 +23,11 @@ export interface Country {
 }
 
 export interface Profile {
-  id: string; // This is the auth.users.id
+  id: string;
+  auth_user_id: string; // This links to auth.users.id
   email: string;
   role: 'admin' | 'consultant' | 'client' | 'legal_reviewer';
-  first_name?: string;
-  last_name?: string;
+  full_name?: string;
   phone?: string;
   language?: string;
   timezone?: string;
@@ -147,9 +147,9 @@ export const getCurrentProfile = async () => {
   if (!user) return null
 
   const { data: profile } = await supabase
-    .from('profiles')
+    .from('profiles') 
     .select('*')
-    .eq('id', user.id)
+    .eq('auth_user_id', user.id)
     .single()
 
   console.log('Current user:', user.id, user.email)
@@ -176,9 +176,9 @@ export const signUp = async (email: string, password: string, userData: Partial<
     // Update with additional data if provided
     if (Object.keys(userData).length > 0) {
       const { error: profileError } = await supabase
-        .from('profiles') // Assuming 'id' in profiles table is the auth.users.id
+        .from('profiles')
         .update(userData)
-        .eq('id', data.user.id)
+        .eq('auth_user_id', data.user.id)
 
       if (profileError) {
         console.error('Error updating profile:', profileError)
@@ -239,9 +239,11 @@ export const getClientConsultant = async (clientId?: string) => {
     .from('clients')
     .select(`
       *,
-      consultant:assigned_consultant_id (*)
+      profile:profile_id (
+        *
+      )
     `)
-    .eq('profile_id', clientId || profile?.id)
+    .eq('profile_id', clientId || profile?.auth_user_id)
     .single()
 
   return data
@@ -258,7 +260,9 @@ export const getConsultantClients = async (consultantId?: string) => {
     .from('clients')
     .select(`
       *,
-      profile:profile_id (*)
+      profile:profile_id (
+        *
+      )
     `)
     .eq('assigned_consultant_id', targetConsultantId)
 
