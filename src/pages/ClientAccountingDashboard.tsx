@@ -91,12 +91,17 @@ const ClientAccountingDashboard = () => {
 
   const fetchData = async () => {
     try {
-      await Promise.all([
-        fetchAccountingProfile(),
-        fetchDocuments(),
-        fetchInvoices(),
-        fetchMessages()
-      ]);
+      // First fetch accounting profile
+      await fetchAccountingProfile();
+      
+      // Then fetch other data after profile is loaded
+      setTimeout(async () => {
+        await Promise.all([
+          fetchDocuments(),
+          fetchInvoices(),
+          fetchMessages()
+        ]);
+      }, 500);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
