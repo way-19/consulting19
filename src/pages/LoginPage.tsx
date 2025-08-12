@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { runAuthDiagnostic, clearAuthState } from '../utils/authDiagnostic'
 import { Globe, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 const LoginPage = () => {
@@ -12,6 +13,11 @@ const LoginPage = () => {
   
   const { signIn, user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+
+  // Run diagnostic on component mount
+  useEffect(() => {
+    runAuthDiagnostic();
+  }, []);
 
   // Force logout if user exists but no profile after 3 seconds
   useEffect(() => {
@@ -131,13 +137,13 @@ const LoginPage = () => {
                 User: {user.email}<br/>
                 This should not happen in production. Please contact support.
               </p>
+              <button
+                onClick={clearAuthState}
+                className="mt-3 bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
+              >
+                Clear Auth & Restart
+              </button>
             </div>
-            <button
-              onClick={signOut}
-              className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors"
-            >
-              Sign Out and Try Again
-            </button>
           </div>
         </div>
       </div>
@@ -360,6 +366,18 @@ const LoginPage = () => {
               <p>Has User: {user ? 'YES' : 'NO'}</p>
               <p>Has Profile: {profile ? 'YES' : 'NO'}</p>
               <p>Profile Role: {profile?.role || 'None'}</p>
+              <button
+                onClick={runAuthDiagnostic}
+                className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700"
+              >
+                Run Diagnostic
+              </button>
+              <button
+                onClick={clearAuthState}
+                className="mt-2 ml-2 bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700"
+              >
+                Clear Auth
+              </button>
               {user && !profile && (
                 <p className="text-red-600 font-bold">⚠️ User exists but no profile - will auto-logout in 3s</p>
               )}
