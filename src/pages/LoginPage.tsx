@@ -126,21 +126,21 @@ const LoginPage = () => {
           <div className="space-y-2">
             <button
               onClick={() => quickLogin('admin@consulting19.com', 'SecureAdmin2025!')}
-              className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 flex items-center"
+              className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               disabled={loading}
             >
               👑 Admin Panel - admin@consulting19.com
             </button>
             <button
               onClick={() => quickLogin('georgia@consulting19.com', 'GeorgiaConsult2025!')}
-              className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50"
+              className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading} 
             >
               🇬🇪 Georgia Consultant - georgia@consulting19.com
             </button>
             <button
               onClick={() => quickLogin('client.georgia@consulting19.com', 'ClientGeorgia2025!')}
-              className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50"
+              className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
               👤 Test Client - client.georgia@consulting19.com
