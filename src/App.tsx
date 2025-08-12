@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
@@ -22,59 +22,57 @@ import AccountingManagement from './pages/AccountingManagement';
 import ClientAccountingDashboard from './pages/ClientAccountingDashboard';
 import CustomersManagement from './pages/CustomersManagement';
 
-const roleHome = (role?: string) => {
-  if (role === 'admin') return '/admin-dashboard';
-  if (role === 'consultant') return '/consultant-dashboard';
-  if (role === 'client') return '/client-accounting';
-  return '/';
-};
-
 function NavigationHandler() {
-  const { user, profile, loading } = useAuth();
-  const navigate = useNavigate();
+  const { loading, user, profile, profileLoaded } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('🔄 NavigationHandler effect:', {
-      loading,
-      user: !!user,
-      profile: profile?.role,
-      path: location.pathname,
-      profileLoaded: !!profile
+    console.log('🔄 NavigationHandler:', { 
+      loading, 
+      hasUser: !!user, 
+      profile: profile?.role, 
+      path: location.pathname, 
+      profileLoaded 
     });
     
-    if (loading) return;
+    if (loading || !profileLoaded) {
+      console.log('⏳ Still loading or profile not loaded, waiting...');
+      return;
+    }
 
-    const path = location.pathname;
-    
-    // If not logged in, redirect to login (except for public pages)  
     if (!user) {
-      const publicPaths = ['/', '/login', '/signup', '/about', '/contact', '/countries', '/services'];
-      const isPublicPath = publicPaths.includes(path) || path.startsWith('/countries/') || path.startsWith('/services/');
-      
-      if (!isPublicPath) {
-        console.log('🚪 Not logged in, redirecting to login from:', path);
+      console.log('🚪 No user, redirecting to login');
+      if (location.pathname !== '/login') {
         navigate('/login', { replace: true });
       }
       return;
     }
 
-    // If logged in but profile not loaded yet, wait
+    // User exists and profile loaded
     if (!profile) {
-      console.log('⏳ User exists but profile not loaded yet, waiting...');
+      console.log('❌ User exists but no profile found');
       return;
     }
 
-    // If logged in with profile and on auth pages, redirect to dashboard
-    if (path === '/login' || path === '/signup') {
-      const targetPath = roleHome(profile?.role);
-      console.log('✅ Logged in with profile, redirecting from auth page to:', targetPath);
+    // If on auth pages, redirect to dashboard
+    const isAuthPage = location.pathname === '/' || location.pathname === '/login';
+    if (isAuthPage) {
+      const role = profile.role;
+      let targetPath = '/';
+      
+      if (role === 'admin') {
+        targetPath = '/admin-dashboard';
+      } else if (role === 'consultant') {
+        targetPath = '/consultant-dashboard';
+      } else if (role === 'client') {
+        targetPath = '/client-accounting';
+      }
+      
+      console.log('🎯 Redirecting to dashboard:', targetPath, 'for role:', role);
       navigate(targetPath, { replace: true });
-      return;
     }
-    
-    console.log('✅ Navigation check complete, staying on:', path);
-  }, [user, profile, loading, location.pathname, navigate]);
+  }, [loading, profileLoaded, user, profile, location.pathname, navigate]);
 
   return null;
 }
