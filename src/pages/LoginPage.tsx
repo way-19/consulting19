@@ -21,18 +21,21 @@ const LoginPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const from = location.state?.from?.pathname || '/'
-
   // Redirect if already signed in
   useEffect(() => {
-    if (session && profile) {
+    console.log('🔍 LoginPage useEffect:', { session: !!session, profile: profile?.role });
+    if (session) {
+      console.log('🔄 Already logged in, redirecting to:', roleHome(profile?.role));
       navigate(roleHome(profile.role), { replace: true });
     }
   }, [session, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (session) return; // prevent re-login when already signed in
+    if (session) {
+      console.log('⚠️ Already logged in, preventing re-login');
+      return;
+    }
     
     setError('')
     setLoading(true)
@@ -64,7 +67,10 @@ const LoginPage = () => {
 
   // Quick login buttons for testing
   const quickLogin = async (userEmail: string, userPassword: string) => {
-    if (session) return; // prevent re-login when already signed in
+    if (session) {
+      console.log('⚠️ Already logged in, preventing quick re-login');
+      return;
+    }
     
     // Otomatik olarak email ve şifre alanlarını doldur
     setEmail(userEmail)

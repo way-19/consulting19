@@ -35,19 +35,33 @@ function NavigationHandler() {
   const location = useLocation();
 
   useEffect(() => {
+    console.log('🔄 NavigationHandler effect:', { loading, session: !!session, profile: profile?.role, path: location.pathname });
+    
     if (loading) return;
-    const path = location.pathname;
 
+    const path = location.pathname;
+    
+    // If not logged in, redirect to login (except for public pages)
     if (!session) {
-      if (path !== '/login' && path !== '/signup' && path !== '/' && path !== '/about' && path !== '/contact' && path !== '/countries' && path !== '/services' && !path.startsWith('/countries/') && !path.startsWith('/services/')) {
+      const publicPaths = ['/', '/login', '/signup', '/about', '/contact', '/countries', '/services'];
+      const isPublicPath = publicPaths.includes(path) || path.startsWith('/countries/') || path.startsWith('/services/');
+      
+      if (!isPublicPath) {
+        console.log('🚪 Not logged in, redirecting to login from:', path);
         navigate('/login', { replace: true });
       }
       return;
     }
 
+    // If logged in and on auth pages, redirect to dashboard
     if (path === '/login' || path === '/signup') {
+      const targetPath = roleHome(profile?.role);
+      console.log('✅ Logged in, redirecting from auth page to:', targetPath);
       navigate(roleHome(profile?.role), { replace: true });
+      return;
     }
+    
+    console.log('✅ Navigation check complete, staying on:', path);
   }, [session, profile?.role, loading, location.pathname, navigate]);
 
   return null;

@@ -59,7 +59,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (didInit.current) {
-      console.log('⚠️ AuthProvider already initialized, skipping...');
       return;
     }
     didInit.current = true;
@@ -71,17 +70,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
+        console.log('📋 Initial session check:', session ? `Session found for ${session.user.email}` : 'No session');
+
         if (!isMounted) return;
         
-        console.log('📋 Initial session check:', session ? 'Session found' : 'No session');
         setUser(session?.user ?? null);
         setSession(session ?? null);
         
         if (session?.user) {
-          console.log('👤 User found in session:', session.user.email);
           const userProfile = await fetchProfile(session.user.id);
           if (isMounted) {
+            console.log('✅ Profile loaded:', userProfile?.email, userProfile?.role);
             setProfile(userProfile);
           }
         }
@@ -100,11 +99,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔔 Auth state changed:', event, session ? `Session for ${session.user.email}` : 'No session');
+      
       if (!isMounted) return;
       
-      console.log('🔔 Auth state changed:', event, session ? `Session exists for ${session.user.email}` : 'No session');
-      
       if (event === 'SIGNED_OUT') {
+        console.log('🚪 User signed out, clearing state');
         setUser(null);
         setSession(null);
         setProfile(null);
@@ -114,14 +114,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user || null);
       setSession(session ?? null);
       if (session?.user) {
-        console.log('👤 Fetching profile for user:', session.user.email);
         const userProfile = await fetchProfile(session.user.id);
         if (isMounted) {
-          console.log('✅ Profile loaded, setting profile:', userProfile?.email, userProfile?.role);
+          console.log('✅ Profile set:', userProfile?.email, userProfile?.role);
           setProfile(userProfile);
         }
       } else {
-        console.log('🚪 User logged out, clearing profile');
         if (isMounted) {
           setProfile(null);
         }
