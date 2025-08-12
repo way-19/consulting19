@@ -55,9 +55,7 @@ const LoginPage = () => {
           setError(error.message)
         }
       } else {
-        console.log('✅ Login successful, waiting for profile...')
-        // Don't navigate here - let the auth state change handle it
-        console.log('✅ Login successful, auth state will handle navigation')
+        console.log('✅ Login successful, NavigationHandler will handle redirect')
       }
     } catch (err) {
       console.error('💥 Unexpected login error:', err)
@@ -86,9 +84,7 @@ const LoginPage = () => {
           setError(error.message)
         }
       } else {
-        console.log('✅ Quick login successful, waiting for profile...')
-        // Don't navigate here - let the auth state change handle it
-        console.log('✅ Quick login successful, auth state will handle navigation')
+        console.log('✅ Quick login successful, NavigationHandler will handle redirect')
       }
     } catch (err) {
       console.error('💥 Unexpected quick login error:', err)
