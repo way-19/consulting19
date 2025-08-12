@@ -17,6 +17,7 @@ import SignupPage from './pages/SignupPage';
 import AboutPage from './pages/AboutPage';
 import ConsultantServices from './pages/ConsultantServices';
 import ClientServices from './pages/ClientServices';
+import LegacyOrders from './pages/LegacyOrders';
 
 // Placeholder pages for routes
 const GetStartedPage = () => (
@@ -123,6 +124,14 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="consultant">
                     <ConsultantServices />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/legacy-orders" 
+                element={
+                  <ProtectedRoute requiredRole="consultant">
+                    <LegacyOrders />
                   </ProtectedRoute>
                 } 
               />
