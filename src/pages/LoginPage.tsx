@@ -44,19 +44,26 @@ const LoginPage = () => {
     setLoading(true)
 
     try {
+      console.log('🔐 Login attempt for:', email)
       const { error } = await signIn(email, password)
       
       if (error) {
+        console.error('❌ Login error:', error.message)
         if (error.message === 'Invalid login credentials') {
           setError('Invalid email or password. Please check your credentials or create the user in Supabase Dashboard first.')
         } else {
           setError(error.message)
         }
       } else {
-        // Redirect will happen automatically via auth context
-        navigate('/')
+        console.log('✅ Login successful, waiting for profile...')
+        // Wait a bit for profile to load, then navigate
+        setTimeout(() => {
+          console.log('🔄 Navigating to home page...')
+          navigate('/')
+        }, 1000)
       }
     } catch (err) {
+      console.error('💥 Unexpected login error:', err)
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -71,19 +78,26 @@ const LoginPage = () => {
     setLoading(true)
 
     try {
+      console.log('⚡ Quick login attempt for:', userEmail)
       const { error } = await signIn(userEmail, userPassword)
       
       if (error) {
+        console.error('❌ Quick login error:', error.message)
         if (error.message === 'Invalid login credentials') {
           setError(`User ${userEmail} not found in Supabase. Please create this user in your Supabase Dashboard → Authentication → Users first.`)
         } else {
           setError(error.message)
         }
       } else {
-        // Redirect will happen automatically via auth context
-        navigate('/')
+        console.log('✅ Quick login successful, waiting for profile...')
+        // Wait a bit for profile to load, then navigate
+        setTimeout(() => {
+          console.log('🔄 Navigating to home page...')
+          navigate('/')
+        }, 1000)
       }
     } catch (err) {
+      console.error('💥 Unexpected quick login error:', err)
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
