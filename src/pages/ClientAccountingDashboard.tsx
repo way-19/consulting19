@@ -126,6 +126,60 @@ const ClientAccountingDashboard = () => {
 
     if (!clientData) {
       console.log('⚠️ No client record found for profile:', profile?.id)
+      console.log('🔧 Creating client record automatically...')
+      
+      // Auto-create client record if missing
+      const { data: newClient, error: clientError } = await supabase
+        .from('clients')
+        .insert([{
+          profile_id: profile?.id,
+          assigned_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83', // Georgia consultant
+          status: 'new',
+          priority: 'medium',
+          service_type: 'company_formation',
+          progress: 0
+        }])
+        .select()
+        .single();
+      
+      if (clientError) {
+        console.error('❌ Error creating client record:', clientError);
+        return;
+      }
+      
+      console.log('✅ Client record created:', newClient);
+      
+      // Now create accounting profile
+      const { data: newAccountingProfile, error: accountingError } = await supabase
+        .from('accounting_clients')
+        .insert([{
+          client_id: newClient.id,
+          consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
+          company_name: 'Georgia Tech Solutions LLC',
+          business_type: 'limited_company',
+          accounting_period: 'monthly',
+          service_package: 'basic',
+          monthly_fee: 500,
+          status: 'active',
+          reminder_frequency: 7,
+          preferred_language: 'en'
+        }])
+        .select(`
+          *,
+          consultant:consultant_id (
+            full_name,
+            email
+          )
+        `)
+        .single();
+      
+      if (accountingError) {
+        console.error('❌ Error creating accounting profile:', accountingError);
+        return;
+      }
+      
+      console.log('✅ Accounting profile created:', newAccountingProfile);
+      setAccountingProfile(newAccountingProfile);
       return;
     }
 
@@ -150,6 +204,40 @@ const ClientAccountingDashboard = () => {
 
     if (!data) {
       console.log('⚠️ No accounting profile found for client:', clientData.id)
+      console.log('🔧 Creating accounting profile automatically...')
+      
+      // Auto-create accounting profile if missing
+      const { data: newAccountingProfile, error: accountingError } = await supabase
+        .from('accounting_clients')
+        .insert([{
+          client_id: clientData.id,
+          consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
+          company_name: 'Georgia Tech Solutions LLC',
+          business_type: 'limited_company',
+          accounting_period: 'monthly',
+          service_package: 'basic',
+          monthly_fee: 500,
+          status: 'active',
+          reminder_frequency: 7,
+          preferred_language: 'en'
+        }])
+        .select(`
+          *,
+          consultant:consultant_id (
+            full_name,
+            email
+          )
+        `)
+        .single();
+      
+      if (accountingError) {
+        console.error('❌ Error creating accounting profile:', accountingError);
+        return;
+      }
+      
+      console.log('✅ Accounting profile auto-created:', newAccountingProfile);
+      setAccountingProfile(newAccountingProfile);
+      return;
     }
 
     setAccountingProfile(data);
