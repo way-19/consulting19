@@ -158,16 +158,16 @@ const CustomersManagement = () => {
 
   const fetchReceivedOrders = async () => {
     const { data, error } = await supabase
-      .from('cross_country_orders')
+      .from('legacy_orders')
       .select(`
         *,
-        source_consultant:source_consultant_id (
+        consultant:consultant_id (
           full_name,
           email,
           country
         )
       `)
-      .eq('target_consultant_id', profile?.id)
+      .eq('consultant_id', profile?.id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -176,16 +176,19 @@ const CustomersManagement = () => {
 
   const fetchSentOrders = async () => {
     const { data, error } = await supabase
-      .from('cross_country_orders')
+      .from('legacy_orders')
       .select(`
         *,
-        target_consultant:target_consultant_id (
+        client:client_id (
           full_name,
           email,
-          country
+          profile:profile_id (
+            full_name,
+            email
+          )
         )
       `)
-      .eq('source_consultant_id', profile?.id)
+      .eq('consultant_id', profile?.id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -194,9 +197,17 @@ const CustomersManagement = () => {
 
   const fetchReferrals = async () => {
     const { data, error } = await supabase
-      .from('consultant_referrals')
-      .select('*')
-      .eq('referring_consultant_id', profile?.id)
+      .from('legacy_orders')
+      .select(`
+        *,
+        consultant:consultant_id (
+          full_name,
+          email,
+          country
+        )
+      `)
+      .eq('consultant_id', profile?.id)
+      .neq('consultant_id', profile?.id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -719,129 +730,6 @@ const CustomersManagement = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">Orders Sent to Other Countries</h3>
-                  <span className="text-sm text-gray-500">You earn 10% referral commission on these orders</span>
-                </div>
-                
-                {sentOrders.length === 0 ? (
-                  <div className="text-center py-12">
-                    <ArrowRight className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Sent Orders</h3>
-                    <p className="text-gray-600">You haven't referred any clients to other countries yet.</p>
-                    <button
-                      onClick={() => setActiveTab('new-order')}
-                      className="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-                    >
-                      Refer Your First Client
-                    </button>
-                  </div>
-                ) : (
-                  sentOrders
-                    .filter(order => {
-                      const matchesSearch = 
-                        order.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.client_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.order_number.toLowerCase().includes(searchTerm.toLowerCase());
-                      const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-                      const matchesCountry = countryFilter === 'all' || order.target_country === countryFilter;
-                      return matchesSearch && matchesStatus && matchesCountry;
-                    })
-                    .map((order) => (
-                      <div key={order.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
-                        <div className="flex items-start justify-between">
-                          {/* Left Side - Order Info */}
-                          <div className="flex-1 max-w-[40%]">
-                            <div className="flex items-center space-x-3 mb-3">
-                              <div className="bg-green-100 rounded-lg p-2">
-                                <ArrowRight className="h-5 w-5 text-green-600" />
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-semibold text-gray-900">{order.order_number}</h3>
-                                <p className="text-sm text-gray-500">
-                                  To {order.target_country} • {new Date(order.created_at).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2">
-                                <Building className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-700">{order.client_name}</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Mail className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-700">{order.client_email}</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Users className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-700">
-                                  {order.target_consultant?.full_name || 'Consultant TBD'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Right Side - Status & Earnings */}
-                          <div className="flex-1 max-w-[60%] ml-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              {/* Status */}
-                              <div>
-                                <div className="flex items-center space-x-2 mb-2">
-                                  <div className={`w-3 h-3 rounded-full ${getPriorityColor(order.priority)}`}></div>
-                                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                    {order.status.replace('_', ' ').toUpperCase()}
-                                  </span>
-                                </div>
-                                <div className={`px-3 py-1 rounded-full text-xs font-medium inline-block ${getPaymentStatusColor(order.payment_status)}`}>
-                                  Payment: {order.payment_status.toUpperCase()}
-                                </div>
-                              </div>
-
-                              {/* Financial Info */}
-                              <div>
-                                <div className="text-sm text-gray-600 mb-1">Total Amount</div>
-                                <div className="text-xl font-bold text-gray-900">${order.total_amount.toLocaleString()}</div>
-                                <div className="text-sm text-orange-600 font-medium">
-                                  Your Referral: ${order.referral_commission.toLocaleString()} (10%)
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  Consultant Gets: ${order.consultant_commission.toLocaleString()} (55%)
-                                </div>
-                              </div>
-
-                              {/* Actions */}
-                              <div className="flex flex-col space-y-2">
-                                <button
-                                  onClick={() => {
-                                    setSelectedOrder(order);
-                                    setShowOrderModal(true);
-                                  }}
-                                  className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center justify-center space-x-2"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                  <span>View Details</span>
-                                </button>
-
-                                <button
-                                  onClick={() => setIsChatOpen(true)}
-                                  className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors flex items-center justify-center space-x-2"
-                                >
-                                  <MessageSquare className="h-4 w-4" />
-                                  <span>Message</span>
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                )}
-              </div>
-            )}
-
-            {activeTab === 'sent' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Orders Sent to Other Countries</h3>
                   <span className="text-sm text-gray-500">Track your client referrals and earn 10% commission</span>
                 </div>
                 
@@ -897,7 +785,7 @@ const CustomersManagement = () => {
                               <div className="flex items-center space-x-2">
                                 <Users className="h-4 w-4 text-gray-400" />
                                 <span className="text-sm text-gray-700">
-                                  {order.target_consultant?.full_name || 'Consultant TBD'}
+                                  {order.client?.profile?.full_name || 'Unknown Client'}
                                 </span>
                               </div>
                             </div>
