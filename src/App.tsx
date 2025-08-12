@@ -86,7 +86,7 @@ const NavigationHandler = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!loading && user && profile && !didNavigate.current) {
+    if (!loading && user && profile && !didNavigate.current && location.pathname === '/login') {
       console.log('🎯 NavigationHandler: User logged in, redirecting based on role:', profile.role);
       
       didNavigate.current = true;

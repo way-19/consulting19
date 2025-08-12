@@ -111,12 +111,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return
       
-      console.log('🔔 Auth state changed:', event, session ? 'Session exists' : 'No session')
+      console.log('🔔 Auth state changed:', event, session ? `Session exists for ${session.user.email}` : 'No session')
       setUser(session?.user || null)
       if (session?.user) {
-        console.log('👤 New user session:', session.user.email)
+        console.log('👤 Fetching profile for user:', session.user.email)
         const userProfile = await fetchProfile(session.user.id)
         if (isMounted) {
+          console.log('✅ Profile loaded, setting profile:', userProfile?.email, userProfile?.role)
           setProfile(userProfile)
         }
       } else {
@@ -124,9 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isMounted) {
           setProfile(null)
         }
-      }
-      if (isMounted) {
-        setLoading(false)
       }
     })
 
@@ -137,6 +135,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe()
     }
   }, [])
+
+  // Set loading to false when we have both user and profile, or when we're sure there's no user
+  useEffect(() => {
+    if (!loading) return // Already set to false
+    
+    if (user && profile) {
+      console.log('✅ User and profile loaded, setting loading to false')
+      setLoading(false)
+    } else if (!user) {
+      console.log('✅ No user, setting loading to false')
+      setLoading(false)
+    }
+  }, [user, profile, loading])
 
   const signIn = async (email: string, password: string) => {
     console.log('🔐 Attempting sign in for:', email)
