@@ -15,6 +15,7 @@ const LoginPage = () => {
 
   // If already logged in, show dashboard button
   if (user && profile && !authLoading) {
+    console.log('🎯 User already logged in, showing dashboard option');
     const goToDashboard = () => {
       const role = profile.role
       if (role === 'admin') {
@@ -103,6 +104,32 @@ const LoginPage = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  // If user exists but no profile, show error
+  if (user && !profile && !authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Profile Not Found</h2>
+            <p className="text-gray-600 mb-6">Your user account exists but profile is missing.</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-red-700">
+                User: {user.email}<br/>
+                This should not happen in production. Please contact support.
+              </p>
+            </div>
+            <button
+              onClick={signOut}
+              className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors"
+            >
+              Sign Out and Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Check if form is valid

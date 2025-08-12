@@ -30,41 +30,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🔍 Fetching profile for user:', u.email);
       
-      // read by auth uid (NOT email) to avoid RLS recursion
+      // First try to get profile by auth_user_id
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('auth_user_id', u.id)
-        .single();
+        .maybeSingle();
 
-      if (!error && data) {
+      if (data) {
         console.log('✅ Profile found:', data.email, data.role);
         setProfile(data as Profile);
         return;
       }
 
-      console.log('⚠️ No profile found, creating new profile...');
+      console.log('⚠️ No profile found by auth_user_id, trying by email...');
       
-      // create minimal profile if missing (allowed by RLS insert policy)
-      const payload = {
-        auth_user_id: u.id,
-        email: u.email || '',
-        role: 'client' as const
-      };
-      
-      const { data: created, error: iErr } = await supabase
+      // Try to find by email as fallback
+      const { data: emailProfile, error: emailError } = await supabase
         .from('profiles')
-        .insert(payload)
         .select('*')
-        .single();
+        .eq('email', u.email)
+        .maybeSingle();
 
-      if (iErr) {
-        console.error('❌ Error creating profile:', iErr);
-        throw iErr;
+      if (emailProfile) {
+        console.log('✅ Profile found by email:', emailProfile.email, emailProfile.role);
+        
+        // Update the auth_user_id to link properly
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ auth_user_id: u.id })
+          .eq('id', emailProfile.id);
+          
+        if (updateError) {
+          console.error('❌ Error updating auth_user_id:', updateError);
+        } else {
+          console.log('✅ Profile linked to auth user');
+        }
+        
+        setProfile(emailProfile as Profile);
+        return;
       }
+
+      console.log('⚠️ No profile found at all, this should not happen in production');
+      console.log('🔧 Available user data:', { id: u.id, email: u.email });
       
-      console.log('✅ Profile created:', created.email, created.role);
-      setProfile(created as Profile);
+      // In production, profiles should already exist
+      setProfile(null);
     } catch (e) {
       console.error('💥 fetchOrCreateProfile failed:', e);
       setProfile(null);
