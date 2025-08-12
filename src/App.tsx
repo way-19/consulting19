@@ -79,6 +79,8 @@ const NavigationHandler = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+  }
+  )
   useEffect(() => {
     if (!loading && user && profile) {
       console.log('🎯 NavigationHandler: User logged in, redirecting based on role:', profile.role);
