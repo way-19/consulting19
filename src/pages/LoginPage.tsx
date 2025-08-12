@@ -318,7 +318,7 @@ const LoginPage = () => {
 
             <button
               type="submit"
-              disabled={loading || authLoading}
+              disabled={loading || authLoading || !email.trim() || !password.trim()}
               className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading || authLoading ? 'Signing in...' : 'Sign In'}
