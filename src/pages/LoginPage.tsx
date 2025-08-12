@@ -23,16 +23,16 @@ const LoginPage = () => {
 
   // Redirect if already signed in
   useEffect(() => {
-    console.log('🔍 LoginPage useEffect:', { session: !!session, profile: profile?.role });
-    if (session) {
+    console.log('🔍 LoginPage useEffect:', { session: !!session, profile: profile?.role, loading });
+    if (session && profile && !loading) {
       console.log('🔄 Already logged in, redirecting to:', roleHome(profile?.role));
       navigate(roleHome(profile.role), { replace: true });
     }
-  }, [session, profile, navigate]);
+  }, [session, profile, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (session) {
+    if (session && profile) {
       console.log('⚠️ Already logged in, preventing re-login');
       return;
     }
@@ -67,7 +67,7 @@ const LoginPage = () => {
 
   // Quick login buttons for testing
   const quickLogin = async (userEmail: string, userPassword: string) => {
-    if (session) {
+    if (session && profile) {
       console.log('⚠️ Already logged in, preventing quick re-login');
       return;
     }

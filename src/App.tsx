@@ -35,7 +35,13 @@ function NavigationHandler() {
   const location = useLocation();
 
   useEffect(() => {
-    console.log('🔄 NavigationHandler effect:', { loading, session: !!session, profile: profile?.role, path: location.pathname });
+    console.log('🔄 NavigationHandler effect:', { 
+      loading, 
+      session: !!session, 
+      profile: profile?.role, 
+      path: location.pathname,
+      profileLoaded: !!profile 
+    });
     
     if (loading) return;
 
@@ -53,16 +59,22 @@ function NavigationHandler() {
       return;
     }
 
-    // If logged in and on auth pages, redirect to dashboard
+    // If logged in but profile not loaded yet, wait
+    if (!profile) {
+      console.log('⏳ Session exists but profile not loaded yet, waiting...');
+      return;
+    }
+
+    // If logged in with profile and on auth pages, redirect to dashboard
     if (path === '/login' || path === '/signup') {
       const targetPath = roleHome(profile?.role);
-      console.log('✅ Logged in, redirecting from auth page to:', targetPath);
-      navigate(roleHome(profile?.role), { replace: true });
+      console.log('✅ Logged in with profile, redirecting from auth page to:', targetPath);
+      navigate(targetPath, { replace: true });
       return;
     }
     
     console.log('✅ Navigation check complete, staying on:', path);
-  }, [session, profile?.role, loading, location.pathname, navigate]);
+  }, [session, profile, loading, location.pathname, navigate]);
 
   return null;
 }
