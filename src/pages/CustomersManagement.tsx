@@ -933,10 +933,6 @@ const CustomersManagement = () => {
                   <MessageSquare className="h-5 w-5" />
                   <span>Send Message</span>
                 </button>
-                <button className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2">
-                  <Phone className="h-5 w-5" />
-                  <span>Schedule Call</span>
-                </button>
                 <button className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2">
                   <FileText className="h-5 w-5" />
                   <span>Generate Report</span>
