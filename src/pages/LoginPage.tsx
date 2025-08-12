@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { runAuthDiagnostic, clearAuthState } from '../utils/authDiagnostic'
 import { Globe, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 const LoginPage = () => {
@@ -14,143 +13,38 @@ const LoginPage = () => {
   const { signIn, user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
 
-  // Run diagnostic on component mount
-  useEffect(() => {
-    runAuthDiagnostic();
-  }, []);
-
-  // Force logout if user exists but no profile after 3 seconds
-  useEffect(() => {
-    if (user && !profile && !authLoading) {
-      const timer = setTimeout(() => {
-        console.log('🔄 Force logout - user exists but no profile found');
-        supabase.auth.signOut();
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [user, profile, authLoading]);
-
-  // If already logged in, show dashboard button
+  // If user is logged in and has profile, redirect to dashboard
   if (user && profile && !authLoading) {
-    console.log('🎯 User already logged in, showing dashboard option');
-    const goToDashboard = () => {
-      const role = profile.role
-      if (role === 'admin') {
-        navigate('/admin-dashboard')
-      } else if (role === 'consultant') {
-        navigate('/consultant-dashboard')
-      } else if (role === 'client') {
-        navigate('/client-accounting')
-      }
+    const role = profile.role;
+    if (role === 'admin') {
+      navigate('/admin-dashboard', { replace: true });
+    } else if (role === 'consultant') {
+      navigate('/consultant-dashboard', { replace: true });
+    } else if (role === 'client') {
+      navigate('/client-accounting', { replace: true });
     }
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <Link to="/" className="inline-flex items-center space-x-2 mb-6">
-              <img 
-                src="/image.png" 
-                alt="Consulting19 Logo" 
-                className="h-20 w-40"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none'
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden')
-                }}
-              />
-              <Globe className="h-20 w-40 text-purple-600 hidden" />
-            </Link>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back!</h2>
-            <p className="text-gray-600">You are already logged in as {profile.role}</p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 text-center">
-            <div className="mb-6">
-              <p className="text-lg font-medium text-gray-900 mb-2">
-                {profile.full_name || profile.email}
-              </p>
-              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
-                {profile.role}
-              </span>
-            </div>
-            
-            <button
-              onClick={goToDashboard}
-              className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-            >
-              Go to Dashboard
-            </button>
-          </div>
-        </div>
-      </div>
-    )
+    return null;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    console.log('🔐 Form submit attempt:', { 
-      email, 
-      passwordLength: password.length, 
-      loading, 
-      authLoading,
-      isFormValid,
-      isButtonDisabled 
-    })
-    
-    // Prevent double submission
-    if (loading || authLoading) {
-      console.log('⚠️ Already loading, preventing submission')
-      return
-    }
+    if (loading) return;
     
     setError('')
     setLoading(true)
 
     try {
-      console.log('🔐 Login attempt for:', email)
       await signIn(email, password)
-      console.log('✅ Login successful')
+      // Navigation will be handled by the redirect logic above
     } catch (err: any) {
       console.error('❌ Login error:', err.message)
-      if (err.message === 'Invalid login credentials') {
-        setError('Invalid email or password. Please check your credentials.')
-      } else {
-        setError(err.message)
-      }
+      setError(err.message || 'Login failed')
     } finally {
       setLoading(false)
     }
   }
 
-  // If user exists but no profile, show error
-  if (user && !profile && !authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Profile Not Found</h2>
-            <p className="text-gray-600 mb-6">Your user account exists but profile is missing.</p>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-red-700">
-                User: {user.email}<br/>
-                This should not happen in production. Please contact support.
-              </p>
-              <button
-                onClick={clearAuthState}
-                className="mt-3 bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
-              >
-                Clear Auth & Restart
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if form is valid
   const isFormValid = email.trim().length > 0 && password.trim().length > 0
   const isButtonDisabled = loading || authLoading || !isFormValid
 
@@ -175,98 +69,18 @@ const LoginPage = () => {
           <p className="text-gray-600">Sign in to your account to continue</p>
         </div>
 
-        {/* Quick Login Credentials Display */}
+        {/* Quick Login Credentials */}
         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <h3 className="text-sm font-medium text-blue-800 mb-3">🏢 Production Users Ready</h3>
-          <p className="text-xs text-blue-700 mb-3 font-medium">
-            Copy these credentials to login:
-          </p>
-          <div className="space-y-3">
-            <div className="bg-white rounded-lg p-3 border border-blue-200">
-              <div className="flex items-center space-x-2 mb-2">
-                <span>👑</span>
-                <span className="font-medium text-gray-900">Admin Panel</span>
-              </div>
-              <div className="space-y-2">
-                <div>
-                  <label className="text-xs text-gray-600">Email:</label>
-                  <input 
-                    type="text" 
-                    value="admin@consulting19.com" 
-                    readOnly 
-                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
-                    onClick={(e) => e.currentTarget.select()}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-600">Password:</label>
-                  <input 
-                    type="text" 
-                    value="SecureAdmin2025!" 
-                    readOnly 
-                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
-                    onClick={(e) => e.currentTarget.select()}
-                  />
-                </div>
-              </div>
+          <h3 className="text-sm font-medium text-blue-800 mb-3">🏢 Test Credentials</h3>
+          <div className="space-y-2 text-xs">
+            <div className="bg-white rounded p-2">
+              <strong>Admin:</strong> admin@consulting19.com / SecureAdmin2025!
             </div>
-
-            <div className="bg-white rounded-lg p-3 border border-blue-200">
-              <div className="flex items-center space-x-2 mb-2">
-                <span>🇬🇪</span>
-                <span className="font-medium text-gray-900">Georgia Consultant</span>
-              </div>
-              <div className="space-y-2">
-                <div>
-                  <label className="text-xs text-gray-600">Email:</label>
-                  <input 
-                    type="text" 
-                    value="georgia@consulting19.com" 
-                    readOnly 
-                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
-                    onClick={(e) => e.currentTarget.select()}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-600">Password:</label>
-                  <input 
-                    type="text" 
-                    value="GeorgiaConsult2025!" 
-                    readOnly 
-                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
-                    onClick={(e) => e.currentTarget.select()}
-                  />
-                </div>
-              </div>
+            <div className="bg-white rounded p-2">
+              <strong>Consultant:</strong> georgia@consulting19.com / GeorgiaConsult2025!
             </div>
-
-            <div className="bg-white rounded-lg p-3 border border-blue-200">
-              <div className="flex items-center space-x-2 mb-2">
-                <span>👤</span>
-                <span className="font-medium text-gray-900">Test Client</span>
-              </div>
-              <div className="space-y-2">
-                <div>
-                  <label className="text-xs text-gray-600">Email:</label>
-                  <input 
-                    type="text" 
-                    value="client.georgia@consulting19.com" 
-                    readOnly 
-                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
-                    onClick={(e) => e.currentTarget.select()}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-600">Password:</label>
-                  <input 
-                    type="text" 
-                    value="ClientGeorgia2025!" 
-                    readOnly 
-                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
-                    onClick={(e) => e.currentTarget.select()}
-                  />
-                </div>
-              </div>
+            <div className="bg-white rounded p-2">
+              <strong>Client:</strong> client.georgia@consulting19.com / ClientGeorgia2025!
             </div>
           </div>
         </div>
@@ -294,10 +108,7 @@ const LoginPage = () => {
                   autoComplete="email"
                   required
                   value={email}
-                  onChange={(e) => {
-                    console.log('📧 Email changed:', e.target.value)
-                    setEmail(e.target.value)
-                  }}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                   placeholder="Enter your email"
                 />
@@ -317,10 +128,7 @@ const LoginPage = () => {
                   autoComplete="current-password"
                   required
                   value={password}
-                  onChange={(e) => {
-                    console.log('🔑 Password changed, length:', e.target.value.length)
-                    setPassword(e.target.value)
-                  }}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                   placeholder="Enter your password"
                 />
@@ -366,20 +174,17 @@ const LoginPage = () => {
               <p>Has User: {user ? 'YES' : 'NO'}</p>
               <p>Has Profile: {profile ? 'YES' : 'NO'}</p>
               <p>Profile Role: {profile?.role || 'None'}</p>
-              <button
-                onClick={runAuthDiagnostic}
-                className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700"
-              >
-                Run Diagnostic
-              </button>
-              <button
-                onClick={clearAuthState}
-                className="mt-2 ml-2 bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700"
-              >
-                Clear Auth
-              </button>
+              
               {user && !profile && (
-                <p className="text-red-600 font-bold">⚠️ User exists but no profile - will auto-logout in 3s</p>
+                <div className="mt-2 p-2 bg-red-100 rounded">
+                  <p className="text-red-700 font-bold">⚠️ User exists but no profile found!</p>
+                  <button
+                    onClick={() => supabase.auth.signOut()}
+                    className="mt-1 bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700"
+                  >
+                    Force Logout
+                  </button>
+                </div>
               )}
             </div>
 
@@ -392,7 +197,7 @@ const LoginPage = () => {
                   : 'bg-purple-600 text-white hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2'
               }`}
             >
-              {loading || authLoading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 

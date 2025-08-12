@@ -27,45 +27,8 @@ function NavigationHandler() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  useEffect(() => {
-    console.log('🔄 NavigationHandler:', { 
-      loading, 
-      hasUser: !!user, 
-      profile: profile?.role, 
-      path: pathname 
-    });
-    
-    if (loading) {
-      console.log('⏳ Still loading, waiting...');
-      return;
-    }
-
-    if (!user) {
-      console.log('🚪 No user, redirecting to login');
-      if (pathname !== '/login' && pathname !== '/signup') {
-        navigate('/login', { replace: true });
-      }
-      return;
-    }
-
-    // User exists, check if we need to redirect from auth pages
-    const isAuthPage = pathname === '/' || pathname === '/login';
-    if (isAuthPage && profile) {
-      const role = profile.role;
-      let targetPath = '/';
-      
-      if (role === 'admin') {
-        targetPath = '/admin-dashboard';
-      } else if (role === 'consultant') {
-        targetPath = '/consultant-dashboard';
-      } else if (role === 'client') {
-        targetPath = '/client-accounting';
-      }
-      
-      console.log('🎯 Redirecting to dashboard:', targetPath, 'for role:', role);
-      navigate(targetPath, { replace: true });
-    }
-  }, [loading, user, profile, pathname, navigate]);
+  // Simplified navigation - no automatic redirects
+  // Let each page handle its own logic
 
   return null;
 }
