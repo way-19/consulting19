@@ -163,8 +163,7 @@ const CustomersManagement = () => {
         *,
         consultant:consultant_id (
           full_name,
-          email,
-          profiles!inner(country)
+          email
         )
       `)
       .eq('consultant_id', profile?.id)
@@ -179,10 +178,9 @@ const CustomersManagement = () => {
       .from('legacy_orders')
       .select(`
         *,
-        consultant:consultant_id (
+        target_consultant:consultant_id (
           full_name,
-          email,
-          profiles!inner(country)
+          email
         )
       `)
       .neq('consultant_id', profile?.id)
