@@ -20,52 +20,100 @@ const admin = createClient(url, serviceKey, {
 });
 
 async function main() {
-  console.log('🚀 Starting production setup...\n');
+  console.log('🚀 Creating production users...\n');
 
-  try {
-    // Check if users already exist
-    const { data: existingUsers } = await admin.auth.admin.listUsers({ page: 1, perPage: 100 }); // Fetch more users
-    const emails = ['admin@consulting19.com', 'georgia@consulting19.com', 'client.georgia@consulting19.com', 'support@consulting19.com'];
-    
-    const existingEmails = existingUsers.users.map(u => u.email).filter(Boolean);
-    const missingUsers = emails.filter(email => !existingEmails.includes(email));
-
-    if (missingUsers.length === 0) {
-      console.log('✅ All production users already exist!');
-      console.log('\n🔐 You can login with:');
-      console.log('   admin@consulting19.com / SecureAdmin2025! (Admin)');
-      console.log('   georgia@consulting19.com / GeorgiaConsult2025! (Consultant)');
-      console.log('   client.georgia@consulting19.com / ClientGeorgia2025! (Client)');
-      console.log('   support@consulting19.com / Support2025! (Support)');
-      return;
+  const users = [
+    { 
+      email: 'admin@consulting19.com', 
+      password: 'SecureAdmin2025!', 
+      role: 'admin',
+      full_name: 'Platform Administrator'
+    },
+    { 
+      email: 'georgia@consulting19.com', 
+      password: 'GeorgiaConsult2025!', 
+      role: 'consultant',
+      full_name: 'Georgia Consultant',
+      country: 'Georgia'
+    },
+    { 
+      email: 'client.georgia@consulting19.com', 
+      password: 'ClientGeorgia2025!', 
+      role: 'client',
+      full_name: 'Test Client',
+      country: 'Georgia'
+    },
+    { 
+      email: 'support@consulting19.com', 
+      password: 'Support2025!', 
+      role: 'admin',
+      full_name: 'Customer Support'
     }
+  ];
 
-    console.log(`⚠️  Missing users: ${missingUsers.join(', ')}`);
-    console.log('🔧 Creating missing users...\n');
+  for (const userData of users) {
+    try {
+      console.log(`📝 Creating user: ${userData.email}`);
+      
+      // Create auth user
+      const { data: authUser, error: authError } = await admin.auth.admin.createUser({
+        email: userData.email,
+        password: userData.password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: userData.full_name
+        }
+      });
 
-    // Create missing users
-    const users = [
-      { email: 'admin@consulting19.com', password: 'SecureAdmin2025!', role: 'admin' },
-      { email: 'georgia@consulting19.com', password: 'GeorgiaConsult2025!', role: 'consultant' },
-      { email: 'client.georgia@consulting19.com', password: 'ClientGeorgia2025!', role: 'client' },
-      { email: 'support@consulting19.com', password: 'Support2025!', role: 'admin' }
-    ];
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          console.log(`✅ User already exists: ${userData.email}`);
+          
+          // Get existing user
+          const { data: existingUsers } = await admin.auth.admin.listUsers();
+          const existingUser = existingUsers.users.find(u => u.email === userData.email);
+          
+          if (existingUser) {
+            // Check if profile exists
+            const { data: existingProfile } = await admin
+              .from('profiles')
+              .select('*')
+              .eq('auth_user_id', existingUser.id)
+              .single();
 
-    for (const userData of users) {
-      if (missingUsers.includes(userData.email)) {
-        console.log(`📝 Creating user: ${userData.email}`);
-        
-        const { data: authUser, error: authError } = await admin.auth.admin.createUser({
-          email: userData.email,
-          password: userData.password,
-          email_confirm: true
-        });
+            if (!existingProfile) {
+              console.log(`📝 Creating missing profile for: ${userData.email}`);
+              
+              const { error: profileError } = await admin
+                .from('profiles')
+                .insert({
+                  id: existingUser.id,
+                  auth_user_id: existingUser.id,
+                  email: userData.email,
+                  role: userData.role,
+                  full_name: userData.full_name,
+                  country: userData.country || null,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                });
 
-        if (authError) {
+              if (profileError) {
+                console.error(`❌ Failed to create profile for ${userData.email}:`, profileError.message);
+              } else {
+                console.log(`✅ Created profile: ${userData.email} (${userData.role})`);
+              }
+            } else {
+              console.log(`✅ Profile already exists: ${userData.email} (${existingProfile.role})`);
+            }
+          }
+          continue;
+        } else {
           console.error(`❌ Failed to create ${userData.email}:`, authError.message);
           continue;
         }
+      }
 
+      if (authUser?.user) {
         console.log(`✅ Created auth user: ${userData.email}`);
 
         // Create profile
@@ -76,7 +124,8 @@ async function main() {
             auth_user_id: authUser.user.id,
             email: userData.email,
             role: userData.role,
-            full_name: userData.email.split('@')[0].replace('.', ' '),
+            full_name: userData.full_name,
+            country: userData.country || null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
@@ -87,17 +136,55 @@ async function main() {
           console.log(`✅ Created profile: ${userData.email} (${userData.role})`);
         }
       }
+    } catch (error) {
+      console.error(`💥 Error processing ${userData.email}:`, error);
     }
+  }
 
-    console.log('\n🎉 User creation completed!');
-    console.log('\n🔐 You can now login with:');
-    console.log('   admin@consulting19.com / SecureAdmin2025! (Admin)');
-    console.log('   georgia@consulting19.com / GeorgiaConsult2025! (Consultant)');
-    console.log('   client.georgia@consulting19.com / ClientGeorgia2025! (Client)');
-    console.log('   support@consulting19.com / Support2025! (Support)');
+  console.log('\n🎉 User creation process completed!');
+  console.log('\n🔐 Login credentials:');
+  console.log('   admin@consulting19.com / SecureAdmin2025! (Admin)');
+  console.log('   georgia@consulting19.com / GeorgiaConsult2025! (Consultant)');
+  console.log('   client.georgia@consulting19.com / ClientGeorgia2025! (Client)');
+  console.log('   support@consulting19.com / Support2025! (Support)');
+  
+  // Create client record for the test client
+  try {
+    console.log('\n📋 Setting up client record...');
     
+    const { data: clientProfile } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('email', 'client.georgia@consulting19.com')
+      .single();
+
+    const { data: consultantProfile } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('email', 'georgia@consulting19.com')
+      .single();
+
+    if (clientProfile && consultantProfile) {
+      const { error: clientError } = await admin
+        .from('clients')
+        .insert({
+          profile_id: clientProfile.id,
+          assigned_consultant_id: consultantProfile.id,
+          company_name: 'Georgia Tech Solutions LLC',
+          status: 'in_progress',
+          priority: 'medium',
+          service_type: 'company_formation',
+          progress: 45
+        });
+
+      if (clientError && !clientError.message.includes('duplicate')) {
+        console.error('❌ Failed to create client record:', clientError.message);
+      } else {
+        console.log('✅ Client record created/exists');
+      }
+    }
   } catch (error) {
-    console.error('❌ Error checking users:', error);
+    console.log('⚠️ Client record setup skipped:', error);
   }
 }
 
