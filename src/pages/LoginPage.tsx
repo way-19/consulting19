@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Globe, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
@@ -10,11 +10,11 @@ const LoginPage = () => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   
-  const { signIn, user, profile, profileLoaded, loading: authLoading } = useAuth()
+  const { signIn, user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
 
   // If already logged in, show dashboard button
-  if (user && profile && profileLoaded && !authLoading) {
+  if (user && profile && !authLoading) {
     const goToDashboard = () => {
       const role = profile.role
       if (role === 'admin') {
@@ -72,8 +72,8 @@ const LoginPage = () => {
     e.preventDefault()
     
     // Prevent double submission
-    if (loading || (user && profile && profileLoaded)) {
-      console.log('⚠️ Already logged in or loading, preventing submission')
+    if (loading || authLoading) {
+      console.log('⚠️ Already loading, preventing submission')
       return
     }
     
@@ -101,8 +101,8 @@ const LoginPage = () => {
 
   const quickLogin = async (userEmail: string, userPassword: string) => {
     // Prevent double submission
-    if (loading || (user && profile && profileLoaded)) {
-      console.log('⚠️ Already logged in or loading, preventing quick login')
+    if (loading || authLoading) {
+      console.log('⚠️ Already loading, preventing quick login')
       return
     }
     
@@ -114,7 +114,7 @@ const LoginPage = () => {
     try {
       console.log('⚡ Quick login attempt for:', userEmail)
       await signIn(userEmail, userPassword)
-      console.log('✅ Quick login successful, AuthContext will handle redirect')
+      console.log('✅ Quick login successful, NavigationHandler will handle redirect')
     } catch (err: any) {
       console.error('❌ Quick login error:', err.message)
       if (err.message === 'Invalid login credentials') {
@@ -158,21 +158,21 @@ const LoginPage = () => {
             <button
               onClick={() => quickLogin('admin@consulting19.com', 'SecureAdmin2025!')}
               className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              disabled={loading}
+              disabled={loading || authLoading}
             >
               👑 Admin Panel - admin@consulting19.com
             </button>
             <button
               onClick={() => quickLogin('georgia@consulting19.com', 'GeorgiaConsult2025!')}
               className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading} 
+              disabled={loading || authLoading} 
             >
               🇬🇪 Georgia Consultant - georgia@consulting19.com
             </button>
             <button
               onClick={() => quickLogin('client.georgia@consulting19.com', 'ClientGeorgia2025!')}
               className="w-full text-left px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
+              disabled={loading || authLoading}
             >
               👤 Test Client - client.georgia@consulting19.com
             </button>
@@ -258,10 +258,10 @@ const LoginPage = () => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || authLoading}
               className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading || authLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 

@@ -24,7 +24,7 @@ export interface Country {
 
 export interface Profile {
   id: string;
-  auth_user_id: string; // This links to auth.users.id
+  user_id: string; // This links to auth.users.id
   email: string;
   role: 'admin' | 'consultant' | 'client' | 'legal_reviewer';
   full_name?: string;
@@ -149,7 +149,7 @@ export const getCurrentProfile = async () => {
   const { data: profile } = await supabase
     .from('profiles') 
     .select('*')
-    .eq('auth_user_id', user.id)
+    .eq('user_id', user.id)
     .single()
 
   console.log('Current user:', user.id, user.email)
@@ -178,7 +178,7 @@ export const signUp = async (email: string, password: string, userData: Partial<
       const { error: profileError } = await supabase
         .from('profiles')
         .update(userData)
-        .eq('auth_user_id', data.user.id)
+        .eq('user_id', data.user.id)
 
       if (profileError) {
         console.error('Error updating profile:', profileError)
@@ -243,7 +243,7 @@ export const getClientConsultant = async (clientId?: string) => {
         *
       )
     `)
-    .eq('profile_id', clientId || profile?.auth_user_id)
+    .eq('profile_id', clientId || profile?.user_id)
     .single()
 
   return data

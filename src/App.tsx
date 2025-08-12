@@ -23,61 +23,54 @@ import ClientAccountingDashboard from './pages/ClientAccountingDashboard'
 import CustomersManagement from './pages/CustomersManagement'
 
 function NavigationHandler() {
-  const { loading, user, profile, profileLoaded } = useAuth()
-  const location = useLocation()
-  const navigate = useNavigate()
+  const { loading, user, profile } = useAuth();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   useEffect(() => {
     console.log('🔄 NavigationHandler:', { 
       loading, 
       hasUser: !!user, 
       profile: profile?.role, 
-      path: location.pathname, 
-      profileLoaded 
-    })
+      path: pathname 
+    });
     
-    if (loading || !profileLoaded) {
-      console.log('⏳ Still loading or profile not loaded, waiting...')
-      return
+    if (loading) {
+      console.log('⏳ Still loading, waiting...');
+      return;
     }
 
     if (!user) {
-      console.log('🚪 No user, redirecting to login')
-      if (location.pathname !== '/login') {
-        navigate('/login', { replace: true })
+      console.log('🚪 No user, redirecting to login');
+      if (pathname !== '/login' && pathname !== '/signup') {
+        navigate('/login', { replace: true });
       }
-      return
+      return;
     }
 
-    // User exists and profile loaded
-    if (!profile) {
-      console.log('❌ User exists but no profile found')
-      return
-    }
-
-    // If on auth pages, redirect to dashboard
-    const isAuthPage = location.pathname === '/' || location.pathname === '/login'
-    if (isAuthPage) {
-      const role = profile.role
-      let targetPath = '/'
+    // User exists, check if we need to redirect from auth pages
+    const isAuthPage = pathname === '/' || pathname === '/login';
+    if (isAuthPage && profile) {
+      const role = profile.role;
+      let targetPath = '/';
       
       if (role === 'admin') {
-        targetPath = '/admin-dashboard'
+        targetPath = '/admin-dashboard';
       } else if (role === 'consultant') {
-        targetPath = '/consultant-dashboard'
+        targetPath = '/consultant-dashboard';
       } else if (role === 'client') {
-        targetPath = '/client-accounting'
+        targetPath = '/client-accounting';
       }
       
-      console.log('🎯 Redirecting to dashboard:', targetPath, 'for role:', role)
-      navigate(targetPath, { replace: true })
+      console.log('🎯 Redirecting to dashboard:', targetPath, 'for role:', role);
+      navigate(targetPath, { replace: true });
     }
-  }, [loading, profileLoaded, user, profile, location.pathname, navigate])
+  }, [loading, user, profile, pathname, navigate]);
 
-  return null
+  return null;
 }
 
-// Placeholder pages for routes
+// Placeholder pages for routes that don't exist yet
 const GetStartedPage = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-50">
     <div className="text-center">
@@ -126,7 +119,19 @@ const AIAssistantPage = () => (
   </div>
 )
 
-function App() {
+const AdminDashboard = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
+    <div className="text-center">
+      <h1 className="text-4xl font-bold text-gray-900 mb-4">Admin Dashboard</h1>
+      <p className="text-lg text-gray-600 mb-8">Platform administration</p>
+      <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 max-w-md mx-auto">
+        <p className="text-gray-600">Coming soon - Admin panel interface</p>
+      </div>
+    </div>
+  </div>
+)
+
+export default function App() {
   return (
     <div>
       <NavigationHandler />
@@ -168,6 +173,14 @@ function App() {
           />
           
           {/* Role-based Protected Routes */}
+          <Route 
+            path="/admin-dashboard" 
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="/consultant-dashboard" 
             element={
@@ -224,11 +237,12 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          
+          {/* Catch all */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </main>
       <Footer />
     </div>
   )
 }
-
-export default App

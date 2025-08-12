@@ -1,54 +1,33 @@
-import React from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode
-  requiredRole?: 'admin' | 'consultant' | 'client'
+  requiredRole?: 'admin' | 'consultant' | 'client';
+  children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requiredRole
-}) => {
-  const { loading, user, profile, profileLoaded } = useAuth()
-  const location = useLocation()
+export default function ProtectedRoute({ requiredRole, children }: ProtectedRouteProps) {
+  const { loading, user, profile } = useAuth();
 
-  if (loading || !profileLoaded) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    return <Navigate to="/login" replace />;
   }
 
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Profile Loading...</h2>
-          <p className="text-gray-600">Please wait while we load your profile.</p>
-        </div>
-      </div>
-    )
+  if (requiredRole && profile?.role !== requiredRole) {
+    // Redirect to their own dashboard based on role
+    if (profile?.role === 'admin') return <Navigate to="/admin-dashboard" replace />;
+    if (profile?.role === 'consultant') return <Navigate to="/consultant-dashboard" replace />;
+    return <Navigate to="/client-accounting" replace />;
   }
 
-  if (requiredRole && profile.role !== requiredRole) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-600">You don't have permission to access this page.</p>
-        </div>
-      </div>
-    )
-  }
-
-  return <>{children}</>
+  return <>{children}</>;
 }
-
-export default ProtectedRoute
