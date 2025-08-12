@@ -1314,6 +1314,5 @@ const CustomersManagement = () => {
   );
 };
 
-export default CustomersManagement;
 
 export default CustomersManagement
