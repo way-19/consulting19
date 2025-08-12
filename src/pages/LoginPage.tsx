@@ -1,104 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Globe, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { Globe, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   
-  const { signIn, user, profile, profileLoaded, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-
-  // Redirect if already signed in
-  useEffect(() => {
-    console.log('🔍 LoginPage useEffect:', { 
-      user: !!user, 
-      profile: profile?.role, 
-      authLoading, 
-      profileLoaded 
-    });
-    
-    if (user && profile && profileLoaded && !authLoading) {
-      console.log('🔄 Already logged in, showing dashboard button');
-    }
-  }, [user, profile, authLoading, profileLoaded]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Prevent double submission
-    if (loading || (user && profile && profileLoaded)) {
-      console.log('⚠️ Already logged in or loading, preventing submission');
-      return;
-    }
-    
-    setError('');
-    setLoading(true);
-
-    try {
-      console.log('🔐 Login attempt for:', email);
-      await signIn(email, password);
-      console.log('✅ Login successful, NavigationHandler will handle redirect');
-      // Clear form to prevent resubmission
-      setEmail('');
-      setPassword('');
-    } catch (err: any) {
-      console.error('❌ Login error:', err.message);
-      if (err.message === 'Invalid login credentials') {
-        setError('Invalid email or password. Please check your credentials.');
-      } else {
-        setError(err.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const quickLogin = async (userEmail: string, userPassword: string) => {
-    // Prevent double submission
-    if (loading || (user && profile && profileLoaded)) {
-      console.log('⚠️ Already logged in or loading, preventing quick login');
-      return;
-    }
-    
-    setEmail(userEmail);
-    setPassword(userPassword);
-    setError('');
-    setLoading(true);
-
-    try {
-      console.log('⚡ Quick login attempt for:', userEmail);
-      await signIn(userEmail, userPassword);
-      console.log('✅ Quick login successful, AuthContext will handle redirect');
-    } catch (err: any) {
-      console.error('❌ Quick login error:', err.message);
-      if (err.message === 'Invalid login credentials') {
-        setError(`User ${userEmail} not found. Please create this user in your Supabase Dashboard.`);
-      } else {
-        setError(err.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const goToDashboard = () => {
-    const role = profile?.role;
-    if (role === 'admin') {
-      navigate('/admin-dashboard');
-    } else if (role === 'consultant') {
-      navigate('/consultant-dashboard');
-    } else if (role === 'client') {
-      navigate('/client-accounting');
-    }
-  };
+  const { signIn, user, profile, profileLoaded, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
 
   // If already logged in, show dashboard button
   if (user && profile && profileLoaded && !authLoading) {
+    const goToDashboard = () => {
+      const role = profile.role
+      if (role === 'admin') {
+        navigate('/admin-dashboard')
+      } else if (role === 'consultant') {
+        navigate('/consultant-dashboard')
+      } else if (role === 'client') {
+        navigate('/client-accounting')
+      }
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
@@ -109,8 +36,8 @@ const LoginPage = () => {
                 alt="Consulting19 Logo" 
                 className="h-20 w-40"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  e.currentTarget.style.display = 'none'
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden')
                 }}
               />
               <Globe className="h-20 w-40 text-purple-600 hidden" />
@@ -138,7 +65,66 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
-    );
+    )
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Prevent double submission
+    if (loading || (user && profile && profileLoaded)) {
+      console.log('⚠️ Already logged in or loading, preventing submission')
+      return
+    }
+    
+    setError('')
+    setLoading(true)
+
+    try {
+      console.log('🔐 Login attempt for:', email)
+      await signIn(email, password)
+      console.log('✅ Login successful, NavigationHandler will handle redirect')
+      // Clear form to prevent resubmission
+      setEmail('')
+      setPassword('')
+    } catch (err: any) {
+      console.error('❌ Login error:', err.message)
+      if (err.message === 'Invalid login credentials') {
+        setError('Invalid email or password. Please check your credentials.')
+      } else {
+        setError(err.message)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const quickLogin = async (userEmail: string, userPassword: string) => {
+    // Prevent double submission
+    if (loading || (user && profile && profileLoaded)) {
+      console.log('⚠️ Already logged in or loading, preventing quick login')
+      return
+    }
+    
+    setEmail(userEmail)
+    setPassword(userPassword)
+    setError('')
+    setLoading(true)
+
+    try {
+      console.log('⚡ Quick login attempt for:', userEmail)
+      await signIn(userEmail, userPassword)
+      console.log('✅ Quick login successful, AuthContext will handle redirect')
+    } catch (err: any) {
+      console.error('❌ Quick login error:', err.message)
+      if (err.message === 'Invalid login credentials') {
+        setError(`User ${userEmail} not found. Please create this user in your Supabase Dashboard.`)
+      } else {
+        setError(err.message)
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -152,8 +138,8 @@ const LoginPage = () => {
               alt="Consulting19 Logo" 
               className="h-20 w-40"
               onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                e.currentTarget.style.display = 'none'
+                e.currentTarget.nextElementSibling?.classList.remove('hidden')
               }}
             />
             <Globe className="h-20 w-40 text-purple-600 hidden" />
@@ -295,7 +281,7 @@ const LoginPage = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LoginPage;
+export default LoginPage

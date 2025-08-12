@@ -1,31 +1,31 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from './contexts/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import HomePage from './pages/HomePage';
-import CountriesPage from './pages/CountriesPage';
-import CountryDetailPage from './pages/CountryDetailPage';
-import ServicesPage from './pages/ServicesPage';
-import ServiceDetailPage from './pages/ServiceDetailPage';
-import CountryServiceDetailPage from './pages/CountryServiceDetailPage';
-import ConsultantDashboard from './pages/ConsultantDashboard';
-import ContactPage from './pages/ContactPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import AboutPage from './pages/AboutPage';
-import ConsultantServices from './pages/ConsultantServices';
-import ClientServices from './pages/ClientServices';
-import LegacyOrders from './pages/LegacyOrders';
-import AccountingManagement from './pages/AccountingManagement';
-import ClientAccountingDashboard from './pages/ClientAccountingDashboard';
-import CustomersManagement from './pages/CustomersManagement';
+import React, { useEffect } from 'react'
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from './contexts/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
+import Navbar from './components/Navbar'
+import Footer from './components/Footer'
+import HomePage from './pages/HomePage'
+import CountriesPage from './pages/CountriesPage'
+import CountryDetailPage from './pages/CountryDetailPage'
+import ServicesPage from './pages/ServicesPage'
+import ServiceDetailPage from './pages/ServiceDetailPage'
+import CountryServiceDetailPage from './pages/CountryServiceDetailPage'
+import ConsultantDashboard from './pages/ConsultantDashboard'
+import ContactPage from './pages/ContactPage'
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
+import AboutPage from './pages/AboutPage'
+import ConsultantServices from './pages/ConsultantServices'
+import ClientServices from './pages/ClientServices'
+import LegacyOrders from './pages/LegacyOrders'
+import AccountingManagement from './pages/AccountingManagement'
+import ClientAccountingDashboard from './pages/ClientAccountingDashboard'
+import CustomersManagement from './pages/CustomersManagement'
 
 function NavigationHandler() {
-  const { loading, user, profile, profileLoaded } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const { loading, user, profile, profileLoaded } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
     console.log('🔄 NavigationHandler:', { 
@@ -34,47 +34,47 @@ function NavigationHandler() {
       profile: profile?.role, 
       path: location.pathname, 
       profileLoaded 
-    });
+    })
     
     if (loading || !profileLoaded) {
-      console.log('⏳ Still loading or profile not loaded, waiting...');
-      return;
+      console.log('⏳ Still loading or profile not loaded, waiting...')
+      return
     }
 
     if (!user) {
-      console.log('🚪 No user, redirecting to login');
+      console.log('🚪 No user, redirecting to login')
       if (location.pathname !== '/login') {
-        navigate('/login', { replace: true });
+        navigate('/login', { replace: true })
       }
-      return;
+      return
     }
 
     // User exists and profile loaded
     if (!profile) {
-      console.log('❌ User exists but no profile found');
-      return;
+      console.log('❌ User exists but no profile found')
+      return
     }
 
     // If on auth pages, redirect to dashboard
-    const isAuthPage = location.pathname === '/' || location.pathname === '/login';
+    const isAuthPage = location.pathname === '/' || location.pathname === '/login'
     if (isAuthPage) {
-      const role = profile.role;
-      let targetPath = '/';
+      const role = profile.role
+      let targetPath = '/'
       
       if (role === 'admin') {
-        targetPath = '/admin-dashboard';
+        targetPath = '/admin-dashboard'
       } else if (role === 'consultant') {
-        targetPath = '/consultant-dashboard';
+        targetPath = '/consultant-dashboard'
       } else if (role === 'client') {
-        targetPath = '/client-accounting';
+        targetPath = '/client-accounting'
       }
       
-      console.log('🎯 Redirecting to dashboard:', targetPath, 'for role:', role);
-      navigate(targetPath, { replace: true });
+      console.log('🎯 Redirecting to dashboard:', targetPath, 'for role:', role)
+      navigate(targetPath, { replace: true })
     }
-  }, [loading, profileLoaded, user, profile, location.pathname, navigate]);
+  }, [loading, profileLoaded, user, profile, location.pathname, navigate])
 
-  return null;
+  return null
 }
 
 // Placeholder pages for routes
@@ -88,7 +88,7 @@ const GetStartedPage = () => (
       </div>
     </div>
   </div>
-);
+)
 
 const BlogPage = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
@@ -100,7 +100,7 @@ const BlogPage = () => (
       </div>
     </div>
   </div>
-);
+)
 
 const ConsultationPage = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
@@ -112,7 +112,7 @@ const ConsultationPage = () => (
       </div>
     </div>
   </div>
-);
+)
 
 const AIAssistantPage = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
@@ -124,7 +124,7 @@ const AIAssistantPage = () => (
       </div>
     </div>
   </div>
-);
+)
 
 function App() {
   return (
@@ -228,7 +228,7 @@ function App() {
       </main>
       <Footer />
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
