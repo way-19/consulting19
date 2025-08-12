@@ -154,6 +154,7 @@ function App() {
       </Router>
     </AuthProvider>
   )
+  )
   );
 }
 
