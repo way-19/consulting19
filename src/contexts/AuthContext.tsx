@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 
 type Profile = {
   id: string;
-  user_id: string;   // FK to auth.users.id
+  auth_user_id: string;   // FK to auth.users.id
   email: string;
   role: 'admin' | 'consultant' | 'client';
   country?: string | null;
@@ -26,19 +26,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  async function fetchOrCreateProfile(u: User) {
+  async function fetchProfile(u: User) {
     try {
-      console.log('🔍 Fetching profile for user:', u.email);
+      console.log('🔍 Fetching profile for user:', u.email, 'ID:', u.id);
       
-      // First try to get profile by auth_user_id
-      const { data, error } = await supabase
+      // Try to get profile by auth_user_id first
+      let { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('auth_user_id', u.id)
         .maybeSingle();
 
+      if (error) {
+        console.error('❌ Error fetching profile by auth_user_id:', error);
+      }
+
       if (data) {
-        console.log('✅ Profile found:', data.email, data.role);
+        console.log('✅ Profile found by auth_user_id:', data.email, data.role);
         setProfile(data as Profile);
         return;
       }
@@ -51,6 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('*')
         .eq('email', u.email)
         .maybeSingle();
+
+      if (emailError) {
+        console.error('❌ Error fetching profile by email:', emailError);
+      }
 
       if (emailProfile) {
         console.log('✅ Profile found by email:', emailProfile.email, emailProfile.role);
@@ -71,13 +79,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      console.log('⚠️ No profile found at all, this should not happen in production');
-      console.log('🔧 Available user data:', { id: u.id, email: u.email });
-      
-      // In production, profiles should already exist
+      console.log('⚠️ No profile found at all for user:', u.email);
       setProfile(null);
     } catch (e) {
-      console.error('💥 fetchOrCreateProfile failed:', e);
+      console.error('💥 fetchProfile failed:', e);
       setProfile(null);
     }
   }
@@ -85,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
     
-    (async () => {
+    async function initAuth() {
       console.log('🚀 AuthProvider initializing...');
       
       try {
@@ -95,17 +100,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!mounted) return;
         
         setUser(session?.user ?? null);
+        
         if (session?.user) {
-          await fetchOrCreateProfile(session.user);
+          await fetchProfile(session.user);
         }
       } catch (error) {
         console.error('❌ Error in initial auth check:', error);
       } finally {
         if (mounted) {
+          console.log('✅ Auth initialization complete, setting loading to false');
           setLoading(false);
         }
       }
-    })();
+    }
+
+    initAuth();
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, sess) => {
       console.log('🔔 Auth state changed:', event, sess ? `Session for ${sess.user.email}` : 'No session');
@@ -113,9 +122,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!mounted) return;
       
       setUser(sess?.user ?? null);
+      
       if (sess?.user) {
         try {
-          await fetchOrCreateProfile(sess.user);
+          await fetchProfile(sess.user);
         } catch (error) {
           console.error('❌ Error fetching profile on auth change:', error);
         }
@@ -124,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (mounted) {
+        console.log('✅ Auth state change complete, setting loading to false');
         setLoading(false);
       }
     });
@@ -142,19 +153,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('🔐 Attempting sign in for:', email);
       setLoading(true);
       
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        console.error('❌ Sign in error:', error.message);
+      try {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          console.error('❌ Sign in error:', error.message);
+          throw error;
+        }
+        
+        console.log('✅ Sign in successful');
+        // onAuthStateChange will handle the rest
+      } catch (error) {
         setLoading(false);
         throw error;
       }
-      
-      console.log('✅ Sign in successful');
-      // onAuthStateChange will handle the rest
     },
     signOut: async () => {
       console.log('🚪 Signing out...');
+      setLoading(true);
       await supabase.auth.signOut();
+      setProfile(null);
+      setLoading(false);
     }
   }), [loading, user, profile]);
 

@@ -13,6 +13,18 @@ const LoginPage = () => {
   const { signIn, user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
 
+  // Force logout if user exists but no profile after 3 seconds
+  useEffect(() => {
+    if (user && !profile && !authLoading) {
+      const timer = setTimeout(() => {
+        console.log('🔄 Force logout - user exists but no profile found');
+        supabase.auth.signOut();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [user, profile, authLoading]);
+
   // If already logged in, show dashboard button
   if (user && profile && !authLoading) {
     console.log('🎯 User already logged in, showing dashboard option');
@@ -134,7 +146,7 @@ const LoginPage = () => {
 
   // Check if form is valid
   const isFormValid = email.trim().length > 0 && password.trim().length > 0
-  const isButtonDisabled = loading || !isFormValid
+  const isButtonDisabled = loading || authLoading || !isFormValid
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -348,6 +360,9 @@ const LoginPage = () => {
               <p>Has User: {user ? 'YES' : 'NO'}</p>
               <p>Has Profile: {profile ? 'YES' : 'NO'}</p>
               <p>Profile Role: {profile?.role || 'None'}</p>
+              {user && !profile && (
+                <p className="text-red-600 font-bold">⚠️ User exists but no profile - will auto-logout in 3s</p>
+              )}
             </div>
 
             <button
