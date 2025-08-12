@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase, Profile } from '../lib/supabase'
-import { useNavigate } from 'react-router-dom'
 
 interface AuthContextType {
   user: User | null
@@ -29,7 +28,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Prevent double initialization in StrictMode
   const didInit = useRef(false)
-  const navigate = useNavigate()
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -66,33 +64,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const redirectBasedOnRole = (userProfile: Profile) => {
-    const currentPath = window.location.pathname
-    console.log('🎯 Redirecting based on role:', userProfile.role, 'from path:', currentPath)
-    
-    // Only redirect from login page
-    if (currentPath !== '/login') return
-    
-    let targetPath = '/'
-    
-    switch (userProfile.role) {
-      case 'admin':
-        targetPath = '/admin-dashboard'
-        break
-      case 'consultant':
-        targetPath = '/consultant-dashboard'
-        break
-      case 'client':
-        targetPath = '/client-accounting'
-        break
-      default:
-        targetPath = '/'
-    }
-    
-    console.log('🔄 Navigating to:', targetPath)
-    navigate(targetPath)
-  }
-
   useEffect(() => {
     // Prevent double initialization in StrictMode
     if (didInit.current) {
@@ -120,9 +91,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userProfile = await fetchProfile(session.user.id)
           if (isMounted) {
             setProfile(userProfile)
-            if (userProfile) {
-              redirectBasedOnRole(userProfile)
-            }
           }
         }
         
@@ -148,7 +116,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (event === 'SIGNED_OUT') {
         setUser(null)
         setProfile(null)
-        setHasRedirected(false)
         return
       }
       
@@ -159,10 +126,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isMounted) {
           console.log('✅ Profile loaded, setting profile:', userProfile?.email, userProfile?.role)
           setProfile(userProfile)
-          
-          if (event === 'SIGNED_IN' && userProfile) {
-            redirectBasedOnRole(userProfile)
-          }
         }
       } else {
         console.log('🚪 User logged out, clearing profile')

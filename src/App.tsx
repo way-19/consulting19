@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -21,6 +21,37 @@ import LegacyOrders from './pages/LegacyOrders';
 import AccountingManagement from './pages/AccountingManagement';
 import ClientAccountingDashboard from './pages/ClientAccountingDashboard';
 import CustomersManagement from './pages/CustomersManagement';
+
+function roleHome(role?: string) {
+  if (role === 'admin') return '/admin-dashboard';
+  if (role === 'consultant') return '/consultant-dashboard';
+  if (role === 'client') return '/client-accounting';
+  return '/';
+}
+
+function NavigationHandler() {
+  const { user, profile, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (loading) return;
+    const path = location.pathname;
+
+    if (!user) {
+      if (path !== '/login' && path !== '/signup' && path !== '/' && path !== '/about' && path !== '/contact' && path !== '/countries' && path !== '/services' && !path.startsWith('/countries/') && !path.startsWith('/services/')) {
+        navigate('/login', { replace: true });
+      }
+      return;
+    }
+
+    if (path === '/login' || path === '/signup') {
+      navigate(roleHome(profile?.role), { replace: true });
+    }
+  }, [user, profile?.role, loading, location.pathname, navigate]);
+
+  return null;
+}
 
 // Placeholder pages for routes
 const GetStartedPage = () => (
@@ -73,93 +104,90 @@ const AIAssistantPage = () => (
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div>
-          <Navbar />
-          <main>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/countries" element={<CountriesPage />} />
-              <Route path="/countries/:slug" element={<CountryDetailPage />} />
-              <Route path="/services" element={<ServicesPage />} />
-              <Route path="/services/:slug" element={<ServiceDetailPage />} />
-              <Route path="/countries/:countrySlug/services/:serviceSlug" element={<CountryServiceDetailPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/blog" element={<BlogPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/ai-assistant" element={<AIAssistantPage />} />
-              
-              {/* Auth Routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              
-              {/* Protected Routes */}
-              <Route 
-                path="/get-started" 
-                element={
-                  <ProtectedRoute>
-                    <GetStartedPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/consultation" 
-                element={
-                  <ProtectedRoute>
-                    <ConsultationPage />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Role-based Protected Routes */}
-              <Route 
-                path="/consultant-dashboard" 
-                element={
-                  <ProtectedRoute requiredRole="consultant">
-                    <ConsultantDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/consultant-services" 
-                element={
-                  <ProtectedRoute requiredRole="consultant">
-                    <ConsultantServices />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/legacy-orders" 
-                element={
-                  <ProtectedRoute requiredRole="consultant">
-                    <LegacyOrders />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/accounting-management" 
-                element={
-                  <ProtectedRoute requiredRole="consultant">
-                    <AccountingManagement />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/client-accounting" 
-                element={
-                  <ProtectedRoute requiredRole="client">
-                    <ClientAccountingDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
-    </AuthProvider>
+    <div>
+      <NavigationHandler />
+      <Navbar />
+      <main>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/countries" element={<CountriesPage />} />
+          <Route path="/countries/:slug" element={<CountryDetailPage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/services/:slug" element={<ServiceDetailPage />} />
+          <Route path="/countries/:countrySlug/services/:serviceSlug" element={<CountryServiceDetailPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/ai-assistant" element={<AIAssistantPage />} />
+          
+          {/* Auth Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          
+          {/* Protected Routes */}
+          <Route 
+            path="/get-started" 
+            element={
+              <ProtectedRoute>
+                <GetStartedPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/consultation" 
+            element={
+              <ProtectedRoute>
+                <ConsultationPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Role-based Protected Routes */}
+          <Route 
+            path="/consultant-dashboard" 
+            element={
+              <ProtectedRoute requiredRole="consultant">
+                <ConsultantDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/consultant-services" 
+            element={
+              <ProtectedRoute requiredRole="consultant">
+                <ConsultantServices />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/legacy-orders" 
+            element={
+              <ProtectedRoute requiredRole="consultant">
+                <LegacyOrders />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/accounting-management" 
+            element={
+              <ProtectedRoute requiredRole="consultant">
+                <AccountingManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/client-accounting" 
+            element={
+              <ProtectedRoute requiredRole="client">
+                <ClientAccountingDashboard />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
   );
 }
 
