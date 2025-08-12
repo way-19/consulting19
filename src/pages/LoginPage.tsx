@@ -274,6 +274,22 @@ const LoginPage = () => {
           <p className="text-gray-600">Hesabınıza giriş yapın</p>
         </div>
 
+        {/* Temporary Login Credentials */}
+        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <h3 className="text-sm font-medium text-blue-800 mb-3">🔑 Test Giriş Bilgileri</h3>
+          <div className="space-y-2 text-xs">
+            <div className="bg-white rounded p-2">
+              <strong>Yönetici:</strong> admin@consulting19.com / SecureAdmin2025!
+            </div>
+            <div className="bg-white rounded p-2">
+              <strong>Danışman:</strong> georgia@consulting19.com / GeorgiaConsult2025!
+            </div>
+            <div className="bg-white rounded p-2">
+              <strong>Müşteri:</strong> client.georgia@consulting19.com / ClientGeorgia2025!
+            </div>
+          </div>
+        </div>
+
         {/* Login Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           {showProfileMissing && (
