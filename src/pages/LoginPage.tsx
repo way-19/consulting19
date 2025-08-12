@@ -89,7 +89,7 @@ const LoginPage = () => {
           setError(error.message)
         }
       } else {
-        console.log('✅ Quick login successful, NavigationHandler will handle redirect')
+        console.log('✅ Quick login successful, AuthContext will handle redirect')
       }
     } catch (err) {
       console.error('💥 Unexpected quick login error:', err)

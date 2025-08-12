@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase, Profile } from '../lib/supabase'
+import { useNavigate } from 'react-router-dom'
 
 interface AuthContextType {
   user: User | null
@@ -25,6 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [hasRedirected, setHasRedirected] = useState(false)
   
   // Prevent double initialization in StrictMode
   const didInit = useRef(false)
@@ -64,6 +66,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  // Handle role-based navigation
+  const handleRoleBasedNavigation = (userProfile: Profile) => {
+    if (hasRedirected) return
+    
+    console.log('🎯 Handling role-based navigation for:', userProfile.role)
+    setHasRedirected(true)
+    
+    // Use setTimeout to ensure navigation happens after current render cycle
+    setTimeout(() => {
+      const currentPath = window.location.pathname
+      console.log('📍 Current path:', currentPath)
+      
+      let targetPath = '/'
+      
+      switch (userProfile.role) {
+        case 'admin':
+          targetPath = '/admin-dashboard'
+          break
+        case 'consultant':
+          targetPath = '/consultant-dashboard'
+          break
+        case 'client':
+          targetPath = '/client-accounting'
+          break
+        default:
+          targetPath = '/'
+      }
+      
+      console.log('🔄 Navigating to:', targetPath)
+      
+      if (currentPath !== targetPath) {
+        window.location.href = targetPath
+      }
+    }, 100)
+  }
+
   useEffect(() => {
     // Prevent double initialization in StrictMode
     if (didInit.current) {
@@ -91,6 +129,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userProfile = await fetchProfile(session.user.id)
           if (isMounted) {
             setProfile(userProfile)
+            // Handle navigation after profile is loaded
+            if (window.location.pathname === '/login') {
+              handleRoleBasedNavigation(userProfile)
+            }
           }
         }
         
@@ -112,6 +154,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!isMounted) return
       
       console.log('🔔 Auth state changed:', event, session ? `Session exists for ${session.user.email}` : 'No session')
+      
+      if (event === 'SIGNED_OUT') {
+        setUser(null)
+        setProfile(null)
+        setHasRedirected(false)
+        return
+      }
+      
       setUser(session?.user || null)
       if (session?.user) {
         console.log('👤 Fetching profile for user:', session.user.email)
@@ -119,11 +169,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isMounted) {
           console.log('✅ Profile loaded, setting profile:', userProfile?.email, userProfile?.role)
           setProfile(userProfile)
+          
+          // Handle navigation after successful login
+          if (event === 'SIGNED_IN' && window.location.pathname === '/login') {
+            handleRoleBasedNavigation(userProfile)
+          }
         }
       } else {
         console.log('🚪 User logged out, clearing profile')
         if (isMounted) {
           setProfile(null)
+          setHasRedirected(false)
         }
       }
     })
@@ -136,21 +192,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [])
 
-  // Set loading to false when we have both user and profile, or when we're sure there's no user
-  useEffect(() => {
-    if (!loading) return // Already set to false
-    
-    if (user && profile) {
-      console.log('✅ User and profile loaded, setting loading to false')
-      setLoading(false)
-    } else if (!user) {
-      console.log('✅ No user, setting loading to false')
-      setLoading(false)
-    }
-  }, [user, profile, loading])
-
   const signIn = async (email: string, password: string) => {
     console.log('🔐 Attempting sign in for:', email)
+    setHasRedirected(false) // Reset redirect flag before login
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -167,6 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     console.log('🚪 Signing out...')
+    setHasRedirected(false)
     await supabase.auth.signOut()
   }
 
