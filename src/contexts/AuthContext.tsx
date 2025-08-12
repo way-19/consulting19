@@ -26,10 +26,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [hasRedirected, setHasRedirected] = useState(false)
   
   // Prevent double initialization in StrictMode
   const didInit = useRef(false)
+  const navigate = useNavigate()
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -66,40 +66,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  // Handle role-based navigation
-  const handleRoleBasedNavigation = (userProfile: Profile) => {
-    if (hasRedirected) return
+  const redirectBasedOnRole = (userProfile: Profile) => {
+    const currentPath = window.location.pathname
+    console.log('🎯 Redirecting based on role:', userProfile.role, 'from path:', currentPath)
     
-    console.log('🎯 Handling role-based navigation for:', userProfile.role)
-    setHasRedirected(true)
+    // Only redirect from login page
+    if (currentPath !== '/login') return
     
-    // Use setTimeout to ensure navigation happens after current render cycle
-    setTimeout(() => {
-      const currentPath = window.location.pathname
-      console.log('📍 Current path:', currentPath)
-      
-      let targetPath = '/'
-      
-      switch (userProfile.role) {
-        case 'admin':
-          targetPath = '/admin-dashboard'
-          break
-        case 'consultant':
-          targetPath = '/consultant-dashboard'
-          break
-        case 'client':
-          targetPath = '/client-accounting'
-          break
-        default:
-          targetPath = '/'
-      }
-      
-      console.log('🔄 Navigating to:', targetPath)
-      
-      if (currentPath !== targetPath) {
-        window.location.href = targetPath
-      }
-    }, 100)
+    let targetPath = '/'
+    
+    switch (userProfile.role) {
+      case 'admin':
+        targetPath = '/admin-dashboard'
+        break
+      case 'consultant':
+        targetPath = '/consultant-dashboard'
+        break
+      case 'client':
+        targetPath = '/client-accounting'
+        break
+      default:
+        targetPath = '/'
+    }
+    
+    console.log('🔄 Navigating to:', targetPath)
+    navigate(targetPath)
   }
 
   useEffect(() => {
@@ -129,9 +120,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userProfile = await fetchProfile(session.user.id)
           if (isMounted) {
             setProfile(userProfile)
-            // Handle navigation after profile is loaded
-            if (window.location.pathname === '/login') {
-              handleRoleBasedNavigation(userProfile)
+            if (userProfile) {
+              redirectBasedOnRole(userProfile)
             }
           }
         }
@@ -170,16 +160,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log('✅ Profile loaded, setting profile:', userProfile?.email, userProfile?.role)
           setProfile(userProfile)
           
-          // Handle navigation after successful login
-          if (event === 'SIGNED_IN' && window.location.pathname === '/login') {
-            handleRoleBasedNavigation(userProfile)
+          if (event === 'SIGNED_IN' && userProfile) {
+            redirectBasedOnRole(userProfile)
           }
         }
       } else {
         console.log('🚪 User logged out, clearing profile')
         if (isMounted) {
           setProfile(null)
-          setHasRedirected(false)
         }
       }
     })
@@ -194,7 +182,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     console.log('🔐 Attempting sign in for:', email)
-    setHasRedirected(false) // Reset redirect flag before login
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -211,7 +198,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     console.log('🚪 Signing out...')
-    setHasRedirected(false)
     await supabase.auth.signOut()
   }
 

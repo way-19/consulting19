@@ -1,8 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -77,7 +75,6 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-white">
           <Navbar />
           <main>
             <Routes>
@@ -142,49 +139,6 @@ function App() {
               />
               <Route 
                 path="/accounting-management" 
-                element={
-                  <ProtectedRoute requiredRole="consultant">
-                    <AccountingManagement />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/customers-management" 
-                element={
-                  <ProtectedRoute requiredRole="consultant">
-                    <CustomersManagement />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/client-services" 
-                element={
-                  <ProtectedRoute requiredRole="client">
-                    <ClientServices />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/client-accounting" 
-                element={
-                  <ProtectedRoute requiredRole="client">
-                    <ClientAccountingDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/admin-dashboard" 
-                element={
-                  <ProtectedRoute requiredRole="admin">
-                    <div className="min-h-screen flex items-center justify-center">
-                      <div className="text-center">
-                        <h1 className="text-4xl font-bold text-gray-900 mb-4">Admin Dashboard</h1>
-                        <p className="text-lg text-gray-600">Coming soon - Full admin panel</p>
-                      </div>
-                    </div>
-                  </ProtectedRoute>
-                } 
-              />
               <Route 
                 path="/client-accounting" 
                 element={
