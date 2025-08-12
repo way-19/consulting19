@@ -110,12 +110,16 @@ const ClientAccountingDashboard = () => {
   };
 
   const fetchAccountingProfile = async () => {
+    console.log('🔍 Fetching accounting profile for user:', profile?.id, profile?.email)
+    
     // First get the client record
     const { data: clientData } = await supabase
       .from('clients')
       .select('id')
       .eq('profile_id', profile?.id)
       .maybeSingle();
+
+    console.log('📋 Client record found:', clientData)
 
     if (!clientData) return;
 
@@ -130,6 +134,8 @@ const ClientAccountingDashboard = () => {
       `)
       .eq('client_id', clientData.id)
       .maybeSingle();
+
+    console.log('💼 Accounting profile found:', data)
 
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching accounting profile:', error);

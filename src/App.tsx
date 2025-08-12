@@ -184,7 +184,7 @@ function App() {
                 } 
               />
               <Route 
-                path="/client-dashboard" 
+                path="/client-accounting" 
                 element={
                   <ProtectedRoute requiredRole="client">
                     <ClientAccountingDashboard />

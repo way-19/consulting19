@@ -31,12 +31,13 @@ const LoginPage = () => {
         navigate('/consultant-dashboard')
         break
       case 'client':
-        navigate('/client-dashboard')
+        navigate('/client-accounting')
         break
       default:
         navigate('/')
     }
   }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -52,14 +53,8 @@ const LoginPage = () => {
           setError(error.message)
         }
       } else {
-        // Wait for profile to be loaded, then redirect
-        setTimeout(() => {
-          if (profile) {
-            redirectBasedOnRole(profile)
-          } else {
-            navigate('/')
-          }
-        }, 1500)
+        // Redirect will happen automatically via auth context
+        navigate('/')
       }
     } catch (err) {
       setError('An unexpected error occurred')
@@ -85,14 +80,8 @@ const LoginPage = () => {
           setError(error.message)
         }
       } else {
-        // Wait for profile to be loaded, then redirect
-        setTimeout(() => {
-          if (profile) {
-            redirectBasedOnRole(profile)
-          } else {
-            navigate('/')
-          }
-        }, 1500)
+        // Redirect will happen automatically via auth context
+        navigate('/')
       }
     } catch (err) {
       setError('An unexpected error occurred')

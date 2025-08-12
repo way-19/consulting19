@@ -166,7 +166,7 @@ const Navbar = () => {
                 
                 {profile.role === 'client' && (
                   <Link
-                    to="/client-dashboard"
+                    to="/client-accounting"
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm text-sm"
                   >
                     My Dashboard
