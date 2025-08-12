@@ -169,6 +169,24 @@ const ClientAccountingDashboard = () => {
   };
 
   const fetchMessages = async () => {
+    // First get the client record to get the client_id for accounting_clients
+    const { data: clientData } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('profile_id', profile?.id)
+      .maybeSingle();
+
+    if (!clientData) return;
+
+    // Then get the accounting_client record
+    const { data: accountingClientData } = await supabase
+      .from('accounting_clients')
+      .select('id')
+      .eq('client_id', clientData.id)
+      .maybeSingle();
+
+    if (!accountingClientData) return;
+
     const { data, error } = await supabase
       .from('accounting_messages')
       .select(`
@@ -178,7 +196,7 @@ const ClientAccountingDashboard = () => {
           email
         )
       `)
-      .eq('receiver_id', profile?.id)
+      .eq('client_id', accountingClientData.id)
       .order('created_at', { ascending: false });
 
     if (error) {
