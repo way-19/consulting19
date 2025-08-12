@@ -320,7 +320,7 @@ const ConsultantServices = () => {
                         </div>
                       ))}
                       {service.features.length > 3 && (
-                        <p className="text-xs text-gray-500 ml-3.5">+{service.features.length - 3} daha fazla</p>
+                        <p className="text-xs text-gray-500 ml-3.5">+{service.features.length - 3} more</p>
                       )}
                     </div>
                   </div>
