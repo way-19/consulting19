@@ -13,16 +13,6 @@ const LoginPage = () => {
   const { signIn, user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
 
-  console.log('🔍 LoginPage Debug:', {
-    email: email.length,
-    password: password.length,
-    loading,
-    authLoading,
-    hasUser: !!user,
-    hasProfile: !!profile,
-    profileRole: profile?.role
-  })
-
   // If already logged in, show dashboard button
   if (user && profile && !authLoading) {
     const goToDashboard = () => {
@@ -81,7 +71,14 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    console.log('🔐 Form submit attempt:', { email, password: password.length, loading, authLoading })
+    console.log('🔐 Form submit attempt:', { 
+      email, 
+      passwordLength: password.length, 
+      loading, 
+      authLoading,
+      isFormValid,
+      isButtonDisabled 
+    })
     
     // Prevent double submission
     if (loading || authLoading) {
@@ -110,16 +107,7 @@ const LoginPage = () => {
 
   // Check if form is valid
   const isFormValid = email.trim().length > 0 && password.trim().length > 0
-  const isButtonDisabled = loading || authLoading || !isFormValid
-
-  console.log('🔍 Form validation:', {
-    emailLength: email.trim().length,
-    passwordLength: password.trim().length,
-    isFormValid,
-    isButtonDisabled,
-    loading,
-    authLoading
-  })
+  const isButtonDisabled = loading || !isFormValid
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -330,6 +318,9 @@ const LoginPage = () => {
               <p>Button disabled: {isButtonDisabled ? 'YES' : 'NO'}</p>
               <p>Loading: {loading ? 'YES' : 'NO'}</p>
               <p>Auth Loading: {authLoading ? 'YES' : 'NO'}</p>
+              <p>Has User: {user ? 'YES' : 'NO'}</p>
+              <p>Has Profile: {profile ? 'YES' : 'NO'}</p>
+              <p>Profile Role: {profile?.role || 'None'}</p>
             </div>
 
             <button

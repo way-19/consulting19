@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', u.id)
+        .eq('auth_user_id', u.id)
         .single();
 
       if (!error && data) {
@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // create minimal profile if missing (allowed by RLS insert policy)
       const payload = {
-        user_id: u.id,
+        auth_user_id: u.id,
         email: u.email || '',
         role: 'client' as const
       };
@@ -77,16 +77,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     (async () => {
       console.log('🚀 AuthProvider initializing...');
       
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('📋 Initial session check:', session ? `Session found for ${session.user.email}` : 'No session');
-      
-      if (!mounted) return;
-      
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchOrCreateProfile(session.user);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('📋 Initial session check:', session ? `Session found for ${session.user.email}` : 'No session');
+        
+        if (!mounted) return;
+        
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchOrCreateProfile(session.user);
+        }
+      } catch (error) {
+        console.error('❌ Error in initial auth check:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     })();
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, sess) => {
@@ -96,11 +103,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(sess?.user ?? null);
       if (sess?.user) {
-        await fetchOrCreateProfile(sess.user);
+        try {
+          await fetchOrCreateProfile(sess.user);
+        } catch (error) {
+          console.error('❌ Error fetching profile on auth change:', error);
+        }
       } else {
         setProfile(null);
       }
-      setLoading(false);
+      
+      if (mounted) {
+        setLoading(false);
+      }
     });
     
     return () => {
