@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Plus, Edit, Trash2, Eye, DollarSign, Clock, Users, Star, Settings, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, DollarSign, Clock, Users, Star, Settings, Save, X, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface CustomService {
   id: string;
@@ -200,6 +201,17 @@ const ConsultantServices = () => {
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Back Button */}
+          <div className="mb-4">
+            <Link 
+              to="/consultant-dashboard"
+              className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Link>
+          </div>
+          
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Özel Hizmetlerim</h1>
