@@ -164,7 +164,7 @@ const CustomersManagement = () => {
         consultant:consultant_id (
           full_name,
           email,
-          country
+          profiles!inner(country)
         )
       `)
       .eq('consultant_id', profile?.id)
@@ -179,16 +179,13 @@ const CustomersManagement = () => {
       .from('legacy_orders')
       .select(`
         *,
-        client:client_id (
+        consultant:consultant_id (
           full_name,
           email,
-          profile:profile_id (
-            full_name,
-            email
-          )
+          profiles!inner(country)
         )
       `)
-      .eq('consultant_id', profile?.id)
+      .neq('consultant_id', profile?.id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -202,12 +199,11 @@ const CustomersManagement = () => {
         *,
         consultant:consultant_id (
           full_name,
-          email,
-          country
+          email
         )
       `)
       .eq('consultant_id', profile?.id)
-      .neq('consultant_id', profile?.id)
+      .not('notes', 'is', null)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
