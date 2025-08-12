@@ -443,7 +443,6 @@ const ConsultantDashboard = () => {
               >
                 Refresh Clients
               </button>
-              </div>
             </div>
 
             {/* Enhanced Upcoming Tasks */}
