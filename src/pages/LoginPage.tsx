@@ -13,6 +13,16 @@ const LoginPage = () => {
   const { signIn, user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
 
+  console.log('🔍 LoginPage Debug:', {
+    email: email.length,
+    password: password.length,
+    loading,
+    authLoading,
+    hasUser: !!user,
+    hasProfile: !!profile,
+    profileRole: profile?.role
+  })
+
   // If already logged in, show dashboard button
   if (user && profile && !authLoading) {
     const goToDashboard = () => {
@@ -71,6 +81,8 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log('🔐 Form submit attempt:', { email, password: password.length, loading, authLoading })
+    
     // Prevent double submission
     if (loading || authLoading) {
       console.log('⚠️ Already loading, preventing submission')
@@ -83,10 +95,7 @@ const LoginPage = () => {
     try {
       console.log('🔐 Login attempt for:', email)
       await signIn(email, password)
-      console.log('✅ Login successful, NavigationHandler will handle redirect')
-      // Clear form to prevent resubmission
-      setEmail('')
-      setPassword('')
+      console.log('✅ Login successful')
     } catch (err: any) {
       console.error('❌ Login error:', err.message)
       if (err.message === 'Invalid login credentials') {
@@ -99,33 +108,18 @@ const LoginPage = () => {
     }
   }
 
-  const quickLogin = async (userEmail: string, userPassword: string) => {
-    // Prevent double submission
-    if (loading || authLoading) {
-      console.log('⚠️ Already loading, preventing quick login')
-      return
-    }
-    
-    setEmail(userEmail)
-    setPassword(userPassword)
-    setError('')
-    setLoading(true)
+  // Check if form is valid
+  const isFormValid = email.trim().length > 0 && password.trim().length > 0
+  const isButtonDisabled = loading || authLoading || !isFormValid
 
-    try {
-      console.log('⚡ Quick login attempt for:', userEmail)
-      await signIn(userEmail, userPassword)
-      console.log('✅ Quick login successful, NavigationHandler will handle redirect')
-    } catch (err: any) {
-      console.error('❌ Quick login error:', err.message)
-      if (err.message === 'Invalid login credentials') {
-        setError(`User ${userEmail} not found. Please create this user in your Supabase Dashboard.`)
-      } else {
-        setError(err.message)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
+  console.log('🔍 Form validation:', {
+    emailLength: email.trim().length,
+    passwordLength: password.trim().length,
+    isFormValid,
+    isButtonDisabled,
+    loading,
+    authLoading
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -148,98 +142,96 @@ const LoginPage = () => {
           <p className="text-gray-600">Sign in to your account to continue</p>
         </div>
 
-        {/* Quick Login Buttons for Development */}
+        {/* Quick Login Credentials Display */}
         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <h3 className="text-sm font-medium text-green-800 mb-3">🏢 Production Users Ready</h3>
+          <h3 className="text-sm font-medium text-blue-800 mb-3">🏢 Production Users Ready</h3>
           <p className="text-xs text-blue-700 mb-3 font-medium">
-            Production users are created automatically. Login with:
+            Copy these credentials to login:
           </p>
-          <div className="space-y-2">
-            <div className="space-y-3">
-              <div className="bg-white rounded-lg p-3 border border-blue-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <span>👑</span>
-                  <span className="font-medium text-gray-900">Admin Panel</span>
+          <div className="space-y-3">
+            <div className="bg-white rounded-lg p-3 border border-blue-200">
+              <div className="flex items-center space-x-2 mb-2">
+                <span>👑</span>
+                <span className="font-medium text-gray-900">Admin Panel</span>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-xs text-gray-600">Email:</label>
+                  <input 
+                    type="text" 
+                    value="admin@consulting19.com" 
+                    readOnly 
+                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
+                    onClick={(e) => e.currentTarget.select()}
+                  />
                 </div>
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-600 w-12">Email:</span>
-                    <input 
-                      type="text" 
-                      value="admin@consulting19.com" 
-                      readOnly 
-                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
-                      onClick={(e) => e.currentTarget.select()}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-600 w-12">Pass:</span>
-                    <input 
-                      type="text" 
-                      value="SecureAdmin2025!" 
-                      readOnly 
-                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
-                      onClick={(e) => e.currentTarget.select()}
-                    />
-                  </div>
+                <div>
+                  <label className="text-xs text-gray-600">Password:</label>
+                  <input 
+                    type="text" 
+                    value="SecureAdmin2025!" 
+                    readOnly 
+                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
+                    onClick={(e) => e.currentTarget.select()}
+                  />
                 </div>
               </div>
+            </div>
 
-              <div className="bg-white rounded-lg p-3 border border-blue-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <span>🇬🇪</span>
-                  <span className="font-medium text-gray-900">Georgia Consultant</span>
+            <div className="bg-white rounded-lg p-3 border border-blue-200">
+              <div className="flex items-center space-x-2 mb-2">
+                <span>🇬🇪</span>
+                <span className="font-medium text-gray-900">Georgia Consultant</span>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-xs text-gray-600">Email:</label>
+                  <input 
+                    type="text" 
+                    value="georgia@consulting19.com" 
+                    readOnly 
+                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
+                    onClick={(e) => e.currentTarget.select()}
+                  />
                 </div>
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-600 w-12">Email:</span>
-                    <input 
-                      type="text" 
-                      value="georgia@consulting19.com" 
-                      readOnly 
-                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
-                      onClick={(e) => e.currentTarget.select()}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-600 w-12">Pass:</span>
-                    <input 
-                      type="text" 
-                      value="GeorgiaConsult2025!" 
-                      readOnly 
-                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
-                      onClick={(e) => e.currentTarget.select()}
-                    />
-                  </div>
+                <div>
+                  <label className="text-xs text-gray-600">Password:</label>
+                  <input 
+                    type="text" 
+                    value="GeorgiaConsult2025!" 
+                    readOnly 
+                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
+                    onClick={(e) => e.currentTarget.select()}
+                  />
                 </div>
               </div>
+            </div>
 
-              <div className="bg-white rounded-lg p-3 border border-blue-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <span>👤</span>
-                  <span className="font-medium text-gray-900">Test Client</span>
+            <div className="bg-white rounded-lg p-3 border border-blue-200">
+              <div className="flex items-center space-x-2 mb-2">
+                <span>👤</span>
+                <span className="font-medium text-gray-900">Test Client</span>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-xs text-gray-600">Email:</label>
+                  <input 
+                    type="text" 
+                    value="client.georgia@consulting19.com" 
+                    readOnly 
+                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
+                    onClick={(e) => e.currentTarget.select()}
+                  />
                 </div>
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-600 w-12">Email:</span>
-                    <input 
-                      type="text" 
-                      value="client.georgia@consulting19.com" 
-                      readOnly 
-                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
-                      onClick={(e) => e.currentTarget.select()}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-600 w-12">Pass:</span>
-                    <input 
-                      type="text" 
-                      value="ClientGeorgia2025!" 
-                      readOnly 
-                      className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono"
-                      onClick={(e) => e.currentTarget.select()}
-                    />
-                  </div>
+                <div>
+                  <label className="text-xs text-gray-600">Password:</label>
+                  <input 
+                    type="text" 
+                    value="ClientGeorgia2025!" 
+                    readOnly 
+                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono select-all"
+                    onClick={(e) => e.currentTarget.select()}
+                  />
                 </div>
               </div>
             </div>
@@ -269,7 +261,10 @@ const LoginPage = () => {
                   autoComplete="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    console.log('📧 Email changed:', e.target.value)
+                    setEmail(e.target.value)
+                  }}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                   placeholder="Enter your email"
                 />
@@ -285,14 +280,24 @@ const LoginPage = () => {
                 <input
                   id="password"
                   name="password"
-                  type="text"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    console.log('🔑 Password changed, length:', e.target.value.length)
+                    setPassword(e.target.value)
+                  }}
                   className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                   placeholder="Enter your password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
 
@@ -316,10 +321,25 @@ const LoginPage = () => {
               </div>
             </div>
 
+            {/* Debug Info */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs">
+              <p><strong>Debug:</strong></p>
+              <p>Email length: {email.trim().length}</p>
+              <p>Password length: {password.trim().length}</p>
+              <p>Form valid: {isFormValid ? 'YES' : 'NO'}</p>
+              <p>Button disabled: {isButtonDisabled ? 'YES' : 'NO'}</p>
+              <p>Loading: {loading ? 'YES' : 'NO'}</p>
+              <p>Auth Loading: {authLoading ? 'YES' : 'NO'}</p>
+            </div>
+
             <button
               type="submit"
-              disabled={loading || authLoading || !email.trim() || !password.trim()}
-              className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isButtonDisabled}
+              className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+                isButtonDisabled
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-purple-600 text-white hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2'
+              }`}
             >
               {loading || authLoading ? 'Signing in...' : 'Sign In'}
             </button>
