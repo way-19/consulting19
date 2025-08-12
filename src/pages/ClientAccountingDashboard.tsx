@@ -110,7 +110,7 @@ const ClientAccountingDashboard = () => {
       .from('clients')
       .select('id')
       .eq('profile_id', profile?.id)
-      .single();
+      .maybeSingle();
 
     if (!clientData) return;
 
@@ -124,7 +124,7 @@ const ClientAccountingDashboard = () => {
         )
       `)
       .eq('client_id', clientData.id)
-      .single();
+      .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching accounting profile:', error);
