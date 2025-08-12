@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -22,15 +22,15 @@ import AccountingManagement from './pages/AccountingManagement';
 import ClientAccountingDashboard from './pages/ClientAccountingDashboard';
 import CustomersManagement from './pages/CustomersManagement';
 
-function roleHome(role?: string) {
+const roleHome = (role?: string) => {
   if (role === 'admin') return '/admin-dashboard';
   if (role === 'consultant') return '/consultant-dashboard';
   if (role === 'client') return '/client-accounting';
   return '/';
-}
+};
 
 function NavigationHandler() {
-  const { user, profile, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -38,7 +38,7 @@ function NavigationHandler() {
     if (loading) return;
     const path = location.pathname;
 
-    if (!user) {
+    if (!session) {
       if (path !== '/login' && path !== '/signup' && path !== '/' && path !== '/about' && path !== '/contact' && path !== '/countries' && path !== '/services' && !path.startsWith('/countries/') && !path.startsWith('/services/')) {
         navigate('/login', { replace: true });
       }
@@ -48,7 +48,7 @@ function NavigationHandler() {
     if (path === '/login' || path === '/signup') {
       navigate(roleHome(profile?.role), { replace: true });
     }
-  }, [user, profile?.role, loading, location.pathname, navigate]);
+  }, [session, profile?.role, loading, location.pathname, navigate]);
 
   return null;
 }
@@ -177,10 +177,26 @@ function App() {
             } 
           />
           <Route 
+            path="/customers-management" 
+            element={
+              <ProtectedRoute requiredRole="consultant">
+                <CustomersManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/client-accounting" 
             element={
               <ProtectedRoute requiredRole="client">
                 <ClientAccountingDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/client-services" 
+            element={
+              <ProtectedRoute requiredRole="client">
+                <ClientServices />
               </ProtectedRoute>
             } 
           />

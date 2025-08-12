@@ -1,7 +1,14 @@
 import React, { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useLocation, useEffect } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Globe, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
+
+const roleHome = (role?: string) => {
+  if (role === 'admin') return '/admin-dashboard';
+  if (role === 'consultant') return '/consultant-dashboard';
+  if (role === 'client') return '/client-accounting';
+  return '/';
+};
 
 const LoginPage = () => {
   const [email, setEmail] = useState('')
@@ -10,36 +17,23 @@ const LoginPage = () => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   
-  const { signIn, profile } = useAuth()
+  const { signIn, session, profile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
   const from = location.state?.from?.pathname || '/'
 
-  // Redirect based on user role after successful login
-  const redirectBasedOnRole = (userProfile: any) => {
-    if (!userProfile) {
-      navigate('/')
-      return
+  // Redirect if already signed in
+  useEffect(() => {
+    if (session && profile) {
+      navigate(roleHome(profile.role), { replace: true });
     }
-
-    switch (userProfile.role) {
-      case 'admin':
-        navigate('/admin-dashboard')
-        break
-      case 'consultant':
-        navigate('/consultant-dashboard')
-        break
-      case 'client':
-        navigate('/client-accounting')
-        break
-      default:
-        navigate('/')
-    }
-  }
+  }, [session, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (session) return; // prevent re-login when already signed in
+    
     setError('')
     setLoading(true)
 
@@ -70,6 +64,8 @@ const LoginPage = () => {
 
   // Quick login buttons for testing
   const quickLogin = async (userEmail: string, userPassword: string) => {
+    if (session) return; // prevent re-login when already signed in
+    
     // Otomatik olarak email ve şifre alanlarını doldur
     setEmail(userEmail)
     setPassword(userPassword)
