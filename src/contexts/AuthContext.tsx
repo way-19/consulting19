@@ -1,9 +1,8 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { User } from '@supabase/supabase-js';
-import { User } from '@supabase/supabase-js';
-import { supabase, Profile } from '../lib/supabase';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import type { User, Session } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
+import type { Profile } from '../lib/supabase';
 
-type Session = any;
 type AuthValue = { 
   user: User | null;
   session: Session | null; 
