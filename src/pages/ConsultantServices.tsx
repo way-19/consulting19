@@ -122,7 +122,7 @@ const ConsultantServices = () => {
   };
 
   const handleDelete = async (serviceId: string) => {
-    if (!confirm('Bu hizmeti silmek istediğinizden emin misiniz?')) return;
+    if (!confirm('Are you sure you want to delete this service?')) return;
 
     try {
       const { error } = await supabase
@@ -214,7 +214,6 @@ const ConsultantServices = () => {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Özel Hizmetlerim</h1>
               <h1 className="text-2xl font-bold text-gray-900">My Custom Services</h1>
               <p className="text-gray-600 mt-1">Create and offer custom services to your clients</p>
             </div>
@@ -223,7 +222,6 @@ const ConsultantServices = () => {
               className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
             >
               <Plus className="h-5 w-5" />
-              <span>Yeni Hizmet</span>
               <span>New Service</span>
             </button>
           </div>
@@ -343,11 +341,11 @@ const ConsultantServices = () => {
                   <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
                     <div className="text-center">
                       <p className="text-lg font-bold text-blue-600">{service.orders_count || 0}</p>
-                      <p className="text-xs text-gray-600">Sipariş</p>
+                      <p className="text-xs text-gray-600">Orders</p>
                     </div>
                     <div className="text-center">
                       <p className="text-lg font-bold text-green-600">${(service.total_revenue || 0).toLocaleString()}</p>
-                      <p className="text-xs text-gray-600">Gelir</p>
+                      <p className="text-xs text-gray-600">Revenue</p>
                     </div>
                   </div>
 
@@ -358,7 +356,7 @@ const ConsultantServices = () => {
                       className="flex-1 bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center justify-center space-x-2"
                     >
                       <Edit className="h-4 w-4" />
-                      <span>Düzenle</span>
+                      <span>Edit</span>
                     </button>
                     <button
                       onClick={() => handleDelete(service.id)}
@@ -396,7 +394,7 @@ const ConsultantServices = () => {
               {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hizmet Başlığı *
+                  Service Title *
                 </label>
                 <input
                   type="text"
@@ -404,28 +402,28 @@ const ConsultantServices = () => {
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Örn: Gürcistan Şirket Sertifikası"
+                  placeholder="e.g: Georgia Company Certificate"
                 />
               </div>
 
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Açıklama
+                  Description
                 </label>
                 <textarea
                   rows={4}
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Hizmetinizin detaylı açıklaması..."
+                  placeholder="Detailed description of your service..."
                 />
               </div>
 
               {/* Features */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hizmet Özellikleri
+                  Service Features
                 </label>
                 <div className="space-y-2">
                   {formData.features.map((feature, index) => (
@@ -435,7 +433,7 @@ const ConsultantServices = () => {
                         value={feature}
                         onChange={(e) => updateFeature(index, e.target.value)}
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Özellik açıklaması"
+                        placeholder="Feature description"
                       />
                       {formData.features.length > 1 && (
                         <button
@@ -454,7 +452,7 @@ const ConsultantServices = () => {
                     className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>Özellik Ekle</span>
+                    <span>Add Feature</span>
                   </button>
                 </div>
               </div>
@@ -463,7 +461,7 @@ const ConsultantServices = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fiyat *
+                    Price *
                   </label>
                   <input
                     type="number"
@@ -478,7 +476,7 @@ const ConsultantServices = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Para Birimi
+                    Currency
                   </label>
                   <select
                     value={formData.currency}
@@ -509,18 +507,18 @@ const ConsultantServices = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kategori
+                    Category
                   </label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="custom">Özel Hizmet</option>
-                    <option value="document">Belge İşlemleri</option>
-                    <option value="certification">Sertifikasyon</option>
-                    <option value="consultation">Danışmanlık</option>
-                    <option value="legal">Hukuki İşlemler</option>
+                    <option value="custom">Custom Service</option>
+                    <option value="document">Document Processing</option>
+                    <option value="certification">Certification</option>
+                    <option value="consultation">Consultation</option>
+                    <option value="legal">Legal Services</option>
                   </select>
                 </div>
               </div>
@@ -535,7 +533,7 @@ const ConsultantServices = () => {
                   className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                 />
                 <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
-                  Hizmeti aktif olarak yayınla
+                  Publish service as active
                 </label>
               </div>
 
@@ -546,14 +544,14 @@ const ConsultantServices = () => {
                   onClick={resetForm}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
-                  İptal
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
                 >
                   <Save className="h-5 w-5" />
-                  <span>{editingService ? 'Güncelle' : 'Kaydet'}</span>
+                  <span>{editingService ? 'Update' : 'Save'}</span>
                 </button>
               </div>
             </form>
