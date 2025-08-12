@@ -8,292 +8,272 @@ import {
   Search, 
   Filter, 
   Users, 
-  Globe, 
-  Send, 
-  Eye,
-  Edit,
   Plus,
+  Eye, 
+  Edit,
   MessageSquare,
-  DollarSign,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  RefreshCw,
-  TrendingUp,
-  BarChart3,
-  MapPin,
-  Building,
-  Mail,
   Phone,
+  Mail,
+  MapPin,
   Calendar,
-  FileText,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
   Star,
-  ArrowRight,
-  ExternalLink
+  DollarSign,
+  FileText,
+  Settings,
+  RefreshCw,
+  Download,
+  Upload,
+  MoreVertical,
+  UserPlus,
+  Building,
+  Globe
 } from 'lucide-react';
 
-interface CrossCountryOrder {
+interface AssignedClient {
   id: string;
-  order_number: string;
-  source_consultant_id: string;
-  target_consultant_id: string;
-  source_country: string;
-  target_country: string;
-  client_name: string;
-  client_email: string;
-  client_phone?: string;
-  service_type: string;
-  service_details: any;
-  total_amount: number;
-  referral_commission: number;
-  consultant_commission: number;
-  platform_fee: number;
-  status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled' | 'rejected';
+  profile_id: string;
+  assigned_consultant_id: string;
+  company_name?: string;
+  phone?: string;
+  status: 'new' | 'in_progress' | 'completed' | 'on_hold';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
-  estimated_completion_days: number;
-  notes?: string;
+  service_type: string;
+  progress: number;
+  satisfaction_rating?: number;
   created_at: string;
   updated_at: string;
-  source_consultant?: {
-    full_name: string;
+  profile?: {
+    id: string;
     email: string;
-    country: string;
+    full_name?: string;
+    country?: string;
   };
-  target_consultant?: {
-    full_name: string;
-    email: string;
-    country: string;
-  };
+  // Calculated fields
+  total_orders?: number;
+  total_revenue?: number;
+  last_contact?: string;
+  next_deadline?: string;
 }
 
-interface ConsultantReferral {
-  id: string;
-  referring_consultant_id: string;
-  receiving_consultant_id: string;
-  order_id: string;
-  client_email: string;
-  service_type: string;
-  referral_fee: number;
-  status: 'pending' | 'confirmed' | 'paid' | 'cancelled';
-  paid_at?: string;
-  created_at: string;
-}
-
-interface NewOrderForm {
-  target_country: string;
-  target_consultant_id: string;
-  client_name: string;
-  client_email: string;
-  client_phone: string;
-  service_type: string;
-  service_details: {
-    company_name?: string;
-    business_type?: string;
-    special_requirements?: string;
-    urgency_reason?: string;
-  };
-  total_amount: number;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  estimated_completion_days: number;
-  notes: string;
+interface ClientStats {
+  total: number;
+  new: number;
+  in_progress: number;
+  completed: number;
+  on_hold: number;
+  high_priority: number;
+  total_revenue: number;
+  avg_satisfaction: number;
 }
 
 const CustomersManagement = () => {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<'received' | 'sent' | 'referrals' | 'new-order'>('received');
-  const [receivedOrders, setReceivedOrders] = useState<CrossCountryOrder[]>([]);
-  const [sentOrders, setSentOrders] = useState<CrossCountryOrder[]>([]);
-  const [referrals, setReferrals] = useState<ConsultantReferral[]>([]);
-  const [consultants, setConsultants] = useState<any[]>([]);
+  const [clients, setClients] = useState<AssignedClient[]>([]);
+  const [filteredClients, setFilteredClients] = useState<AssignedClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [countryFilter, setCountryFilter] = useState('all');
-  const [selectedOrder, setSelectedOrder] = useState<CrossCountryOrder | null>(null);
-  const [showOrderModal, setShowOrderModal] = useState(false);
-  const [showNewOrderForm, setShowNewOrderForm] = useState(false);
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [serviceFilter, setServiceFilter] = useState('all');
+  const [sortBy, setSortBy] = useState<'name' | 'created_at' | 'progress' | 'revenue' | 'last_contact'>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [selectedClient, setSelectedClient] = useState<AssignedClient | null>(null);
+  const [showClientModal, setShowClientModal] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [newOrderForm, setNewOrderForm] = useState<NewOrderForm>({
-    target_country: '',
-    target_consultant_id: '',
-    client_name: '',
-    client_email: '',
-    client_phone: '',
-    service_type: 'company_formation',
-    service_details: {},
-    total_amount: 0,
-    priority: 'medium',
-    estimated_completion_days: 14,
-    notes: ''
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
+  const [stats, setStats] = useState<ClientStats>({
+    total: 0,
+    new: 0,
+    in_progress: 0,
+    completed: 0,
+    on_hold: 0,
+    high_priority: 0,
+    total_revenue: 0,
+    avg_satisfaction: 0
   });
-
-  // Stats calculations
-  const totalReceived = receivedOrders.length;
-  const totalSent = sentOrders.length;
-  const completedOrders = [...receivedOrders, ...sentOrders].filter(o => o.status === 'completed').length;
-  const totalReferralEarnings = referrals.filter(r => r.status === 'paid').reduce((sum, r) => sum + r.referral_fee, 0);
-  const totalConsultantEarnings = receivedOrders.filter(o => o.payment_status === 'paid').reduce((sum, o) => sum + o.consultant_commission, 0);
 
   useEffect(() => {
     if (profile?.id) {
-      fetchData();
+      fetchClients();
     }
   }, [profile]);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    applyFiltersAndSort();
+  }, [clients, searchTerm, statusFilter, priorityFilter, serviceFilter, sortBy, sortOrder]);
+
+  const fetchClients = async () => {
     try {
-      await Promise.all([
-        fetchReceivedOrders(),
-        fetchSentOrders(),
-        fetchReferrals(),
-        fetchConsultants()
-      ]);
+      setLoading(true);
+      console.log('🔍 Fetching all clients for consultant:', profile?.id);
+      
+      const { data, error } = await supabase
+        .from('clients')
+        .select(`
+          *,
+          profile:profile_id (
+            id,
+            email,
+            full_name,
+            country
+          )
+        `)
+        .eq('assigned_consultant_id', profile?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error fetching clients:', error);
+        return;
+      }
+
+      console.log('✅ Fetched clients:', data?.length || 0);
+      
+      // Calculate additional stats for each client
+      const enrichedClients = await Promise.all(
+        (data || []).map(async (client) => {
+          // Get order count and revenue
+          const { data: orders } = await supabase
+            .from('legacy_orders')
+            .select('total_amount, status, created_at')
+            .eq('client_id', client.profile_id);
+
+          const totalOrders = orders?.length || 0;
+          const totalRevenue = orders?.reduce((sum, order) => sum + parseFloat(order.total_amount), 0) || 0;
+          const lastContact = orders?.[0]?.created_at || client.created_at;
+
+          return {
+            ...client,
+            total_orders: totalOrders,
+            total_revenue: totalRevenue,
+            last_contact: lastContact
+          };
+        })
+      );
+
+      setClients(enrichedClients);
+      calculateStats(enrichedClients);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('💥 Error in fetchClients:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchReceivedOrders = async () => {
-    const { data, error } = await supabase
-      .from('legacy_orders')
-      .select(`
-        *,
-        consultant:consultant_id (
-          full_name,
-          email
-        )
-      `)
-      .eq('consultant_id', profile?.id)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    setReceivedOrders(data || []);
+  const calculateStats = (clientData: AssignedClient[]) => {
+    const stats: ClientStats = {
+      total: clientData.length,
+      new: clientData.filter(c => c.status === 'new').length,
+      in_progress: clientData.filter(c => c.status === 'in_progress').length,
+      completed: clientData.filter(c => c.status === 'completed').length,
+      on_hold: clientData.filter(c => c.status === 'on_hold').length,
+      high_priority: clientData.filter(c => c.priority === 'high' || c.priority === 'urgent').length,
+      total_revenue: clientData.reduce((sum, c) => sum + (c.total_revenue || 0), 0),
+      avg_satisfaction: clientData.filter(c => c.satisfaction_rating).length > 0 
+        ? clientData.reduce((sum, c) => sum + (c.satisfaction_rating || 0), 0) / clientData.filter(c => c.satisfaction_rating).length
+        : 0
+    };
+    setStats(stats);
   };
 
-  const fetchSentOrders = async () => {
-    const { data, error } = await supabase
-      .from('legacy_orders')
-      .select(`
-        *,
-        target_consultant:consultant_id (
-          full_name,
-          email
-        )
-      `)
-      .neq('consultant_id', profile?.id)
-      .order('created_at', { ascending: false });
+  const applyFiltersAndSort = () => {
+    let filtered = [...clients];
 
-    if (error) throw error;
-    setSentOrders(data || []);
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(client => 
+        client.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.profile?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.profile?.country?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(client => client.status === statusFilter);
+    }
+
+    // Apply priority filter
+    if (priorityFilter !== 'all') {
+      filtered = filtered.filter(client => client.priority === priorityFilter);
+    }
+
+    // Apply service filter
+    if (serviceFilter !== 'all') {
+      filtered = filtered.filter(client => client.service_type === serviceFilter);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any;
+      
+      switch (sortBy) {
+        case 'name':
+          aValue = a.company_name || a.profile?.full_name || a.profile?.email || '';
+          bValue = b.company_name || b.profile?.full_name || b.profile?.email || '';
+          break;
+        case 'created_at':
+          aValue = new Date(a.created_at);
+          bValue = new Date(b.created_at);
+          break;
+        case 'progress':
+          aValue = a.progress;
+          bValue = b.progress;
+          break;
+        case 'revenue':
+          aValue = a.total_revenue || 0;
+          bValue = b.total_revenue || 0;
+          break;
+        case 'last_contact':
+          aValue = new Date(a.last_contact || a.created_at);
+          bValue = new Date(b.last_contact || b.created_at);
+          break;
+        default:
+          aValue = a.created_at;
+          bValue = b.created_at;
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    setFilteredClients(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
-  const fetchReferrals = async () => {
-    const { data, error } = await supabase
-      .from('legacy_orders')
-      .select(`
-        *,
-        consultant:consultant_id (
-          full_name,
-          email
-        )
-      `)
-      .eq('consultant_id', profile?.id)
-      .not('notes', 'is', null)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    setReferrals(data || []);
-  };
-
-  const fetchConsultants = async () => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(`
-        id,
-        full_name,
-        email,
-        country,
-        consultant_country_assignments!inner (
-          country_id,
-          countries (
-            name,
-            flag_emoji
-          )
-        )
-      `)
-      .eq('role', 'consultant')
-      .neq('id', profile?.id);
-
-    if (error) throw error;
-    setConsultants(data || []);
-  };
-
-  const handleCreateOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const updateClientStatus = async (clientId: string, newStatus: string) => {
     try {
-      const orderData = {
-        source_consultant_id: profile?.id,
-        target_consultant_id: newOrderForm.target_consultant_id,
-        source_country: profile?.country || 'Georgia',
-        target_country: newOrderForm.target_country,
-        client_name: newOrderForm.client_name,
-        client_email: newOrderForm.client_email,
-        client_phone: newOrderForm.client_phone,
-        service_type: newOrderForm.service_type,
-        service_details: newOrderForm.service_details,
-        total_amount: newOrderForm.total_amount,
-        priority: newOrderForm.priority,
-        estimated_completion_days: newOrderForm.estimated_completion_days,
-        notes: newOrderForm.notes
-      };
-
       const { error } = await supabase
-        .from('cross_country_orders')
-        .insert([orderData]);
+        .from('clients')
+        .update({ status: newStatus })
+        .eq('id', clientId);
 
       if (error) throw error;
-
-      await fetchData();
-      setShowNewOrderForm(false);
-      setNewOrderForm({
-        target_country: '',
-        target_consultant_id: '',
-        client_name: '',
-        client_email: '',
-        client_phone: '',
-        service_type: 'company_formation',
-        service_details: {},
-        total_amount: 0,
-        priority: 'medium',
-        estimated_completion_days: 14,
-        notes: ''
-      });
-      
-      alert('Cross-country order created successfully!');
+      await fetchClients();
     } catch (error) {
-      console.error('Error creating order:', error);
-      alert('Failed to create order');
+      console.error('Error updating client status:', error);
     }
   };
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateClientPriority = async (clientId: string, newPriority: string) => {
     try {
       const { error } = await supabase
-        .from('cross_country_orders')
-        .update({ 
-          status: newStatus,
-          actual_completion_date: newStatus === 'completed' ? new Date().toISOString() : null
-        })
-        .eq('id', orderId);
+        .from('clients')
+        .update({ priority: newPriority })
+        .eq('id', clientId);
 
       if (error) throw error;
-      await fetchData();
+      await fetchClients();
     } catch (error) {
-      console.error('Error updating order status:', error);
+      console.error('Error updating client priority:', error);
     }
   };
 
@@ -301,10 +281,8 @@ const CustomersManagement = () => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'accepted': return 'bg-purple-100 text-purple-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'cancelled': return 'bg-gray-100 text-gray-800';
+      case 'new': return 'bg-purple-100 text-purple-800';
+      case 'on_hold': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -319,37 +297,20 @@ const CustomersManagement = () => {
     }
   };
 
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'failed': return 'bg-red-100 text-red-800';
-      case 'refunded': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const getProgressColor = (progress: number) => {
+    if (progress >= 80) return 'bg-green-500';
+    if (progress >= 50) return 'bg-blue-500';
+    if (progress >= 25) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
-  const countries = [
-    { code: 'US', name: 'United States', flag: '🇺🇸' },
-    { code: 'GE', name: 'Georgia', flag: '🇬🇪' },
-    { code: 'EE', name: 'Estonia', flag: '🇪🇪' },
-    { code: 'AE', name: 'UAE', flag: '🇦🇪' },
-    { code: 'MT', name: 'Malta', flag: '🇲🇹' },
-    { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
-    { code: 'ES', name: 'Spain', flag: '🇪🇸' },
-    { code: 'CH', name: 'Switzerland', flag: '🇨🇭' }
-  ];
+  // Pagination
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentClients = filteredClients.slice(startIndex, endIndex);
 
-  const serviceTypes = [
-    { value: 'company_formation', label: 'Company Formation' },
-    { value: 'bank_account_opening', label: 'Bank Account Opening' },
-    { value: 'tax_residency', label: 'Tax Residency' },
-    { value: 'visa_residence', label: 'Visa & Residence' },
-    { value: 'accounting_services', label: 'Accounting Services' },
-    { value: 'legal_consulting', label: 'Legal Consulting' },
-    { value: 'investment_advisory', label: 'Investment Advisory' },
-    { value: 'custom_service', label: 'Custom Service' }
-  ];
+  const serviceTypes = Array.from(new Set(clients.map(c => c.service_type)));
 
   if (loading) {
     return (
@@ -360,836 +321,508 @@ const CustomersManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Back Button */}
-          <div className="mb-4">
-            <Link 
-              to="/consultant-dashboard"
-              className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Link>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Cross-Country Customers</h1>
-              <p className="text-gray-600 mt-1">Manage international client referrals and cross-border services</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setShowNewOrderForm(true)}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+    <>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            {/* Back Button */}
+            <div className="mb-4">
+              <Link 
+                to="/consultant-dashboard"
+                className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors"
               >
-                <Plus className="h-5 w-5" />
-                <span>Refer Client</span>
-              </button>
-              <button
-                onClick={fetchData}
-                className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
-              >
-                <RefreshCw className="h-5 w-5" />
-                <span>Refresh</span>
-              </button>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Link>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Received Orders</p>
-                <p className="text-3xl font-bold text-blue-600">{totalReceived}</p>
+                <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
+                <p className="text-gray-600 mt-1">Comprehensive client management and tracking system</p>
               </div>
-              <ArrowRight className="h-8 w-8 text-blue-600 rotate-180" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Sent Orders</p>
-                <p className="text-3xl font-bold text-green-600">{totalSent}</p>
-              </div>
-              <ArrowRight className="h-8 w-8 text-green-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-3xl font-bold text-purple-600">{completedOrders}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-purple-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Referral Earnings</p>
-                <p className="text-3xl font-bold text-orange-600">${totalReferralEarnings.toLocaleString()}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-orange-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Service Earnings</p>
-                <p className="text-3xl font-bold text-indigo-600">${totalConsultantEarnings.toLocaleString()}</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-indigo-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Commission Info Banner */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-8 border border-blue-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Cross-Country Commission Structure</h3>
-              <p className="text-gray-600">Revenue sharing for international client referrals and services</p>
-            </div>
-            <div className="grid grid-cols-3 gap-6 text-center">
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="text-2xl font-bold text-orange-600">10%</div>
-                <div className="text-sm text-gray-600">Referral Fee</div>
-                <div className="text-xs text-gray-500">To referring consultant</div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="text-2xl font-bold text-green-600">55%</div>
-                <div className="text-sm text-gray-600">Service Fee</div>
-                <div className="text-xs text-gray-500">To executing consultant</div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="text-2xl font-bold text-purple-600">35%</div>
-                <div className="text-sm text-gray-600">Platform Fee</div>
-                <div className="text-xs text-gray-500">To Consulting19</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              {[
-                { key: 'received', label: 'Received Orders', icon: ArrowRight, count: totalReceived, rotation: 'rotate-180' },
-                { key: 'sent', label: 'Sent Orders', icon: ArrowRight, count: totalSent, rotation: '' },
-                { key: 'referrals', label: 'My Referrals', icon: TrendingUp, count: referrals.length, rotation: '' },
-                { key: 'new-order', label: 'Refer Client', icon: Plus, count: 0, rotation: '' }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as any)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                    activeTab === tab.key
-                      ? 'border-purple-500 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <tab.icon className={`h-4 w-4 ${tab.rotation}`} />
-                  <span>{tab.label}</span>
-                  {tab.count > 0 && (
-                    <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Filters */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-              {/* Search */}
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search clients, orders, or countries..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Filters */}
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Filter className="h-4 w-4 text-gray-500" />
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="accepted">Accepted</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-
-                <select
-                  value={countryFilter}
-                  onChange={(e) => setCountryFilter(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                <button
+                  onClick={() => setShowClientModal(true)}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
                 >
-                  <option value="all">All Countries</option>
-                  {countries.map(country => (
-                    <option key={country.code} value={country.name}>
-                      {country.flag} {country.name}
-                    </option>
+                  <UserPlus className="h-5 w-5" />
+                  <span>Add Client</span>
+                </button>
+                <button
+                  onClick={fetchClients}
+                  className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                >
+                  <RefreshCw className="h-5 w-5" />
+                  <span>Refresh</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Stats Dashboard */}
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Clients</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+                </div>
+                <Users className="h-8 w-8 text-blue-600" />
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">New</p>
+                  <p className="text-3xl font-bold text-purple-600">{stats.new}</p>
+                </div>
+                <UserPlus className="h-8 w-8 text-purple-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">In Progress</p>
+                  <p className="text-3xl font-bold text-blue-600">{stats.in_progress}</p>
+                </div>
+                <Clock className="h-8 w-8 text-blue-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Completed</p>
+                  <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">On Hold</p>
+                  <p className="text-3xl font-bold text-yellow-600">{stats.on_hold}</p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-yellow-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">High Priority</p>
+                  <p className="text-3xl font-bold text-red-600">{stats.high_priority}</p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-red-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                  <p className="text-3xl font-bold text-green-600">${stats.total_revenue.toLocaleString()}</p>
+                </div>
+                <DollarSign className="h-8 w-8 text-green-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Avg Rating</p>
+                  <p className="text-3xl font-bold text-yellow-600">{stats.avg_satisfaction.toFixed(1)}</p>
+                </div>
+                <Star className="h-8 w-8 text-yellow-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Advanced Filters */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+              {/* Search */}
+              <div className="lg:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Search Clients</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Name, email, company..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="all">All Status</option>
+                  <option value="new">New</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="on_hold">On Hold</option>
+                </select>
+              </div>
+
+              {/* Priority Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                <select
+                  value={priorityFilter}
+                  onChange={(e) => setPriorityFilter(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="all">All Priority</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+
+              {/* Service Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
+                <select
+                  value={serviceFilter}
+                  onChange={(e) => setServiceFilter(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="all">All Services</option>
+                  {serviceTypes.map(service => (
+                    <option key={service} value={service}>{service.replace('_', ' ').toUpperCase()}</option>
                   ))}
                 </select>
               </div>
+
+              {/* Sort By */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="created_at">Date Created</option>
+                  <option value="name">Name</option>
+                  <option value="progress">Progress</option>
+                  <option value="revenue">Revenue</option>
+                  <option value="last_contact">Last Contact</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Showing {currentClients.length} of {filteredClients.length} clients
+                {filteredClients.length !== stats.total && ` (filtered from ${stats.total} total)`}
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                >
+                  {sortOrder === 'asc' ? '↑ Ascending' : '↓ Descending'}
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Content */}
-          <div className="p-6">
-            {activeTab === 'received' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Orders Received from Other Countries</h3>
-                  <span className="text-sm text-gray-500">You earn 55% commission on these orders</span>
-                </div>
-                
-                {receivedOrders.length === 0 ? (
-                  <div className="text-center py-12">
-                    <ArrowRight className="h-12 w-12 text-gray-400 mx-auto mb-4 rotate-180" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Received Orders</h3>
-                    <p className="text-gray-600">No orders have been referred to you from other consultants yet.</p>
+          {/* Clients Table */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {currentClients.length === 0 ? (
+              <div className="text-center py-16">
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Clients Found</h3>
+                <p className="text-gray-600 mb-6">
+                  {filteredClients.length === 0 && stats.total === 0 
+                    ? 'No clients have been assigned to you yet.'
+                    : 'No clients match your current filters.'
+                  }
+                </p>
+                {filteredClients.length === 0 && stats.total === 0 && (
+                  <button
+                    onClick={() => setShowClientModal(true)}
+                    className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                  >
+                    Add Your First Client
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Table Header */}
+                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                  <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
+                    <div className="col-span-3">Client Information</div>
+                    <div className="col-span-2">Status & Priority</div>
+                    <div className="col-span-2">Progress & Service</div>
+                    <div className="col-span-2">Revenue & Orders</div>
+                    <div className="col-span-2">Contact Info</div>
+                    <div className="col-span-1">Actions</div>
                   </div>
-                ) : (
-                  receivedOrders
-                    .filter(order => {
-                      const matchesSearch = 
-                        order.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.client_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.order_number.toLowerCase().includes(searchTerm.toLowerCase());
-                      const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-                      const matchesCountry = countryFilter === 'all' || order.source_country === countryFilter;
-                      return matchesSearch && matchesStatus && matchesCountry;
-                    })
-                    .map((order) => (
-                      <div key={order.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
-                        <div className="flex items-start justify-between">
-                          {/* Left Side - Order Info */}
-                          <div className="flex-1 max-w-[40%]">
-                            <div className="flex items-center space-x-3 mb-3">
-                              <div className="bg-blue-100 rounded-lg p-2">
-                                <ArrowRight className="h-5 w-5 text-blue-600 rotate-180" />
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-semibold text-gray-900">{order.order_number}</h3>
-                                <p className="text-sm text-gray-500">
-                                  From {order.source_country} • {new Date(order.created_at).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
+                </div>
 
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2">
-                                <Building className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-700">{order.client_name}</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Mail className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-700">{order.client_email}</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <FileText className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-700">
-                                  {serviceTypes.find(s => s.value === order.service_type)?.label}
-                                </span>
+                {/* Table Body */}
+                <div className="divide-y divide-gray-200">
+                  {currentClients.map((client) => (
+                    <div key={client.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                      <div className="grid grid-cols-12 gap-4 items-center">
+                        {/* Client Information */}
+                        <div className="col-span-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+                              {(client.company_name || client.profile?.full_name || client.profile?.email || 'U')[0].toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {client.company_name || client.profile?.full_name || 'Unnamed Client'}
+                              </p>
+                              <p className="text-sm text-gray-600">{client.profile?.email}</p>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <Globe className="h-3 w-3 text-gray-400" />
+                                <span className="text-xs text-gray-500">{client.profile?.country || 'Unknown'}</span>
                               </div>
                             </div>
                           </div>
+                        </div>
 
-                          {/* Right Side - Status & Actions */}
-                          <div className="flex-1 max-w-[60%] ml-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              {/* Status */}
-                              <div>
-                                <div className="flex items-center space-x-2 mb-2">
-                                  <div className={`w-3 h-3 rounded-full ${getPriorityColor(order.priority)}`}></div>
-                                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                    {order.status.replace('_', ' ').toUpperCase()}
-                                  </span>
-                                </div>
-                                <div className={`px-3 py-1 rounded-full text-xs font-medium inline-block ${getPaymentStatusColor(order.payment_status)}`}>
-                                  Payment: {order.payment_status.toUpperCase()}
-                                </div>
-                              </div>
-
-                              {/* Financial Info */}
-                              <div>
-                                <div className="text-sm text-gray-600 mb-1">Total Amount</div>
-                                <div className="text-xl font-bold text-gray-900">${order.total_amount.toLocaleString()}</div>
-                                <div className="text-sm text-green-600 font-medium">
-                                  Your Commission: ${order.consultant_commission.toLocaleString()} (55%)
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  Referral Fee: ${order.referral_commission.toLocaleString()} (10%)
-                                </div>
-                              </div>
-
-                              {/* Actions */}
-                              <div className="flex flex-col space-y-2">
-                                <button
-                                  onClick={() => {
-                                    setSelectedOrder(order);
-                                    setShowOrderModal(true);
-                                  }}
-                                  className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center justify-center space-x-2"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                  <span>View Details</span>
-                                </button>
-
-                                {order.status === 'pending' && (
-                                  <div className="flex space-x-1">
-                                    <button
-                                      onClick={() => updateOrderStatus(order.id, 'accepted')}
-                                      className="flex-1 bg-green-50 text-green-600 px-3 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors text-xs"
-                                    >
-                                      Accept
-                                    </button>
-                                    <button
-                                      onClick={() => updateOrderStatus(order.id, 'rejected')}
-                                      className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors text-xs"
-                                    >
-                                      Reject
-                                    </button>
-                                  </div>
-                                )}
-
-                                {(order.status === 'accepted' || order.status === 'in_progress') && (
-                                  <select
-                                    value={order.status}
-                                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                  >
-                                    <option value="accepted">Accepted</option>
-                                    <option value="in_progress">In Progress</option>
-                                    <option value="completed">Completed</option>
-                                  </select>
-                                )}
-                              </div>
+                        {/* Status & Priority */}
+                        <div className="col-span-2">
+                          <div className="space-y-2">
+                            <select
+                              value={client.status}
+                              onChange={(e) => updateClientStatus(client.id, e.target.value)}
+                              className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${getStatusColor(client.status)}`}
+                            >
+                              <option value="new">New</option>
+                              <option value="in_progress">In Progress</option>
+                              <option value="completed">Completed</option>
+                              <option value="on_hold">On Hold</option>
+                            </select>
+                            <div className="flex items-center space-x-2">
+                              <div className={`w-3 h-3 rounded-full ${getPriorityColor(client.priority)}`}></div>
+                              <select
+                                value={client.priority}
+                                onChange={(e) => updateClientPriority(client.id, e.target.value)}
+                                className="text-xs border border-gray-300 rounded px-2 py-1"
+                              >
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                              </select>
                             </div>
+                          </div>
+                        </div>
 
-                            {/* Service Details */}
-                            {order.service_details && Object.keys(order.service_details).length > 0 && (
-                              <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200">
-                                <div className="text-sm font-medium text-gray-700 mb-2">Service Requirements:</div>
-                                <div className="space-y-1">
-                                  {order.service_details.company_name && (
-                                    <div className="text-sm text-gray-600">Company: {order.service_details.company_name}</div>
-                                  )}
-                                  {order.service_details.business_type && (
-                                    <div className="text-sm text-gray-600">Type: {order.service_details.business_type}</div>
-                                  )}
-                                  {order.service_details.special_requirements && (
-                                    <div className="text-sm text-gray-600">Requirements: {order.service_details.special_requirements}</div>
-                                  )}
-                                </div>
+                        {/* Progress & Service */}
+                        <div className="col-span-2">
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                <div 
+                                  className={`h-2 rounded-full ${getProgressColor(client.progress)}`}
+                                  style={{ width: `${client.progress}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-sm font-medium text-gray-900">{client.progress}%</span>
+                            </div>
+                            <p className="text-xs text-gray-600">{client.service_type.replace('_', ' ').toUpperCase()}</p>
+                            {client.satisfaction_rating && (
+                              <div className="flex items-center space-x-1">
+                                <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                                <span className="text-xs text-gray-600">{client.satisfaction_rating}/5</span>
                               </div>
                             )}
                           </div>
                         </div>
-                      </div>
-                    ))
-                )}
-              </div>
-            )}
 
-            {activeTab === 'sent' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Orders Sent to Other Countries</h3>
-                  <span className="text-sm text-gray-500">Track your client referrals and earn 10% commission</span>
-                </div>
-                
-                {sentOrders.length === 0 ? (
-                  <div className="text-center py-12">
-                    <ArrowRight className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Sent Orders</h3>
-                    <p className="text-gray-600">You haven't referred any clients to other countries yet.</p>
-                    <button
-                      onClick={() => setActiveTab('new-order')}
-                      className="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-                    >
-                      Refer Your First Client
-                    </button>
-                  </div>
-                ) : (
-                  sentOrders
-                    .filter(order => {
-                      const matchesSearch = 
-                        order.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.client_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.order_number.toLowerCase().includes(searchTerm.toLowerCase());
-                      const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-                      const matchesCountry = countryFilter === 'all' || order.target_country === countryFilter;
-                      return matchesSearch && matchesStatus && matchesCountry;
-                    })
-                    .map((order) => (
-                      <div key={order.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
-                        <div className="flex items-start justify-between">
-                          {/* Left Side - Order Info */}
-                          <div className="flex-1 max-w-[40%]">
-                            <div className="flex items-center space-x-3 mb-3">
-                              <div className="bg-green-100 rounded-lg p-2">
-                                <ArrowRight className="h-5 w-5 text-green-600" />
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-semibold text-gray-900">{order.order_number}</h3>
-                                <p className="text-sm text-gray-500">
-                                  To {order.target_country} • {new Date(order.created_at).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2">
-                                <Building className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-700">{order.client_name}</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Mail className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-700">{order.client_email}</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Users className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-700">
-                                  {order.client?.profile?.full_name || 'Unknown Client'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Right Side - Status & Earnings */}
-                          <div className="flex-1 max-w-[60%] ml-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              {/* Status */}
-                              <div>
-                                <div className="flex items-center space-x-2 mb-2">
-                                  <div className={`w-3 h-3 rounded-full ${getPriorityColor(order.priority)}`}></div>
-                                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                    {order.status.replace('_', ' ').toUpperCase()}
-                                  </span>
-                                </div>
-                                <div className={`px-3 py-1 rounded-full text-xs font-medium inline-block ${getPaymentStatusColor(order.payment_status)}`}>
-                                  Payment: {order.payment_status.toUpperCase()}
-                                </div>
-                              </div>
-
-                              {/* Financial Info */}
-                              <div>
-                                <div className="text-sm text-gray-600 mb-1">Total Amount</div>
-                                <div className="text-xl font-bold text-gray-900">${order.total_amount.toLocaleString()}</div>
-                                <div className="text-sm text-orange-600 font-medium">
-                                  Your Referral: ${order.referral_commission.toLocaleString()} (10%)
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  Consultant Gets: ${order.consultant_commission.toLocaleString()} (55%)
-                                </div>
-                              </div>
-
-                              {/* Actions */}
-                              <div className="flex flex-col space-y-2">
-                                <button
-                                  onClick={() => {
-                                    setSelectedOrder(order);
-                                    setShowOrderModal(true);
-                                  }}
-                                  className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center justify-center space-x-2"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                  <span>View Details</span>
-                                </button>
-
-                                <button
-                                  onClick={() => setIsChatOpen(true)}
-                                  className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors flex items-center justify-center space-x-2"
-                                >
-                                  <MessageSquare className="h-4 w-4" />
-                                  <span>Message</span>
-                                </button>
-                              </div>
-                            </div>
+                        {/* Revenue & Orders */}
+                        <div className="col-span-2">
+                          <div className="space-y-1">
+                            <p className="text-sm font-bold text-green-600">
+                              ${(client.total_revenue || 0).toLocaleString()}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {client.total_orders || 0} orders
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Last: {client.last_contact ? new Date(client.last_contact).toLocaleDateString() : 'Never'}
+                            </p>
                           </div>
                         </div>
-                      </div>
-                    ))
-                )}
-              </div>
-            )}
 
-            {activeTab === 'referrals' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Referral Commission Tracking</h3>
-                  <span className="text-sm text-gray-500">Total earned: ${totalReferralEarnings.toLocaleString()}</span>
-                </div>
-                
-                {referrals.length === 0 ? (
-                  <div className="text-center py-12">
-                    <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Referrals Yet</h3>
-                    <p className="text-gray-600">Start referring clients to earn 10% commission on their orders.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {referrals.map((referral) => (
-                      <div key={referral.id} className="bg-gray-50 rounded-lg p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-4 mb-2">
-                              <h3 className="text-lg font-semibold text-gray-900">{referral.client_email}</h3>
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(referral.status)}`}>
-                                {referral.status.toUpperCase()}
+                        {/* Contact Info */}
+                        <div className="col-span-2">
+                          <div className="space-y-1">
+                            {client.phone && (
+                              <div className="flex items-center space-x-1">
+                                <Phone className="h-3 w-3 text-gray-400" />
+                                <span className="text-xs text-gray-600">{client.phone}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center space-x-1">
+                              <Mail className="h-3 w-3 text-gray-400" />
+                              <span className="text-xs text-gray-600">{client.profile?.email}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Calendar className="h-3 w-3 text-gray-400" />
+                              <span className="text-xs text-gray-600">
+                                {new Date(client.created_at).toLocaleDateString()}
                               </span>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                              <div>
-                                <span className="font-medium">Service:</span> {referral.service_type.replace('_', ' ')}
-                              </div>
-                              <div>
-                                <span className="font-medium">Referral Fee:</span> ${referral.referral_fee.toLocaleString()}
-                              </div>
-                              <div>
-                                <span className="font-medium">Date:</span> {new Date(referral.created_at).toLocaleDateString()}
-                              </div>
-                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="col-span-1">
+                          <div className="flex items-center space-x-1">
+                            <button
+                              onClick={() => {
+                                setSelectedClient(client);
+                                setIsChatOpen(true);
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Send Message"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedClient(client);
+                                setShowClientModal(true);
+                              }}
+                              className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                              title="View Details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                            <button
+                              className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                              title="More Options"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
                           </div>
                         </div>
                       </div>
-                    ))}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-600">
+                        Showing {startIndex + 1} to {Math.min(endIndex, filteredClients.length)} of {filteredClients.length} clients
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                          disabled={currentPage === 1}
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Previous
+                        </button>
+                        
+                        <div className="flex items-center space-x-1">
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            const page = i + 1;
+                            return (
+                              <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`px-3 py-2 text-sm rounded-lg ${
+                                  currentPage === page
+                                    ? 'bg-purple-600 text-white'
+                                    : 'border border-gray-300 hover:bg-gray-50'
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            );
+                          })}
+                          {totalPages > 5 && (
+                            <>
+                              <span className="px-2 text-gray-500">...</span>
+                              <button
+                                onClick={() => setCurrentPage(totalPages)}
+                                className={`px-3 py-2 text-sm rounded-lg ${
+                                  currentPage === totalPages
+                                    ? 'bg-purple-600 text-white'
+                                    : 'border border-gray-300 hover:bg-gray-50'
+                                }`}
+                              >
+                                {totalPages}
+                              </button>
+                            </>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                          disabled={currentPage === totalPages}
+                          className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
-              </div>
-            )}
-
-            {activeTab === 'new-order' && (
-              <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Refer Client to Another Country</h3>
-                  <p className="text-gray-600 mb-8">
-                    Refer your client to a specialist consultant in another country and earn 10% commission.
-                  </p>
-
-                  <form onSubmit={handleCreateOrder} className="space-y-6">
-                    {/* Client Information */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Client Name *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={newOrderForm.client_name}
-                          onChange={(e) => setNewOrderForm(prev => ({ ...prev, client_name: e.target.value }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="Enter client's full name"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Client Email *
-                        </label>
-                        <input
-                          type="email"
-                          required
-                          value={newOrderForm.client_email}
-                          onChange={(e) => setNewOrderForm(prev => ({ ...prev, client_email: e.target.value }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="client@example.com"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Client Phone
-                      </label>
-                      <input
-                        type="tel"
-                        value={newOrderForm.client_phone}
-                        onChange={(e) => setNewOrderForm(prev => ({ ...prev, client_phone: e.target.value }))}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="+1 (555) 123-4567"
-                      />
-                    </div>
-
-                    {/* Service Information */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Target Country *
-                        </label>
-                        <select
-                          required
-                          value={newOrderForm.target_country}
-                          onChange={(e) => {
-                            setNewOrderForm(prev => ({ ...prev, target_country: e.target.value }));
-                            // Reset consultant selection when country changes
-                            setNewOrderForm(prev => ({ ...prev, target_consultant_id: '' }));
-                          }}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        >
-                          <option value="">Select target country</option>
-                          {countries.map(country => (
-                            <option key={country.code} value={country.name}>
-                              {country.flag} {country.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Target Consultant *
-                        </label>
-                        <select
-                          required
-                          value={newOrderForm.target_consultant_id}
-                          onChange={(e) => setNewOrderForm(prev => ({ ...prev, target_consultant_id: e.target.value }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          disabled={!newOrderForm.target_country}
-                        >
-                          <option value="">Select consultant</option>
-                          {consultants
-                            .filter(c => c.country === newOrderForm.target_country)
-                            .map(consultant => (
-                              <option key={consultant.id} value={consultant.id}>
-                                {consultant.full_name} ({consultant.email})
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Service Type *
-                        </label>
-                        <select
-                          required
-                          value={newOrderForm.service_type}
-                          onChange={(e) => setNewOrderForm(prev => ({ ...prev, service_type: e.target.value }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        >
-                          {serviceTypes.map(service => (
-                            <option key={service.value} value={service.value}>
-                              {service.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Priority Level *
-                        </label>
-                        <select
-                          required
-                          value={newOrderForm.priority}
-                          onChange={(e) => setNewOrderForm(prev => ({ ...prev, priority: e.target.value as any }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        >
-                          <option value="low">Low Priority</option>
-                          <option value="medium">Medium Priority</option>
-                          <option value="high">High Priority</option>
-                          <option value="urgent">Urgent</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Service Details */}
-                    <div className="space-y-4">
-                      <h4 className="text-lg font-semibold text-gray-900">Service Details</h4>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Company Name (if applicable)
-                          </label>
-                          <input
-                            type="text"
-                            value={newOrderForm.service_details.company_name || ''}
-                            onChange={(e) => setNewOrderForm(prev => ({ 
-                              ...prev, 
-                              service_details: { ...prev.service_details, company_name: e.target.value }
-                            }))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            placeholder="Desired company name"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Business Type
-                          </label>
-                          <select
-                            value={newOrderForm.service_details.business_type || ''}
-                            onChange={(e) => setNewOrderForm(prev => ({ 
-                              ...prev, 
-                              service_details: { ...prev.service_details, business_type: e.target.value }
-                            }))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          >
-                            <option value="">Select business type</option>
-                            <option value="llc">Limited Liability Company (LLC)</option>
-                            <option value="corporation">Corporation</option>
-                            <option value="partnership">Partnership</option>
-                            <option value="sole_proprietorship">Sole Proprietorship</option>
-                            <option value="holding_company">Holding Company</option>
-                            <option value="other">Other</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Special Requirements
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={newOrderForm.service_details.special_requirements || ''}
-                          onChange={(e) => setNewOrderForm(prev => ({ 
-                            ...prev, 
-                            service_details: { ...prev.service_details, special_requirements: e.target.value }
-                          }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="Any special requirements or preferences..."
-                        />
-                      </div>
-                    </div>
-
-                    {/* Financial & Timeline */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Total Amount (USD) *
-                        </label>
-                        <input
-                          type="number"
-                          required
-                          min="0"
-                          step="0.01"
-                          value={newOrderForm.total_amount}
-                          onChange={(e) => setNewOrderForm(prev => ({ ...prev, total_amount: parseFloat(e.target.value) || 0 }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="0.00"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Your referral commission: ${(newOrderForm.total_amount * 0.10).toLocaleString()}
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Estimated Completion (Days)
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="365"
-                          value={newOrderForm.estimated_completion_days}
-                          onChange={(e) => setNewOrderForm(prev => ({ ...prev, estimated_completion_days: parseInt(e.target.value) || 14 }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        />
-                      </div>
-
-                      <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                        <h5 className="font-medium text-purple-900 mb-2">Commission Breakdown</h5>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-purple-700">Your Referral (10%):</span>
-                            <span className="font-medium">${(newOrderForm.total_amount * 0.10).toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-purple-700">Consultant (55%):</span>
-                            <span className="font-medium">${(newOrderForm.total_amount * 0.55).toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-purple-700">Platform (35%):</span>
-                            <span className="font-medium">${(newOrderForm.total_amount * 0.35).toLocaleString()}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Additional Notes */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Additional Notes
-                      </label>
-                      <textarea
-                        rows={4}
-                        value={newOrderForm.notes}
-                        onChange={(e) => setNewOrderForm(prev => ({ ...prev, notes: e.target.value }))}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Any additional information for the receiving consultant..."
-                      />
-                    </div>
-
-                    {/* Submit Button */}
-                    <div className="flex items-center space-x-4 pt-6 border-t border-gray-200">
-                      <button
-                        type="button"
-                        onClick={() => setShowNewOrderForm(false)}
-                        className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
-                      >
-                        <Send className="h-5 w-5" />
-                        <span>Send Referral</span>
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
+              </>
             )}
           </div>
         </div>
       </div>
 
-      {/* Order Detail Modal */}
-      {showOrderModal && selectedOrder && (
+      {/* Multilingual Chat Modal */}
+      {selectedClient && (
+        <MultilingualChat
+          isOpen={isChatOpen}
+          onClose={() => {
+            setIsChatOpen(false);
+            setSelectedClient(null);
+          }}
+          chatType="consultant-client"
+          currentUserId={profile?.id || 'consultant-1'}
+          currentUserRole="consultant"
+          targetUserId={selectedClient.profile_id}
+        />
+      )}
+
+      {/* Client Detail Modal */}
+      {showClientModal && selectedClient && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Order Details - {selectedOrder.order_number}</h2>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Client Details - {selectedClient.company_name || selectedClient.profile?.full_name}
+                </h2>
                 <button
-                  onClick={() => setShowOrderModal(false)}
+                  onClick={() => {
+                    setShowClientModal(false);
+                    setSelectedClient(null);
+                  }}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   ✕
@@ -1198,121 +831,123 @@ const CustomersManagement = () => {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Order Overview */}
+              {/* Client Overview */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Client Information</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Client Name:</span>
-                      <p className="font-medium">{selectedOrder.client_name}</p>
+                      <span className="text-sm text-gray-600">Company Name:</span>
+                      <p className="font-medium">{selectedClient.company_name || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Contact Person:</span>
+                      <p className="font-medium">{selectedClient.profile?.full_name || 'Not provided'}</p>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">Email:</span>
-                      <p className="font-medium">{selectedOrder.client_email}</p>
+                      <p className="font-medium">{selectedClient.profile?.email}</p>
                     </div>
-                    {selectedOrder.client_phone && (
-                      <div>
-                        <span className="text-sm text-gray-600">Phone:</span>
-                        <p className="font-medium">{selectedOrder.client_phone}</p>
-                      </div>
-                    )}
+                    <div>
+                      <span className="text-sm text-gray-600">Phone:</span>
+                      <p className="font-medium">{selectedClient.phone || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Country:</span>
+                      <p className="font-medium">{selectedClient.profile?.country || 'Not specified'}</p>
+                    </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Details</h3>
                   <div className="space-y-3">
                     <div>
                       <span className="text-sm text-gray-600">Service Type:</span>
-                      <p className="font-medium">
-                        {serviceTypes.find(s => s.value === selectedOrder.service_type)?.label}
-                      </p>
+                      <p className="font-medium">{selectedClient.service_type.replace('_', ' ').toUpperCase()}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Countries:</span>
-                      <p className="font-medium">{selectedOrder.source_country} → {selectedOrder.target_country}</p>
+                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedClient.status)}`}>
+                        {selectedClient.status.replace('_', ' ').toUpperCase()}
+                      </span>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">Priority:</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ml-2 ${
-                        selectedOrder.priority === 'urgent' ? 'bg-red-100 text-red-800' :
-                        selectedOrder.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                        selectedOrder.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {selectedOrder.priority.toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Financial Breakdown */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Financial Breakdown</h3>
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-gray-900">${selectedOrder.total_amount.toLocaleString()}</p>
-                      <p className="text-sm text-gray-600">Total Amount</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-orange-600">${selectedOrder.referral_commission.toLocaleString()}</p>
-                      <p className="text-sm text-gray-600">Referral Fee (10%)</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">${selectedOrder.consultant_commission.toLocaleString()}</p>
-                      <p className="text-sm text-gray-600">Consultant Fee (55%)</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-purple-600">${selectedOrder.platform_fee.toLocaleString()}</p>
-                      <p className="text-sm text-gray-600">Platform Fee (35%)</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Service Details */}
-              {selectedOrder.service_details && Object.keys(selectedOrder.service_details).length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Requirements</h3>
-                  <div className="bg-blue-50 rounded-lg p-4 space-y-2">
-                    {Object.entries(selectedOrder.service_details).map(([key, value]) => (
-                      <div key={key} className="flex justify-between">
-                        <span className="text-sm text-blue-700 capitalize">{key.replace('_', ' ')}:</span>
-                        <span className="text-sm text-blue-900 font-medium">{value as string}</span>
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-3 h-3 rounded-full ${getPriorityColor(selectedClient.priority)}`}></div>
+                        <span className="font-medium">{selectedClient.priority.toUpperCase()}</span>
                       </div>
-                    ))}
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Progress:</span>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${getProgressColor(selectedClient.progress)}`}
+                            style={{ width: `${selectedClient.progress}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium">{selectedClient.progress}%</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Notes */}
-              {selectedOrder.notes && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Notes</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-700">{selectedOrder.notes}</p>
+              {/* Financial Summary */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Financial Summary</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <p className="text-sm text-green-600 font-medium">Total Revenue</p>
+                    <p className="text-2xl font-bold text-green-700">${(selectedClient.total_revenue || 0).toLocaleString()}</p>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <p className="text-sm text-blue-600 font-medium">Total Orders</p>
+                    <p className="text-2xl font-bold text-blue-700">{selectedClient.total_orders || 0}</p>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <p className="text-sm text-purple-600 font-medium">Satisfaction</p>
+                    <div className="flex items-center space-x-1">
+                      <p className="text-2xl font-bold text-purple-700">
+                        {selectedClient.satisfaction_rating || 'N/A'}
+                      </p>
+                      {selectedClient.satisfaction_rating && (
+                        <Star className="h-5 w-5 text-yellow-500 fill-current" />
+                      )}
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowClientModal(false);
+                    setIsChatOpen(true);
+                  }}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  <span>Send Message</span>
+                </button>
+                <button className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2">
+                  <Phone className="h-5 w-5" />
+                  <span>Schedule Call</span>
+                </button>
+                <button className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2">
+                  <FileText className="h-5 w-5" />
+                  <span>Generate Report</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Multilingual Chat Modal */}
-      <MultilingualChat
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-        chatType="consultant-client"
-        currentUserId={profile?.id || 'consultant-1'}
-        currentUserRole="consultant"
-      />
-    </div>
+    </>
   );
 };
 
-
-export default CustomersManagement
+export default CustomersManagement;
