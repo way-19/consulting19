@@ -56,6 +56,9 @@ const LoginPage = () => {
         }
       } else {
         console.log('✅ Login successful, NavigationHandler will handle redirect')
+        // Clear form to prevent resubmission
+        setEmail('')
+        setPassword('')
       }
     } catch (err) {
       console.error('💥 Unexpected login error:', err)
@@ -67,8 +70,6 @@ const LoginPage = () => {
 
   // Quick login buttons for testing
   const quickLogin = async (userEmail: string, userPassword: string) => {
-    setEmail(userEmail)
-    setPassword(userPassword)
     setError('')
     setLoading(true)
 
