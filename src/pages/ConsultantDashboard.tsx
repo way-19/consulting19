@@ -536,16 +536,16 @@ const ConsultantDashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* Multilingual Chat Modal */}
-      <MultilingualChat
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-        chatType={chatType}
-        currentUserId={profile?.id || 'consultant-1'}
-        currentUserRole="consultant"
-      />
     </div>
+
+    {/* Multilingual Chat Modal */}
+    <MultilingualChat
+      isOpen={isChatOpen}
+      onClose={() => setIsChatOpen(false)}
+      chatType={chatType}
+      currentUserId={profile?.id || 'consultant-1'}
+      currentUserRole="consultant"
+    />
   );
 };
 
