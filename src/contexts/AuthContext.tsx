@@ -25,7 +25,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [initialized, setInitialized] = useState(false)
   
   // Prevent double initialization in StrictMode
   const didInit = useRef(false)
@@ -66,42 +65,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   useEffect(() => {
-    // Prevent double initialization
-    if (didInit.current) return
+    // Prevent double initialization in StrictMode
+    if (didInit.current) {
+      console.log('⚠️ AuthProvider already initialized, skipping...')
+      return
+    }
     didInit.current = true
     
     console.log('🚀 AuthProvider initializing...')
     
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('📋 Initial session check:', session ? 'Session found' : 'No session')
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        console.log('👤 User found in session:', session.user.email)
-        fetchProfile(session.user.id).then(setProfile)
+    let isMounted = true
+    
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (!isMounted) return
+        
+        console.log('📋 Initial session check:', session ? 'Session found' : 'No session')
+        setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          console.log('👤 User found in session:', session.user.email)
+          const userProfile = await fetchProfile(session.user.id)
+          if (isMounted) {
+            setProfile(userProfile)
+          }
+        }
+        
+        if (isMounted) {
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error('💥 Error initializing auth:', error)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
-      setLoading(false)
-      setInitialized(true)
-    })
+    }
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return
+      
       console.log('🔔 Auth state changed:', event, session ? 'Session exists' : 'No session')
       setUser(session?.user || null)
       if (session?.user) {
         console.log('👤 New user session:', session.user.email)
         const userProfile = await fetchProfile(session.user.id)
-        setProfile(userProfile)
+        if (isMounted) {
+          setProfile(userProfile)
+        }
       } else {
         console.log('🚪 User logged out, clearing profile')
-        setProfile(null)
+        if (isMounted) {
+          setProfile(null)
+        }
       }
-      setLoading(false)
+      if (isMounted) {
+        setLoading(false)
+      }
     })
 
-    return () => subscription.unsubscribe()
+    initializeAuth()
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
