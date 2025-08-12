@@ -1,14 +1,75 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import MultilingualChat from '../components/MultilingualChat';
+import AssignedClientsList from '../components/consultant/dashboard/AssignedClientsList';
 import { Users, TrendingUp, Clock, CheckCircle, Calendar, FileText, MessageSquare, Settings, Star, Award, Target, Zap, Calculator, CreditCard, Globe, Globe2 } from 'lucide-react';
+
+interface AssignedClient {
+  id: string;
+  profile_id: string;
+  company_name?: string;
+  status: string;
+  priority: string;
+  progress: number;
+  created_at: string;
+  profile?: {
+    email: string;
+    full_name?: string;
+    country?: string;
+  };
+}
 
 const ConsultantDashboard = () => {
   const { profile } = useAuth();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatType, setChatType] = useState<'admin-consultant' | 'consultant-client'>('admin-consultant');
+  const [assignedClients, setAssignedClients] = useState<AssignedClient[]>([]);
+  const [loadingClients, setLoadingClients] = useState(true);
+
+  useEffect(() => {
+    if (profile?.id) {
+      fetchAssignedClients();
+    }
+  }, [profile]);
+
+  const fetchAssignedClients = async () => {
+    try {
+      console.log('Fetching clients for consultant:', profile?.id);
+      
+      const { data, error } = await supabase
+        .from('clients')
+        .select(`
+          id,
+          profile_id,
+          company_name,
+          status,
+          priority,
+          progress,
+          created_at,
+          profile:profile_id (
+            email,
+            full_name,
+            country
+          )
+        `)
+        .eq('assigned_consultant_id', profile?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching assigned clients:', error);
+      } else {
+        console.log('Fetched clients:', data);
+        setAssignedClients(data || []);
+      }
+    } catch (error) {
+      console.error('Error in fetchAssignedClients:', error);
+    } finally {
+      setLoadingClients(false);
+    }
+  };
 
   if (!profile) {
     return (
@@ -268,79 +329,122 @@ const ConsultantDashboard = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Enhanced Recent Clients */}
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Recent Clients</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Assigned Clients</h2>
               <button className="text-sm text-purple-600 hover:text-purple-700 font-medium">
                 View All
               </button>
             </div>
             <div className="p-6">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left text-sm font-medium text-gray-500">
-                      <th className="pb-4">Client</th>
-                      <th className="pb-4">Country</th>
-                      <th className="pb-4">Status</th>
-                      <th className="pb-4">Progress</th>
-                      <th className="pb-4">Revenue</th>
-                      <th className="pb-4">Last Contact</th>
-                    </tr>
-                  </thead>
-                  <tbody className="space-y-4">
-                    {recentClients.map((client) => (
-                      <tr key={client.id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
-                        <td className="py-4">
-                          <div>
-                            <div className="font-medium text-gray-900">{client.name}</div>
-                            <div className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${
-                              client.priority === 'High' ? 'bg-red-100 text-red-700' :
-                              client.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+              {loadingClients ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+              ) : assignedClients.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Assigned Clients</h3>
+                  <p className="text-gray-600">No clients have been assigned to you yet.</p>
+                  <button 
+                    onClick={fetchAssignedClients}
+                    className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                  >
+                    Refresh
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {assignedClients.map((client) => (
+                    <div key={client.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h4 className="font-medium text-gray-900">
+                              {client.company_name || client.profile?.full_name || client.profile?.email}
+                            </h4>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              client.priority === 'high' ? 'bg-red-100 text-red-700' :
+                              client.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
                               'bg-gray-100 text-gray-700'
                             }`}>
                               {client.priority} Priority
+                            </span>
+                          </div>
+                          
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <p>Email: {client.profile?.email}</p>
+                            <p>Country: {client.profile?.country || 'Georgia'}</p>
+                            <p>Status: {client.status}</p>
+                          </div>
+                          
+                          <div className="mt-3">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-24 bg-gray-200 rounded-full h-2">
+                                <div 
+                                  className={`h-2 rounded-full ${
+                                    client.progress === 100 ? 'bg-green-500' :
+                                    client.progress >= 50 ? 'bg-blue-500' : 'bg-yellow-500'
+                                  }`}
+                                  style={{ width: `${client.progress}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-sm text-gray-600">{client.progress}%</span>
                             </div>
                           </div>
-                        </td>
-                        <td className="py-4 text-gray-600">{client.country}</td>
-                        <td className="py-4">
+                        </div>
+                        
+                        <div className="text-right">
                           <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                            client.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                            client.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
+                            client.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            client.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
                             'bg-yellow-100 text-yellow-800'
                           }`}>
-                            {client.status}
+                            {client.status.replace('_', ' ').toUpperCase()}
                           </span>
-                        </td>
-                        <td className="py-4">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-16 bg-gray-200 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full ${
-                                  client.progress === 100 ? 'bg-green-500' :
-                                  client.progress >= 50 ? 'bg-blue-500' : 'bg-yellow-500'
-                                }`}
-                                style={{ width: `${client.progress}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm text-gray-600">{client.progress}%</span>
-                          </div>
-                        </td>
-                        <td className="py-4 font-medium text-gray-900">{client.revenue}</td>
-                        <td className="py-4 text-sm text-gray-500">{client.lastContact}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Enhanced Sidebar */}
+          {/* Right Sidebar */}
           <div className="space-y-6">
+            {/* Debug Info */}
+            <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
+              <h3 className="text-lg font-semibold text-blue-900 mb-4">Debug Info</h3>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-blue-700 font-medium">Consultant ID:</span>
+                  <p className="text-blue-600 font-mono text-xs">{profile?.id}</p>
+                </div>
+                <div>
+                  <span className="text-blue-700 font-medium">Email:</span>
+                  <p className="text-blue-600">{profile?.email}</p>
+                </div>
+                <div>
+                  <span className="text-blue-700 font-medium">Role:</span>
+                  <p className="text-blue-600">{profile?.role}</p>
+                </div>
+                <div>
+                  <span className="text-blue-700 font-medium">Assigned Clients:</span>
+                  <p className="text-blue-600">{assignedClients.length}</p>
+                </div>
+              </div>
+              <button 
+                onClick={fetchAssignedClients}
+                className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Refresh Clients
+              </button>
+              </div>
+            </div>
+
             {/* Enhanced Upcoming Tasks */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
