@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -77,16 +77,18 @@ const AIAssistantPage = () => (
 const NavigationHandler = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const didNavigate = useRef(false);
 
   useEffect(() => {
   }
   )
   useEffect(() => {
-    if (!loading && user && profile) {
+    if (!loading && user && profile && !didNavigate.current) {
       console.log('🎯 NavigationHandler: User logged in, redirecting based on role:', profile.role);
       
       // Only redirect if we're on login page
       if (window.location.pathname === '/login') {
+        didNavigate.current = true;
         switch (profile.role) {
           case 'admin':
             console.log('🔄 Redirecting admin to admin dashboard');

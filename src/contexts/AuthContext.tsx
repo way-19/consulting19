@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase, Profile } from '../lib/supabase'
 
@@ -25,6 +25,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
+  
+  // Prevent double initialization in StrictMode
+  const didInit = useRef(false)
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -62,6 +66,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   useEffect(() => {
+    // Prevent double initialization
+    if (didInit.current) return
+    didInit.current = true
+    
     console.log('🚀 AuthProvider initializing...')
     
     // Get initial session
@@ -73,6 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchProfile(session.user.id).then(setProfile)
       }
       setLoading(false)
+      setInitialized(true)
     })
 
     // Listen for auth changes
@@ -80,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔔 Auth state changed:', event, session ? 'Session exists' : 'No session')
-      setUser(session?.user || null);
+      setUser(session?.user || null)
       if (session?.user) {
         console.log('👤 New user session:', session.user.email)
         const userProfile = await fetchProfile(session.user.id)
