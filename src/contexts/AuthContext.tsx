@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { User } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
 import { supabase, Profile } from '../lib/supabase';
 
 type Session = any;
@@ -58,7 +59,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (didInit.current) {
       return;
     }
     didInit.current = true;
@@ -78,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session ?? null);
         
         if (session?.user) {
+          console.log('👤 Loading profile for user:', session.user.id);
           const userProfile = await fetchProfile(session.user.id);
           if (isMounted) {
             console.log('✅ Profile loaded:', userProfile?.email, userProfile?.role);
@@ -86,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         if (isMounted) {
+          console.log('🏁 Auth initialization complete');
           setLoading(false);
         }
       } catch (error) {
@@ -111,17 +113,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      setUser(session?.user || null);
-      setSession(session ?? null);
-      if (session?.user) {
-        const userProfile = await fetchProfile(session.user.id);
-        if (isMounted) {
-          console.log('✅ Profile set:', userProfile?.email, userProfile?.role);
-          setProfile(userProfile);
-        }
-      } else {
-        if (isMounted) {
-          setProfile(null);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        console.log('🔑 Setting user and session from auth state change');
+        setUser(session?.user || null);
+        setSession(session ?? null);
+        
+        if (session?.user) {
+          console.log('👤 Loading profile after auth state change for:', session.user.id);
+          const userProfile = await fetchProfile(session.user.id);
+          if (isMounted) {
+            console.log('✅ Profile set after auth state change:', userProfile?.email, userProfile?.role);
+            setProfile(userProfile);
+          }
+        } else {
+          if (isMounted) {
+            setProfile(null);
+          }
         }
       }
     });
