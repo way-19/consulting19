@@ -75,6 +75,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <div>
           <Navbar />
           <main>
             <Routes>
@@ -159,8 +160,6 @@ function App() {
         </div>
       </Router>
     </AuthProvider>
-  )
-  )
   );
 }
 
