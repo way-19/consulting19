@@ -70,6 +70,10 @@ const LoginPage = () => {
 
   // Quick login buttons for testing
   const quickLogin = async (userEmail: string, userPassword: string) => {
+    // Otomatik olarak email ve şifre alanlarını doldur
+    setEmail(userEmail)
+    setPassword(userPassword)
+    
     setError('')
     setLoading(true)
 
