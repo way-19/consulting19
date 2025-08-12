@@ -139,6 +139,12 @@ function App() {
               />
               <Route 
                 path="/accounting-management" 
+                element={
+                  <ProtectedRoute requiredRole="consultant">
+                    <AccountingManagement />
+                  </ProtectedRoute>
+                } 
+              />
               <Route 
                 path="/client-accounting" 
                 element={
