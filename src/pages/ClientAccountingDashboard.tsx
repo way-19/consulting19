@@ -120,6 +120,11 @@ const ClientAccountingDashboard = () => {
     postalCode: '',
     country: ''
   });
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
+  const handleShippingPayment = () => {
+    // Handle shipping payment logic here
+  };
 
   console.log('🔵 ClientDashboard render:', { 
     loading, 
@@ -130,37 +135,6 @@ const ClientAccountingDashboard = () => {
 
   // Mock data for demo
   useEffect(() => {
-    const mockMailboxItems = [
-      {
-        id: '1',
-        document_type: 'VAT Certificate',
-        document_name: 'VAT Registration Certificate',
-        description: 'Official VAT registration certificate from Georgian tax authorities',
-        file_url: 'https://example.com/vat-cert.pdf',
-        file_size: 245760,
-        status: 'pending',
-        tracking_number: 'VM20250813-D6A6F082',
-        shipping_fee: 0,
-        payment_status: 'unpaid',
-        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: '2',
-        document_type: 'Business License',
-        document_name: 'Business Operating License',
-        description: 'Official business operating license',
-        file_url: 'https://example.com/business-license.pdf',
-        file_size: 189440,
-        status: 'viewed',
-        tracking_number: 'VM20250812-A1B2C3D4',
-        shipping_fee: 15,
-        payment_status: 'paid',
-        sent_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        viewed_date: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ];
-
     // Create mock accounting profile
     const mockProfile: ClientAccountingProfile = {
       id: 'mock-client-1',
@@ -264,7 +238,6 @@ const ClientAccountingDashboard = () => {
     setDocuments(mockDocuments);
     setInvoices(mockInvoices);
     setMessages(mockMessages);
-    setMailboxItems(mockMailboxItems);
   }, []);
 
   const getStatusColor = (status: string) => {
@@ -829,6 +802,161 @@ const ClientAccountingDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Shipping Modal */}
+      {showShippingModal && selectedMailboxItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Ship Document</h3>
+                <button
+                  onClick={() => setShowShippingModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Document Info */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h4 className="font-medium text-gray-900 mb-2">{selectedMailboxItem.document_name}</h4>
+                <p className="text-sm text-gray-600">{selectedMailboxItem.description}</p>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-sm text-gray-500">Document Type:</span>
+                  <span className="text-sm font-medium text-gray-900">{selectedMailboxItem.document_type}</span>
+                </div>
+              </div>
+
+              {/* Shipping Options */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">Shipping Option</label>
+                <div className="space-y-3">
+                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="shipping"
+                      value="standard"
+                      checked={shippingOption === 'standard'}
+                      onChange={(e) => setShippingOption(e.target.value as 'standard' | 'express')}
+                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                    />
+                    <div className="ml-3 flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-900">Standard Shipping</span>
+                        <span className="font-bold text-gray-900">$15</span>
+                      </div>
+                      <p className="text-sm text-gray-600">5-7 business days</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="shipping"
+                      value="express"
+                      checked={shippingOption === 'express'}
+                      onChange={(e) => setShippingOption(e.target.value as 'standard' | 'express')}
+                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                    />
+                    <div className="ml-3 flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-900">Express Shipping</span>
+                        <span className="font-bold text-gray-900">$25</span>
+                      </div>
+                      <p className="text-sm text-gray-600">2-3 business days</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Shipping Address */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Shipping Address</label>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={shippingAddress.fullName}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, fullName: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Street Address"
+                    value={shippingAddress.address}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, address: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      placeholder="City"
+                      value={shippingAddress.city}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Postal Code"
+                      value={shippingAddress.postalCode}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, postalCode: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Country"
+                    value={shippingAddress.country}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, country: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Payment Summary */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-700">Shipping Fee:</span>
+                  <span className="font-bold text-gray-900">${shippingOption === 'standard' ? '15' : '25'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700">Delivery Time:</span>
+                  <span className="text-gray-900">{shippingOption === 'standard' ? '5-7 days' : '2-3 days'}</span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => setShowShippingModal(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleShippingPayment}
+                  disabled={paymentLoading || !shippingAddress.fullName || !shippingAddress.address || !shippingAddress.city || !shippingAddress.country}
+                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {paymentLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-5 w-5" />
+                      <span>Pay ${shippingOption === 'standard' ? '15' : '25'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
