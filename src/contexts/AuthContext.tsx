@@ -36,89 +36,95 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Attempt 1: Query by auth_user_id
       console.log('🔍 Step 1: Querying by auth_user_id...');
-      const { data: profileByAuthId, error: authIdError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('auth_user_id', userId)
-        .maybeSingle();
-      
-      console.log('🔍 Step 1 Results:', { data: profileByAuthId, error: authIdError });
-      
-      if (authIdError) {
-        console.error('❌ Error fetching profile by auth_user_id:', authIdError.message);
-        console.error('❌ Full error details:', authIdError);
-      }
-      if (profileByAuthId) {
-        console.log('✅ Profile found by auth_user_id:', {
-          id: profileByAuthId.id,
-          email: profileByAuthId.email,
-          role: profileByAuthId.role,
-          auth_user_id: profileByAuthId.auth_user_id
-        });
-        return profileByAuthId;
+      try {
+        const { data: profileByAuthId, error: authIdError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('auth_user_id', userId)
+          .maybeSingle();
+        
+        console.log('🔍 Step 1 Results:', { data: profileByAuthId, error: authIdError });
+        
+        if (authIdError) {
+          console.error('❌ Error fetching profile by auth_user_id:', authIdError.message);
+          console.error('❌ Full error details:', authIdError);
+        }
+        if (profileByAuthId) {
+          console.log('✅ Profile found by auth_user_id:', {
+            id: profileByAuthId.id,
+            email: profileByAuthId.email,
+            role: profileByAuthId.role,
+            auth_user_id: profileByAuthId.auth_user_id
+          });
+          return profileByAuthId;
+        }
+      } catch (step1Error) {
+        console.error('💥 Step 1 crashed:', step1Error);
       }
 
       console.log('⚠️ Profile not found by auth_user_id. Attempting to fetch by id...');
       console.log('🔍 Step 2: Querying by id...');
       
-      // Attempt 2: Query by id
-      const { data: profileById, error: idError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      console.log('🔍 Step 2 Results:', { data: profileById, error: idError });
-      
-      if (idError) {
-        console.error('❌ Error fetching profile by id:', idError.message);
-        console.error('❌ Full error details:', idError);
-      }
-      if (profileById) {
-        console.log('✅ Profile found by id:', {
-          id: profileById.id,
-          email: profileById.email,
-          role: profileById.role,
-          auth_user_id: profileById.auth_user_id
-        });
-        return profileById;
+      try {
+        // Attempt 2: Query by id
+        const { data: profileById, error: idError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+        
+        console.log('🔍 Step 2 Results:', { data: profileById, error: idError });
+        
+        if (idError) {
+          console.error('❌ Error fetching profile by id:', idError.message);
+          console.error('❌ Full error details:', idError);
+        }
+        if (profileById) {
+          console.log('✅ Profile found by id:', {
+            id: profileById.id,
+            email: profileById.email,
+            role: profileById.role,
+            auth_user_id: profileById.auth_user_id
+          });
+          return profileById;
+        }
+      } catch (step2Error) {
+        console.error('💥 Step 2 crashed:', step2Error);
       }
 
       // Attempt 3: Query by email as last resort
       console.log('⚠️ Profile not found by id either. Trying by email...');
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        console.log('🔍 Step 3: Querying by email:', session.user.email);
-        const { data: profileByEmail, error: emailError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('email', session.user.email)
-          .maybeSingle();
-        
-        console.log('🔍 Step 3 Results:', { data: profileByEmail, error: emailError });
-        
-        if (emailError) {
-          console.error('❌ Error fetching profile by email:', emailError.message);
-          console.error('❌ Full error details:', emailError);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) {
+          console.log('🔍 Step 3: Querying by email:', session.user.email);
+          const { data: profileByEmail, error: emailError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', session.user.email)
+            .maybeSingle();
+          
+          console.log('🔍 Step 3 Results:', { data: profileByEmail, error: emailError });
+          
+          if (emailError) {
+            console.error('❌ Error fetching profile by email:', emailError.message);
+            console.error('❌ Full error details:', emailError);
+          }
+          if (profileByEmail) {
+            console.log('✅ Profile found by email:', {
+              id: profileByEmail.id,
+              email: profileByEmail.email,
+              role: profileByEmail.role,
+              auth_user_id: profileByEmail.auth_user_id
+            });
+            return profileByEmail;
+          }
         }
-        if (profileByEmail) {
-          console.log('✅ Profile found by email:', {
-            id: profileByEmail.id,
-            email: profileByEmail.email,
-            role: profileByEmail.role,
-            auth_user_id: profileByEmail.auth_user_id
-          });
-          return profileByEmail;
-        }
+      } catch (step3Error) {
+        console.error('💥 Step 3 crashed:', step3Error);
       }
       
       console.error('❌ Profile not found by any method (auth_user_id, id, or email) for user:', userId);
-      console.error('❌ Available debugging info:');
-      console.error('   - Auth user ID:', userId);
-      console.error('   - Auth user email:', session?.user?.email);
-      console.error('   - Auth ID error:', authIdError?.message || 'None');
-      console.error('   - ID error:', idError?.message || 'None');
-      
       return null;
     } catch (error) {
       console.error('💥 General error during profile fetch:', error);
