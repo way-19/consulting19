@@ -105,7 +105,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       '/legacy-orders',
       '/accounting-management',
       '/customers-management',
-      '/consultant-payments'
+      '/consultant-payments',
+      '/payments'
     ];
     
     // For clients, allow all client-related pages  
@@ -125,7 +126,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     else if (userProfile.role === 'admin') allowedPages = adminPages;
     
     // Only navigate if not already on an allowed page
-    const isOnAllowedPage = allowedPages.some(page => currentPath === page || currentPath.startsWith(page));
+    const isOnAllowedPage = allowedPages.some(page => 
+      currentPath === page || 
+      currentPath.startsWith(page) ||
+      (page === '/consultant-payments' && currentPath === '/payments')
+    );
     
     if (!isOnAllowedPage) {
       console.log(`➡️ Navigating from ${currentPath} to ${targetPath}`);

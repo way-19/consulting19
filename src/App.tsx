@@ -203,6 +203,12 @@ export default function App() {
             <ClientServices />
           }
         />
+        <Route
+          path="/consultant-payments"
+          element={
+            <ConsultantPayments />
+          }
+        />
         
         {/* Catch all */}
         <Route path="/blog" element={<BlogPage />} />
