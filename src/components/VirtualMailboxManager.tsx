@@ -1,33 +1,94 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import { 
-  Plus, 
   FileText, 
-  Send, 
-  Eye, 
-  Download, 
-  Upload, 
-  Package, 
-  Clock, 
+  Calendar, 
+  AlertTriangle, 
   CheckCircle, 
+  Clock,
+  Upload,
+  Download,
+  MessageSquare,
+  Bell,
   DollarSign,
+  Eye,
   Search,
   Filter,
-  X,
-  Save,
-  Trash2,
-  Mail,
-  Truck,
+  Users,
+  TrendingUp,
+  Globe2,
+  Star,
+  Package,
   CreditCard,
-  AlertCircle,
-  MapPin
+  Settings,
+  Mail,
+  Truck
+  Mail,
+  Truck
+  Mail,
+  Truck
+  Mail,
+  Truck
 } from 'lucide-react';
+
+interface ClientAccountingProfile {
+  id: string;
+  company_name: string;
+  tax_number?: string;
+  business_type: string;
+  accounting_period: string;
+  service_package: string;
+  monthly_fee: number;
+  status: string;
+  next_deadline?: string;
+  consultant?: {
+    full_name: string;
+    email: string;
+  };
+}
+
+interface ClientDocument {
+  id: string;
+  document_type: string;
+  category: string;
+  title: string;
+  due_date?: string;
+  received_date?: string;
+  status: 'pending' | 'received' | 'processed' | 'completed' | 'overdue';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  file_url?: string;
+}
+
+interface ClientInvoice {
+  id: string;
+  invoice_number: string;
+  period_start?: string;
+  period_end?: string;
+  amount: number;
+  currency: string;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  due_date?: string;
+  sent_at?: string;
+  paid_at?: string;
+}
+
+interface ClientMessage {
+  id: string;
+  subject?: string;
+  message: string;
+  message_type: string;
+  is_read: boolean;
+  created_at: string;
+  sender?: {
+    full_name: string;
+    email: string;
+  };
+}
 
 interface VirtualMailboxItem {
   id: string;
-  client_id: string;
-  consultant_id: string;
   document_type: string;
   document_name: string;
   description?: string;
@@ -42,1211 +103,791 @@ interface VirtualMailboxItem {
   viewed_date?: string;
   downloaded_date?: string;
   created_at: string;
-  client?: {
-    company_name: string;
-    profile?: {
-      full_name: string;
-      email: string;
-    };
-  };
 }
-
-interface VirtualMailboxManagerProps {
-  clientId?: string;
-  viewMode: 'consultant' | 'client';
+interface VirtualMailboxItem {
+  id: string;
+  document_type: string;
+  document_name: string;
+  description?: string;
+  file_url?: string;
+  file_size?: number;
+  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
+  tracking_number: string;
+  shipping_fee: number;
+  payment_status: 'unpaid' | 'paid' | 'waived';
+  sent_date?: string;
+  delivered_date?: string;
+  viewed_date?: string;
+  downloaded_date?: string;
+  created_at: string;
 }
-
-const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId, viewMode }) => {
-  const { profile } = useAuth();
-  const [items, setItems] = useState<VirtualMailboxItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
+interface VirtualMailboxItem {
+  id: string;
+  document_type: string;
+  document_name: string;
+  description?: string;
+  file_url?: string;
+  file_size?: number;
+  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
+  tracking_number: string;
+  shipping_fee: number;
+  payment_status: 'unpaid' | 'paid' | 'waived';
+  sent_date?: string;
+  delivered_date?: string;
+  viewed_date?: string;
+  downloaded_date?: string;
+  created_at: string;
+}
+interface VirtualMailboxItem {
+  id: string;
+  document_type: string;
+  document_name: string;
+  description?: string;
+  file_url?: string;
+  file_size?: number;
+  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
+  tracking_number: string;
+  shipping_fee: number;
+  payment_status: 'unpaid' | 'paid' | 'waived';
+  sent_date?: string;
+  delivered_date?: string;
+  viewed_date?: string;
+  downloaded_date?: string;
+  created_at: string;
+}
+const ClientAccountingDashboard = () => {
+  const { user, profile } = useAuth();
+  const [accountingProfile, setAccountingProfile] = useState<ClientAccountingProfile | null>(null);
+  const [documents, setDocuments] = useState<ClientDocument[]>([]);
+  const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
+  const [messages, setMessages] = useState<ClientMessage[]>([]);
+  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
+  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
+  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
+  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [paymentFilter, setPaymentFilter] = useState('all');
-  const [selectedItem, setSelectedItem] = useState<VirtualMailboxItem | null>(null);
-  const [showItemDetail, setShowItemDetail] = useState(false);
   const [showShippingModal, setShowShippingModal] = useState(false);
-  const [shippingData, setShippingData] = useState({
-    delivery_type: 'standard' as 'standard' | 'express',
-    recipient_name: '',
-    address_line1: '',
-    address_line2: '',
+  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    address: '',
     city: '',
-    state: '',
-    postal_code: '',
-    country: '',
-    phone: ''
+    postalCode: '',
+    country: ''
   });
-  const [processingPayment, setProcessingPayment] = useState(false);
-
-  // Pricing configuration
-  const SHIPPING_PRICES = {
-    standard: 15, // $15 for standard delivery (5-7 business days)
-    express: 25   // $25 for express delivery (2-3 business days)
-  };
-
-  const [formData, setFormData] = useState({
-    client_id: clientId || '',
-    document_type: '',
-    document_name: '',
-    description: '',
-    file: null as File | null
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: ''
+  });
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: ''
+  });
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: ''
   });
 
-  const documentTypes = [
-    'Company Registration Certificate',
-    'Tax Registration Document',
-    'Bank Account Information',
-    'Corporate Seal',
-    'Shareholder Agreement',
-    'Board Resolution',
-    'Business License',
-    'VAT Certificate',
-    'Legal Address Certificate',
-    'Director Appointment Letter',
-    'Share Certificate',
-    'Company Bylaws',
-    'Other Official Document'
-  ];
+  console.log('🔵 ClientDashboard render:', { 
+    loading, 
+    user: !!user, 
+    profile: !!profile, 
+    profileRole: profile?.role 
+  });
 
+  // Mock data for demo
   useEffect(() => {
-    if (profile?.id) {
-      fetchItems();
-    } else {
-      // Add sample data for testing when no profile
-      const sampleItems: VirtualMailboxItem[] = [
-        {
-          id: 'sample-1',
-          client_id: 'client-1',
-          consultant_id: 'consultant-1',
-          document_type: 'Company Registration Certificate',
-          document_name: 'Georgia Tech Solutions LLC - Registration Certificate',
-          description: 'Official company registration certificate from Georgian House of Justice',
-          file_url: 'https://example.com/sample-certificate.pdf',
-          file_size: 245760, // 240 KB
-          status: 'sent',
-          tracking_number: 'VM-2024-001',
-          shipping_fee: 25.00,
-          payment_status: 'unpaid',
-          sent_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          client: {
-            company_name: 'Georgia Tech Solutions LLC',
-            profile: {
-              full_name: 'Test Client',
-              email: 'client.georgia@consulting19.com'
-            }
-          }
-        },
-        {
-          id: 'sample-2',
-          client_id: 'client-1',
-          consultant_id: 'consultant-1',
-          document_type: 'Tax Registration Document',
-          document_name: 'Tax Number Certificate - GE123456789',
-          description: 'Official tax registration certificate with tax number',
-          file_url: 'https://example.com/sample-tax-cert.pdf',
-          file_size: 189440, // 185 KB
-          status: 'delivered',
-          tracking_number: 'VM-2024-002',
-          shipping_fee: 25.00,
-          payment_status: 'paid',
-          sent_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          delivered_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-          viewed_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-          client: {
-            company_name: 'Georgia Tech Solutions LLC',
-            profile: {
-              full_name: 'Test Client',
-              email: 'client.georgia@consulting19.com'
-            }
-          }
-        },
-        {
-          id: 'sample-3',
-          client_id: 'client-1',
-          consultant_id: 'consultant-1',
-          document_type: 'Corporate Seal',
-          document_name: 'Official Corporate Seal',
-          description: 'Physical corporate seal for official documents',
-          status: 'pending',
-          tracking_number: 'VM-2024-003',
-          shipping_fee: 35.00,
-          payment_status: 'unpaid',
-          created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-          client: {
-            company_name: 'Georgia Tech Solutions LLC',
-            profile: {
-              full_name: 'Test Client',
-              email: 'client.georgia@consulting19.com'
-            }
-          }
-        }
-      ];
-      setItems(sampleItems);
-      setLoading(false);
-    }
-  }, [clientId, profile]);
-
-  const fetchItems = async () => {
-    if (!profile?.id) {
-      // For testing without database connection
-      console.log('🧪 Using sample data for Virtual Mailbox testing');
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      let query = supabase
-        .from('virtual_mailbox_items')
-        .select(`
-          *,
-          client:client_id (
-            company_name,
-            profile:profile_id (
-              full_name,
-              email
-            )
-          )
-        `);
-
-      if (viewMode === 'consultant') {
-        query = query.eq('consultant_id', profile?.id);
-        if (clientId) {
-          query = query.eq('client_id', clientId);
-        }
-      } else if (viewMode === 'client') {
-        // Client view - get client record first
-        const { data: clientData } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('profile_id', profile?.id)
-          .single();
-
-        if (clientData) {
-          query = query.eq('client_id', clientData.id);
-        }
-      } else {
-        // Invalid view mode, return empty results
-        setItems([]);
-        return;
+    // Create mock accounting profile
+    const mockProfile: ClientAccountingProfile = {
+      id: 'mock-client-1',
+      company_name: 'Georgia Tech Solutions LLC',
+      tax_number: 'GE123456789',
+      business_type: 'limited_company',
+      accounting_period: 'monthly',
+      service_package: 'basic',
+      monthly_fee: 500,
+      status: 'active',
+      next_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      consultant: {
+        full_name: 'Nino Kvaratskhelia',
+        email: 'georgia@consulting19.com'
       }
+    };
 
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setItems(data || []);
-    } catch (error) {
-      console.error('Error fetching mailbox items:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate file upload
-    if (!formData.file) {
-      alert('Please upload a document file');
-      return;
-    }
-    
-    // For testing without database
-    if (!profile?.id) {
-      const newItem: VirtualMailboxItem = {
-        id: `sample-${Date.now()}`,
-        client_id: formData.client_id || 'client-1',
-        consultant_id: 'consultant-1',
-        document_type: formData.document_type,
-        document_name: formData.document_name,
-        description: formData.description,
-        file_url: `https://example.com/documents/${formData.file?.name}`,
-        file_size: formData.file?.size || 0,
+    const mockDocuments: ClientDocument[] = [
+      {
+        id: '1',
+        document_type: 'Monthly Financial Report',
+        category: 'financial',
+        title: 'December 2024 Financial Report',
+        due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
         status: 'pending',
-        tracking_number: `VM-2024-${String(items.length + 1).padStart(3, '0')}`,
-        shipping_fee: 0,
-        payment_status: 'unpaid',
-        created_at: new Date().toISOString(),
-        client: {
-          company_name: 'Georgia Tech Solutions LLC',
-          profile: {
-            full_name: 'Test Client',
-            email: 'client.georgia@consulting19.com'
-          }
-        }
-      };
-      
-      setItems(prev => [newItem, ...prev]);
-      resetForm();
-      alert(`Document "${formData.document_name}" uploaded and added to virtual mailbox!\n\nFile: ${formData.file?.name}\n\n(Test Mode - Customer will enter shipping address when requesting delivery)`);
-      return;
-    }
-    
-    try {
-      // 1) Prepare file URL (simulation)
-      let fileUrl = null;
-      
-      // 2) Destructure formData, excluding file (not in DB schema)
-      const { file, ...restOfFormData } = formData;
-      
-      if (formData.file) {
-        // In real implementation, upload to Supabase Storage
-        fileUrl = `https://example.com/documents/${formData.file.name}`;
+        priority: 'high'
+      },
+      {
+        id: '2',
+        document_type: 'Tax Declaration',
+        category: 'tax',
+        title: 'Q4 2024 Tax Declaration',
+        due_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'pending',
+        priority: 'medium'
+      },
+      {
+        id: '3',
+        document_type: 'Bank Statement',
+        category: 'financial',
+        title: 'November 2024 Bank Statement',
+        received_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'completed',
+        priority: 'low'
       }
-      
-      // 3) Prepare DB insert payload
-      const itemData = {
-        ...restOfFormData,
-        consultant_id: profile?.id,
-        status: 'pending',
-        file_url: fileUrl,
-        file_size: formData.file?.size || 0,
-        shipping_fee: 0, // Will be set when client chooses delivery option
-      };
+    ];
 
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .insert([itemData]);
+    const mockInvoices: ClientInvoice[] = [
+      {
+        id: '1',
+        invoice_number: 'INV-2024-001',
+        period_start: '2024-12-01',
+        period_end: '2024-12-31',
+        amount: 500,
+        currency: 'USD',
+        status: 'sent',
+        due_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+        sent_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: '2',
+        invoice_number: 'INV-2024-002',
+        period_start: '2024-11-01',
+        period_end: '2024-11-30',
+        amount: 500,
+        currency: 'USD',
+        status: 'paid',
+        due_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        paid_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
 
-      if (error) throw error;
+    const mockMessages: ClientMessage[] = [
+      {
+        id: '1',
+        subject: 'Monthly Report Reminder',
+        message: 'Please submit your December financial documents by the end of this week.',
+        message_type: 'reminder',
+        is_read: false,
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        sender: {
+          full_name: 'Nino Kvaratskhelia',
+          email: 'georgia@consulting19.com'
+        }
+      },
+      {
+        id: '2',
+        subject: 'Welcome to Accounting Services',
+        message: 'Welcome to our accounting services! I will be your dedicated consultant.',
+        message_type: 'general',
+        is_read: true,
+        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        sender: {
+          full_name: 'Nino Kvaratskhelia',
+          email: 'georgia@consulting19.com'
+        }
+      }
+    ];
 
-      await fetchItems();
-      resetForm();
-      alert('Document added to virtual mailbox successfully!');
-    } catch (error) {
-      console.error('Error adding document:', error);
-      alert('Failed to add document');
-    }
-  };
-
-  const updateStatus = async (itemId: string, newStatus: string) => {
-    // For testing without database
-    if (!profile?.id) {
-      setItems(prev => prev.map(item => 
-        item.id === itemId 
-          ? { 
-              ...item, 
-              status: newStatus as any,
-              delivered_date: newStatus === 'delivered' ? new Date().toISOString() : item.delivered_date,
-              viewed_date: newStatus === 'viewed' ? new Date().toISOString() : item.viewed_date,
-              downloaded_date: newStatus === 'downloaded' ? new Date().toISOString() : item.downloaded_date
-            }
-          : item
-      ));
-      return;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({ status: newStatus })
-        .eq('id', itemId);
-
-      if (error) throw error;
-      await fetchItems();
-    } catch (error) {
-      console.error('Error updating status:', error);
-    }
-  };
-
-  const updatePaymentStatus = async (itemId: string, newPaymentStatus: string) => {
-    // For testing without database
-    if (!profile?.id) {
-      setItems(prev => prev.map(item => 
-        item.id === itemId 
-          ? { ...item, payment_status: newPaymentStatus as any }
-          : item
-      ));
-      return;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({ payment_status: newPaymentStatus })
-        .eq('id', itemId);
-
-      if (error) throw error;
-      await fetchItems();
-    } catch (error) {
-      console.error('Error updating payment status:', error);
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      client_id: clientId || '',
-      document_type: '',
-      document_name: '',
-      description: '',
-      file: null
-    });
-    setShowAddForm(false);
-  };
+    setAccountingProfile(mockProfile);
+    setDocuments(mockDocuments);
+    setInvoices(mockInvoices);
+    setMessages(mockMessages);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'downloaded': return 'bg-green-100 text-green-800';
-      case 'viewed': return 'bg-blue-100 text-blue-800';
-      case 'delivered': return 'bg-purple-100 text-purple-800';
-      case 'sent': return 'bg-yellow-100 text-yellow-800';
-      case 'pending': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'received': return 'bg-blue-100 text-blue-800';
+      case 'processed': return 'bg-purple-100 text-purple-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'overdue': return 'bg-red-100 text-red-800';
       case 'paid': return 'bg-green-100 text-green-800';
-      case 'waived': return 'bg-blue-100 text-blue-800';
-      case 'unpaid': return 'bg-red-100 text-red-800';
+      case 'sent': return 'bg-blue-100 text-blue-800';
+      case 'draft': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'downloaded': return <Download className="h-4 w-4" />;
-      case 'viewed': return <Eye className="h-4 w-4" />;
-      case 'delivered': return <Package className="h-4 w-4" />;
-      case 'sent': return <Truck className="h-4 w-4" />;
-      case 'pending': return <Clock className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-500';
+      case 'high': return 'bg-orange-500';
+      case 'medium': return 'bg-yellow-500';
+      case 'low': return 'bg-gray-400';
+      default: return 'bg-gray-400';
     }
   };
 
-  const handleShippingPayment = (item: VirtualMailboxItem) => {
-    setSelectedItem(item);
-    setShowShippingModal(true);
-  };
+  const overdueDocuments = documents.filter(d => d.status === 'overdue').length;
+  const pendingDocuments = documents.filter(d => d.status === 'pending').length;
+  const unpaidInvoices = invoices.filter(i => i.status === 'sent' || i.status === 'overdue').length;
+  const unreadMessages = messages.filter(m => !m.is_read).length;
 
-  const processShipping = async () => {
-    if (!selectedItem) return;
-    
-    setProcessingPayment(true);
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      // Update item with shipping fee and payment status
-      const shippingFee = SHIPPING_PRICES[shippingData.delivery_type];
-      
-      setItems(prev => prev.map(item => 
-        item.id === selectedItem.id 
-          ? { 
-              ...item, 
-              shipping_fee: shippingFee,
-              payment_status: 'paid' as any,
-              status: 'sent' as any,
-              sent_date: new Date().toISOString()
-            }
-          : item
-      ));
-      
-      setProcessingPayment(false);
-      setShowShippingModal(false);
-      
-      alert(`Payment successful!\n\nShipping Fee: $${shippingFee}\nDelivery: ${shippingData.delivery_type} (${shippingData.delivery_type === 'standard' ? '5-7' : '2-3'} business days)\n\nYour document will be shipped to:\n${shippingData.recipient_name}\n${shippingData.address_line1}\n${shippingData.city}, ${shippingData.state} ${shippingData.postal_code}\n${shippingData.country}`);
-    }, 2000);
-  };
+  const stats = [
+    {
+      name: 'Pending Documents',
+      value: pendingDocuments.toString(),
+      icon: Clock,
+      color: 'bg-yellow-500',
+      change: '+2',
+      changeType: 'neutral',
+      description: 'Documents awaiting submission'
+    },
+    {
+      name: 'Overdue Items',
+      value: overdueDocuments.toString(),
+      icon: AlertTriangle,
+      color: 'bg-red-500',
+      change: '0',
+      changeType: 'positive',
+      description: 'Items past due date'
+    },
+    {
+      name: 'Unpaid Invoices',
+      value: unpaidInvoices.toString(),
+      icon: DollarSign,
+      color: 'bg-orange-500',
+      change: '+1',
+      changeType: 'neutral',
+      description: 'Outstanding payments'
+    },
+    {
+      name: 'New Messages',
+      value: unreadMessages.toString(),
+      icon: MessageSquare,
+      color: 'bg-blue-500',
+      change: '+3',
+      changeType: 'neutral',
+      description: 'Unread messages'
+    }
+  ];
 
-  const filteredItems = items.filter(item => {
-    const matchesSearch = 
-      item.document_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.document_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tracking_number.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-    const matchesPayment = paymentFilter === 'all' || item.payment_status === paymentFilter;
-    
-    return matchesSearch && matchesStatus && matchesPayment;
-  });
-
-  const pendingItems = items.filter(i => i.status === 'pending').length;
-  const unpaidItems = items.filter(i => i.payment_status === 'unpaid').length;
-  const totalRevenue = items.filter(i => i.payment_status === 'paid').reduce((sum, i) => sum + i.shipping_fee, 0);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
+  const quickActions = [
+    { name: 'Upload Document', icon: Upload, color: 'bg-green-500 hover:bg-green-600', description: 'Submit documents' },
+    { name: 'Pay Invoice', icon: CreditCard, color: 'bg-blue-500 hover:bg-blue-600', description: 'Pay outstanding invoices' },
+    { name: 'Message Consultant', icon: MessageSquare, color: 'bg-purple-500 hover:bg-purple-600', description: 'Contact your consultant' },
+    { name: 'View Reports', icon: FileText, color: 'bg-indigo-500 hover:bg-indigo-600', description: 'Financial reports' },
+    { name: 'Download Files', icon: Download, color: 'bg-teal-500 hover:bg-teal-600', description: 'Download documents' },
+    { name: 'Account Settings', icon: Settings, color: 'bg-gray-500 hover:bg-gray-600', description: 'Manage account' }
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Stats for consultant view */}
-      {viewMode === 'consultant' && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50">
+      {/* Enhanced Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Logo Section */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <img 
+                src="/image.png" 
+                alt="Consulting19 Logo" 
+                className="h-16 w-32"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <Globe2 className="h-16 w-32 text-purple-600 hidden" />
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Documents</p>
-                <p className="text-2xl font-bold text-gray-900">{items.length}</p>
+                <p className="text-sm text-gray-500">Client Accounting Dashboard</p>
               </div>
-              <FileText className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 bg-green-100 text-green-800 px-4 py-2 rounded-full">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium">Active</span>
+              </div>
+              <span className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
+                {profile?.role || 'client'} • Georgia Tech Solutions
+              </span>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">{pendingItems}</p>
+          {/* Welcome Section */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Welcome back, {profile?.full_name || profile?.email || user?.email || 'Client'}
+              </h2>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm text-gray-600">Consultant: Nino Kvaratskhelia</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Star className="h-4 w-4 text-yellow-500" />
+                  <span className="text-sm text-gray-600">Premium Service</span>
+                </div>
               </div>
-              <Clock className="h-6 w-6 text-yellow-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Unpaid</p>
-                <p className="text-2xl font-bold text-red-600">{unpaidItems}</p>
-              </div>
-              <CreditCard className="h-6 w-6 text-red-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Revenue</p>
-                <p className="text-2xl font-bold text-green-600">${totalRevenue}</p>
-              </div>
-              <DollarSign className="h-6 w-6 text-green-600" />
             </div>
           </div>
         </div>
-      )}
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">
-            {viewMode === 'consultant' ? 'Virtual Mailbox Management' : 'My Virtual Mailbox'}
-          </h2>
-          <p className="text-gray-600">
-            {viewMode === 'consultant' 
-              ? 'Send official documents to clients via virtual mailbox'
-              : 'Receive and download your official documents'
-            }
-          </p>
-        </div>
-        {viewMode === 'consultant' && (
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Add Document</span>
-          </button>
-        )}
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search documents..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+      {/* Navigation Menu */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8 py-4">
+            <button 
+              onClick={() => setActiveTab('overview')}
+              className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'overview' 
+                  ? 'text-blue-600 bg-blue-50 border border-blue-200' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
             >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="sent">Sent</option>
-              <option value="delivered">Delivered</option>
-              <option value="viewed">Viewed</option>
-              <option value="downloaded">Downloaded</option>
-            </select>
+              <Eye className="h-4 w-4" />
+              <span>Overview</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('documents')}
+              className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'documents' 
+                  ? 'text-blue-600 bg-blue-50 border border-blue-200' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              <FileText className="h-4 w-4" />
+              <span>Documents ({documents.length})</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('invoices')}
+              className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'invoices' 
+                  ? 'text-blue-600 bg-blue-50 border border-blue-200' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              <DollarSign className="h-4 w-4" />
+              <span>Invoices ({invoices.length})</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('messages')}
+              className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'messages' 
+                  ? 'text-blue-600 bg-blue-50 border border-blue-200' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>Messages ({unreadMessages})</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('mailbox')}
+              className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'mailbox' 
+                  ? 'text-blue-600 bg-blue-50 border border-blue-200' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              <Package className="h-4 w-4" />
+              <span>Virtual Mailbox</span>
+            </button>
+          </nav>
+        </div>
+      </div>
 
-            {viewMode === 'consultant' && (
-              <select
-                value={paymentFilter}
-                onChange={(e) => setPaymentFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">All Payments</option>
-                <option value="unpaid">Unpaid</option>
-                <option value="paid">Paid</option>
-                <option value="waived">Waived</option>
-              </select>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat) => (
+            <div key={stat.name} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`${stat.color} rounded-xl p-3 shadow-lg`}>
+                  <stat.icon className="h-6 w-6 text-white" />
+                </div>
+                <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                  stat.changeType === 'positive' ? 'text-green-700 bg-green-100' : 
+                  stat.changeType === 'neutral' ? 'text-blue-700 bg-blue-100' :
+                  'text-red-700 bg-red-100'
+                }`}>
+                  {stat.change}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">{stat.name}</p>
+                <p className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
+                <p className="text-xs text-gray-500">{stat.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Company Info Card */}
+        {accountingProfile && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Company Name</p>
+                <p className="font-medium text-gray-900">{accountingProfile.company_name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Business Type</p>
+                <p className="font-medium text-gray-900">{accountingProfile.business_type.replace('_', ' ').toUpperCase()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Service Package</p>
+                <p className="font-medium text-gray-900">{accountingProfile.service_package}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Monthly Fee</p>
+                <p className="font-medium text-gray-900">${accountingProfile.monthly_fee}</p>
+              </div>
+            </div>
+            {accountingProfile.next_deadline && (
+              <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-5 w-5 text-orange-600" />
+                  <span className="text-orange-800 font-medium">
+                    Next Deadline: {new Date(accountingProfile.next_deadline).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Documents List */}
-      <div className="space-y-4">
-        {filteredItems.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-            <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {viewMode === 'consultant' ? 'No Documents Sent' : 'No Documents Received'}
-            </h3>
-            <p className="text-gray-600">
-              {viewMode === 'consultant' 
-                ? 'Start sending documents to your clients via virtual mailbox.'
-                : 'You haven\'t received any documents yet.'
-              }
-            </p>
-          </div>
-        ) : (
-          filteredItems.map((item) => (
-            <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-4 mb-3">
-                    <div className="bg-purple-100 rounded-lg p-2">
-                      {getStatusIcon(item.status)}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{item.document_name}</h3>
-                      <p className="text-sm text-gray-600">{item.document_type}</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
-                      {item.status.toUpperCase()}
-                    </span>
-                  </div>
-
-                  {item.description && (
-                    <p className="text-gray-700 mb-3">{item.description}</p>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
-                    <div>
-                      <span className="font-medium">Tracking:</span> {item.tracking_number}
-                    </div>
-                    <div>
-                      <span className="font-medium">Shipping Fee:</span> ${item.shipping_fee}
-                    </div>
-                    <div>
-                      <span className="font-medium">Payment:</span>
-                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(item.payment_status)}`}>
-                        {item.payment_status.toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-medium">Size:</span> {item.file_size ? `${(item.file_size / 1024).toFixed(1)} KB` : 'N/A'}
-                    </div>
-                  </div>
-
-                  {/* Timeline */}
-                  <div className="flex items-center space-x-4 text-xs text-gray-500">
-                    {item.sent_date && (
-                      <div className="flex items-center space-x-1">
-                        <Send className="h-3 w-3" />
-                        <span>Sent: {new Date(item.sent_date).toLocaleDateString()}</span>
-                      </div>
-                    )}
-                    {item.delivered_date && (
-                      <div className="flex items-center space-x-1">
-                        <Package className="h-3 w-3" />
-                        <span>Delivered: {new Date(item.delivered_date).toLocaleDateString()}</span>
-                      </div>
-                    )}
-                    {item.viewed_date && (
-                      <div className="flex items-center space-x-1">
-                        <Eye className="h-3 w-3" />
-                        <span>Viewed: {new Date(item.viewed_date).toLocaleDateString()}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  {viewMode === 'consultant' ? (
-                    <>
-                      {item.status === 'pending' && (
-                        <button
-                          onClick={() => updateStatus(item.id, 'sent')}
-                          className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
-                        >
-                          <Send className="h-4 w-4" />
-                          <span>Send</span>
-                        </button>
-                      )}
-                      
-                      {item.payment_status === 'unpaid' && (
-                        <button
-                          onClick={() => updatePaymentStatus(item.id, 'waived')}
-                          className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors"
-                        >
-                          Waive Fee
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {item.payment_status === 'unpaid' && item.status === 'sent' && (
-                        <button
-                          onClick={() => handleShippingPayment(item)}
-                          className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
-                        >
-                          <MapPin className="h-4 w-4" />
-                          <span>Enter Address & Pay ${SHIPPING_PRICES.standard}</span>
-                        </button>
-                      )}
-                      
-                      {item.payment_status === 'paid' && item.file_url && (
-                        <button
-                          onClick={() => {
-                            updateStatus(item.id, 'downloaded');
-                            // Simulate file download
-                            const link = document.createElement('a');
-                            link.href = item.file_url;
-                            link.download = item.document_name;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            const name = String(item?.document_name ?? 'Unnamed');
-                            alert('Document "' + name + '" downloaded successfully!');
-                          }}
-                          className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          <span>Download</span>
-                        </button>
-                      )}
-                      
-                      {item.payment_status === 'paid' && item.file_url && !item.viewed_date && (
-                        <button
-                          onClick={() => {
-                            updateStatus(item.id, 'viewed');
-                            // Simulate document preview
-                            window.open(item.file_url, '_blank');
-                          }}
-                          className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span>Preview</span>
-                        </button>
-                      )}
-                    </>
-                  )}
-
-                  <button
-                    onClick={() => {
-                      setSelectedItem(item);
-                      setShowItemDetail(true);
-                    }}
-                    className="bg-gray-50 text-gray-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
         )}
-      </div>
 
-      {/* Add Document Form Modal */}
-      {showAddForm && viewMode === 'consultant' && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Add Document to Virtual Mailbox</h2>
-                <button
-                  onClick={resetForm}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
-              </div>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Tab Content */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {activeTab === 'overview' && 'Dashboard Overview'}
+                {activeTab === 'documents' && 'My Documents'}
+                {activeTab === 'invoices' && 'My Invoices'}
+                {activeTab === 'messages' && 'Messages from Consultant'}
+                {activeTab === 'mailbox' && 'Virtual Mailbox'}
+              </h2>
             </div>
+            <div className="p-6">
+              {activeTab === 'overview' && (
+                <div className="space-y-6">
+                  {/* Recent Documents */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Documents</h3>
+                    <div className="space-y-3">
+                      {documents.slice(0, 3).map((document) => (
+                        <div key={document.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-3 h-3 rounded-full ${getPriorityColor(document.priority)}`}></div>
+                            <div>
+                              <p className="font-medium text-gray-900">{document.title}</p>
+                              <p className="text-sm text-gray-600">Due: {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
+                            {document.status.toUpperCase()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Client Selection */}
-              {!clientId && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Client *
-                  </label>
-                  <select
-                    required
-                    value={formData.client_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, client_id: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="">Choose a client...</option>
-                    <option value="client-1">Georgia Tech Solutions LLC</option>
-                    <option value="client-2">Test Company Ltd</option>
-                    <option value="client-3">Sample Business Inc</option>
-                  </select>
+                  {/* Recent Invoices */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Invoices</h3>
+                    <div className="space-y-3">
+                      {invoices.slice(0, 2).map((invoice) => (
+                        <div key={invoice.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-medium text-gray-900">{invoice.invoice_number}</p>
+                            <p className="text-sm text-gray-600">
+                              {invoice.period_start && invoice.period_end 
+                                ? `${new Date(invoice.period_start).toLocaleDateString()} - ${new Date(invoice.period_end).toLocaleDateString()}`
+                                : 'One-time invoice'
+                              }
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium text-gray-900">${invoice.amount}</p>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                              {invoice.status.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* Document Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Document Type *
-                </label>
-                <select
-                  required
-                  value={formData.document_type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, document_type: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="">Select document type...</option>
-                  {documentTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Document Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Document Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.document_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, document_name: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="e.g., Georgia Tech Solutions LLC - Registration Certificate"
-                />
-              </div>
-
-              {/* File Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload Document File *
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] || null;
-                      setFormData(prev => ({ ...prev, file }));
-                    }}
-                    className="hidden"
-                    id="file-upload"
-                  />
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">
-                      {formData.file ? formData.file.name : 'Click to upload document'}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      PDF, DOC, DOCX, JPG, PNG (Max 10MB)
-                    </p>
-                  </label>
-                </div>
-                {formData.file && (
-                  <div className="mt-2 flex items-center justify-between bg-green-50 rounded-lg p-3 border border-green-200">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="h-4 w-4 text-green-600" />
-                      <span className="text-sm text-green-800">{formData.file.name}</span>
-                      <span className="text-xs text-green-600">({(formData.file.size / 1024).toFixed(1)} KB)</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, file: null }))}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Additional notes about this document..."
-                />
-              </div>
-
-              {/* Shipping Address Section */}
-              <div className="border-t border-gray-200 pt-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h4>
-                
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    <strong>Process:</strong> Client will see document in their panel, choose delivery option 
-                    (Standard $10 / Express $25), enter shipping address, and pay. You will be notified when payment is completed.
-                  </p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <Save className="h-5 w-5" />
-                  <span>Add to Mailbox</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Item Detail Modal */}
-      {showItemDetail && selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Document Details</h2>
-                <button
-                  onClick={() => setShowItemDetail(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Document Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Information</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-gray-600">Document Name:</span>
-                      <p className="font-medium">{selectedItem.document_name}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Type:</span>
-                      <p className="font-medium">{selectedItem.document_type}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Tracking Number:</span>
-                      <p className="font-medium font-mono">{selectedItem.tracking_number}</p>
-                    </div>
-                    {selectedItem.description && (
-                      <div>
-                        <span className="text-sm text-gray-600">Description:</span>
-                        <p className="font-medium">{selectedItem.description}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Status & Payment</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-gray-600">Status:</span>
-                      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
-                        {selectedItem.status.toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Shipping Fee:</span>
-                      <p className="font-medium">${selectedItem.shipping_fee}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Payment Status:</span>
-                      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(selectedItem.payment_status)}`}>
-                        {selectedItem.payment_status.toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Timeline */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Timeline</h3>
+              {activeTab === 'documents' && (
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <Clock className="h-5 w-5 text-gray-500" />
-                    <div>
-                      <p className="font-medium text-gray-900">Document Created</p>
-                      <p className="text-sm text-gray-600">{new Date(selectedItem.created_at).toLocaleString()}</p>
-                    </div>
-                  </div>
-                  
-                  {selectedItem.sent_date && (
-                    <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                      <Send className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <p className="font-medium text-blue-900">Document Sent</p>
-                        <p className="text-sm text-blue-700">{new Date(selectedItem.sent_date).toLocaleString()}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedItem.delivered_date && (
-                    <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                      <Package className="h-5 w-5 text-purple-600" />
-                      <div>
-                        <p className="font-medium text-purple-900">Document Delivered</p>
-                        <p className="text-sm text-purple-700">{new Date(selectedItem.delivered_date).toLocaleString()}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedItem.viewed_date && (
-                    <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                      <Eye className="h-5 w-5 text-green-600" />
-                      <div>
-                        <p className="font-medium text-green-900">Document Viewed</p>
-                        <p className="text-sm text-green-700">{new Date(selectedItem.viewed_date).toLocaleString()}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+                  {documents.map((document) => (
+                    <div key={document.id} className="bg-gray-50 rounded-lg p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-4 mb-2">
+                            <div className={`w-3 h-3 rounded-full ${getPriorityColor(document.priority)}`}></div>
+                            <h3 className="text-lg font-semibold text-gray-900">{document.title}</h3>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
+                              {document.status.toUpperCase()}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
+                            <div>
+                              <span className="font-medium">Type:</span> {document.document_type}
+                            </div>
+                            <div>
+                              <span className="font-medium">Category:</span> {document.category}
+                            </div>
+                            <div>
+                              <span className="font-medium">Due Date:</span> 
+                              <span className={document.due_date && new Date(document.due_date) < new Date() ? 'text-red-600 font-medium' : ''}>
+                                {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
 
-              {/* Actions */}
-              {viewMode === 'client' && selectedItem.payment_status === 'unpaid' && selectedItem.status === 'sent' && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-yellow-900">Shipping Address & Payment Required</h4>
-                      <p className="text-sm text-yellow-700 mt-1">
-                        Please enter your shipping address and pay ${selectedItem.shipping_fee} shipping fee to receive your document.
-                      </p>
-                      <button
-                        onClick={() => {
-                          // In real implementation, this would open address form
-                          const address = prompt('Enter your shipping address:');
-                          if (address) {
-                            updatePaymentStatus(selectedItem.id, 'paid');
-                            alert(`Address saved: ${address}\nPayment processed: $${selectedItem.shipping_fee}\nDocument will be shipped soon!`);
-                          }
-                        }}
-                        className="mt-3 bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
-                      >
-                        <MapPin className="h-4 w-4" />
-                        <span>Enter Address & Pay ${selectedItem.shipping_fee}</span>
-                      </button>
+                        <div className="flex items-center space-x-2">
+                          {document.file_url ? (
+                            <button className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center space-x-2">
+                              <Download className="h-4 w-4" />
+                              <span>Download</span>
+                            </button>
+                          ) : (
+                            <button className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2">
+                              <Upload className="h-4 w-4" />
+                              <span>Upload</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                </div>
+              )}
+
+              {activeTab === 'invoices' && (
+                <div className="space-y-4">
+                  {invoices.map((invoice) => (
+                    <div key={invoice.id} className="bg-gray-50 rounded-lg p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-4 mb-2">
+                            <h3 className="text-lg font-semibold text-gray-900">{invoice.invoice_number}</h3>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                              {invoice.status.toUpperCase()}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                            <div>
+                              <span className="font-medium">Amount:</span> ${invoice.amount} {invoice.currency}
+                            </div>
+                            <div>
+                              <span className="font-medium">Period:</span> 
+                              {invoice.period_start && invoice.period_end 
+                                ? `${new Date(invoice.period_start).toLocaleDateString()} - ${new Date(invoice.period_end).toLocaleDateString()}`
+                                : 'One-time'
+                              }
+                            </div>
+                            <div>
+                              <span className="font-medium">Due Date:</span> 
+                              {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}
+                            </div>
+                            <div>
+                              <span className="font-medium">Paid:</span> 
+                              {invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString() : 'Not paid'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <button className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors flex items-center space-x-2">
+                            <Eye className="h-4 w-4" />
+                            <span>View</span>
+                          </button>
+                          {(invoice.status === 'sent' || invoice.status === 'overdue') && (
+                            <button className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors">
+                              Pay Now
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {activeTab === 'messages' && (
+                <div className="space-y-4">
+                  {messages.map((message) => (
+                    <div key={message.id} className={`rounded-lg p-6 ${message.is_read ? 'bg-gray-50' : 'bg-blue-50 border border-blue-200'}`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                            <MessageSquare className="h-4 w-4 text-purple-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{message.sender?.full_name}</p>
+                            <p className="text-sm text-gray-600">{new Date(message.created_at).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        {!message.is_read && (
+                          <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                            New
+                          </span>
+                        )}
+                      </div>
+                      
+                      {message.subject && (
+                        <h4 className="font-medium text-gray-900 mb-2">{message.subject}</h4>
+                      )}
+                      
+                      <p className="text-gray-700">{message.message}</p>
+                      
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          message.message_type === 'urgent' ? 'bg-red-100 text-red-800' :
+                          message.message_type === 'reminder' ? 'bg-orange-100 text-orange-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {message.message_type.replace('_', ' ').toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {activeTab === 'mailbox' && (
+                <div>
+                  <VirtualMailboxManager viewMode="client" />
                 </div>
               )}
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Shipping Address & Payment Modal */}
-      {showShippingModal && selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Ship Document to Address</h2>
-                <button
-                  onClick={() => setShowShippingModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
+          {/* Right Sidebar */}
+          <div className="space-y-6">
+            {/* Debug Info */}
+            <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
+              <h3 className="text-lg font-semibold text-blue-900 mb-4">System Status</h3>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-blue-700 font-medium">User:</span>
+                  <p className="text-blue-600">{user?.email || 'No user'}</p>
+                </div>
+                <div>
+                  <span className="text-blue-700 font-medium">Profile:</span>
+                  <p className="text-blue-600">{profile ? `${profile.email} (${profile.role})` : 'No profile'}</p>
+                </div>
+                <div>
+                  <span className="text-blue-700 font-medium">Company:</span>
+                  <p className="text-blue-600">{accountingProfile?.company_name || 'Not set'}</p>
+                </div>
               </div>
             </div>
 
-            <div className="p-6 space-y-6">
-              {/* Document Info */}
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <h3 className="font-medium text-blue-900 mb-2">Document: {selectedItem.document_name}</h3>
-                <p className="text-sm text-blue-700">This document is available for digital download. Physical shipping is optional.</p>
-              </div>
-
-              {/* Shipping Options */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Shipping Option *
-                </label>
-                <div className="space-y-3">
-                  <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="shippingType"
-                      value="standard"
-                      checked={shippingData.delivery_type === 'standard'}
-                      onChange={(e) => setShippingData(prev => ({ ...prev, delivery_type: e.target.value as 'standard' | 'express' }))}
-                      className="text-purple-600"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">Standard Delivery - $15</div>
-                      <div className="text-sm text-gray-600">5-7 business days</div>
-                    </div>
-                  </label>
-                  <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="shippingType"
-                      value="express"
-                      checked={shippingData.delivery_type === 'express'}
-                      onChange={(e) => setShippingData(prev => ({ ...prev, delivery_type: e.target.value as 'standard' | 'express' }))}
-                      className="text-purple-600"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">Express Delivery - $25</div>
-                      <div className="text-sm text-gray-600">2-3 business days</div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Shipping Address Form */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Delivery Address *
-                </label>
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Recipient Name"
-                    value={shippingData.recipient_name}
-                    onChange={(e) => setShippingData(prev => ({ ...prev, recipient_name: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Address Line 1"
-                    value={shippingData.address_line1}
-                    onChange={(e) => setShippingData(prev => ({ ...prev, address_line1: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Address Line 2 (Optional)"
-                    value={shippingData.address_line2}
-                    onChange={(e) => setShippingData(prev => ({ ...prev, address_line2: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder="City"
-                      value={shippingData.city}
-                      onChange={(e) => setShippingData(prev => ({ ...prev, city: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="State/Province"
-                      value={shippingData.state}
-                      onChange={(e) => setShippingData(prev => ({ ...prev, state: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      required
-                    />
+            {/* Consultant Info */}
+            {accountingProfile?.consultant && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Consultant</h3>
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    {accountingProfile.consultant.full_name[0]}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder="Postal Code"
-                      value={shippingData.postal_code}
-                      onChange={(e) => setShippingData(prev => ({ ...prev, postal_code: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      required
-                    />
-                    <select
-                      value={shippingData.country}
-                      onChange={(e) => setShippingData(prev => ({ ...prev, country: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      required
+                  <div>
+                    <p className="font-medium text-gray-900">{accountingProfile.consultant.full_name}</p>
+                    <p className="text-sm text-gray-600">{accountingProfile.consultant.email}</p>
+                    <div className="flex items-center space-x-1 mt-1">
+                      <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                      <span className="text-xs text-gray-500">4.9 Rating</span>
+                    </div>
+                  </div>
+                </div>
+                <button className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2">
+                  <MessageSquare className="h-5 w-5" />
+                  <span>Send Message</span>
+                </button>
+              </div>
+            )}
+
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-2 gap-3">
+                  {quickActions.map((action, index) => (
+                    <button 
+                      key={index} 
+                      className={`${action.color} text-white p-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md group cursor-pointer`}
                     >
-                      <option value="">Select Country</option>
-                      <option value="US">United States</option>
-                      <option value="CA">Canada</option>
-                      <option value="GB">United Kingdom</option>
-                      <option value="DE">Germany</option>
-                      <option value="FR">France</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                  <input
-                    type="tel"
-                    placeholder="Phone Number (Optional)"
-                    value={shippingData.phone}
-                    onChange={(e) => setShippingData(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
+                      <action.icon className="h-5 w-5 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                      <div className="text-xs font-medium">{action.name}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
+            </div>
 
-              {/* Payment Summary */}
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <h4 className="font-medium text-gray-900 mb-3">Shipping Payment</h4>
-                <div className="mb-4">
-                  <div className="text-2xl font-bold text-gray-900">
-                    ${SHIPPING_PRICES[shippingData.delivery_type]} USD
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {shippingData.delivery_type === 'standard' ? 'Standard Delivery (5-7 days)' : 'Express Delivery (2-3 days)'}
-                  </div>
+            {/* Monthly Summary */}
+            <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-sm text-white p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">This Month</h3>
+                <TrendingUp className="h-6 w-6 text-blue-200" />
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-100">Documents Submitted</span>
+                  <span className="font-bold">{documents.filter(d => d.status === 'completed').length}</span>
                 </div>
-
-                {/* Actions */}
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => setShowShippingModal(false)}
-                    className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={processShipping}
-                    disabled={processingPayment || !shippingData.recipient_name || !shippingData.address_line1 || !shippingData.city || !shippingData.state || !shippingData.postal_code || !shippingData.country}
-                    className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                  >
-                    {processingPayment ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        <span>Processing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="h-5 w-5" />
-                        <span>Pay ${SHIPPING_PRICES[shippingData.delivery_type]}</span>
-                      </>
-                    )}
-                  </button>
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-100">Invoices Paid</span>
+                  <span className="font-bold">{invoices.filter(i => i.status === 'paid').length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-100">Service Rating</span>
+                  <div className="flex items-center space-x-1">
+                    <Star className="h-4 w-4 text-yellow-300 fill-current" />
+                    <span className="font-bold">5.0</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-export default VirtualMailboxManager;
+export default ClientAccountingDashboard;
