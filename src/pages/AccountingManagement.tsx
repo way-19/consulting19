@@ -29,7 +29,8 @@ import {
   Settings,
   RefreshCw,
   Globe,
-  Mail
+  Mail,
+  X
 } from 'lucide-react';
 
 interface AccountingClient {
@@ -805,8 +806,7 @@ const AccountingManagement = () => {
           targetUserId={selectedClient.client?.profile_id}
         />
       )}
-    </div>
-  );
+
       {/* Client Detail Modal */}
       {showClientModal && selectedClient && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -985,7 +985,6 @@ const AccountingManagement = () => {
                   <option value="document_request">Document Request</option>
                 </select>
               </div>
-};
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1031,5 +1030,8 @@ const AccountingManagement = () => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
 
 export default AccountingManagement;
