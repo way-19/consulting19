@@ -22,18 +22,16 @@ import {
   Search,
   Filter,
   Users,
-  TrendingUp,
-  Globe2,
-  Star,
-  Package,
   Settings,
   Mail,
   Truck,
+  Globe2,
+  Star,
+  Package,
   CreditCard,
   MapPin,
   X,
-  Save,
-  Send
+  Save
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
@@ -143,6 +141,24 @@ const ClientAccountingDashboard: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank'>('card');
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [showAccountSettingsModal, setShowAccountSettingsModal] = useState(false);
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: ''
+  });
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [newMessage, setNewMessage] = useState({
+    category: 'general',
+    subject: '',
+    message: '',
+    language: 'en'
+  });
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     if (profile?.id) {
@@ -1042,7 +1058,7 @@ const ClientAccountingDashboard: React.FC = () => {
                   className="flex w-full items-center justify-center space-x-2 rounded-lg bg-purple-600 px-4 py-3 font-medium text-white transition-colors hover:bg-purple-700"
                 >
                   <MessageSquare className="h-5 w-5" />
-                  <span onClick={() => setActiveTab('messages')}>Message Consultant</span>
+                  <span>Send Message</span>
                 </button>
               </div>
             )}
