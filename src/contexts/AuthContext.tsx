@@ -47,15 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (authIdError) {
         console.error('❌ Error fetching profile by auth_user_id:', authIdError.message);
         console.error('❌ Full error details:', authIdError);
-        console.error('❌ Full error details:', authIdError);
       }
       if (profileByAuthId) {
         console.log('✅ Profile found by auth_user_id:', {
-          id: profileByAuthId.id,
-          email: profileByAuthId.email,
-          role: profileByAuthId.role,
-          auth_user_id: profileByAuthId.auth_user_id
-        });
           id: profileByAuthId.id,
           email: profileByAuthId.email,
           role: profileByAuthId.role,
@@ -79,15 +73,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (idError) {
         console.error('❌ Error fetching profile by id:', idError.message);
         console.error('❌ Full error details:', idError);
-        console.error('❌ Full error details:', idError);
       }
       if (profileById) {
         console.log('✅ Profile found by id:', {
-          id: profileById.id,
-          email: profileById.email,
-          role: profileById.role,
-          auth_user_id: profileById.auth_user_id
-        });
           id: profileById.id,
           email: profileById.email,
           role: profileById.role,
@@ -108,37 +96,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .maybeSingle();
         
         console.log('🔍 Step 3 Results:', { data: profileByEmail, error: emailError });
-        
-        if (emailError) {
-          console.error('❌ Error fetching profile by email:', emailError.message);
-          console.error('❌ Full error details:', emailError);
-        }
-        if (profileByEmail) {
-          console.log('✅ Profile found by email:', {
-            id: profileByEmail.id,
-            email: profileByEmail.email,
-            role: profileByEmail.role,
-            auth_user_id: profileByEmail.auth_user_id
-          });
-          return profileByEmail;
-        }
-      }
-      
-      console.error('❌ Profile not found by any method (auth_user_id, id, or email) for user:', userId);
-      console.error('❌ Available debugging info:');
-      console.error('   - Auth user ID:', userId);
-      console.error('   - Auth user email:', session?.user?.email);
-      console.error('   - Auth ID error:', authIdError?.message || 'None');
-      console.error('   - ID error:', idError?.message || 'None');
-      
-      console.log('⚠️ Profile not found by id either. Trying by email...');
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        const { data: profileByEmail, error: emailError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('email', session.user.email)
-          .maybeSingle();
         
         if (emailError) {
           console.error('❌ Error fetching profile by email:', emailError.message);
