@@ -72,9 +72,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     document_type: '',
     document_name: '',
     description: '',
-    shipping_fee: 25.00,
-    file: null as File | null,
-    recipient_name: ''
+    file: null as File | null
   });
 
   const documentTypes = [
@@ -250,7 +248,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         file_size: formData.file?.size || 0,
         status: 'pending',
         tracking_number: `VM-2024-${String(items.length + 1).padStart(3, '0')}`,
-        shipping_fee: formData.shipping_fee,
+        shipping_fee: 0,
         payment_status: 'unpaid',
         created_at: new Date().toISOString(),
         client: {
@@ -272,8 +270,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       // 1) Prepare file URL (simulation)
       let fileUrl = null;
       
-      // 2) Destructure formData, excluding file and recipient_name (not in DB schema)
-      const { file, recipient_name, ...restOfFormData } = formData;
+      // 2) Destructure formData, excluding file (not in DB schema)
+      const { file, ...restOfFormData } = formData;
       
       if (formData.file) {
         // In real implementation, upload to Supabase Storage
@@ -287,6 +285,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         status: 'pending',
         file_url: fileUrl,
         file_size: formData.file?.size || 0,
+        shipping_fee: 0, // Will be set when client chooses delivery option
       };
 
       const { error } = await supabase
@@ -364,9 +363,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       document_type: '',
       document_name: '',
       description: '',
-      shipping_fee: 25.00,
-      file: null,
-      recipient_name: ''
+      file: null
     });
     setShowAddForm(false);
   };
@@ -538,26 +535,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               </select>
             )}
           </div>
-              {/* Shipping Fee */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Shipping Fee (USD) *
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  required
-                  value={formData.shipping_fee}
-                  onChange={(e) => setFormData(prev => ({ ...prev, shipping_fee: parseFloat(e.target.value) || 0 }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="25.00"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Standard fee: $10 | Express/Large documents: Higher fee based on size
-                </p>
-              </div>
-
         </div>
       </div>
 
@@ -860,8 +837,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                 
                 <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                   <p className="text-sm text-blue-800">
-                    <strong>Process:</strong> Client will see document in their panel, enter shipping address, 
-                    and pay the shipping fee. You will be notified when payment is completed.
+                    <strong>Process:</strong> Client will see document in their panel, choose delivery option 
+                    (Standard $10 / Express $25), enter shipping address, and pay. You will be notified when payment is completed.
                   </p>
                 </div>
               </div>
