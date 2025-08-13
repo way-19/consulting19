@@ -167,6 +167,36 @@ const ConsultantServices = () => {
     setShowForm(false);
   };
 
+  const handleEdit = (service: CustomService) => {
+    setEditingService(service);
+    setFormData({
+      title: service.title,
+      description: service.description || '',
+      features: service.features.length > 0 ? service.features : [''],
+      price: service.price,
+      currency: service.currency,
+      delivery_time_days: service.delivery_time_days,
+      category: service.category,
+      is_active: service.is_active
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (serviceId: string) => {
+    if (!confirm('Are you sure you want to delete this service?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('custom_services')
+        .delete()
+        .eq('id', serviceId);
+
+      if (error) throw error;
+      await fetchServices();
+    } catch (error) {
+      console.error('Error deleting service:', error);
+    }
+  };
   const addFeature = () => {
     setFormData(prev => ({
       ...prev,
