@@ -40,9 +40,8 @@ interface VirtualMailboxItem {
   delivered_date?: string;
   viewed_date?: string;
   downloaded_date?: string;
-    const { file, ...itemDataWithoutFile } = formData;
   created_at: string;
-      ...itemDataWithoutFile,
+  client: {
     company_name: string;
     profile?: {
       full_name: string;
@@ -277,8 +276,9 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         fileUrl = `https://example.com/documents/${formData.file.name}`;
       }
       
+      const { file, ...itemDataWithoutFile } = formData;
       const itemData = {
-        ...formData,
+        ...itemDataWithoutFile,
         consultant_id: profile?.id,
         status: 'pending',
         file_url: fileUrl,
