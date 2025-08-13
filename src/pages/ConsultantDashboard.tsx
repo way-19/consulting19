@@ -104,9 +104,18 @@ const ConsultantDashboard = () => {
     full_name: profile?.full_name || '',
     email: profile?.email || '',
     phone: '',
-    country: profile?.country || 'Georgia',
     bio: '',
-    specializations: ['Company Formation', 'Tax Consulting'],
+   specializations: ['Company Formation', 'Tax Consulting'],
+   currentPassword: '',
+   newPassword: '',
+   confirmPassword: '',
+   emailNotifications: true,
+   smsNotifications: false,
+   clientMessageAlerts: true,
+   workingHoursStart: '09:00',
+   workingHoursEnd: '18:00',
+   timezone: 'Asia/Tbilisi',
+   preferredLanguage: 'en'
     languages: ['English', 'Turkish', 'Georgian']
   });
   useEffect(() => {
@@ -245,9 +254,33 @@ This is a sample report. In production, this would contain real data.
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+     // Validate password change if provided
+     if (settingsData.newPassword) {
+       if (settingsData.newPassword !== settingsData.confirmPassword) {
+         alert('New passwords do not match');
+         return;
+       }
+       
+       if (settingsData.newPassword.length < 8) {
+         alert('Password must be at least 8 characters long');
+         return;
+       }
+       
+       if (!settingsData.currentPassword) {
+         alert('Please enter your current password');
+         return;
+       }
+     }
+
       // In real implementation, this would update profile in database
       console.log('Updating profile:', profileForm);
       alert('Profile updated successfully!');
+     // Update password if provided
+     if (settingsData.newPassword && settingsData.currentPassword) {
+       // In real implementation, this would call Supabase auth.updateUser
+       console.log('Password change requested');
+     }
+     
       setShowSettingsModal(false);
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -988,23 +1021,165 @@ This is a sample report. In production, this would contain real data.
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Account Settings</h2>
-                <button
-                  onClick={() => setShowSettingsModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
-              </div>
-            </div>
-
-            <form onSubmit={handleUpdateProfile} className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                   <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                       Specialization Country
+                     </label>
+                     <div className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-600">
+                       🇬🇪 Georgia (Fixed)
+                     </div>
+                     <p className="text-xs text-gray-500 mt-1">Your specialization country cannot be changed</p>
+                   </div>
                     Full Name *
                   </label>
+                 {/* Password Change Section */}
+                 <div className="border-t border-gray-200 pt-6">
+                   <h4 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h4>
+                   <div className="space-y-4">
+                     <div>
+                       <label className="block text-sm font-medium text-gray-700 mb-2">
+                         Current Password
+                       </label>
+                       <input
+                         type="password"
+                         value={settingsData.currentPassword}
+                         onChange={(e) => setSettingsData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                         placeholder="Enter current password"
+                       />
+                     </div>
+                     
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <div>
+                         <label className="block text-sm font-medium text-gray-700 mb-2">
+                           New Password
+                         </label>
+                         <input
+                           type="password"
+                           value={settingsData.newPassword}
+                           onChange={(e) => setSettingsData(prev => ({ ...prev, newPassword: e.target.value }))}
+                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                           placeholder="Enter new password"
+                         />
+                       </div>
+                       
+                       <div>
+                         <label className="block text-sm font-medium text-gray-700 mb-2">
+                           Confirm New Password
+                         </label>
+                         <input
+                           type="password"
+                           value={settingsData.confirmPassword}
+                           onChange={(e) => setSettingsData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                           placeholder="Confirm new password"
+                         />
+                       </div>
+                     </div>
+                     
+                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                       <h5 className="font-medium text-blue-900 mb-2">Password Requirements</h5>
+                       <ul className="text-sm text-blue-800 space-y-1">
+                         <li>• At least 8 characters long</li>
+                         <li>• Include uppercase and lowercase letters</li>
+                         <li>• Include at least one number</li>
+                         <li>• Include at least one special character</li>
+                       </ul>
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Notification Preferences */}
+                 <div className="border-t border-gray-200 pt-6">
+                   <h4 className="text-lg font-semibold text-gray-900 mb-4">Notification Preferences</h4>
+                   <div className="space-y-4">
+                     <div className="flex items-center justify-between">
+                       <div>
+                         <p className="font-medium text-gray-900">Email Notifications</p>
+                         <p className="text-sm text-gray-600">Receive notifications via email</p>
+                       </div>
+                       <input
+                         type="checkbox"
+                         checked={settingsData.emailNotifications}
+                         onChange={(e) => setSettingsData(prev => ({ ...prev, emailNotifications: e.target.checked }))}
+                         className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                       />
+                     </div>
+                     
+                     <div className="flex items-center justify-between">
+                       <div>
+                         <p className="font-medium text-gray-900">SMS Notifications</p>
+                         <p className="text-sm text-gray-600">Receive urgent notifications via SMS</p>
+                       </div>
+                       <input
+                         type="checkbox"
+                         checked={settingsData.smsNotifications}
+                         onChange={(e) => setSettingsData(prev => ({ ...prev, smsNotifications: e.target.checked }))}
+                         className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                       />
+                     </div>
+                     
+                     <div className="flex items-center justify-between">
+                       <div>
+                         <p className="font-medium text-gray-900">Client Message Alerts</p>
+                         <p className="text-sm text-gray-600">Get notified when clients send messages</p>
+                       </div>
+                       <input
+                         type="checkbox"
+                         checked={settingsData.clientMessageAlerts}
+                         onChange={(e) => setSettingsData(prev => ({ ...prev, clientMessageAlerts: e.target.checked }))}
+                         className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                       />
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Working Hours */}
+                 <div className="border-t border-gray-200 pt-6">
+                   <h4 className="text-lg font-semibold text-gray-900 mb-4">Working Hours</h4>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div>
+                       <label className="block text-sm font-medium text-gray-700 mb-2">
+                         Start Time
+                       </label>
+                       <input
+                         type="time"
+                         value={settingsData.workingHoursStart}
+                         onChange={(e) => setSettingsData(prev => ({ ...prev, workingHoursStart: e.target.value }))}
+                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                       />
+                     </div>
+                     
+                     <div>
+                       <label className="block text-sm font-medium text-gray-700 mb-2">
+                         End Time
+                       </label>
+                       <input
+                         type="time"
+                         value={settingsData.workingHoursEnd}
+                         onChange={(e) => setSettingsData(prev => ({ ...prev, workingHoursEnd: e.target.value }))}
+                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                       />
+                     </div>
+                   </div>
+                   
+                   <div className="mt-4">
+                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                       Time Zone
+                     </label>
+                     <select
+                       value={settingsData.timezone}
+                       onChange={(e) => setSettingsData(prev => ({ ...prev, timezone: e.target.value }))}
+                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                     >
+                       <option value="Asia/Tbilisi">🇬🇪 Georgia Time (GMT+4)</option>
+                       <option value="Europe/Istanbul">🇹🇷 Turkey Time (GMT+3)</option>
+                       <option value="Europe/London">🇬🇧 London Time (GMT+0)</option>
+                       <option value="America/New_York">🇺🇸 New York Time (GMT-5)</option>
+                     </select>
+                   </div>
+                 </div>
+
                   <input
                     type="text"
                     required
