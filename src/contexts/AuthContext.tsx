@@ -86,31 +86,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (createError) {
         console.error('❌ Profile creation error:', createError);
         console.error('❌ Creation error details:', createError.message, createError.code, createError.details);
-        
-        // If duplicate key error (23505), profile already exists - retry fetch
-        if (createError.code === '23505') {
-          console.log('🔄 Profile already exists, retrying fetch...');
-          try {
-            const { data: existingProfile, error: retryError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('auth_user_id', userId)
-              .maybeSingle();
-            
-            if (retryError) {
-              console.error('❌ Retry fetch error:', retryError);
-              return null;
-            }
-            
-            if (existingProfile) {
-              console.log('✅ Found existing profile on retry:', existingProfile.email, existingProfile.role);
-              return existingProfile;
-            }
-          } catch (retryErr) {
-            console.error('💥 Retry fetch crashed:', retryErr);
-          }
-        }
-        
         return null;
       }
       
