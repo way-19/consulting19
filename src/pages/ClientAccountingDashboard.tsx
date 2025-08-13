@@ -29,7 +29,9 @@ import {
   CreditCard,
   MapPin,
   X,
-  Save
+  Save,
+  CalendarDays,
+  ExclamationTriangle
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
