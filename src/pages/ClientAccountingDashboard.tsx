@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
-import { 
-  FileText, 
-  Calendar, 
-  AlertTriangle, 
-  CheckCircle, 
+import {
+  FileText,
+  Calendar,
+  AlertTriangle,
+  CheckCircle,
   Clock,
   Upload,
   Download,
@@ -24,19 +24,7 @@ import {
   CreditCard,
   Settings,
   Mail,
-  Truck
-  Mail,
-  Truck
-  Mail,
-  Truck
-  Mail,
-  Truck
-  Mail,
-  Truck
-  Mail,
-  Truck
-  Mail,
-  Truck
+  Truck,
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
@@ -341,16 +329,13 @@ const ClientAccountingDashboard = () => {
   console.log('🔵 ClientDashboard render:', { 
     loading, 
     user: !!user, 
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
+    profile: !!profile, 
+    profileRole: profile?.role 
   });
+
+  // Mock data for demo
+  useEffect(() => {
+    // Create mock accounting profile
     const mockProfile: ClientAccountingProfile = {
       id: 'mock-client-1',
       company_name: 'Georgia Tech Solutions LLC',
