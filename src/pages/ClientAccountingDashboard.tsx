@@ -114,6 +114,16 @@ interface VirtualMailboxItem {
   created_at: string;
 }
 
+interface UpcomingDeadline {
+  id: string;
+  title: string;
+  date: string;
+  type: 'document' | 'invoice';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: string;
+  daysUntil: number;
+}
+
 const ClientAccountingDashboard: React.FC = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -123,6 +133,7 @@ const ClientAccountingDashboard: React.FC = () => {
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState<UpcomingDeadline[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'>('overview');
@@ -138,17 +149,6 @@ const ClientAccountingDashboard: React.FC = () => {
   const [selectedInvoiceToPay, setSelectedInvoiceToPay] = useState<ClientInvoice | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank'>('card');
   const [paymentProcessing, setPaymentProcessing] = useState(false);
-
-  // Upcoming deadlines state
-  const [upcomingDeadlines, setUpcomingDeadlines] = useState<Array<{
-    id: string;
-    title: string;
-    date: string;
-    type: 'document' | 'invoice' | 'task';
-    priority: 'low' | 'medium' | 'high' | 'urgent';
-    status: string;
-    daysUntil: number;
-  }>>([]);
 
   useEffect(() => {
     if (profile?.id) {
@@ -256,6 +256,55 @@ const ClientAccountingDashboard: React.FC = () => {
       } else {
         setMessages(messagesData || []);
       }
+
+      // Calculate upcoming deadlines
+      const deadlines: UpcomingDeadline[] = [];
+      
+      // Add document deadlines
+      (documentsData || []).forEach(doc => {
+        if (doc.due_date && doc.status !== 'completed') {
+          const dueDate = new Date(doc.due_date);
+          const today = new Date();
+          const daysUntil = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysUntil >= -7 && daysUntil <= 30) { // Show items from 7 days overdue to 30 days ahead
+            deadlines.push({
+              id: `doc-${doc.id}`,
+              title: doc.title,
+              date: doc.due_date,
+              type: 'document' as const,
+              priority: doc.priority,
+              status: doc.status,
+              daysUntil
+            });
+          }
+        }
+      });
+
+      // Add invoice deadlines
+      (invoicesData || []).forEach(invoice => {
+        if (invoice.due_date && (invoice.status === 'sent' || invoice.status === 'overdue')) {
+          const dueDate = new Date(invoice.due_date);
+          const today = new Date();
+          const daysUntil = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysUntil >= -7 && daysUntil <= 30) {
+            deadlines.push({
+              id: `inv-${invoice.id}`,
+              title: `Invoice ${invoice.invoice_number}`,
+              date: invoice.due_date,
+              type: 'invoice' as const,
+              priority: daysUntil <= 3 ? 'urgent' : daysUntil <= 7 ? 'high' : 'medium',
+              status: invoice.status,
+              daysUntil
+            });
+          }
+        }
+      });
+
+      // Sort by days until deadline (most urgent first)
+      deadlines.sort((a, b) => a.daysUntil - b.daysUntil);
+      setUpcomingDeadlines(deadlines);
 
     } catch (error) {
       console.error('Error in fetchAccountingData:', error);
