@@ -30,140 +30,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const navigate = useNavigate();
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userEmail: string, userId: string) => {
+    console.log('🔍 Fetching profile for:', userEmail, 'ID:', userId);
+    
     try {
-      console.log('🔍 Fetching profile for user:', userId);
-      console.log('📧 Step 1: Getting current session...');
-      let session;
-      try {
-        const sessionResult = await supabase.auth.getSession();
-        session = sessionResult.data.session;
-        console.log('✅ Session retrieved successfully:', session ? `User: ${session.user?.email}` : 'No session');
-        
-        if (sessionResult.error) {
-          console.error('❌ Session error:', sessionResult.error);
-          return null;
-        }
-      } catch (sessionErr) {
-        console.error('💥 Session fetch crashed:', sessionErr);
-        return null;
-      }
+      console.log('📧 Querying profiles table...');
       
-      if (!session?.user?.email) {
-        console.error('❌ No session or email found');
-        return null;
-      }
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', userEmail)
+        .maybeSingle();
       
-      console.log('📧 Step 2: Querying profile by email:', session.user.email);
-      
-      let profile, error;
-      try {
-        console.log('🔍 Creating Supabase query...');
-        const result = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('email', session.user.email)
-          .maybeSingle();
-        
-        profile = result.data;
-        error = result.error;
-        console.log('✅ Query executed successfully');
-        console.log('🔍 Profile result:', profile ? `Found: ${profile.email}` : 'Not found');
-        console.log('🔍 Error result:', error ? error.message : 'No error');
-      } catch (queryErr) {
-        console.error('💥 Profile query crashed:', queryErr);
-        console.error('💥 Query error details:', queryErr instanceof Error ? queryErr.message : 'Unknown error');
-        return null;
-      }
+      console.log('📊 Query result:', { data, error });
       
       if (error) {
-        console.error('❌ Error fetching profile:', error);
-        console.error('❌ Error details:', error.message, error.code, error.details);
-        
-        // If no profile found, try to create one
-        if (!profile) {
-          console.log('📝 Step 3: Profile not found, creating new profile...');
-          
-          try {
-            const newProfile = {
-              id: userId,
-              auth_user_id: userId,
-              email: session.user.email,
-              role: 'client' as const,
-              full_name: session.user.user_metadata?.full_name || null,
-              country: null
-            };
-            
-            console.log('📝 Creating profile with data:', newProfile);
-            
-            const createResult = await supabase
-              .from('profiles')
-              .insert([newProfile])
-              .select()
-              .single();
-            
-            console.log('📝 Profile creation result:', createResult);
-            
-            if (createResult.error) {
-              console.error('❌ Error creating profile:', createResult.error.message);
-              return null;
-            }
-            
-            console.log('✅ Profile created successfully:', createResult.data);
-            return createResult.data;
-          } catch (createErr) {
-            console.error('💥 Profile creation crashed:', createErr);
-            return null;
-          }
-        }
-        
+        console.error('❌ Profile query error:', error);
         return null;
       }
       
-      if (!profile) {
-        console.error('❌ Profile is null but no error returned');
-        console.log('🔍 Attempting to create missing profile...');
-        
-        const newProfile = {
-          id: userId,
-          auth_user_id: userId,
-          email: session.user.email,
-          role: 'client' as const,
-          full_name: session.user.user_metadata?.full_name || null,
-          country: null
-        };
-        
-        console.log('📝 Creating profile with data:', newProfile);
-        
-        const { data: createdProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert([newProfile])
-          .select()
-          .single();
-        
-        console.log('📝 Profile creation result:', { createdProfile, createError });
-        
-        if (createError) {
-          console.error('❌ Error creating profile:', createError.message);
-          return null;
-        }
-        
-        console.log('✅ Profile created successfully:', createdProfile);
-        return createdProfile;
+      if (data) {
+        console.log('✅ Profile found:', data.email, data.role);
+        return data;
+      }
+      
+      console.log('📝 Profile not found, creating new profile...');
+      
+      // Create new profile
+      const newProfile = {
+        id: userId,
+        auth_user_id: userId,
+        email: userEmail,
+        role: 'client' as const,
+        full_name: null,
+        country: null
+      };
+      
+      const { data: createdProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert([newProfile])
+        .select()
+        .single();
+      
+      if (createError) {
+        console.error('❌ Profile creation error:', createError);
         return null;
       }
       
-      console.log('✅ Profile found successfully:', {
-        id: profile.id,
-        email: profile.email,
-        role: profile.role,
-        auth_user_id: profile.auth_user_id
-      });
+      console.log('✅ Profile created:', createdProfile.email, createdProfile.role);
+      return createdProfile;
       
-      return profile;
     } catch (error) {
-      console.error('💥 Unexpected error in fetchProfile:', error);
-      console.error('💥 Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('💥 fetchProfile crashed:', error);
       return null;
     }
   };
@@ -195,21 +113,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Session error:', error);
+          setLoading(false);
+          return;
+        }
         
         if (session?.user) {
           console.log('👤 Session found:', session.user.email);
           setUser(session.user);
           
-          const userProfile = await fetchProfile(session.user.id);
+          const userProfile = await fetchProfile(session.user.email!, session.user.id);
           if (userProfile) {
             console.log('✅ Profile loaded successfully, navigating...');
             setProfile(userProfile);
             navigateBasedOnRole(userProfile);
           } else {
-            console.error('❌ Could not load profile after session found. User will stay on current page.');
-            console.error('❌ This means the user exists in auth.users but not in profiles table.');
+            console.error('❌ Could not load profile');
           }
+        } else {
+          console.log('👤 No session found');
         }
       } catch (error) {
         console.error('💥 Auth init error:', error);
@@ -227,14 +152,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user);
           
-          const userProfile = await fetchProfile(session.user.id);
+          const userProfile = await fetchProfile(session.user.email!, session.user.id);
           if (userProfile) {
             console.log('✅ Profile loaded after sign in, navigating...');
             setProfile(userProfile);
             navigateBasedOnRole(userProfile);
           } else {
-            console.error('❌ Could not load profile after sign in. This is a critical issue.');
-            console.error('❌ User authenticated but profile missing from database.');
+            console.error('❌ Could not load profile after sign in');
           }
           setLoading(false);
         } else if (event === 'SIGNED_OUT') {
@@ -263,7 +187,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('❌ Sign in error:', error.message);
-        console.error('❌ Full sign in error:', error);
         setLoading(false);
         throw error;
       }
