@@ -54,27 +54,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log('🚀 Initializing auth...');
     
-    let mounted = true;
-
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (mounted) {
-          if (session?.user) {
-            console.log('👤 Session found:', session.user.email);
-            setUser(session.user);
-            
-            const userProfile = await fetchProfile(session.user.id);
-            if (mounted && userProfile) {
-              setProfile(userProfile);
-            }
+        if (session?.user) {
+          console.log('👤 Session found:', session.user.email);
+          setUser(session.user);
+          
+          const userProfile = await fetchProfile(session.user.id);
+          if (userProfile) {
+            setProfile(userProfile);
           }
-          setLoading(false);
         }
+        setLoading(false);
       } catch (error) {
         console.error('💥 Auth init error:', error);
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     };
 
@@ -82,31 +78,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
-        
         console.log('🔄 Auth state change:', event, session?.user?.email);
 
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user);
           
-          const userProfile = await fetchProfile(session.user.id);
-          if (mounted && userProfile) {
-            setProfile(userProfile);
+          // Only fetch profile if we don't have one or it's different user
+          if (!profile || profile.auth_user_id !== session.user.id) {
+            const userProfile = await fetchProfile(session.user.id);
+            if (userProfile) {
+              setProfile(userProfile);
+            }
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
         }
         
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     );
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Empty dependency array - only run once
 
   const signIn = async (email: string, password: string) => {
     console.log('🔐 Signing in:', email);
