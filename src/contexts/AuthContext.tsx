@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
     let authSubscription: any = null;
 
     const initializeAuth = async () => {
@@ -61,13 +61,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (isMounted) {
+        if (mounted) {
           if (session?.user) {
             console.log('👤 Session found:', session.user.email);
             setUser(session.user);
             
             const userProfile = await fetchProfile(session.user.id);
-            if (isMounted && userProfile) {
+            if (mounted && userProfile) {
               setProfile(userProfile);
             }
           } else {
@@ -77,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error('💥 Auth initialization error:', error);
-        if (isMounted) {
+        if (mounted) {
           setLoading(false);
         }
       }
@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     authSubscription = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!isMounted) return;
+        if (!mounted) return;
         
         console.log('🔄 Auth state change:', event, session?.user?.email);
 
@@ -96,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(session.user);
           
           const userProfile = await fetchProfile(session.user.id);
-          if (isMounted && userProfile) {
+          if (mounted && userProfile) {
             setProfile(userProfile);
           }
         } else if (event === 'SIGNED_OUT') {
@@ -104,15 +104,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null);
         }
         
-        if (isMounted) {
+        if (mounted) {
           setLoading(false);
         }
       }
     );
 
     return () => {
-      isMounted = false;
-      if (authSubscription) {
+      mounted = false;
+      if (authSubscription?.data?.subscription) {
         authSubscription.data.subscription.unsubscribe();
       }
     };

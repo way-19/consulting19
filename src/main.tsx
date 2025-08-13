@@ -24,13 +24,11 @@ import AppErrorBoundary from './components/AppErrorBoundary';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AppErrorBoundary>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </AppErrorBoundary>
-    </BrowserRouter>
-  </React.StrictMode>,
+  <BrowserRouter>
+    <AppErrorBoundary>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </AppErrorBoundary>
+  </BrowserRouter>
 );
