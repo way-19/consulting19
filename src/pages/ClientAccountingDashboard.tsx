@@ -22,7 +22,9 @@ import {
   CreditCard,
 } from 'lucide-react';
 
-interface ClientAccountingProfile {
+  Settings,
+  Mail,
+  Truck
   id: string;
   client_id: string;
   consultant_id: string;
@@ -86,6 +88,23 @@ interface ClientMessage {
   };
 }
 
+interface VirtualMailboxItem {
+  id: string;
+  document_type: string;
+  document_name: string;
+  description?: string;
+  file_url?: string;
+  file_size?: number;
+  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
+  tracking_number: string;
+  shipping_fee: number;
+  payment_status: 'unpaid' | 'paid' | 'waived';
+  sent_date?: string;
+  delivered_date?: string;
+  viewed_date?: string;
+  downloaded_date?: string;
+  created_at: string;
+}
 const ClientAccountingDashboard: React.FC = () => {
   const { user, profile } = useAuth();
 
@@ -93,6 +112,7 @@ const ClientAccountingDashboard: React.FC = () => {
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
+  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'>('overview');
@@ -986,16 +1006,198 @@ const ClientAccountingDashboard: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-blue-100">Service Rating</span>
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: ''
+  });
                   <div className="flex items-center space-x-1">
                     <Star className="h-4 w-4 fill-current text-yellow-300" />
                     <span className="font-bold">5.0</span>
-                  </div>
+                    Document Type
+                  </label>
+                  <select
+                    value={uploadDocumentType}
+                    onChange={(e) => setUploadDocumentType(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    <option value="">Select document type</option>
+                    <option value="financial_statement">Financial Statement</option>
+                    <option value="bank_statement">Bank Statement</option>
+                    <option value="tax_document">Tax Document</option>
+                    <option value="invoice">Invoice</option>
+                    <option value="receipt">Receipt</option>
+                    <option value="contract">Contract</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
+                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={uploadDescription}
+                    onChange={(e) => setUploadDescription(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Brief description of the document..."
+                  />
+                </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select File
+                  </label>
+                  <input
+                    type="file"
+                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported formats: PDF, DOC, DOCX, JPG, PNG, XLSX, XLS (Max 10MB)
+                  </p>
+                </div>
+              </div>
+              </div>
+              <div className="flex items-center space-x-4 mt-6">
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmUpload}
+                  disabled={uploadProcessing || !uploadFile || !uploadDocumentType}
+                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {uploadProcessing ? (
+                    <>
+                      <Loader className="h-5 w-5 animate-spin" />
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileUp className="h-5 w-5" />
+                      <span>Upload</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
         </div>
+      )}
+            </div>
+      {/* Pay Invoice Modal */}
+      {showPayInvoiceModal && selectedInvoiceToPay && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Pay Invoice</h3>
+                <button
+                  onClick={() => setShowPayInvoiceModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+          </div>
+              {/* Invoice Details */}
+              <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                <h4 className="font-bold text-gray-900 mb-4">{selectedInvoiceToPay.invoice_number}</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount:</span>
+                    <span className="font-bold text-gray-900">${selectedInvoiceToPay.amount} {selectedInvoiceToPay.currency}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Due Date:</span>
+                    <span className="font-medium text-gray-900">
+                      {selectedInvoiceToPay.due_date ? new Date(selectedInvoiceToPay.due_date).toLocaleDateString() : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedInvoiceToPay.status)}`}>
+                      {selectedInvoiceToPay.status.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+        </div>
+              {/* Payment Method */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
+                <div className="space-y-3">
+                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      value="card"
+                      defaultChecked
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <div className="ml-3 flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-900">Credit/Debit Card</span>
+                        <CreditCard className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <p className="text-sm text-gray-600">Secure payment via Stripe</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      value="bank"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <div className="ml-3 flex-1">
+                      <span className="font-medium text-gray-900">Bank Transfer</span>
+                      <p className="text-sm text-gray-600">Direct bank transfer</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
       </div>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setShowPayInvoiceModal(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmPayInvoice}
+                  disabled={paymentProcessing}
+                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {paymentProcessing ? (
+                    <>
+                      <Loader className="h-5 w-5 animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-5 w-5" />
+                      <span>Pay ${selectedInvoiceToPay.amount}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
