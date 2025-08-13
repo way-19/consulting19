@@ -15,6 +15,14 @@ A revolutionary business consulting platform that combines artificial intelligen
 ### 1. Environment Setup
 
 ```bash
+# Fix npm permissions for global packages
+mkdir -p ~/.npm-global
+npm config set prefix '~/.npm-global'
+export PATH=~/.npm-global/bin:$PATH
+
+# Install Supabase CLI globally
+npm install -g supabase
+
 # Copy environment template
 cp .env.example .env
 

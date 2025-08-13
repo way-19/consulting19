@@ -128,8 +128,13 @@ import LegacyOrders from './pages/LegacyOrders';
 import ConsultantServices from './pages/ConsultantServices';
 import ClientServices from './pages/ClientServices';
 import AccountingManagement from './pages/AccountingManagement';
+import AdminDashboard from './pages/AdminDashboard';
+import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
 
 export default function App() {
+  console.log('🚀 App component loaded');
+  
   return (
     <>
       <Navbar />
@@ -137,8 +142,8 @@ export default function App() {
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/countries" element={<CountriesPage />} />
-        <Route path="/country/:code" element={<CountryDetailPage />} />
-        <Route path="/country/:code/service/:slug" element={<CountryServiceDetailPage />} />
+        <Route path="/countries/:slug" element={<CountryDetailPage />} />
+        <Route path="/countries/:countrySlug/services/:serviceSlug" element={<CountryServiceDetailPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/services/:slug" element={<ServiceDetailPage />} />
         <Route path="/about" element={<AboutPage />} />
@@ -150,69 +155,55 @@ export default function App() {
         <Route
           path="/admin-dashboard"
           element={
-            <ProtectedRoute requiredRole="admin">
-              <CustomersManagement />
-            </ProtectedRoute>
+            <AdminDashboard />
           }
         />
         <Route
           path="/consultant-dashboard"
           element={
-            <ProtectedRoute requiredRole="consultant">
-              <ConsultantDashboard />
-            </ProtectedRoute>
+            <ConsultantDashboard />
           }
         />
         <Route
           path="/consultant-services"
           element={
-            <ProtectedRoute requiredRole="consultant">
-              <ConsultantServices />
-            </ProtectedRoute>
+            <ConsultantServices />
           }
         />
         <Route
           path="/legacy-orders"
           element={
-            <ProtectedRoute requiredRole="consultant">
-              <LegacyOrders />
-            </ProtectedRoute>
+            <LegacyOrders />
           }
         />
         <Route
           path="/accounting-management"
           element={
-            <ProtectedRoute requiredRole="consultant">
-              <AccountingManagement />
-            </ProtectedRoute>
+            <AccountingManagement />
           }
         />
         <Route
-          path="/customers"
+          path="/customers-management"
           element={
-            <ProtectedRoute requiredRole="consultant">
-              <CustomersManagement />
-            </ProtectedRoute>
+            <CustomersManagement />
           }
         />
         <Route
           path="/client-accounting"
           element={
-            <ProtectedRoute requiredRole="client">
-              <ClientAccountingDashboard />
-            </ProtectedRoute>
+            <ClientAccountingDashboard />
           }
         />
         <Route
           path="/client-services"
           element={
-            <ProtectedRoute requiredRole="client">
-              <ClientServices />
-            </ProtectedRoute>
+            <ClientServices />
           }
         />
         
         {/* Catch all */}
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/blog/:postId" element={<BlogPostPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <Footer />

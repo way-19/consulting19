@@ -1,129 +1,7 @@
-/* __backup__ 2025-08-12 15:30 */
-// import { createContext, useContext, useEffect, useState } from 'react';
-// import type { User } from '@supabase/supabase-js';
-// import { supabase } from '../lib/supabase';
-// 
-// type Role = 'admin' | 'consultant' | 'client';
-// 
-// export type Profile = {
-//   id: string;
-//   auth_user_id: string;
-//   email: string;
-//   role: Role;
-//   country?: string | null;
-//   full_name?: string | null;
-// };
-// 
-// type AuthContextValue = {
-//   loading: boolean;
-//   user: User | null;
-//   profile: Profile | null;
-//   signIn: (email: string, password: string) => Promise<void>;
-//   signOut: () => Promise<void>;
-// };
-// 
-// const AuthCtx = createContext<AuthContextValue | undefined>(undefined);
-// 
-// export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-//   const [loading, setLoading] = useState(true);
-//   const [user, setUser] = useState<User | null>(null);
-//   const [profile, setProfile] = useState<Profile | null>(null);
-// 
-//   async function fetchProfile(u: User) {
-//     try {
-//       console.log('🔍 Fetching profile for:', u.id);
-//       const { data, error } = await supabase
-//         .from('profiles')
-//         .select('*')
-//         .eq('auth_user_id', u.id)
-//         .single();
-// 
-//       if (error) {
-//         console.error('❌ Profile fetch error:', error.message);
-//         setProfile(null);
-//         return;
-//       }
-// 
-//       console.log('✅ Profile found:', data.role);
-//       setProfile(data as Profile);
-//     } catch (e) {
-//       console.error('💥 Profile fetch failed:', e);
-//       setProfile(null);
-//     }
-//   }
-// 
-//   useEffect(() => {
-//     let mounted = true;
-// 
-//     async function initAuth() {
-//       const { data: { session } } = await supabase.auth.getSession();
-// 
-//       if (!mounted) return;
-// 
-//       if (session?.user) {
-//         console.log('✅ Session user:', session.user.id);
-//         setUser(session.user);
-//         await fetchProfile(session.user);
-//       } else {
-//         console.log('🔍 No session found');
-//         setUser(null);
-//         setProfile(null);
-//       }
-// 
-//       setLoading(false);
-//     }
-// 
-//     initAuth();
-// 
-//     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-//       if (!mounted) return;
-// 
-//       console.log('🔔 Auth state changed:', event);
-// 
-//       if (session?.user) {
-//         setUser(session.user);
-//         await fetchProfile(session.user);
-//       } else {
-//         setUser(null);
-//         setProfile(null);
-//       }
-// 
-//       setLoading(false);
-//     });
-// 
-//     return () => {
-//       mounted = false;
-//       subscription.unsubscribe();
-//     };
-//   }, []);
-// 
-//   const signIn = async (email: string, password: string) => {
-//     const { error } = await supabase.auth.signInWithPassword({ email, password });
-//     if (error) throw error;
-//   };
-// 
-//   const signOut = async () => {
-//     await supabase.auth.signOut();
-//     setUser(null);
-//     setProfile(null);
-//   };
-// 
-//   return (
-//     <AuthCtx.Provider value={{ loading, user, profile, signIn, signOut }}>
-//       {children}
-//     </AuthCtx.Provider>
-//   );
-// };
-// 
-// export const useAuth = () => {
-//   const ctx = useContext(AuthCtx);
-//   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
-//   return ctx;
-// };
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { ensureProfile } from '../lib/ensureProfile';
 
 type Role = 'admin' | 'consultant' | 'client';
 
@@ -151,67 +29,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  async function fetchProfile(u: User) {
-    try {
-      console.log('🔍 Fetching profile for:', u.id);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('auth_user_id', u.id)
-        .single();
-
-      if (error) {
-        console.error('❌ Profile fetch error:', error.message);
-        setProfile(null);
-        return;
-      }
-
-      console.log('✅ Profile found:', data.role);
-      setProfile(data as Profile);
-    } catch (e) {
-      console.error('💥 Profile fetch failed:', e);
-      setProfile(null);
-    }
-  }
-
   useEffect(() => {
     let mounted = true;
 
-    async function initAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!mounted) return;
-
-      if (session?.user) {
-        console.log('✅ Session user:', session.user.id);
-        setUser(session.user);
-        await fetchProfile(session.user);
-      } else {
-        console.log('🔍 No session found');
-        setUser(null);
-        setProfile(null);
+    // Get initial session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted) {
+          if (session?.user) {
+            setUser(session.user);
+            const userProfile = await ensureProfile();
+            if (mounted && userProfile) {
+              setProfile(userProfile);
+            }
+          }
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
+    };
 
-      setLoading(false);
-    }
+    initializeAuth();
 
-    initAuth();
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-
-      console.log('🔔 Auth state changed:', event);
-
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user);
-      } else {
-        setUser(null);
-        setProfile(null);
+        if (event === 'SIGNED_IN' && session?.user) {
+          setUser(session.user);
+          try {
+            const userProfile = await ensureProfile();
+            if (mounted && userProfile) {
+              setProfile(userProfile);
+            }
+          } catch (error) {
+            console.error('Error fetching profile after sign in:', error);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setProfile(null);
+        }
       }
-
-      setLoading(false);
-    });
+    );
 
     return () => {
       mounted = false;
@@ -220,14 +85,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password: password.trim()
+    });
+    
+    if (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Force clear local state even if server logout fails
+      setUser(null);
+      setProfile(null);
+    }
   };
 
   return (

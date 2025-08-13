@@ -1,11 +1,24 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import MultilingualChat from '../components/MultilingualChat';
-import AssignedClientsList from '../components/consultant/dashboard/AssignedClientsList';
-import { Users, TrendingUp, Clock, CheckCircle, Calendar, FileText, MessageSquare, Settings, Star, Award, Target, Zap, Calculator, CreditCard, Globe, Globe2 } from 'lucide-react';
+import { 
+  Users, 
+  TrendingUp, 
+  Clock, 
+  CheckCircle, 
+  Calendar, 
+  FileText, 
+  MessageSquare, 
+  Settings, 
+  Star, 
+  Award, 
+  Calculator, 
+  CreditCard, 
+  Globe, 
+  Globe2 
+} from 'lucide-react';
 
 interface AssignedClient {
   id: string;
@@ -23,11 +36,11 @@ interface AssignedClient {
 }
 
 const ConsultantDashboard = () => {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatType, setChatType] = useState<'admin-consultant' | 'consultant-client'>('admin-consultant');
   const [assignedClients, setAssignedClients] = useState<AssignedClient[]>([]);
-  const [loadingClients, setLoadingClients] = useState(true);
+  const [loadingClients, setLoadingClients] = useState(false);
 
   useEffect(() => {
     if (profile?.id) {
@@ -37,7 +50,7 @@ const ConsultantDashboard = () => {
 
   const fetchAssignedClients = async () => {
     try {
-      console.log('🔍 Fetching clients for consultant:', profile?.id, profile?.email);
+      setLoadingClients(true);
       
       const { data, error } = await supabase
         .from('clients')
@@ -61,31 +74,21 @@ const ConsultantDashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error fetching assigned clients:', error);
+        console.error('Error fetching assigned clients:', error);
       } else {
-        console.log('✅ Fetched clients:', data?.length || 0, 'clients found');
-        console.log('📊 Client data:', data);
         setAssignedClients(data || []);
       }
     } catch (error) {
-      console.error('💥 Error in fetchAssignedClients:', error);
+      console.error('Error in fetchAssignedClients:', error);
     } finally {
       setLoadingClients(false);
     }
   };
 
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
-
   const stats = [
     {
       name: 'Active Clients',
-      value: '24',
+      value: assignedClients.filter(c => c.status === 'in_progress').length.toString(),
       icon: Users,
       color: 'bg-blue-500',
       change: '+12%',
@@ -94,7 +97,7 @@ const ConsultantDashboard = () => {
     },
     {
       name: 'Completed Projects',
-      value: '156',
+      value: assignedClients.filter(c => c.status === 'completed').length.toString(),
       icon: CheckCircle,
       color: 'bg-green-500',
       change: '+8%',
@@ -102,13 +105,13 @@ const ConsultantDashboard = () => {
       description: 'Successfully completed'
     },
     {
-      name: 'Success Rate',
-      value: '98.5%',
+      name: 'Total Clients',
+      value: assignedClients.length.toString(),
       icon: TrendingUp,
       color: 'bg-purple-500',
       change: '+2.1%',
       changeType: 'positive',
-      description: 'Project success rate'
+      description: 'All assigned clients'
     },
     {
       name: 'Avg Response Time',
@@ -118,49 +121,6 @@ const ConsultantDashboard = () => {
       change: '-15min',
       changeType: 'positive',
       description: 'Average response time'
-    }
-  ];
-
-  const recentClients = [
-    { 
-      id: 1, 
-      name: 'Tech Startup LLC', 
-      country: 'Georgia', 
-      status: 'In Progress', 
-      priority: 'High',
-      lastContact: '2 hours ago',
-      progress: 75,
-      revenue: '$15,000'
-    },
-    { 
-      id: 2, 
-      name: 'Global Trading Co.', 
-      country: 'Estonia', 
-      status: 'Completed', 
-      priority: 'Medium',
-      lastContact: '1 day ago',
-      progress: 100,
-      revenue: '$8,500'
-    },
-    { 
-      id: 3, 
-      name: 'Investment Fund', 
-      country: 'UAE', 
-      status: 'Review', 
-      priority: 'High',
-      lastContact: '3 hours ago',
-      progress: 45,
-      revenue: '$25,000'
-    },
-    { 
-      id: 4, 
-      name: 'E-commerce Ltd.', 
-      country: 'Malta', 
-      status: 'In Progress', 
-      priority: 'Low',
-      lastContact: '5 hours ago',
-      progress: 30,
-      revenue: '$5,200'
     }
   ];
 
@@ -209,8 +169,7 @@ const ConsultantDashboard = () => {
   ];
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Enhanced Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -222,7 +181,6 @@ const ConsultantDashboard = () => {
                 alt="Consulting19 Logo" 
                 className="h-16 w-32"
                 onError={(e) => {
-                  // Fallback to icon if logo fails to load
                   e.currentTarget.style.display = 'none';
                   e.currentTarget.nextElementSibling?.classList.remove('hidden');
                 }}
@@ -238,7 +196,7 @@ const ConsultantDashboard = () => {
                 <span className="text-sm font-medium">Online</span>
               </div>
               <span className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium">
-                {profile.role} • Georgia Specialist
+                {profile?.role || 'consultant'} • Georgia Specialist
               </span>
             </div>
           </div>
@@ -247,7 +205,7 @@ const ConsultantDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Welcome back, {profile.full_name || profile.email}
+                Welcome back, {profile?.full_name || profile?.email || user?.email || 'Consultant'}
               </h2>
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
@@ -338,9 +296,12 @@ const ConsultantDashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Assigned Clients</h2>
-              <button className="text-sm text-purple-600 hover:text-purple-700 font-medium">
+              <Link 
+                to="/customers-management"
+                className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+              >
                 View All
-              </button>
+              </Link>
             </div>
             <div className="p-6">
               {loadingClients ? (
@@ -361,7 +322,7 @@ const ConsultantDashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {assignedClients.map((client) => (
+                  {assignedClients.slice(0, 5).map((client) => (
                     <div key={client.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -421,19 +382,15 @@ const ConsultantDashboard = () => {
           <div className="space-y-6">
             {/* Debug Info */}
             <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
-              <h3 className="text-lg font-semibold text-blue-900 mb-4">Debug Info</h3>
+              <h3 className="text-lg font-semibold text-blue-900 mb-4">System Status</h3>
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-blue-700 font-medium">Consultant ID:</span>
-                  <p className="text-blue-600 font-mono text-xs">{profile?.id}</p>
+                  <span className="text-blue-700 font-medium">User:</span>
+                  <p className="text-blue-600">{user?.email || 'No user'}</p>
                 </div>
                 <div>
-                  <span className="text-blue-700 font-medium">Email:</span>
-                  <p className="text-blue-600">{profile?.email}</p>
-                </div>
-                <div>
-                  <span className="text-blue-700 font-medium">Role:</span>
-                  <p className="text-blue-600">{profile?.role}</p>
+                  <span className="text-blue-700 font-medium">Profile:</span>
+                  <p className="text-blue-600">{profile ? `${profile.email} (${profile.role})` : 'No profile'}</p>
                 </div>
                 <div>
                   <span className="text-blue-700 font-medium">Assigned Clients:</span>
@@ -521,7 +478,7 @@ const ConsultantDashboard = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-purple-100">New Clients</span>
-                  <span className="font-bold">8</span>
+                  <span className="font-bold">{assignedClients.filter(c => c.status === 'new').length}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-purple-100">Revenue</span>
@@ -539,7 +496,6 @@ const ConsultantDashboard = () => {
           </div>
         </div>
       </div>
-      </div>
 
       {/* Multilingual Chat Modal */}
       <MultilingualChat
@@ -549,7 +505,7 @@ const ConsultantDashboard = () => {
         currentUserId={profile?.id || 'consultant-1'}
         currentUserRole="consultant"
       />
-    </>
+    </div>
   );
 };
 

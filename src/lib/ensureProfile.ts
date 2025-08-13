@@ -1,4 +1,3 @@
-```typescript
 import { supabase } from './supabase';
 
 export async function ensureProfile() {
@@ -46,4 +45,3 @@ export async function ensureProfileAfterLogin() {
     return null;
   }
 }
-```

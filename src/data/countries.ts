@@ -32,7 +32,7 @@ export const countries: Country[] = [
       '0% tax on foreign-sourced income',
       'Free economic zones available'
     ],
-    imageUrl: 'https://images.pexels.com/photos/12461/pexels-photo-12461.jpeg?auto=compress&cs=tinysrgb&w=800',
+    imageUrl: 'https://images.pexels.com/photos/3566187/pexels-photo-3566187.jpeg?auto=compress&cs=tinysrgb&w=800',
     primaryLanguage: 'en',
     supportedLanguages: ['en', 'tr'],
     tags: ['Tax Friendly', 'EU Proximity', 'Gateway Location'],
@@ -59,7 +59,7 @@ export const countries: Country[] = [
       'Global market access',
       'Advanced banking systems'
     ],
-    imageUrl: 'https://images.pexels.com/photos/1237119/pexels-photo-1237119.jpeg?auto=compress&cs=tinysrgb&w=800',
+    imageUrl: 'https://images.pexels.com/photos/2190283/pexels-photo-2190283.jpeg?auto=compress&cs=tinysrgb&w=800',
     primaryLanguage: 'en',
     supportedLanguages: ['en'],
     tags: ['Market Access', 'Innovation Hub', 'Global Standard'],
@@ -76,7 +76,7 @@ export const countries: Country[] = [
       'Investment citizenship program',
       'Growing digital economy'
     ],
-    imageUrl: 'https://images.pexels.com/photos/994605/pexels-photo-994605.jpeg?auto=compress&cs=tinysrgb&w=800',
+    imageUrl: 'https://images.pexels.com/photos/3566187/pexels-photo-3566187.jpeg?auto=compress&cs=tinysrgb&w=800',
     primaryLanguage: 'en',
     supportedLanguages: ['en', 'sr'],
     tags: ['EU Candidate', 'Investment', 'Digital Growth'],
@@ -110,7 +110,7 @@ export const countries: Country[] = [
       'EU membership benefits',
       'Strategic Atlantic position'
     ],
-    imageUrl: 'https://images.pexels.com/photos/2166559/pexels-photo-2166559.jpeg?auto=compress&cs=tinysrgb&w=800',
+    imageUrl: 'https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&w=800',
     primaryLanguage: 'pt',
     supportedLanguages: ['pt', 'en'],
     tags: ['Golden Visa', 'EU Access', 'Atlantic Gateway'],
@@ -127,7 +127,7 @@ export const countries: Country[] = [
       'Financial services hub',
       'Tax optimization opportunities'
     ],
-    imageUrl: 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg?auto=compress&cs=tinysrgb&w=800',
+    imageUrl: 'https://images.pexels.com/photos/2166553/pexels-photo-2166553.jpeg?auto=compress&cs=tinysrgb&w=800',
     primaryLanguage: 'en',
     supportedLanguages: ['en'],
     tags: ['EU Member', 'Financial Hub', 'Tax Optimization'],
@@ -144,7 +144,7 @@ export const countries: Country[] = [
       'Global financial hub',
       'Privacy protection laws'
     ],
-    imageUrl: 'https://images.pexels.com/photos/5622000/pexels-photo-5622000.jpeg?auto=compress&cs=tinysrgb&w=800',
+    imageUrl: 'https://images.pexels.com/photos/3566187/pexels-photo-3566187.jpeg?auto=compress&cs=tinysrgb&w=800',
     primaryLanguage: 'es',
     supportedLanguages: ['es', 'en'],
     tags: ['Offshore Hub', 'Privacy', 'Global Finance'],
@@ -161,7 +161,7 @@ export const countries: Country[] = [
       'Strategic Middle East location',
       'Modern business infrastructure'
     ],
-    imageUrl: 'https://images.pexels.com/photos/1456291/pexels-photo-1456291.jpeg?auto=compress&cs=tinysrgb&w=800',
+    imageUrl: 'https://images.pexels.com/photos/3787839/pexels-photo-3787839.jpeg?auto=compress&cs=tinysrgb&w=800',
     primaryLanguage: 'en',
     supportedLanguages: ['en', 'ar'],
     tags: ['Tax Free', 'Middle East Hub', 'Modern Infrastructure'],
@@ -195,7 +195,7 @@ export const countries: Country[] = [
       'Growing startup ecosystem',
       'Excellent quality of life'
     ],
-    imageUrl: 'https://images.pexels.com/photos/2412603/pexels-photo-2412603.jpeg?auto=compress&cs=tinysrgb&w=800',
+    imageUrl: 'https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&w=800',
     primaryLanguage: 'es',
     supportedLanguages: ['es', 'en'],
     tags: ['EU Member', 'Startup Ecosystem', 'Quality of Life'],

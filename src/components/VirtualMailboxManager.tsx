@@ -90,10 +90,19 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
   ];
 
   useEffect(() => {
-    fetchItems();
+    if (profile?.id) {
+      fetchItems();
+    } else {
+      setLoading(false);
+    }
   }, [clientId, profile]);
 
   const fetchItems = async () => {
+    if (!profile?.id) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       let query = supabase
         .from('virtual_mailbox_items')
