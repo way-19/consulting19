@@ -175,11 +175,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             navigateBasedOnRole(userProfile);
           } else {
             console.error('❌ Could not load profile after sign in');
-    const { data, error } = await supabase
+          }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
           setLoading(false);
+        }
+      }
+    );
 
     return () => {
       subscription.unsubscribe();
@@ -189,6 +192,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     console.log('🔐 Signing in:', email);
     setLoading(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
         password: password.trim()
       });
       
@@ -203,5 +210,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       setLoading(false);
       throw error;
-    console.log('📝 Profile not found - will be created by database trigger');
-    return null;
+    }
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return (
+    <AuthCtx.Provider value={{
+      loading,
+      user,
+      profile,
+      signIn,
+      signOut
+    }}>
+      {children}
+    </AuthCtx.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthCtx);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
