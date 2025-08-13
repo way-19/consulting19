@@ -121,6 +121,7 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import ConsultantDashboard from './pages/ConsultantDashboard';
 import ClientAccountingDashboard from './pages/ClientAccountingDashboard';
 import CustomersManagement from './pages/CustomersManagement';
