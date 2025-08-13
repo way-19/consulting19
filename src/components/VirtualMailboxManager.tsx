@@ -619,7 +619,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               {/* Shipping Fee */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Virtual Shipping Fee (USD)
+                  Virtual Shipping Fee (USD Only)
                 </label>
                 <input
                   type="number"
@@ -629,7 +629,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   onChange={(e) => setFormData(prev => ({ ...prev, shipping_fee: parseFloat(e.target.value) || 0 }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
-                <p className="text-xs text-gray-500 mt-1">Standard virtual shipping fee is $25.00</p>
+                <p className="text-xs text-gray-500 mt-1">Standard virtual shipping fee is $25.00 USD</p>
               </div>
 
               {/* Actions */}

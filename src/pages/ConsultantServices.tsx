@@ -158,7 +158,7 @@ const ConsultantServices = () => {
       description: '',
       features: [''],
       price: 0,
-      currency: 'USD', // Always USD
+      currency: 'USD',
       delivery_time_days: 7,
       category: 'custom',
       is_active: true
@@ -332,7 +332,7 @@ const ConsultantServices = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-2xl font-bold text-gray-900">
                       ${service.price.toLocaleString()}
-                      <span className="text-sm font-normal text-gray-500 ml-1">{service.currency}</span>
+                      <span className="text-sm font-normal text-gray-500 ml-1">USD</span>
                     </div>
                     <div className="flex items-center space-x-1 text-sm text-gray-500">
                       <Clock className="h-4 w-4" />
