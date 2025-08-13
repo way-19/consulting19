@@ -193,7 +193,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         if (clientId) {
           query = query.eq('client_id', clientId);
         }
-      } else {
+      } else if (viewMode === 'client') {
         // Client view - get client record first
         const { data: clientData } = await supabase
           .from('clients')
@@ -204,6 +204,10 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         if (clientData) {
           query = query.eq('client_id', clientData.id);
         }
+      } else {
+        // Invalid view mode, return empty results
+        setItems([]);
+        return;
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
