@@ -150,6 +150,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (error) {
           console.error('❌ Session error:', error);
+          
+          // Handle invalid refresh token by clearing session and redirecting to login
+          if (error.message?.includes('Refresh Token Not Found') || error.message?.includes('Invalid Refresh Token')) {
+            console.log('🔄 Clearing invalid session and redirecting to login');
+            await supabase.auth.signOut();
+            navigate('/login');
+            setLoading(false);
+            return;
+          }
+          
           setLoading(false);
           return;
         }
