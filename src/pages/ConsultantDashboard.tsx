@@ -79,6 +79,7 @@ const ConsultantDashboard = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [clientFilter, setClientFilter] = useState('all');
+  const [clientStatusFilter, setClientStatusFilter] = useState('all');
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [assignedClients, setAssignedClients] = useState<AssignedClient[]>([]);
   const [loadingClients, setLoadingClients] = useState(false);
