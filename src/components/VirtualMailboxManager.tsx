@@ -20,7 +20,8 @@ import {
   Mail,
   Truck,
   CreditCard,
-  AlertCircle
+  AlertCircle,
+  MapPin
 } from 'lucide-react';
 
 interface VirtualMailboxItem {
@@ -71,7 +72,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     document_name: '',
     description: '',
     shipping_fee: 25.00,
-    file: null as File | null
+    file: null as File | null,
+    recipient_name: ''
   });
 
   const documentTypes = [
@@ -125,13 +127,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           document_name: 'Tax Number Certificate - GE123456789',
           description: 'Official tax registration certificate with tax number',
           file_url: 'https://example.com/sample-tax-cert.pdf',
-        
-        }
-      ]
-    }
-  }
-  )
-}  file_size: 189440, // 185 KB
+          file_size: 189440, // 185 KB
           status: 'delivered',
           tracking_number: 'VM-2024-002',
           shipping_fee: 25.00,
@@ -364,7 +360,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       document_name: '',
       description: '',
       shipping_fee: 25.00,
-      file: null
+      file: null,
+      recipient_name: ''
     });
     setShowAddForm(false);
   };
@@ -644,10 +641,10 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       {item.payment_status === 'unpaid' && item.status === 'sent' && (
                         <button
                           onClick={() => updatePaymentStatus(item.id, 'paid')}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                          className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
                         >
-                          <CreditCard className="h-4 w-4" />
-                          <span>Pay ${item.shipping_fee}</span>
+                          <MapPin className="h-4 w-4" />
+                          <span>Enter Address & Pay</span>
                         </button>
                       )}
                       
@@ -662,7 +659,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
-                            alert(`Document "${item.document_name}\" downloaded successfully!`);
+                            alert(\`Document "${item.document_name}" downloaded successfully!`);
                           }}
                           className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
                         >
@@ -847,6 +844,11 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       onChange={(e) => setFormData(prev => ({ ...prev, recipient_name: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       placeholder="Full name of recipient"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Actions */}
               <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
                 <button
@@ -917,7 +919,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div className="space-y-3">
                     <div>
                       <span className="text-sm text-gray-600">Status:</span>
-                      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
+                      <span className={\`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
                         {selectedItem.status.toUpperCase()}
                       </span>
                     </div>
@@ -1008,8 +1010,4 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
   );
 };
 
-
-
-
-
-export default VirtualMailboxManager
+export default VirtualMailboxManager;
