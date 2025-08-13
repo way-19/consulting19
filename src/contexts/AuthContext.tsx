@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const queryPromise = supabase
         .from('profiles')
         .select('*')
-        .eq('email', userEmail)
+        .eq('auth_user_id', userId)
         .maybeSingle();
       
       const timeoutPromise = new Promise((_, reject) => 
