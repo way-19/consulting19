@@ -287,6 +287,22 @@ This is a sample report. In production, this would contain real data.
       alert('Failed to update profile');
     }
   };
+
+  // Filter clients for report modal
+  const filteredClientsForReport = assignedClients.filter(client => {
+    const matchesSearch = 
+      (client.company_name?.toLowerCase().includes(clientSearchTerm.toLowerCase())) ||
+      (client.profile?.full_name?.toLowerCase().includes(clientSearchTerm.toLowerCase())) ||
+      (client.profile?.email?.toLowerCase().includes(clientSearchTerm.toLowerCase()));
+    
+    const matchesStatus = 
+      clientStatusFilter === 'all' ||
+      (clientStatusFilter === 'high_priority' && (client.priority === 'high' || client.priority === 'urgent')) ||
+      client.status === clientStatusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
   const stats = [
     {
       name: 'Active Clients',
