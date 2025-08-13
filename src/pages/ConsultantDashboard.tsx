@@ -80,6 +80,11 @@ const ConsultantDashboard = () => {
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [clientFilter, setClientFilter] = useState('all');
   const [clientStatusFilter, setClientStatusFilter] = useState('all');
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [assignedClients, setAssignedClients] = useState<AssignedClient[]>([]);
   const [loadingClients, setLoadingClients] = useState(false);
@@ -114,7 +119,6 @@ const ConsultantDashboard = () => {
    confirmPassword: '',
    emailNotifications: true,
    smsNotifications: false,
-   clientMessageAlerts: true,
    workingHoursStart: '09:00',
    workingHoursEnd: '18:00',
    timezone: 'Asia/Tbilisi',
