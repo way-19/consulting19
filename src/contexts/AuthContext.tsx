@@ -53,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let mounted = true;
+    let profileFetched = false;
 
     const initializeAuth = async () => {
       try {
@@ -87,17 +88,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('🔄 Auth state change:', event, session?.user?.email);
-        
         if (!mounted) return;
+        
+        console.log('🔄 Auth state change:', event, session?.user?.email);
 
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user);
-          const userProfile = await fetchProfile(session.user.id);
-          if (mounted && userProfile) {
-            setProfile(userProfile);
+          
+          if (!profileFetched) {
+            profileFetched = true;
+            const userProfile = await fetchProfile(session.user.id);
+            if (mounted && userProfile) {
+              setProfile(userProfile);
+            }
+            if (mounted && userProfile) {
+              setProfile(userProfile);
+            }
           }
         } else if (event === 'SIGNED_OUT') {
+          profileFetched = false;
           setUser(null);
           setProfile(null);
         }
