@@ -660,7 +660,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                             link.click();
                             document.body.removeChild(link);
                             const name = String(item?.document_name ?? 'Unnamed');
-                             alert(\`Document "${name}\" downloaded successfully!`);
+                             alert(`Document "${name}" downloaded successfully!`);
                           }}
                           className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
                         >
