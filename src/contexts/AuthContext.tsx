@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-
 import { useNavigate } from 'react-router-dom';
 
 type Role = 'admin' | 'consultant' | 'client';
@@ -54,6 +53,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const navigateBasedOnRole = (userProfile: Profile) => {
+    console.log('🧭 Navigating based on role:', userProfile.role);
+    switch (userProfile.role) {
+      case 'admin':
+        console.log('➡️ Navigating to admin dashboard');
+        navigate('/admin-dashboard');
+        break;
+      case 'consultant':
+        console.log('➡️ Navigating to consultant dashboard');
+        navigate('/consultant-dashboard');
+        break;
+      case 'client':
+        console.log('➡️ Navigating to client dashboard');
+        navigate('/client-accounting');
+        break;
+      default:
+        console.log('➡️ Navigating to home');
+        navigate('/');
+    }
+  };
+
   useEffect(() => {
     console.log('🚀 Initializing auth...');
     
@@ -68,13 +88,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userProfile = await fetchProfile(session.user.id);
           if (userProfile) {
             setProfile(userProfile);
-            // Navigate based on role after profile is loaded
             navigateBasedOnRole(userProfile);
           }
         }
-        setLoading(false);
       } catch (error) {
         console.error('💥 Auth init error:', error);
+      } finally {
         setLoading(false);
       }
     };
@@ -88,62 +107,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user);
           
-          // Only fetch profile if we don't have one or it's different user
-          if (!profile || profile.auth_user_id !== session.user.id) {
-            const userProfile = await fetchProfile(session.user.id);
-            if (userProfile) {
-              setProfile(userProfile);
-              // Navigate based on role after profile is loaded
-              navigateBasedOnRole(userProfile);
-            }
+          const userProfile = await fetchProfile(session.user.id);
+          if (userProfile) {
+            setProfile(userProfile);
+            navigateBasedOnRole(userProfile);
           }
+          setLoading(false);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []); // Empty dependency array - only run once
-
-  const navigateBasedOnRole = (userProfile: Profile) => {
-    switch (userProfile.role) {
-      case 'admin':
-        navigate('/admin-dashboard');
-        break;
-      case 'consultant':
-        navigate('/consultant-dashboard');
-        break;
-      case 'client':
-        navigate('/client-accounting');
-        break;
-      default:
-        navigate('/');
-    }
-  };
+  }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
     console.log('🔐 Signing in:', email);
     setLoading(true);
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password: password.trim()
-    });
-    
-    if (error) {
-      console.error('❌ Sign in error:', error.message);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim()
+      });
+      
+      if (error) {
+        console.error('❌ Sign in error:', error.message);
+        setLoading(false);
+        throw error;
+      }
+      
+      console.log('✅ Sign in successful');
+      // Navigation will happen in auth state change handler
+    } catch (error) {
       setLoading(false);
       throw error;
     }
-    
-    console.log('✅ Sign in successful');
-    // Navigation will happen in auth state change handler
   };
 
   const signOut = async () => {
