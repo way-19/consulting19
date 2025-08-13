@@ -146,6 +146,16 @@ const LegacyOrders = () => {
     }
   };
 
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pending';
+      case 'in_progress': return 'In Progress';
+      case 'completed': return 'Completed';
+      case 'on_hold': return 'On Hold';
+      case 'cancelled': return 'Cancelled';
+      default: return status;
+    }
+  };
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

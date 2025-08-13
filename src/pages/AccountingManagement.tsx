@@ -308,6 +308,10 @@ const AccountingManagement = () => {
     }
   };
 
+  const resetForm = () => {
+    // Reset form function for potential future use
+    console.log('Form reset');
+  };
   const filteredClients = clients.filter(client => {
     const matchesSearch = 
       client.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
