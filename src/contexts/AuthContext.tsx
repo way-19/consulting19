@@ -106,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       '/accounting-management',
       '/customers-management',
       '/consultant-payments',
-      '/site-management'
+      '/site-management',
       '/payments'
     ];
     
