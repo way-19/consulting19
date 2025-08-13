@@ -52,13 +52,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    console.log('🚀 Initializing auth...');
+    
     let mounted = true;
-    let authSubscription: any = null;
 
-    const initializeAuth = async () => {
+    const initAuth = async () => {
       try {
-        console.log('🚀 Initializing auth...');
-        
         const { data: { session } } = await supabase.auth.getSession();
         
         if (mounted) {
@@ -70,23 +69,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (mounted && userProfile) {
               setProfile(userProfile);
             }
-          } else {
-            console.log('❌ No session found');
           }
           setLoading(false);
         }
       } catch (error) {
-        console.error('💥 Auth initialization error:', error);
-        if (mounted) {
-          setLoading(false);
-        }
+        console.error('💥 Auth init error:', error);
+        if (mounted) setLoading(false);
       }
     };
 
-    initializeAuth();
+    initAuth();
 
-    // Listen for auth changes
-    authSubscription = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
         
@@ -104,17 +98,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null);
         }
         
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
     );
 
     return () => {
       mounted = false;
-      if (authSubscription?.data?.subscription) {
-        authSubscription.data.subscription.unsubscribe();
-      }
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -134,22 +124,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     console.log('✅ Sign in successful');
-    // Loading will be set to false by the auth state change listener
   };
 
   const signOut = async () => {
     console.log('🚪 Signing out...');
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      setProfile(null);
-      console.log('✅ Sign out successful');
-    } catch (error) {
-      console.error('❌ Sign out error:', error);
-      // Force clear local state even if server logout fails
-      setUser(null);
-      setProfile(null);
-    }
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
+    console.log('✅ Sign out successful');
   };
 
   return (
