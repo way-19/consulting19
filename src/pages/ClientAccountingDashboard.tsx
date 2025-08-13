@@ -1090,6 +1090,14 @@ const ClientAccountingDashboard: React.FC = () => {
                   </button>
 
                   <button 
+                    onClick={() => navigate('/client-services')}
+                    className="bg-orange-500 hover:bg-orange-600 group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md"
+                  >
+                    <Settings className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    <div className="text-xs font-medium">Additional Services</div>
+                  </button>
+
+                  <button 
                     onClick={handleAccountSettings}
                     className="bg-gray-500 hover:bg-gray-600 group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md"
                   >
