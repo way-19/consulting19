@@ -20,8 +20,7 @@ import {
   Mail,
   Truck,
   CreditCard,
-  AlertTriangle,
-  MapPin
+  AlertCircle
 } from 'lucide-react';
 
 interface VirtualMailboxItem {
@@ -126,7 +125,13 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           document_name: 'Tax Number Certificate - GE123456789',
           description: 'Official tax registration certificate with tax number',
           file_url: 'https://example.com/sample-tax-cert.pdf',
-          file_size: 189440, // 185 KB
+        
+        }
+      ]
+    }
+  }
+  )
+}  file_size: 189440, // 185 KB
           status: 'delivered',
           tracking_number: 'VM-2024-002',
           shipping_fee: 25.00,
@@ -639,10 +644,10 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       {item.payment_status === 'unpaid' && item.status === 'sent' && (
                         <button
                           onClick={() => updatePaymentStatus(item.id, 'paid')}
-                          className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
                         >
-                          <MapPin className="h-4 w-4" />
-                          <span>Enter Address & Pay</span>
+                          <CreditCard className="h-4 w-4" />
+                          <span>Pay ${item.shipping_fee}</span>
                         </button>
                       )}
                       
@@ -980,23 +985,16 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div className="flex items-start space-x-3">
                     <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <h4 className="font-medium text-yellow-900">Shipping Address & Payment Required</h4>
+                      <h4 className="font-medium text-yellow-900">Payment Required</h4>
                       <p className="text-sm text-yellow-700 mt-1">
-                        Please enter your shipping address and pay ${selectedItem.shipping_fee} shipping fee to receive your document.
+                        Please pay the virtual shipping fee of ${selectedItem.shipping_fee} to access your document.
                       </p>
                       <button
-                        onClick={() => {
-                          // In real implementation, this would open address form
-                          const address = prompt('Enter your shipping address:');
-                          if (address) {
-                            updatePaymentStatus(selectedItem.id, 'paid');
-                            alert(`Address saved: ${address}\nPayment processed: $${selectedItem.shipping_fee}\nDocument will be shipped soon!`);
-                          }
-                        }}
-                        className="mt-3 bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                        onClick={() => updatePaymentStatus(selectedItem.id, 'paid')}
+                        className="mt-3 bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 transition-colors flex items-center space-x-2"
                       >
-                        <MapPin className="h-4 w-4" />
-                        <span>Enter Address & Pay ${selectedItem.shipping_fee}</span>
+                        <CreditCard className="h-4 w-4" />
+                        <span>Pay Now - ${selectedItem.shipping_fee}</span>
                       </button>
                     </div>
                   </div>
