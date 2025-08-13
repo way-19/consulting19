@@ -188,31 +188,6 @@ const ClientAccountingDashboard = () => {
 
   console.log('🔵 ClientDashboard render:', { 
     loading, 
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({
-          shipping_fee: shippingFee,
-          payment_status: 'paid',
-          status: 'sent',
-          sent_date: new Date().toISOString()
-        })
-        .eq('id', selectedMailboxItem.id);
-
-      if (error) throw error;
-      
-      setShowShippingModal(false);
-      setSelectedMailboxItem(null);
-      await fetchVirtualMailboxItems();
-      
-      alert(`Payment successful! Your document will be shipped via ${shippingOption} delivery ($${shippingFee}). Tracking number will be provided once shipped.`);
-    } catch (error) {
-      console.error('Error processing payment:', error);
-      alert('Payment failed. Please try again.');
-    } finally {
-      setPaymentLoading(false);
-    }
-  };
-
     user: !!user, 
     profile: !!profile, 
     profileRole: profile?.role 
@@ -931,7 +906,7 @@ const ClientAccountingDashboard = () => {
                     <div className="ml-3 flex-1">
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-gray-900">Standard Shipping</span>
-                        <span className="font-bold text-gray-900">$15</span>
+                        <span className="font-bold text-gray-900">$15.00</span>
                       </div>
                       <p className="text-sm text-gray-600">5-7 business days</p>
                     </div>
@@ -948,7 +923,7 @@ const ClientAccountingDashboard = () => {
                     <div className="ml-3 flex-1">
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-gray-900">Express Shipping</span>
-                        <span className="font-bold text-gray-900">$25</span>
+                        <span className="font-bold text-gray-900">$25.00</span>
                       </div>
                       <p className="text-sm text-gray-600">2-3 business days</p>
                     </div>
@@ -1001,21 +976,35 @@ const ClientAccountingDashboard = () => {
               </div>
 
               {/* Payment Summary */}
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 mb-6">
+                <h4 className="font-medium text-blue-900 mb-3">Payment Summary</h4>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-700">Shipping Fee:</span>
-                  <span className="font-bold text-gray-900">${shippingOption === 'standard' ? '15' : '25'}</span>
+                  <span className="text-blue-700">Shipping Fee:</span>
+                  <span className="font-bold text-blue-900">${shippingOption === 'standard' ? '15.00' : '25.00'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Delivery Time:</span>
-                  <span className="text-gray-900">{shippingOption === 'standard' ? '5-7 days' : '2-3 days'}</span>
+                  <span className="text-blue-700">Delivery Time:</span>
+                  <span className="text-blue-900">{shippingOption === 'standard' ? '5-7 business days' : '2-3 business days'}</span>
                 </div>
               </div>
 
+              {/* Stripe Payment Info */}
+              <div className="bg-green-50 rounded-lg p-4 border border-green-200 mb-6">
+                <h4 className="font-medium text-green-900 mb-2">Secure Payment</h4>
+                <div className="text-sm text-green-800 space-y-1">
+                  <p>• Secure payment via Stripe</p>
+                  <p>• All major credit cards accepted</p>
+                  <p>• Tracking number provided after payment</p>
+                  <p>• Consultant will be notified automatically</p>
+                </div>
+              </div>
               {/* Actions */}
               <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
                 <button
-                  onClick={() => setShowShippingModal(false)}
+                  onClick={() => {
+                    setShowShippingModal(false);
+                    setSelectedMailboxItem(null);
+                  }}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
                   Cancel
@@ -1033,7 +1022,7 @@ const ClientAccountingDashboard = () => {
                   ) : (
                     <>
                       <CreditCard className="h-5 w-5" />
-                      <span>Pay ${shippingOption === 'standard' ? '15' : '25'}</span>
+                      <span>Pay ${shippingOption === 'standard' ? '15.00' : '25.00'}</span>
                     </>
                   )}
                 </button>
