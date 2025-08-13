@@ -1,8 +1,13 @@
 import React from 'react';
+import { useEffect } from 'react';
 import { Shield, Eye, Lock, Globe, Users, FileText, Clock, CheckCircle } from 'lucide-react';
 
 const PrivacyPolicyPage = () => {
   const lastUpdated = "January 1, 2025";
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const dataTypes = [
     {

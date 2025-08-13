@@ -1,9 +1,14 @@
 import React from 'react';
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, User, Clock, Tag, Share2 } from 'lucide-react';
 
 const BlogPostPage = () => {
   const { postId } = useParams<{ postId: string }>();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Mock blog post data
   const blogPost = {

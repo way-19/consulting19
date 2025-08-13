@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Calendar, User, ArrowRight, Clock, Tag } from 'lucide-react';
 
@@ -18,6 +19,10 @@ interface BlogPost {
 const BlogPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Mock blog posts
   const blogPosts: BlogPost[] = [

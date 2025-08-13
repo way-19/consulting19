@@ -1,8 +1,13 @@
 import React from 'react';
+import { useEffect } from 'react';
 import { FileText, Scale, Globe, Shield, Users, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 
 const TermsOfServicePage = () => {
   const lastUpdated = "January 1, 2025";
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const serviceCategories = [
     {

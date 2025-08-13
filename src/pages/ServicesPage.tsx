@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, ArrowRight } from 'lucide-react';
 import ServiceCard from '../components/ServiceCard';
@@ -8,6 +9,10 @@ const ServicesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState('all');
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const priceRanges = {
     'all': 'All Prices',

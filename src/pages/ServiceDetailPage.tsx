@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Clock, Users, Award, MessageSquare } from 'lucide-react';
 import * as Icons from 'lucide-react';
@@ -8,6 +9,10 @@ import { countries } from '../data/countries';
 const ServiceDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const service = services.find(s => s.slug === slug);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   if (!service) {
     return (

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import CountryCard from '../components/CountryCard';
 import { countries, Country } from '../data/countries';
@@ -7,6 +8,10 @@ const CountriesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const regions = {
     'all': 'All Regions',

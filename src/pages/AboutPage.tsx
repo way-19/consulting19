@@ -1,8 +1,13 @@
 import React from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Bot, Globe, Users, Award, TrendingUp, Shield, Zap, Clock, CheckCircle, Star } from 'lucide-react';
 
 const AboutPage = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const milestones = [
     {
       year: '2016',

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Globe, Users, TrendingUp, MessageCircle } from 'lucide-react';
 import { countries } from '../data/countries';
@@ -6,6 +7,10 @@ import { countries } from '../data/countries';
 const CountryDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const country = countries.find(c => c.slug === slug);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   if (!country) {
     return (

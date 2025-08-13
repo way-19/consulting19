@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { Bot, Mic, Volume2, Globe, Shield, Zap, MessageSquare, Users, CheckCircle, ArrowRight, Play, Pause } from 'lucide-react';
 
 const AIAssistantPage = () => {
   const [isListening, setIsListening] = useState(false);
   const [currentDemo, setCurrentDemo] = useState(0);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const demoConversations = [
     {
