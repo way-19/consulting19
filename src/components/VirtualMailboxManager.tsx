@@ -27,8 +27,6 @@ import {
   Truck
   Mail,
   Truck
-  Mail,
-  Truck
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
@@ -119,23 +117,6 @@ interface VirtualMailboxItem {
   downloaded_date?: string;
   created_at: string;
 }
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
 
 const ClientAccountingDashboard = () => {
   const { user, profile } = useAuth();
@@ -143,7 +124,6 @@ const ClientAccountingDashboard = () => {
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -170,20 +150,42 @@ const ClientAccountingDashboard = () => {
     postalCode: '',
     country: ''
   });
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
   const [paymentLoading, setPaymentLoading] = useState(false);
 
-  const handleShippingPayment = () => {
-    // Handle shipping payment logic here
+  const handleShippingPayment = async () => {
+    if (!selectedMailboxItem) return;
+    
+    setPaymentLoading(true);
+    try {
+      const shippingFee = shippingOption === 'standard' ? 15 : 25;
+      
+      const { error } = await supabase
+        .from('virtual_mailbox_items')
+        .update({
+          shipping_fee: shippingFee,
+          payment_status: 'paid',
+          status: 'sent',
+          sent_date: new Date().toISOString()
+        })
+        .eq('id', selectedMailboxItem.id);
+
+      if (error) throw error;
+      
+      setShowShippingModal(false);
+      setSelectedMailboxItem(null);
+      await fetchVirtualMailboxItems();
+      
+      alert(`Payment successful! Your document will be shipped via ${shippingOption} delivery ($${shippingFee}). Tracking number will be provided once shipped.`);
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      alert('Payment failed. Please try again.');
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const fetchVirtualMailboxItems = async () => {
+    // Fetch virtual mailbox items logic here
   };
 
   console.log('🔵 ClientDashboard render:', { 
