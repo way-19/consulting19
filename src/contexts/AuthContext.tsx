@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
+import { useNavigate } from 'react-router-dom';
+
 type Role = 'admin' | 'consultant' | 'client';
 
 export type Profile = {
@@ -27,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const navigate = useNavigate();
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -65,6 +68,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userProfile = await fetchProfile(session.user.id);
           if (userProfile) {
             setProfile(userProfile);
+            // Navigate based on role after profile is loaded
+            navigateBasedOnRole(userProfile);
           }
         }
         setLoading(false);
@@ -88,6 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userProfile = await fetchProfile(session.user.id);
             if (userProfile) {
               setProfile(userProfile);
+              // Navigate based on role after profile is loaded
+              navigateBasedOnRole(userProfile);
             }
           }
         } else if (event === 'SIGNED_OUT') {
@@ -103,6 +110,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, []); // Empty dependency array - only run once
+
+  const navigateBasedOnRole = (userProfile: Profile) => {
+    switch (userProfile.role) {
+      case 'admin':
+        navigate('/admin-dashboard');
+        break;
+      case 'consultant':
+        navigate('/consultant-dashboard');
+        break;
+      case 'client':
+        navigate('/client-accounting');
+        break;
+      default:
+        navigate('/');
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     console.log('🔐 Signing in:', email);
@@ -120,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     console.log('✅ Sign in successful');
+    // Navigation will happen in auth state change handler
   };
 
   const signOut = async () => {
@@ -127,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
+    navigate('/');
     console.log('✅ Sign out successful');
   };
 

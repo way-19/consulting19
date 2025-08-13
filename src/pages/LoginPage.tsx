@@ -19,17 +19,7 @@ const LoginPage = () => {
 
     try {
       await signIn(email.trim(), password.trim());
-
-      // Navigate based on email using React Router
-      if (email.includes('admin')) {
-        navigate('/admin-dashboard');
-      } else if (email.includes('georgia')) {
-        navigate('/consultant-dashboard');
-      } else if (email.includes('client')) {
-        navigate('/client-accounting');
-      } else {
-        navigate('/');
-      }
+      // Navigation will be handled by AuthContext after profile is loaded
     } catch (err: any) {
       setError(err.message || 'Giriş başarısız');
       setLoading(false);
@@ -43,7 +33,7 @@ const LoginPage = () => {
     
     try {
       await signIn(email, password);
-      navigate(dashboard);
+      // Navigation will be handled by AuthContext
     } catch (err: any) {
       setError(err.message || 'Giriş başarısız');
       setLoading(false);
