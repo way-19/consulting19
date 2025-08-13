@@ -140,33 +140,23 @@ const ClientAccountingDashboard: React.FC = () => {
             )
           )
         `)
-        .eq('client_id', clientData.id);
+        .eq('client_id', clientData.id)
+        .single();
 
       if (accountingError) {
         console.error('Error fetching accounting profile:', accountingError);
-        setError('Failed to load accounting data. Please try again.');
-        return;
-      }
-
-      // Handle multiple or no results
-      if (!accountingData || accountingData.length === 0) {
         // If no accounting profile exists, create a default one
         await createDefaultAccountingProfile(clientData.id);
         return;
       }
 
-      // If multiple profiles exist, use the first one and log a warning
-      if (accountingData.length > 1) {
-        console.warn(`Multiple accounting profiles found for client ${clientData.id}. Using the first one.`);
-      }
-
-      setAccountingProfile(accountingData[0]);
+      setAccountingProfile(accountingData);
 
       // Fetch documents
       const { data: documentsData, error: documentsError } = await supabase
         .from('accounting_documents')
         .select('*')
-        .eq('client_id', accountingData[0].id)
+        .eq('client_id', accountingData.id)
         .order('due_date', { ascending: true });
 
       if (documentsError) {
@@ -179,7 +169,7 @@ const ClientAccountingDashboard: React.FC = () => {
       const { data: invoicesData, error: invoicesError } = await supabase
         .from('accounting_invoices')
         .select('*')
-        .eq('client_id', accountingData[0].id)
+        .eq('client_id', accountingData.id)
         .order('created_at', { ascending: false });
 
       if (invoicesError) {
@@ -198,7 +188,7 @@ const ClientAccountingDashboard: React.FC = () => {
             email
           )
         `)
-        .eq('client_id', accountingData[0].id)
+        .eq('client_id', accountingData.id)
         .order('created_at', { ascending: false });
 
       if (messagesError) {
@@ -217,6 +207,24 @@ const ClientAccountingDashboard: React.FC = () => {
 
   const createDefaultAccountingProfile = async (clientId: string) => {
     try {
+      // First check if an accounting profile already exists
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('accounting_clients')
+        .select('id')
+        .eq('client_id', clientId);
+
+      if (checkError) {
+        console.error('Error checking existing profile:', checkError);
+        setError('Failed to check existing accounting profile.');
+        return;
+      }
+
+      if (existingProfile && existingProfile.length > 0) {
+        console.log('Accounting profile already exists, fetching data...');
+        await fetchAccountingData();
+        return;
+      }
+
       // Get the consultant assigned to this client
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
