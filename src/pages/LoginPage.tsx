@@ -28,15 +28,15 @@ const LoginPage = () => {
         return;
       }
 
-      // Immediate redirect based on email
+      // Navigate based on email using React Router
       if (email.includes('admin')) {
-        window.location.href = '/admin-dashboard';
+        navigate('/admin-dashboard');
       } else if (email.includes('georgia')) {
-        window.location.href = '/consultant-dashboard';
+        navigate('/consultant-dashboard');
       } else if (email.includes('client')) {
-        window.location.href = '/client-accounting';
+        navigate('/client-accounting');
       } else {
-        window.location.href = '/';
+        navigate('/');
       }
     } catch (err: any) {
       setError('Giriş başarısız');
@@ -44,13 +44,23 @@ const LoginPage = () => {
     }
   };
 
-  const quickLogin = (email: string, password: string, dashboard: string) => {
+  const quickLogin = async (email: string, password: string, dashboard: string) => {
     setEmail(email);
     setPassword(password);
+    setLoading(true);
     
-    supabase.auth.signInWithPassword({ email, password }).then(() => {
-      window.location.href = dashboard;
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+      navigate(dashboard);
+    } catch (err) {
+      setError('Giriş başarısız');
+      setLoading(false);
+    }
   };
 
   return (
@@ -72,8 +82,7 @@ const LoginPage = () => {
           <div className="space-y-2">
             <button
               onClick={() => {
-                console.log('🔴 Admin Dashboard clicked');
-                window.location.href = '/admin-dashboard';
+                quickLogin('admin@consulting19.com', 'SecureAdmin2025!', '/admin-dashboard');
               }}
               className="w-full bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
             >
@@ -81,8 +90,7 @@ const LoginPage = () => {
             </button>
             <button
               onClick={() => {
-                console.log('🟢 Consultant Dashboard clicked');
-                window.location.href = '/consultant-dashboard';
+                quickLogin('georgia@consulting19.com', 'GeorgiaConsult2025!', '/consultant-dashboard');
               }}
               className="w-full bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
             >
@@ -90,8 +98,7 @@ const LoginPage = () => {
             </button>
             <button
               onClick={() => {
-                console.log('🔵 Client Dashboard clicked');
-                window.location.href = '/client-accounting';
+                quickLogin('client.georgia@consulting19.com', 'ClientGeorgia2025!', '/client-accounting');
               }}
               className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
