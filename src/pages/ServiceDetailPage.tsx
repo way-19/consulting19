@@ -23,7 +23,7 @@ const ServiceDetailPage: React.FC = () => {
   }
 
   const IconComponent = Icons[service.icon as keyof typeof Icons] as any;
-  const popularCountries = countries.slice(0, 6); // Show first 6 countries
+  const allCountries = countries; // Show all 10 countries
 
   return (
     <div className="min-h-screen">
@@ -179,7 +179,7 @@ const ServiceDetailPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {popularCountries.map((country) => (
+            {allCountries.map((country) => (
               <Link
                 key={country.id}
                 to={`/countries/${country.slug}`}
