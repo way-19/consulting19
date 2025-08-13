@@ -328,6 +328,11 @@ const CustomersManagement = () => {
     }
   };
 
+  const fetchAssignedClients = async () => {
+    // Alias for fetchClients for compatibility
+    await fetchClients();
+  };
+
   // Pagination
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
