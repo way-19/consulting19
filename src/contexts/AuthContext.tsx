@@ -53,7 +53,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let mounted = true;
-    let profileFetched = false;
 
     const initializeAuth = async () => {
       try {
@@ -95,20 +94,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user);
           
-          if (!profileFetched) {
-            profileFetched = true;
-            const userProfile = await fetchProfile(session.user.id);
-            if (mounted && userProfile) {
-              setProfile(userProfile);
-            }
-            if (mounted && userProfile) {
-              setProfile(userProfile);
-            }
+          const userProfile = await fetchProfile(session.user.id);
+          if (mounted && userProfile) {
+            setProfile(userProfile);
           }
         } else if (event === 'SIGNED_OUT') {
-          profileFetched = false;
           setUser(null);
           setProfile(null);
+        }
+        
+        if (mounted) {
+          setLoading(false);
         }
       }
     );
