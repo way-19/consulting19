@@ -1,4 +1,3 @@
-// /src/pages/ClientAccountingDashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,6 +24,8 @@ import {
 
 interface ClientAccountingProfile {
   id: string;
+  client_id: string;
+  consultant_id: string;
   company_name: string;
   tax_number?: string;
   business_type: string;
@@ -32,10 +33,21 @@ interface ClientAccountingProfile {
   service_package: string;
   monthly_fee: number;
   status: string;
+  last_document_received?: string;
   next_deadline?: string;
+  reminder_frequency: number;
+  preferred_language?: string;
+  created_at: string;
+  updated_at: string;
   consultant?: {
     full_name: string;
     email: string;
+  };
+  client?: {
+    profile?: {
+      full_name: string;
+      email: string;
+    };
   };
 }
 
@@ -54,21 +66,18 @@ interface ClientDocument {
 interface ClientInvoice {
   id: string;
   invoice_number: string;
-  period_start?: string;
-  period_end?: string;
   amount: number;
   currency: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  status: 'pending' | 'sent' | 'paid' | 'overdue' | 'cancelled';
   due_date?: string;
-  sent_at?: string;
-  paid_at?: string;
+  created_at: string;
 }
 
 interface ClientMessage {
   id: string;
   subject?: string;
   message: string;
-  message_type: string;
+  category: string;
   is_read: boolean;
   created_at: string;
   sender?: {
@@ -77,226 +86,180 @@ interface ClientMessage {
   };
 }
 
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
-
 const ClientAccountingDashboard: React.FC = () => {
   const { user, profile } = useAuth();
 
-  const [accountingProfile, setAccountingProfile] =
-    useState<ClientAccountingProfile | null>(null);
+  const [accountingProfile, setAccountingProfile] = useState<ClientAccountingProfile | null>(null);
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'>('overview');
 
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'
-  >('overview');
+  useEffect(() => {
+    if (profile?.id) {
+      fetchAccountingData();
+    }
+  }, [profile]);
 
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] =
-    useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>(
-    'standard',
-  );
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: '',
-  });
-  const [paymentLoading, setPaymentLoading] = useState(false);
+  const fetchAccountingData = async () => {
+    if (!profile?.id) return;
 
-  const handleShippingPayment = async () => {
-    if (!selectedMailboxItem) return;
-
-    setPaymentLoading(true);
     try {
-      const shippingFee = shippingOption === 'standard' ? 15 : 25;
+      setLoading(true);
+      setError(null);
 
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({
-          shipping_fee: shippingFee,
-          payment_status: 'paid',
-          status: 'sent',
-          sent_date: new Date().toISOString(),
-        })
-        .eq('id', selectedMailboxItem.id);
+      // First, get the client record to find the accounting client
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('profile_id', profile.id)
+        .single();
 
-      if (error) throw error;
+      if (clientError) {
+        console.error('Error fetching client:', clientError);
+        // If no client record exists, show message
+        setError('No client record found. Please contact support.');
+        return;
+      }
 
-      setShowShippingModal(false);
-      setSelectedMailboxItem(null);
-      await fetchVirtualMailboxItems();
+      // Fetch accounting client profile
+      const { data: accountingData, error: accountingError } = await supabase
+        .from('accounting_clients')
+        .select(`
+          *,
+          consultant:consultant_id (
+            full_name,
+            email
+          ),
+          client:client_id (
+            profile:profile_id (
+              full_name,
+              email
+            )
+          )
+        `)
+        .eq('client_id', clientData.id)
+        .single();
 
-      alert(
-        `Payment successful! Your document will be shipped via ${shippingOption} delivery ($${shippingFee}). Tracking number will be provided once shipped.`,
-      );
+      if (accountingError) {
+        console.error('Error fetching accounting profile:', accountingError);
+        // If no accounting profile exists, create a default one
+        await createDefaultAccountingProfile(clientData.id);
+        return;
+      }
+
+      setAccountingProfile(accountingData);
+
+      // Fetch documents
+      const { data: documentsData, error: documentsError } = await supabase
+        .from('accounting_documents')
+        .select('*')
+        .eq('client_id', accountingData.id)
+        .order('due_date', { ascending: true });
+
+      if (documentsError) {
+        console.error('Error fetching documents:', documentsError);
+      } else {
+        setDocuments(documentsData || []);
+      }
+
+      // Fetch invoices
+      const { data: invoicesData, error: invoicesError } = await supabase
+        .from('accounting_invoices')
+        .select('*')
+        .eq('client_id', accountingData.id)
+        .order('created_at', { ascending: false });
+
+      if (invoicesError) {
+        console.error('Error fetching invoices:', invoicesError);
+      } else {
+        setInvoices(invoicesData || []);
+      }
+
+      // Fetch messages
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('accounting_messages')
+        .select(`
+          *,
+          sender:sender_id (
+            full_name,
+            email
+          )
+        `)
+        .eq('client_id', accountingData.id)
+        .order('created_at', { ascending: false });
+
+      if (messagesError) {
+        console.error('Error fetching messages:', messagesError);
+      } else {
+        setMessages(messagesData || []);
+      }
+
     } catch (error) {
-      console.error('Error processing payment:', error);
-      alert('Payment failed. Please try again.');
+      console.error('Error in fetchAccountingData:', error);
+      setError('Failed to load accounting data. Please try again.');
     } finally {
-      setPaymentLoading(false);
+      setLoading(false);
     }
   };
 
-  const fetchVirtualMailboxItems = async () => {
-    // TODO: Supabase'den gerçek verileri çekin
+  const createDefaultAccountingProfile = async (clientId: string) => {
+    try {
+      // Get the consultant assigned to this client
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('assigned_consultant_id, company_name')
+        .eq('id', clientId)
+        .single();
+
+      if (clientError || !clientData?.assigned_consultant_id) {
+        setError('No assigned consultant found. Please contact support.');
+        return;
+      }
+
+      // Create default accounting profile
+      const { data: newProfile, error: createError } = await supabase
+        .from('accounting_clients')
+        .insert([{
+          client_id: clientId,
+          consultant_id: clientData.assigned_consultant_id,
+          company_name: clientData.company_name || 'Company Name Not Set',
+          business_type: 'limited_company',
+          accounting_period: 'monthly',
+          service_package: 'basic',
+          monthly_fee: 500, // Default fee, consultant can adjust
+          status: 'active',
+          reminder_frequency: 7,
+          preferred_language: 'en'
+        }])
+        .select(`
+          *,
+          consultant:consultant_id (
+            full_name,
+            email
+          ),
+          client:client_id (
+            profile:profile_id (
+              full_name,
+              email
+            )
+          )
+        `)
+        .single();
+
+      if (createError) {
+        console.error('Error creating accounting profile:', createError);
+        setError('Failed to create accounting profile. Please contact support.');
+      } else {
+        setAccountingProfile(newProfile);
+      }
+    } catch (error) {
+      console.error('Error creating default profile:', error);
+      setError('Failed to setup accounting profile. Please contact support.');
+    }
   };
-
-  console.log('🔵 ClientDashboard render:', {
-    loading,
-    user: !!user,
-    profile: !!profile,
-    profileRole: profile?.role,
-  });
-
-  // Mock data
-  useEffect(() => {
-    const mockProfile: ClientAccountingProfile = {
-      id: 'mock-client-1',
-      company_name: 'Georgia Tech Solutions LLC',
-      tax_number: 'GE123456789',
-      business_type: 'limited_company',
-      accounting_period: 'monthly',
-      service_package: 'basic',
-      monthly_fee: 500,
-      status: 'active',
-      next_deadline: new Date(
-        Date.now() + 7 * 24 * 60 * 60 * 1000,
-      ).toISOString(),
-      consultant: {
-        full_name: 'Nino Kvaratskhelia',
-        email: 'georgia@consulting19.com',
-      },
-    };
-
-    const mockDocuments: ClientDocument[] = [
-      {
-        id: '1',
-        document_type: 'Monthly Financial Report',
-        category: 'financial',
-        title: 'December 2024 Financial Report',
-        due_date: new Date(
-          Date.now() + 3 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        status: 'pending',
-        priority: 'high',
-      },
-      {
-        id: '2',
-        document_type: 'Tax Declaration',
-        category: 'tax',
-        title: 'Q4 2024 Tax Declaration',
-        due_date: new Date(
-          Date.now() + 10 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        status: 'pending',
-        priority: 'medium',
-      },
-      {
-        id: '3',
-        document_type: 'Bank Statement',
-        category: 'financial',
-        title: 'November 2024 Bank Statement',
-        received_date: new Date(
-          Date.now() - 5 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        status: 'completed',
-        priority: 'low',
-      },
-    ];
-
-    const mockInvoices: ClientInvoice[] = [
-      {
-        id: '1',
-        invoice_number: 'INV-2024-001',
-        period_start: '2024-12-01',
-        period_end: '2024-12-31',
-        amount: 500,
-        currency: 'USD',
-        status: 'sent',
-        due_date: new Date(
-          Date.now() + 15 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        sent_at: new Date(
-          Date.now() - 2 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-      },
-      {
-        id: '2',
-        invoice_number: 'INV-2024-002',
-        period_start: '2024-11-01',
-        period_end: '2024-11-30',
-        amount: 500,
-        currency: 'USD',
-        status: 'paid',
-        due_date: new Date(
-          Date.now() - 5 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        paid_at: new Date(
-          Date.now() - 10 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-      },
-    ];
-
-    const mockMessages: ClientMessage[] = [
-      {
-        id: '1',
-        subject: 'Monthly Report Reminder',
-        message:
-          'Please submit your December financial documents by the end of this week.',
-        message_type: 'reminder',
-        is_read: false,
-        created_at: new Date(
-          Date.now() - 1 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        sender: {
-          full_name: 'Nino Kvaratskhelia',
-          email: 'georgia@consulting19.com',
-        },
-      },
-      {
-        id: '2',
-        subject: 'Welcome to Accounting Services',
-        message:
-          'Welcome to our accounting services! I will be your dedicated consultant.',
-        message_type: 'general',
-        is_read: true,
-        created_at: new Date(
-          Date.now() - 7 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        sender: {
-          full_name: 'Nino Kvaratskhelia',
-          email: 'georgia@consulting19.com',
-        },
-      },
-    ];
-
-    setAccountingProfile(mockProfile);
-    setDocuments(mockDocuments);
-    setInvoices(mockInvoices);
-    setMessages(mockMessages);
-  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -336,11 +299,59 @@ const ClientAccountingDashboard: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your accounting dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={fetchAccountingData}
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!accountingProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">No Accounting Profile</h2>
+          <p className="text-gray-600 mb-4">
+            You don't have an accounting profile yet. This will be created automatically when you order accounting services.
+          </p>
+          <Link
+            to="/client-services"
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors inline-flex items-center space-x-2"
+          >
+            <Package className="h-5 w-5" />
+            <span>Browse Services</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const overdueDocuments = documents.filter((d) => d.status === 'overdue').length;
   const pendingDocuments = documents.filter((d) => d.status === 'pending').length;
-  const unpaidInvoices = invoices.filter(
-    (i) => i.status === 'sent' || i.status === 'overdue',
-  ).length;
+  const unpaidInvoices = invoices.filter((i) => i.status === 'sent' || i.status === 'overdue').length;
   const unreadMessages = messages.filter((m) => !m.is_read).length;
 
   const stats = [
@@ -406,10 +417,10 @@ const ClientAccountingDashboard: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2 rounded-full bg-green-100 px-4 py-2 text-green-800">
                 <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
-                <span className="text-sm font-medium">Active</span>
+                <span className="text-sm font-medium">{accountingProfile.status.toUpperCase()}</span>
               </div>
               <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-800">
-                {profile?.role || 'client'} • Georgia Tech Solutions
+                {profile?.role || 'client'} • {accountingProfile.company_name}
               </span>
             </div>
           </div>
@@ -422,11 +433,15 @@ const ClientAccountingDashboard: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <Users className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm text-gray-600">Consultant: Nino Kvaratskhelia</span>
+                  <span className="text-sm text-gray-600">
+                    Consultant: {accountingProfile.consultant?.full_name || 'Not assigned'}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Star className="h-4 w-4 text-yellow-500" />
-                  <span className="text-sm text-gray-600">Premium Service</span>
+                  <span className="text-sm text-gray-600">
+                    {accountingProfile.service_package.charAt(0).toUpperCase() + accountingProfile.service_package.slice(1)} Package
+                  </span>
                 </div>
               </div>
             </div>
@@ -531,41 +546,44 @@ const ClientAccountingDashboard: React.FC = () => {
         </div>
 
         {/* Company Info */}
-        {accountingProfile && (
-          <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">Company Information</h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-              <div>
-                <p className="text-sm text-gray-600">Company Name</p>
-                <p className="font-medium text-gray-900">{accountingProfile.company_name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Business Type</p>
-                <p className="font-medium text-gray-900">
-                  {accountingProfile.business_type.replace('_', ' ').toUpperCase()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Service Package</p>
-                <p className="font-medium text-gray-900">{accountingProfile.service_package}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Monthly Fee</p>
-                <p className="font-medium text-gray-900">${accountingProfile.monthly_fee}</p>
+        <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Company Information</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div>
+              <p className="text-sm text-gray-600">Company Name</p>
+              <p className="font-medium text-gray-900">{accountingProfile.company_name}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Business Type</p>
+              <p className="font-medium text-gray-900">
+                {accountingProfile.business_type.replace('_', ' ').toUpperCase()}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Service Package</p>
+              <p className="font-medium text-gray-900">
+                {accountingProfile.service_package.charAt(0).toUpperCase() + accountingProfile.service_package.slice(1)}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Monthly Fee</p>
+              <p className="font-medium text-green-600 text-lg">${accountingProfile.monthly_fee.toLocaleString()}</p>
+              <p className="text-xs text-gray-500">
+                {accountingProfile.accounting_period.charAt(0).toUpperCase() + accountingProfile.accounting_period.slice(1)} billing
+              </p>
+            </div>
+          </div>
+          {accountingProfile.next_deadline && (
+            <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5 text-orange-600" />
+                <span className="font-medium text-orange-800">
+                  Next Deadline: {new Date(accountingProfile.next_deadline).toLocaleDateString()}
+                </span>
               </div>
             </div>
-            {accountingProfile.next_deadline && (
-              <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5 text-orange-600" />
-                  <span className="font-medium text-orange-800">
-                    Next Deadline: {new Date(accountingProfile.next_deadline).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -587,217 +605,240 @@ const ClientAccountingDashboard: React.FC = () => {
                   {/* Recent Documents */}
                   <div>
                     <h3 className="mb-4 text-lg font-semibold text-gray-900">Recent Documents</h3>
-                    <div className="space-y-3">
-                      {documents.slice(0, 3).map((document) => (
-                        <div
-                          key={document.id}
-                          className="flex items-center justify-between rounded-lg bg-gray-50 p-4"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className={`h-3 w-3 rounded-full ${getPriorityColor(document.priority)}`} />
-                            <div>
-                              <p className="font-medium text-gray-900">{document.title}</p>
-                              <p className="text-sm text-gray-600">
-                                Due:{' '}
-                                {document.due_date
-                                  ? new Date(document.due_date).toLocaleDateString()
-                                  : 'N/A'}
-                              </p>
+                    {documents.length === 0 ? (
+                      <div className="text-center py-8">
+                        <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">No documents yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {documents.slice(0, 3).map((document) => (
+                          <div
+                            key={document.id}
+                            className="flex items-center justify-between rounded-lg bg-gray-50 p-4"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className={`h-3 w-3 rounded-full ${getPriorityColor(document.priority)}`} />
+                              <div>
+                                <p className="font-medium text-gray-900">{document.title}</p>
+                                <p className="text-sm text-gray-600">
+                                  Due: {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}
+                                </p>
+                              </div>
                             </div>
+                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(document.status)}`}>
+                              {document.status.toUpperCase()}
+                            </span>
                           </div>
-                          <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(document.status)}`}>
-                            {document.status.toUpperCase()}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Recent Invoices */}
                   <div>
                     <h3 className="mb-4 text-lg font-semibold text-gray-900">Recent Invoices</h3>
-                    <div className="space-y-3">
-                      {invoices.slice(0, 2).map((invoice) => (
-                        <div
-                          key={invoice.id}
-                          className="flex items-center justify-between rounded-lg bg-gray-50 p-4"
-                        >
-                          <div>
-                            <p className="font-medium text-gray-900">{invoice.invoice_number}</p>
-                            <p className="text-sm text-gray-600">
-                              {invoice.period_start && invoice.period_end
-                                ? `${new Date(invoice.period_start).toLocaleDateString()} - ${new Date(
-                                    invoice.period_end,
-                                  ).toLocaleDateString()}`
-                                : 'One-time invoice'}
-                            </p>
+                    {invoices.length === 0 ? (
+                      <div className="text-center py-8">
+                        <DollarSign className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">No invoices yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {invoices.slice(0, 2).map((invoice) => (
+                          <div
+                            key={invoice.id}
+                            className="flex items-center justify-between rounded-lg bg-gray-50 p-4"
+                          >
+                            <div>
+                              <p className="font-medium text-gray-900">{invoice.invoice_number}</p>
+                              <p className="text-sm text-gray-600">
+                                {new Date(invoice.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium text-gray-900">${invoice.amount} {invoice.currency}</p>
+                              <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                                {invoice.status.toUpperCase()}
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-medium text-gray-900">${invoice.amount}</p>
-                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(invoice.status)}`}>
-                              {invoice.status.toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
               {activeTab === 'documents' && (
                 <div className="space-y-4">
-                  {documents.map((document) => (
-                    <div key={document.id} className="rounded-lg bg-gray-50 p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="mb-2 flex items-center space-x-4">
-                            <div className={`h-3 w-3 rounded-full ${getPriorityColor(document.priority)}`} />
-                            <h3 className="text-lg font-semibold text-gray-900">{document.title}</h3>
-                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(document.status)}`}>
-                              {document.status.toUpperCase()}
-                            </span>
-                          </div>
-
-                          <div className="mb-4 grid grid-cols-1 gap-4 text-sm text-gray-600 md:grid-cols-3">
-                            <div>
-                              <span className="font-medium">Type:</span> {document.document_type}
-                            </div>
-                            <div>
-                              <span className="font-medium">Category:</span> {document.category}
-                            </div>
-                            <div>
-                              <span className="font-medium">Due Date:</span>{' '}
-                              <span
-                                className={
-                                  document.due_date && new Date(document.due_date) < new Date()
-                                    ? 'font-medium text-red-600'
-                                    : ''
-                                }
-                              >
-                                {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}
+                  {documents.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Yet</h3>
+                      <p className="text-gray-600">Your consultant will add documents here when needed.</p>
+                    </div>
+                  ) : (
+                    documents.map((document) => (
+                      <div key={document.id} className="rounded-lg bg-gray-50 p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="mb-2 flex items-center space-x-4">
+                              <div className={`h-3 w-3 rounded-full ${getPriorityColor(document.priority)}`} />
+                              <h3 className="text-lg font-semibold text-gray-900">{document.title}</h3>
+                              <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(document.status)}`}>
+                                {document.status.toUpperCase()}
                               </span>
                             </div>
+
+                            <div className="mb-4 grid grid-cols-1 gap-4 text-sm text-gray-600 md:grid-cols-3">
+                              <div>
+                                <span className="font-medium">Type:</span> {document.document_type}
+                              </div>
+                              <div>
+                                <span className="font-medium">Category:</span> {document.category}
+                              </div>
+                              <div>
+                                <span className="font-medium">Due Date:</span>{' '}
+                                <span
+                                  className={
+                                    document.due_date && new Date(document.due_date) < new Date()
+                                      ? 'font-medium text-red-600'
+                                      : ''
+                                  }
+                                >
+                                  {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            {document.file_url ? (
+                              <button className="flex items-center space-x-2 rounded-lg bg-green-50 px-4 py-2 font-medium text-green-600 transition-colors hover:bg-green-100">
+                                <Download className="h-4 w-4" />
+                                <span>Download</span>
+                              </button>
+                            ) : (
+                              <button className="flex items-center space-x-2 rounded-lg bg-blue-50 px-4 py-2 font-medium text-blue-600 transition-colors hover:bg-blue-100">
+                                <Upload className="h-4 w-4" />
+                                <span>Upload</span>
+                              </button>
+                            )}
                           </div>
                         </div>
-
-                        <div className="flex items-center space-x-2">
-                          {document.file_url ? (
-                            <button className="flex items-center space-x-2 rounded-lg bg-green-50 px-4 py-2 font-medium text-green-600 transition-colors hover:bg-green-100">
-                              <Download className="h-4 w-4" />
-                              <span>Download</span>
-                            </button>
-                          ) : (
-                            <button className="flex items-center space-x-2 rounded-lg bg-blue-50 px-4 py-2 font-medium text-blue-600 transition-colors hover:bg-blue-100">
-                              <Upload className="h-4 w-4" />
-                              <span>Upload</span>
-                            </button>
-                          )}
-                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               )}
 
               {activeTab === 'invoices' && (
                 <div className="space-y-4">
-                  {invoices.map((invoice) => (
-                    <div key={invoice.id} className="rounded-lg bg-gray-50 p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="mb-2 flex items-center space-x-4">
-                            <h3 className="text-lg font-semibold text-gray-900">{invoice.invoice_number}</h3>
-                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(invoice.status)}`}>
-                              {invoice.status.toUpperCase()}
-                            </span>
+                  {invoices.length === 0 ? (
+                    <div className="text-center py-12">
+                      <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Invoices Yet</h3>
+                      <p className="text-gray-600">Invoices will appear here when generated by your consultant.</p>
+                    </div>
+                  ) : (
+                    invoices.map((invoice) => (
+                      <div key={invoice.id} className="rounded-lg bg-gray-50 p-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="mb-2 flex items-center space-x-4">
+                              <h3 className="text-lg font-semibold text-gray-900">{invoice.invoice_number}</h3>
+                              <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                                {invoice.status.toUpperCase()}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4 text-sm text-gray-600 md:grid-cols-3">
+                              <div>
+                                <span className="font-medium">Amount:</span> ${invoice.amount} {invoice.currency}
+                              </div>
+                              <div>
+                                <span className="font-medium">Due Date:</span>{' '}
+                                {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Created:</span>{' '}
+                                {new Date(invoice.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
                           </div>
 
-                          <div className="grid grid-cols-1 gap-4 text-sm text-gray-600 md:grid-cols-4">
-                            <div>
-                              <span className="font-medium">Amount:</span> ${invoice.amount} {invoice.currency}
-                            </div>
-                            <div>
-                              <span className="font-medium">Period:</span>{' '}
-                              {invoice.period_start && invoice.period_end
-                                ? `${new Date(invoice.period_start).toLocaleDateString()} - ${new Date(
-                                    invoice.period_end,
-                                  ).toLocaleDateString()}`
-                                : 'One-time'}
-                            </div>
-                            <div>
-                              <span className="font-medium">Due Date:</span>{' '}
-                              {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}
-                            </div>
-                            <div>
-                              <span className="font-medium">Paid:</span>{' '}
-                              {invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString() : 'Not paid'}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <button className="flex items-center space-x-2 rounded-lg bg-purple-50 px-4 py-2 font-medium text-purple-600 transition-colors hover:bg-purple-100">
-                            <Eye className="h-4 w-4" />
-                            <span>View</span>
-                          </button>
-                          {(invoice.status === 'sent' || invoice.status === 'overdue') && (
-                            <button className="rounded-lg bg-green-50 px-4 py-2 font-medium text-green-600 transition-colors hover:bg-green-100">
-                              Pay Now
+                          <div className="flex items-center space-x-2">
+                            <button className="flex items-center space-x-2 rounded-lg bg-purple-50 px-4 py-2 font-medium text-purple-600 transition-colors hover:bg-purple-100">
+                              <Eye className="h-4 w-4" />
+                              <span>View</span>
                             </button>
-                          )}
+                            {(invoice.status === 'sent' || invoice.status === 'overdue') && (
+                              <button className="rounded-lg bg-green-50 px-4 py-2 font-medium text-green-600 transition-colors hover:bg-green-100">
+                                Pay Now
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               )}
 
               {activeTab === 'messages' && (
                 <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`rounded-lg p-6 ${message.is_read ? 'bg-gray-50' : 'border border-blue-200 bg-blue-50'}`}
-                    >
-                      <div className="mb-3 flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
-                            <MessageSquare className="h-4 w-4 text-purple-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{message.sender?.full_name}</p>
-                            <p className="text-sm text-gray-600">
-                              {new Date(message.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        {!message.is_read && (
-                          <span className="rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">New</span>
-                        )}
-                      </div>
-
-                      {message.subject && (
-                        <h4 className="mb-2 font-medium text-gray-900">{message.subject}</h4>
-                      )}
-
-                      <p className="text-gray-700">{message.message}</p>
-
-                      <div className="mt-3 flex items-center justify-between">
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs font-medium ${
-                            message.message_type === 'urgent'
-                              ? 'bg-red-100 text-red-800'
-                              : message.message_type === 'reminder'
-                              ? 'bg-orange-100 text-orange-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {message.message_type.replace('_', ' ').toUpperCase()}
-                        </span>
-                      </div>
+                  {messages.length === 0 ? (
+                    <div className="text-center py-12">
+                      <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Messages Yet</h3>
+                      <p className="text-gray-600">Messages from your consultant will appear here.</p>
                     </div>
-                  ))}
+                  ) : (
+                    messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`rounded-lg p-6 ${message.is_read ? 'bg-gray-50' : 'border border-blue-200 bg-blue-50'}`}
+                      >
+                        <div className="mb-3 flex items-start justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
+                              <MessageSquare className="h-4 w-4 text-purple-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{message.sender?.full_name || 'Consultant'}</p>
+                              <p className="text-sm text-gray-600">
+                                {new Date(message.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          {!message.is_read && (
+                            <span className="rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">New</span>
+                          )}
+                        </div>
+
+                        {message.subject && (
+                          <h4 className="mb-2 font-medium text-gray-900">{message.subject}</h4>
+                        )}
+
+                        <p className="text-gray-700">{message.message}</p>
+
+                        <div className="mt-3 flex items-center justify-between">
+                          <span
+                            className={`rounded-full px-2 py-1 text-xs font-medium ${
+                              message.category === 'urgent'
+                                ? 'bg-red-100 text-red-800'
+                                : message.category === 'reminder'
+                                ? 'bg-orange-100 text-orange-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {message.category.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
 
@@ -811,27 +852,8 @@ const ClientAccountingDashboard: React.FC = () => {
 
           {/* Right */}
           <div className="space-y-6">
-            {/* Debug Info */}
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-6">
-              <h3 className="mb-4 text-lg font-semibold text-blue-900">System Status</h3>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="font-medium text-blue-700">User:</span>
-                  <p className="text-blue-600">{user?.email || 'No user'}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-blue-700">Profile:</span>
-                  <p className="text-blue-600">{profile ? `${profile.email} (${profile.role})` : 'No profile'}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-blue-700">Company:</span>
-                  <p className="text-blue-600">{accountingProfile?.company_name || 'Not set'}</p>
-                </div>
-              </div>
-            </div>
-
             {/* Consultant */}
-            {accountingProfile?.consultant && (
+            {accountingProfile.consultant && (
               <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                 <h3 className="mb-4 text-lg font-semibold text-gray-900">Your Consultant</h3>
                 <div className="mb-4 flex items-center space-x-4">
@@ -878,15 +900,50 @@ const ClientAccountingDashboard: React.FC = () => {
                     </button>
                   ))}
 
-                  {/* ✅ Yeni buton: Additional Services */}
+                  {/* Additional Services Button */}
                   <Link
                     to="/client-services"
-                    className="group cursor-pointer rounded-lg bg-orange-500 p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:bg-orange-600 hover:shadow-md"
+                    className="bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md group cursor-pointer"
                   >
-                    <Package className="mx-auto mb-2 h-6 w-6 transition-transform group-hover:scale-110" />
-                    <div className="text-sm font-medium text-center">Additional Services</div>
+                    <Package className="h-5 w-5 mx-auto mb-2 transition-transform group-hover:scale-110" />
+                    <div className="text-xs font-medium text-center">Additional Services</div>
                   </Link>
                 </div>
+              </div>
+            </div>
+
+            {/* Service Details */}
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold text-gray-900">Service Details</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Package Type:</span>
+                  <span className="font-medium text-gray-900">
+                    {accountingProfile.service_package.charAt(0).toUpperCase() + accountingProfile.service_package.slice(1)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Billing Period:</span>
+                  <span className="font-medium text-gray-900">
+                    {accountingProfile.accounting_period.charAt(0).toUpperCase() + accountingProfile.accounting_period.slice(1)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Monthly Fee:</span>
+                  <span className="font-bold text-green-600 text-lg">${accountingProfile.monthly_fee.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Reminder Frequency:</span>
+                  <span className="font-medium text-gray-900">{accountingProfile.reminder_frequency} days</span>
+                </div>
+                {accountingProfile.last_document_received && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Last Document:</span>
+                    <span className="font-medium text-gray-900">
+                      {new Date(accountingProfile.last_document_received).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -921,170 +978,6 @@ const ClientAccountingDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Shipping Modal */}
-      {showShippingModal && selectedMailboxItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white shadow-2xl">
-            <div className="p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">Ship Document</h3>
-                <button
-                  onClick={() => setShowShippingModal(false)}
-                  className="text-gray-400 transition-colors hover:text-gray-600"
-                >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="mb-6 rounded-lg bg-gray-50 p-4">
-                <h4 className="mb-2 font-medium text-gray-900">
-                  {selectedMailboxItem.document_name}
-                </h4>
-                <p className="text-sm text-gray-600">{selectedMailboxItem.description}</p>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Document Type:</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {selectedMailboxItem.document_type}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <label className="mb-3 block text-sm font-medium text-gray-700">Shipping Option</label>
-                <div className="space-y-3">
-                  <label className="flex cursor-pointer items-center rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value="standard"
-                      checked={shippingOption === 'standard'}
-                      onChange={(e) => setShippingOption(e.target.value as 'standard' | 'express')}
-                      className="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-500"
-                    />
-                    <div className="ml-3 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900">Standard Shipping</span>
-                        <span className="font-bold text-gray-900">$15</span>
-                      </div>
-                      <p className="text-sm text-gray-600">5-7 business days</p>
-                    </div>
-                  </label>
-                  <label className="flex cursor-pointer items-center rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value="express"
-                      checked={shippingOption === 'express'}
-                      onChange={(e) => setShippingOption(e.target.value as 'standard' | 'express')}
-                      className="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-500"
-                    />
-                    <div className="ml-3 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900">Express Shipping</span>
-                        <span className="font-bold text-gray-900">$25</span>
-                      </div>
-                      <p className="text-sm text-gray-600">2-3 business days</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-3 block text-sm font-medium text-gray-700">Shipping Address</label>
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    value={shippingAddress.fullName}
-                    onChange={(e) => setShippingAddress((p) => ({ ...p, fullName: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Street Address"
-                    value={shippingAddress.address}
-                    onChange={(e) => setShippingAddress((p) => ({ ...p, address: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
-                  />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder="City"
-                      value={shippingAddress.city}
-                      onChange={(e) => setShippingAddress((p) => ({ ...p, city: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Postal Code"
-                      value={shippingAddress.postalCode}
-                      onChange={(e) => setShippingAddress((p) => ({ ...p, postalCode: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Country"
-                    value={shippingAddress.country}
-                    onChange={(e) => setShippingAddress((p) => ({ ...p, country: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-gray-50 p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-gray-700">Shipping Fee:</span>
-                  <span className="font-bold text-gray-900">
-                    ${shippingOption === 'standard' ? '15' : '25'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Delivery Time:</span>
-                  <span className="text-gray-900">
-                    {shippingOption === 'standard' ? '5-7 days' : '2-3 days'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4 border-t border-gray-200 pt-4">
-                <button
-                  onClick={() => setShowShippingModal(false)}
-                  className="flex-1 rounded-lg bg-gray-100 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleShippingPayment}
-                  disabled={
-                    paymentLoading ||
-                    !shippingAddress.fullName ||
-                    !shippingAddress.address ||
-                    !shippingAddress.city ||
-                    !shippingAddress.country
-                  }
-                  className="flex-1 flex items-center justify-center space-x-2 rounded-lg bg-purple-600 px-6 py-3 font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {paymentLoading ? (
-                    <>
-                      <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-5 w-5" />
-                      <span>Pay ${shippingOption === 'standard' ? '15' : '25'}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
