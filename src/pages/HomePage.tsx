@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Bot, Shield, Zap, BarChart3, MessageSquare, Users, Globe2, TrendingUp, Clock } from 'lucide-react';
+import { ArrowRight, Bot, Shield, Zap, BarChart3, MessageSquare, Users, Globe2, TrendingUp, Clock, Mic, Volume2 } from 'lucide-react';
 import CountryCard from '../components/CountryCard';
 import ServiceCard from '../components/ServiceCard';
 import { countries } from '../data/countries';
@@ -9,6 +9,8 @@ import { services } from '../data/services';
 
 const HomePage = () => {
   const featuredCountries = countries.slice(0, 8);
+  const [isAIAssistantActive, setIsAIAssistantActive] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   
   // Hero Slider State
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -616,6 +618,148 @@ const HomePage = () => {
           </Link>
         </div>
       </section>
+
+      {/* AI Voice Assistant Floating Icon */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="relative">
+          {/* Pulse animation rings */}
+          <div className={`absolute inset-0 rounded-full ${isListening ? 'animate-ping' : ''} bg-gradient-to-r from-blue-400 to-purple-600 opacity-75`}></div>
+          <div className={`absolute inset-0 rounded-full ${isListening ? 'animate-pulse' : ''} bg-gradient-to-r from-blue-500 to-purple-700 opacity-50`}></div>
+          
+          {/* Main button */}
+          <button
+            onClick={() => {
+              setIsAIAssistantActive(!isAIAssistantActive);
+              if (!isAIAssistantActive) {
+                setIsListening(true);
+                // Simulate voice activation
+                setTimeout(() => setIsListening(false), 3000);
+              }
+            }}
+            className={`relative w-16 h-16 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 ${
+              isAIAssistantActive 
+                ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
+                : 'bg-gradient-to-r from-blue-500 to-purple-600'
+            } ${isListening ? 'animate-bounce' : ''}`}
+            title="AI Voice Assistant"
+          >
+            {isListening ? (
+              <Volume2 className="h-8 w-8 text-white mx-auto animate-pulse" />
+            ) : isAIAssistantActive ? (
+              <Bot className="h-8 w-8 text-white mx-auto" />
+            ) : (
+              <Mic className="h-8 w-8 text-white mx-auto" />
+            )}
+          </button>
+
+          {/* Status indicator */}
+          <div className={`absolute -top-2 -right-2 w-6 h-6 rounded-full border-2 border-white shadow-lg transition-all duration-300 ${
+            isAIAssistantActive ? 'bg-green-500' : 'bg-gray-400'
+          }`}>
+            <div className={`w-full h-full rounded-full ${isAIAssistantActive ? 'animate-pulse bg-green-400' : ''}`}></div>
+          </div>
+
+          {/* Tooltip */}
+          <div className={`absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg transition-all duration-300 whitespace-nowrap ${
+            isAIAssistantActive || isListening ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+          }`}>
+            {isListening ? 'Listening...' : isAIAssistantActive ? 'AI Assistant Active' : 'Click to activate AI Assistant'}
+            <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+          </div>
+
+          {/* Voice waves animation */}
+          {isListening && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex space-x-1">
+                <div className="w-1 bg-white rounded-full animate-pulse" style={{ height: '8px', animationDelay: '0ms' }}></div>
+                <div className="w-1 bg-white rounded-full animate-pulse" style={{ height: '12px', animationDelay: '150ms' }}></div>
+                <div className="w-1 bg-white rounded-full animate-pulse" style={{ height: '16px', animationDelay: '300ms' }}></div>
+                <div className="w-1 bg-white rounded-full animate-pulse" style={{ height: '12px', animationDelay: '450ms' }}></div>
+                <div className="w-1 bg-white rounded-full animate-pulse" style={{ height: '8px', animationDelay: '600ms' }}></div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* AI Assistant Panel */}
+        {isAIAssistantActive && (
+          <div className="absolute bottom-20 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden transform transition-all duration-300">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                    <Bot className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">AI Voice Assistant</h3>
+                    <p className="text-xs text-blue-100">Powered by Admin Panel</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsAIAssistantActive(false)}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+              <div className="text-center mb-4">
+                <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3 ${
+                  isListening ? 'bg-green-100' : 'bg-blue-100'
+                }`}>
+                  {isListening ? (
+                    <Volume2 className="h-6 w-6 text-green-600 animate-pulse" />
+                  ) : (
+                    <Mic className="h-6 w-6 text-blue-600" />
+                  )}
+                </div>
+                <p className="text-sm text-gray-600">
+                  {isListening ? 'Listening to your voice...' : 'Click the microphone to start'}
+                </p>
+              </div>
+
+              {/* Voice Controls */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setIsListening(!isListening);
+                    if (!isListening) {
+                      setTimeout(() => setIsListening(false), 3000);
+                    }
+                  }}
+                  className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+                    isListening 
+                      ? 'bg-red-500 hover:bg-red-600 text-white' 
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  }`}
+                >
+                  {isListening ? 'Stop Listening' : 'Start Voice Chat'}
+                </button>
+
+                <div className="text-xs text-gray-500 text-center">
+                  <p>• Multi-language support</p>
+                  <p>• Webhook independent</p>
+                  <p>• Admin panel controlled</p>
+                </div>
+              </div>
+
+              {/* Sample Commands */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <p className="text-xs font-medium text-gray-700 mb-2">Try saying:</p>
+                <div className="space-y-1 text-xs text-gray-600">
+                  <p>"Which country is best for my startup?"</p>
+                  <p>"Help me with company formation"</p>
+                  <p>"Show me tax benefits in Estonia"</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
