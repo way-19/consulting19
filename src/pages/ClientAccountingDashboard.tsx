@@ -1,56 +1,63 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
-import {
-  FileText,
+import { 
+  ArrowLeft, 
+  Search, 
+  Filter, 
+  Users, 
+  FileText, 
+  AlertTriangle, 
   Calendar,
-  AlertTriangle,
-  CheckCircle,
+  DollarSign,
   Clock,
-  Upload,
+  CheckCircle,
+  XCircle,
+  Send,
+  Eye,
+  Edit,
+  Trash2,
+  Plus,
   Download,
+  Upload,
   MessageSquare,
   Bell,
-  DollarSign,
-  Eye,
-  Search,
-  Filter,
-  Users,
   TrendingUp,
-  Globe2,
-  Star,
+  BarChart3,
+  Settings,
+  RefreshCw,
+  Globe,
+  Mail,
+  X,
   Package,
-  Settings,
-  Mail,
+  CreditCard,
+  Star,
+  Building,
+  Phone,
+  MapPin,
   Truck
-  Mail,
-  Truck
-  Mail,
-  Truck
-  Settings,
-  Mail,
-  Truck,
 } from 'lucide-react';
 
-interface ClientAccountingProfile {
+interface AccountingClient {
   id: string;
+  client_id: string;
   company_name: string;
   tax_number?: string;
   business_type: string;
   accounting_period: string;
   service_package: string;
   monthly_fee: number;
-  status: string;
+  status: 'active' | 'inactive' | 'suspended';
+  last_document_received?: string;
   next_deadline?: string;
-  consultant?: {
-    full_name: string;
-    email: string;
-  };
+  reminder_frequency: number;
 }
 
-interface ClientDocument {
+interface AccountingDocument {
   id: string;
+  client_id: string;
   document_type: string;
   category: string;
   title: string;
@@ -58,1296 +65,594 @@ interface ClientDocument {
   received_date?: string;
   status: 'pending' | 'received' | 'processed' | 'completed' | 'overdue';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  file_url?: string;
+  reminder_sent: boolean;
+  reminder_count: number;
 }
 
-interface ClientInvoice {
+interface AccountingTask {
   id: string;
-  invoice_number: string;
-  period_start?: string;
-  period_end?: string;
-  amount: number;
-  currency: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  client_id: string;
+  title: string;
+  description?: string;
+  task_type: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   due_date?: string;
-  sent_at?: string;
-  paid_at?: string;
+  estimated_hours?: number;
+  actual_hours?: number;
 }
 
-interface ClientMessage {
+interface AccountingReminder {
   id: string;
-  subject?: string;
+  client_id: string;
+  reminder_type: string;
+  title: string;
   message: string;
-  message_type: string;
-  is_read: boolean;
-  created_at: string;
-  sender?: {
-    full_name: string;
-    email: string;
-  };
+  due_date?: string;
+  status: 'pending' | 'sent' | 'acknowledged' | 'cancelled';
+  reminder_level: number;
 }
 
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
-
-const ClientAccountingDashboard: React.FC = () => {
-  const { user, profile } = useAuth();
-
-  const [accountingProfile, setAccountingProfile] =
-    useState<ClientAccountingProfile | null>(null);
-  const [documents, setDocuments] = useState<ClientDocument[]>([]);
-  const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
-  const [messages, setMessages] = useState<ClientMessage[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
-
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'
-  >('overview');
-
+const ClientAccountingDashboard = () => {
+  const { profile } = useAuth();
+  const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'tasks' | 'reminders' | 'messages' | 'services' | 'mailbox'>('overview');
+  const [accountingClient, setAccountingClient] = useState<AccountingClient | null>(null);
+  const [documents, setDocuments] = useState<AccountingDocument[]>([]);
+  const [tasks, setTasks] = useState<AccountingTask[]>([]);
+  const [reminders, setReminders] = useState<AccountingReminder[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
 
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] =
-    useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>(
-    'standard',
-  );
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: '',
-  });
-  const [paymentLoading, setPaymentLoading] = useState(false);
+  useEffect(() => {
+    if (profile?.id) {
+      fetchAccountingData();
+    }
+  }, [profile]);
 
-  const handleShippingPayment = async () => {
-    if (!selectedMailboxItem) return;
-
-    setPaymentLoading(true);
+  const fetchAccountingData = async () => {
     try {
-      const shippingFee = shippingOption === 'standard' ? 15 : 25;
+      // Fetch accounting client profile
+      const { data: clientData, error: clientError } = await supabase
+        .from('accounting_clients')
+        .select('*')
+        .eq('client_id', profile?.id)
+        .single();
 
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({
-          shipping_fee: shippingFee,
-          payment_status: 'paid',
-          status: 'sent',
-          sent_date: new Date().toISOString(),
-        })
-        .eq('id', selectedMailboxItem.id);
+      if (clientError && clientError.code !== 'PGRST116') {
+        console.error('Error fetching accounting client:', clientError);
+      } else {
+        setAccountingClient(clientData);
+      }
 
-      if (error) throw error;
+      // Fetch documents
+      const { data: documentsData, error: documentsError } = await supabase
+        .from('accounting_documents')
+        .select('*')
+        .eq('client_id', clientData?.id)
+        .order('due_date', { ascending: true });
 
-      setShowShippingModal(false);
-      setSelectedMailboxItem(null);
-      await fetchVirtualMailboxItems();
+      if (documentsError) {
+        console.error('Error fetching documents:', documentsError);
+      } else {
+        setDocuments(documentsData || []);
+      }
 
-      alert(
-        `Payment successful! Your document will be shipped via ${shippingOption} delivery ($${shippingFee}). Tracking number will be provided once shipped.`,
-      );
+      // Fetch tasks
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('accounting_tasks')
+        .select('*')
+        .eq('client_id', clientData?.id)
+        .order('due_date', { ascending: true });
+
+      if (tasksError) {
+        console.error('Error fetching tasks:', tasksError);
+      } else {
+        setTasks(tasksData || []);
+      }
+
+      // Fetch reminders
+      const { data: remindersData, error: remindersError } = await supabase
+        .from('accounting_reminders')
+        .select('*')
+        .eq('client_id', clientData?.id)
+        .order('created_at', { ascending: false });
+
+      if (remindersError) {
+        console.error('Error fetching reminders:', remindersError);
+      } else {
+        setReminders(remindersData || []);
+      }
     } catch (error) {
-      console.error('Error processing payment:', error);
-      alert('Payment failed. Please try again.');
+      console.error('Error fetching accounting data:', error);
     } finally {
-      setPaymentLoading(false);
+      setLoading(false);
     }
   };
 
-  const fetchVirtualMailboxItems = async () => {
-    // TODO: Supabase'den gerçek verileri çek
-    // Şimdilik boş bırakıyoruz / mock ile çalışabilirsiniz.
-  };
-
-  console.log('🔵 ClientDashboard render:', {
-    loading,
-    user: !!user,
-    profile: !!profile,
-    profileRole: profile?.role,
-  });
-
-  // Mock data for demo
-  useEffect(() => {
-    const mockProfile: ClientAccountingProfile = {
-      id: 'mock-client-1',
-      company_name: 'Georgia Tech Solutions LLC',
-      tax_number: 'GE123456789',
-      business_type: 'limited_company',
-      accounting_period: 'monthly',
-      service_package: 'basic',
-      monthly_fee: 500,
-      status: 'active',
-      next_deadline: new Date(
-        Date.now() + 7 * 24 * 60 * 60 * 1000,
-      ).toISOString(),
-      consultant: {
-        full_name: 'Nino Kvaratskhelia',
-        email: 'georgia@consulting19.com',
-      },
-    };
-
-    const mockDocuments: ClientDocument[] = [
-      {
-        id: '1',
-        document_type: 'Monthly Financial Report',
-        category: 'financial',
-        title: 'December 2024 Financial Report',
-        due_date: new Date(
-          Date.now() + 3 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        status: 'pending',
-        priority: 'high',
-      },
-      {
-        id: '2',
-        document_type: 'Tax Declaration',
-        category: 'tax',
-        title: 'Q4 2024 Tax Declaration',
-        due_date: new Date(
-          Date.now() + 10 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        status: 'pending',
-        priority: 'medium',
-      },
-      {
-        id: '3',
-        document_type: 'Bank Statement',
-        category: 'financial',
-        title: 'November 2024 Bank Statement',
-        received_date: new Date(
-          Date.now() - 5 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        status: 'completed',
-        priority: 'low',
-      },
-    ];
-
-    const mockInvoices: ClientInvoice[] = [
-      {
-        id: '1',
-        invoice_number: 'INV-2024-001',
-        period_start: '2024-12-01',
-        period_end: '2024-12-31',
-        amount: 500,
-        currency: 'USD',
-        status: 'sent',
-        due_date: new Date(
-          Date.now() + 15 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        sent_at: new Date(
-          Date.now() - 2 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-      },
-      {
-        id: '2',
-        invoice_number: 'INV-2024-002',
-        period_start: '2024-11-01',
-        period_end: '2024-11-30',
-        amount: 500,
-        currency: 'USD',
-        status: 'paid',
-        due_date: new Date(
-          Date.now() - 5 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        paid_at: new Date(
-          Date.now() - 10 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-      },
-    ];
-
-    const mockMessages: ClientMessage[] = [
-      {
-        id: '1',
-        subject: 'Monthly Report Reminder',
-        message:
-          'Please submit your December financial documents by the end of this week.',
-        message_type: 'reminder',
-        is_read: false,
-        created_at: new Date(
-          Date.now() - 1 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        sender: {
-          full_name: 'Nino Kvaratskhelia',
-          email: 'georgia@consulting19.com',
-        },
-      },
-      {
-        id: '2',
-        subject: 'Welcome to Accounting Services',
-        message:
-          'Welcome to our accounting services! I will be your dedicated consultant.',
-        message_type: 'general',
-        is_read: true,
-        created_at: new Date(
-          Date.now() - 7 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        sender: {
-          full_name: 'Nino Kvaratskhelia',
-          email: 'georgia@consulting19.com',
-        },
-      },
-    ];
-
-    setAccountingProfile(mockProfile);
-    setDocuments(mockDocuments);
-    setInvoices(mockInvoices);
-    setMessages(mockMessages);
-  }, []);
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'received':
-        return 'bg-blue-100 text-blue-800';
-      case 'processed':
-        return 'bg-purple-100 text-purple-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'overdue':
-        return 'bg-red-100 text-red-800';
-      case 'paid':
-        return 'bg-green-100 text-green-800';
-      case 'sent':
-        return 'bg-blue-100 text-blue-800';
-      case 'draft':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'received': return 'bg-blue-100 text-blue-800';
+      case 'processed': return 'bg-purple-100 text-purple-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'overdue': return 'bg-red-100 text-red-800';
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'inactive': return 'bg-gray-100 text-gray-800';
+      case 'suspended': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent':
-        return 'bg-red-500';
-      case 'high':
-        return 'bg-orange-500';
-      case 'medium':
-        return 'bg-yellow-500';
-      case 'low':
-        return 'bg-gray-400';
-      default:
-        return 'bg-gray-400';
+      case 'urgent': return 'bg-red-500';
+      case 'high': return 'bg-orange-500';
+      case 'medium': return 'bg-yellow-500';
+      case 'low': return 'bg-gray-400';
+      default: return 'bg-gray-400';
     }
   };
 
-  const overdueDocuments = documents.filter((d) => d.status === 'overdue').length;
-  const pendingDocuments = documents.filter((d) => d.status === 'pending').length;
-  const unpaidInvoices = invoices.filter(
-    (i) => i.status === 'sent' || i.status === 'overdue',
-  ).length;
-  const unreadMessages = messages.filter((m) => !m.is_read).length;
+  const filteredDocuments = documents.filter(doc => {
+    const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || doc.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-  const stats = [
-    {
-      name: 'Pending Documents',
-      value: pendingDocuments.toString(),
-      icon: Clock,
-      color: 'bg-yellow-500',
-      change: '+2',
-      changeType: 'neutral',
-      description: 'Documents awaiting submission',
-    },
-    {
-      name: 'Overdue Items',
-      value: overdueDocuments.toString(),
-      icon: AlertTriangle,
-      color: 'bg-red-500',
-      change: '0',
-      changeType: 'positive',
-      description: 'Items past due date',
-    },
-    {
-      name: 'Unpaid Invoices',
-      value: unpaidInvoices.toString(),
-      icon: DollarSign,
-      color: 'bg-orange-500',
-      change: '+1',
-      changeType: 'neutral',
-      description: 'Outstanding payments',
-    },
-    {
-      name: 'New Messages',
-      value: unreadMessages.toString(),
-      icon: MessageSquare,
-      color: 'bg-blue-500',
-      change: '+3',
-      changeType: 'neutral',
-      description: 'Unread messages',
-    },
-  ];
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Enhanced Header */}
+      {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          {/* Logo Section */}
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <img
-                src="/image.png"
-                alt="Consulting19 Logo"
-                className="h-16 w-32"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-              <Globe2 className="hidden h-16 w-32 text-purple-600" />
-              <div>
-                <p className="text-sm text-gray-500">Client Accounting Dashboard</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 rounded-full bg-green-100 px-4 py-2 text-green-800">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
-                <span className="text-sm font-medium">Active</span>
-              </div>
-              <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-800">
-                {profile?.role || 'client'} • Georgia Tech Solutions
-              </span>
-            </div>
-          </div>
-
-          {/* Welcome Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="mb-2 text-2xl font-bold text-gray-900">
-                Welcome back, {profile?.full_name || profile?.email || user?.email || 'Client'}
-              </h2>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm text-gray-600">
-                    Consultant: Nino Kvaratskhelia
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Star className="h-4 w-4 text-yellow-500" />
-                  <span className="text-sm text-gray-600">Premium Service</span>
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold text-gray-900">My Accounting Dashboard</h1>
+              <p className="text-gray-600 mt-1">Track your accounting documents, tasks, and deadlines</p>
             </div>
+            <div className="flex items-center space-x-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full">
+              <Users className="h-4 w-4" />
+              <span className="text-sm font-medium">Client</span>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="mt-6 border-b border-gray-200">
+            <nav className="flex space-x-8">
+              {[
+                { key: 'overview', label: 'Overview', icon: BarChart3 },
+                { key: 'documents', label: 'Documents', icon: FileText },
+                { key: 'tasks', label: 'Tasks', icon: CheckCircle },
+                { key: 'reminders', label: 'Reminders', icon: Bell },
+                { key: 'messages', label: 'Messages', icon: MessageSquare },
+                { key: 'services', label: 'Additional Services', icon: Settings },
+                { key: 'mailbox', label: 'Virtual Mailbox', icon: Mail }
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                    activeTab === tab.key
+                      ? 'border-purple-500 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </nav>
           </div>
         </div>
       </div>
 
-      {/* Navigation Menu */}
-      <div className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8 py-4">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === 'overview'
-                  ? 'border border-blue-200 bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
-              }`}
-            >
-              <Eye className="h-4 w-4" />
-              <span>Overview</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('documents')}
-              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === 'documents'
-                  ? 'border border-blue-200 bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
-              }`}
-            >
-              <FileText className="h-4 w-4" />
-              <span>Documents ({documents.length})</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('invoices')}
-              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === 'invoices'
-                  ? 'border border-blue-200 bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
-              }`}
-            >
-              <DollarSign className="h-4 w-4" />
-              <span>Invoices ({invoices.length})</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('messages')}
-              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === 'messages'
-                  ? 'border border-blue-200 bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
-              }`}
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span>Messages ({unreadMessages})</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('mailbox')}
-              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === 'mailbox'
-                  ? 'border border-blue-200 bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
-              }`}
-            >
-              <Package className="h-4 w-4" />
-              <span>Virtual Mailbox</span>
-            </button>
-          </nav>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Stats Cards */}
-        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <div
-              key={stat.name}
-              className="transform rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <div className={`${stat.color} rounded-xl p-3 shadow-lg`}>
-                  <stat.icon className="h-6 w-6 text-white" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="space-y-8">
+            {/* Client Info Card */}
+            {accountingClient ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Accounting Service Information</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div>
+                    <span className="text-sm text-gray-600">Company Name:</span>
+                    <p className="font-medium text-gray-900">{accountingClient.company_name}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">Service Package:</span>
+                    <p className="font-medium text-gray-900">{accountingClient.service_package.toUpperCase()}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">Monthly Fee:</span>
+                    <p className="font-medium text-gray-900">${accountingClient.monthly_fee}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">Status:</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(accountingClient.status)}`}>
+                      {accountingClient.status.toUpperCase()}
+                    </span>
+                  </div>
                 </div>
-                <span
-                  className={`rounded-full px-2 py-1 text-sm font-medium ${
-                    stat.changeType === 'positive'
-                      ? 'bg-green-100 text-green-700'
-                      : stat.changeType === 'neutral'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-red-100 text-red-700'
-                  }`}
-                >
-                  {stat.change}
-                </span>
               </div>
-              <div>
-                <p className="mb-1 text-sm font-medium text-gray-600">{stat.name}</p>
-                <p className="mb-1 text-3xl font-bold text-gray-900">{stat.value}</p>
-                <p className="text-xs text-gray-500">{stat.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Company Info Card */}
-        {accountingProfile && (
-          <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">
-              Company Information
-            </h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-              <div>
-                <p className="text-sm text-gray-600">Company Name</p>
-                <p className="font-medium text-gray-900">
-                  {accountingProfile.company_name}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Business Type</p>
-                <p className="font-medium text-gray-900">
-                  {accountingProfile.business_type.replace('_', ' ').toUpperCase()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Service Package</p>
-                <p className="font-medium text-gray-900">
-                  {accountingProfile.service_package}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Monthly Fee</p>
-                <p className="font-medium text-gray-900">
-                  ${accountingProfile.monthly_fee}
-                </p>
-              </div>
-            </div>
-            {accountingProfile.next_deadline && (
-              <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5 text-orange-600" />
-                  <span className="font-medium text-orange-800">
-                    Next Deadline:{' '}
-                    {new Date(accountingProfile.next_deadline).toLocaleDateString()}
-                  </span>
-                </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+                <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Accounting Service</h3>
+                <p className="text-gray-600 mb-6">You don't have an active accounting service yet.</p>
+                <button className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                  Request Accounting Service
+                </button>
               </div>
             )}
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Pending Documents</p>
+                    <p className="text-3xl font-bold text-yellow-600">{documents.filter(d => d.status === 'pending').length}</p>
+                  </div>
+                  <FileText className="h-8 w-8 text-yellow-600" />
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Overdue Items</p>
+                    <p className="text-3xl font-bold text-red-600">{documents.filter(d => d.status === 'overdue').length}</p>
+                  </div>
+                  <AlertTriangle className="h-8 w-8 text-red-600" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Active Tasks</p>
+                    <p className="text-3xl font-bold text-blue-600">{tasks.filter(t => t.status === 'in_progress').length}</p>
+                  </div>
+                  <CheckCircle className="h-8 w-8 text-blue-600" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Unread Messages</p>
+                    <p className="text-3xl font-bold text-purple-600">3</p>
+                  </div>
+                  <MessageSquare className="h-8 w-8 text-purple-600" />
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Document submitted successfully</p>
+                    <p className="text-xs text-gray-500">2 hours ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                  <MessageSquare className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">New message from consultant</p>
+                    <p className="text-xs text-gray-500">1 day ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
+                  <Bell className="h-5 w-5 text-yellow-600" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Reminder: Monthly documents due</p>
+                    <p className="text-xs text-gray-500">3 days ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {/* Tab Content */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 px-6 py-4">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {activeTab === 'overview' && 'Dashboard Overview'}
-                {activeTab === 'documents' && 'My Documents'}
-                {activeTab === 'invoices' && 'My Invoices'}
-                {activeTab === 'messages' && 'Messages from Consultant'}
-                {activeTab === 'mailbox' && 'Virtual Mailbox'}
-              </h2>
+        {/* Documents Tab */}
+        {activeTab === 'documents' && (
+          <div className="space-y-6">
+            {/* Filters */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search documents..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="received">Received</option>
+                  <option value="processed">Processed</option>
+                  <option value="completed">Completed</option>
+                  <option value="overdue">Overdue</option>
+                </select>
+              </div>
             </div>
 
-            <div className="p-6">
-              {activeTab === 'overview' && (
-                <div className="space-y-6">
-                  {/* Recent Documents */}
-                  <div>
-                    <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                      Recent Documents
-                    </h3>
-                    <div className="space-y-3">
-                      {documents.slice(0, 3).map((document) => (
-                        <div
-                          key={document.id}
-                          className="flex items-center justify-between rounded-lg bg-gray-50 p-4"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className={`h-3 w-3 rounded-full ${getPriorityColor(
-                                document.priority,
-                              )}`}
-                            ></div>
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {document.title}
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                Due:{' '}
-                                {document.due_date
-                                  ? new Date(
-                                      document.due_date,
-                                    ).toLocaleDateString()
-                                  : 'N/A'}
-                              </p>
-                            </div>
-                          </div>
-                          <span
-                            className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
-                              document.status,
-                            )}`}
-                          >
+            {/* Documents List */}
+            <div className="space-y-4">
+              {filteredDocuments.length === 0 ? (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Found</h3>
+                  <p className="text-gray-600">No documents match your current filters.</p>
+                </div>
+              ) : (
+                filteredDocuments.map((document) => (
+                  <div key={document.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-4 mb-2">
+                          <div className={`w-3 h-3 rounded-full ${getPriorityColor(document.priority)}`}></div>
+                          <h3 className="text-lg font-semibold text-gray-900">{document.title}</h3>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
                             {document.status.toUpperCase()}
                           </span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Recent Invoices */}
-                  <div>
-                    <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                      Recent Invoices
-                    </h3>
-                    <div className="space-y-3">
-                      {invoices.slice(0, 2).map((invoice) => (
-                        <div
-                          key={invoice.id}
-                          className="flex items-center justify-between rounded-lg bg-gray-50 p-4"
-                        >
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
                           <div>
-                            <p className="font-medium text-gray-900">
-                              {invoice.invoice_number}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {invoice.period_start && invoice.period_end
-                                ? `${new Date(
-                                    invoice.period_start,
-                                  ).toLocaleDateString()} - ${new Date(
-                                    invoice.period_end,
-                                  ).toLocaleDateString()}`
-                                : 'One-time invoice'}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium text-gray-900">
-                              ${invoice.amount}
-                            </p>
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
-                                invoice.status,
-                              )}`}
-                            >
-                              {invoice.status.toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'documents' && (
-                <div className="space-y-4">
-                  {documents.map((document) => (
-                    <div key={document.id} className="rounded-lg bg-gray-50 p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="mb-2 flex items-center space-x-4">
-                            <div
-                              className={`h-3 w-3 rounded-full ${getPriorityColor(
-                                document.priority,
-                              )}`}
-                            ></div>
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {document.title}
-                            </h3>
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
-                                document.status,
-                              )}`}
-                            >
-                              {document.status.toUpperCase()}
-                            </span>
-                          </div>
-
-                          <div className="mb-4 grid grid-cols-1 gap-4 text-sm text-gray-600 md:grid-cols-3">
-                            <div>
-                              <span className="font-medium">Type:</span>{' '}
-                              {document.document_type}
-                            </div>
-                            <div>
-                              <span className="font-medium">Category:</span>{' '}
-                              {document.category}
-                            </div>
-                            <div>
-                              <span className="font-medium">Due Date:</span>{' '}
-                              <span
-                                className={
-                                  document.due_date &&
-                                  new Date(document.due_date) < new Date()
-                                    ? 'font-medium text-red-600'
-                                    : ''
-                                }
-                              >
-                                {document.due_date
-                                  ? new Date(
-                                      document.due_date,
-                                    ).toLocaleDateString()
-                                  : 'N/A'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          {document.file_url ? (
-                            <button className="flex items-center space-x-2 rounded-lg bg-green-50 px-4 py-2 font-medium text-green-600 transition-colors hover:bg-green-100">
-                              <Download className="h-4 w-4" />
-                              <span>Download</span>
-                            </button>
-                          ) : (
-                            <button className="flex items-center space-x-2 rounded-lg bg-blue-50 px-4 py-2 font-medium text-blue-600 transition-colors hover:bg-blue-100">
-                              <Upload className="h-4 w-4" />
-                              <span>Upload</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {activeTab === 'invoices' && (
-                <div className="space-y-4">
-                  {invoices.map((invoice) => (
-                    <div key={invoice.id} className="rounded-lg bg-gray-50 p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="mb-2 flex items-center space-x-4">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {invoice.invoice_number}
-                            </h3>
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
-                                invoice.status,
-                              )}`}
-                            >
-                              {invoice.status.toUpperCase()}
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-4 text-sm text-gray-600 md:grid-cols-4">
-                            <div>
-                              <span className="font-medium">Amount:</span> $
-                              {invoice.amount} {invoice.currency}
-                            </div>
-                            <div>
-                              <span className="font-medium">Period:</span>{' '}
-                              {invoice.period_start && invoice.period_end
-                                ? `${new Date(
-                                    invoice.period_start,
-                                  ).toLocaleDateString()} - ${new Date(
-                                    invoice.period_end,
-                                  ).toLocaleDateString()}`
-                                : 'One-time'}
-                            </div>
-                            <div>
-                              <span className="font-medium">Due Date:</span>{' '}
-                              {invoice.due_date
-                                ? new Date(
-                                    invoice.due_date,
-                                  ).toLocaleDateString()
-                                : 'N/A'}
-                            </div>
-                            <div>
-                              <span className="font-medium">Paid:</span>{' '}
-                              {invoice.paid_at
-                                ? new Date(invoice.paid_at).toLocaleDateString()
-                                : 'Not paid'}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <button className="flex items-center space-x-2 rounded-lg bg-purple-50 px-4 py-2 font-medium text-purple-600 transition-colors hover:bg-purple-100">
-                            <Eye className="h-4 w-4" />
-                            <span>View</span>
-                          </button>
-                          {(invoice.status === 'sent' ||
-                            invoice.status === 'overdue') && (
-                            <button className="rounded-lg bg-green-50 px-4 py-2 font-medium text-green-600 transition-colors hover:bg-green-100">
-                              Pay Now
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {activeTab === 'messages' && (
-                <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`rounded-lg p-6 ${
-                        message.is_read
-                          ? 'bg-gray-50'
-                          : 'border border-blue-200 bg-blue-50'
-                      }`}
-                    >
-                      <div className="mb-3 flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
-                            <MessageSquare className="h-4 w-4 text-purple-600" />
+                            <span className="font-medium">Type:</span> {document.document_type}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">
-                              {message.sender?.full_name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {new Date(message.created_at).toLocaleDateString()}
-                            </p>
+                            <span className="font-medium">Category:</span> {document.category}
+                          </div>
+                          <div>
+                            <span className="font-medium">Due Date:</span> 
+                            <span className={document.due_date && new Date(document.due_date) < new Date() ? 'text-red-600 font-medium' : ''}>
+                              {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}
+                            </span>
                           </div>
                         </div>
-                        {!message.is_read && (
-                          <span className="rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">
-                            New
-                          </span>
+
+                        {document.reminder_sent && (
+                          <div className="flex items-center space-x-2 text-sm text-blue-600">
+                            <Bell className="h-4 w-4" />
+                            <span>Reminder received ({document.reminder_count} times)</span>
+                          </div>
                         )}
                       </div>
 
-                      {message.subject && (
-                        <h4 className="mb-2 font-medium text-gray-900">
-                          {message.subject}
-                        </h4>
-                      )}
-
-                      <p className="text-gray-700">{message.message}</p>
-
-                      <div className="mt-3 flex items-center justify-between">
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs font-medium ${
-                            message.message_type === 'urgent'
-                              ? 'bg-red-100 text-red-800'
-                              : message.message_type === 'reminder'
-                              ? 'bg-orange-100 text-orange-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {message.message_type.replace('_', ' ').toUpperCase()}
-                        </span>
+                      <div className="flex items-center space-x-2">
+                        <button className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2">
+                          <Upload className="h-4 w-4" />
+                          <span>Upload</span>
+                        </button>
+                        <button className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors flex items-center space-x-2">
+                          <Eye className="h-4 w-4" />
+                          <span>View</span>
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {activeTab === 'mailbox' && (
-                <div>
-                  <VirtualMailboxManager viewMode="client" />
-                </div>
+                  </div>
+                ))
               )}
             </div>
           </div>
+        )}
 
-          {/* Right Sidebar */}
+        {/* Tasks Tab */}
+        {activeTab === 'tasks' && (
           <div className="space-y-6">
-            {/* Debug Info */}
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-6">
-              <h3 className="mb-4 text-lg font-semibold text-blue-900">
-                System Status
-              </h3>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="font-medium text-blue-700">User:</span>
-                  <p className="text-blue-600">{user?.email || 'No user'}</p>
+            {/* Filters */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search tasks..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
                 </div>
-                <div>
-                  <span className="font-medium text-blue-700">Profile:</span>
-                  <p className="text-blue-600">
-                    {profile ? `${profile.email} (${profile.role})` : 'No profile'}
-                  </p>
-                </div>
-                <div>
-                  <span className="font-medium text-blue-700">Company:</span>
-                  <p className="text-blue-600">
-                    {accountingProfile?.company_name || 'Not set'}
-                  </p>
-                </div>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
               </div>
             </div>
 
-            {/* Consultant Info */}
-            {accountingProfile?.consultant && (
-              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                  Your Consultant
-                </h3>
-                <div className="mb-4 flex items-center space-x-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-lg font-bold text-white">
-                    {accountingProfile.consultant.full_name[0]}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {accountingProfile.consultant.full_name}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {accountingProfile.consultant.email}
-                    </p>
-                    <div className="mt-1 flex items-center space-x-1">
-                      <Star className="h-3 w-3 fill-current text-yellow-500" />
-                      <span className="text-xs text-gray-500">4.9 Rating</span>
+            {/* Tasks List */}
+            <div className="space-y-4">
+              {filteredTasks.length === 0 ? (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+                  <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Tasks Found</h3>
+                  <p className="text-gray-600">No tasks match your current filters.</p>
+                </div>
+              ) : (
+                filteredTasks.map((task) => (
+                  <div key={task.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-4 mb-2">
+                          <div className={`w-3 h-3 rounded-full ${getPriorityColor(task.priority)}`}></div>
+                          <h3 className="text-lg font-semibold text-gray-900">{task.title}</h3>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                            {task.status.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </div>
+                        
+                        {task.description && (
+                          <p className="text-gray-600 mb-3">{task.description}</p>
+                        )}
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                          <div>
+                            <span className="font-medium">Type:</span> {task.task_type.replace('_', ' ')}
+                          </div>
+                          <div>
+                            <span className="font-medium">Due Date:</span> 
+                            {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}
+                          </div>
+                          <div>
+                            <span className="font-medium">Estimated Hours:</span> 
+                            {task.estimated_hours ? `${task.estimated_hours}h` : 'N/A'}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <button className="flex w-full items-center justify-center space-x-2 rounded-lg bg-purple-600 px-4 py-3 font-medium text-white transition-colors hover:bg-purple-700">
-                  <MessageSquare className="h-5 w-5" />
-                  <span>Send Message</span>
-                </button>
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 px-6 py-4">
-                <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    {
-                      name: 'Upload Document',
-                      icon: Upload,
-                      color: 'bg-green-500 hover:bg-green-600',
-                    },
-                    {
-                      name: 'Pay Invoice',
-                      icon: CreditCard,
-                      color: 'bg-blue-500 hover:bg-blue-600',
-                    },
-                    {
-                      name: 'Message Consultant',
-                      icon: MessageSquare,
-                      color: 'bg-purple-500 hover:bg-purple-600',
-                    },
-                    {
-                      name: 'View Reports',
-                      icon: FileText,
-                      color: 'bg-indigo-500 hover:bg-indigo-600',
-                    },
-                    {
-                      name: 'Download Files',
-                      icon: Download,
-                      color: 'bg-teal-500 hover:bg-teal-600',
-                    },
-                    {
-                      name: 'Account Settings',
-                      icon: Settings,
-                      color: 'bg-gray-500 hover:bg-gray-600',
-                    },
-                  ].map((action, index) => (
-                    <button
-                      key={index}
-                      className={`${action.color} group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md`}
-                    >
-                      <action.icon className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                      <div className="text-xs font-medium">{action.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+                ))
+              )}
             </div>
+          </div>
+        )}
 
-            {/* Monthly Summary */}
-            <div className="rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 p-6 text-white shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold">This Month</h3>
-                <TrendingUp className="h-6 w-6 text-blue-200" />
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-blue-100">Documents Submitted</span>
-                  <span className="font-bold">
-                    {documents.filter((d) => d.status === 'completed').length}
-                  </span>
+        {/* Reminders Tab */}
+        {activeTab === 'reminders' && (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              {reminders.length === 0 ? (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+                  <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Reminders</h3>
+                  <p className="text-gray-600">You have no active reminders.</p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-blue-100">Invoices Paid</span>
-                  <span className="font-bold">
-                    {invoices.filter((i) => i.status === 'paid').length}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-blue-100">Service Rating</span>
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 fill-current text-yellow-300" />
-                    <span className="font-bold">5.0</span>
+              ) : (
+                reminders.map((reminder) => (
+                  <div key={reminder.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-4 mb-2">
+                          <Bell className="h-5 w-5 text-orange-500" />
+                          <h3 className="text-lg font-semibold text-gray-900">{reminder.title}</h3>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(reminder.status)}`}>
+                            {reminder.status.toUpperCase()}
+                          </span>
+                        </div>
+                        
+                        <p className="text-gray-600 mb-3">{reminder.message}</p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                          <div>
+                            <span className="font-medium">Type:</span> {reminder.reminder_type.replace('_', ' ')}
+                          </div>
+                          <div>
+                            <span className="font-medium">Due Date:</span> 
+                            {reminder.due_date ? new Date(reminder.due_date).toLocaleDateString() : 'N/A'}
+                          </div>
+                          <div>
+                            <span className="font-medium">Level:</span> {reminder.reminder_level}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Messages Tab */}
+        {activeTab === 'messages' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Messages</h3>
+            <p className="text-gray-600 mb-6">Communicate with your accounting consultant</p>
+            <button className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors">
+              Start Conversation
+            </button>
+          </div>
+        )}
+
+        {/* Additional Services Tab */}
+        {activeTab === 'services' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Services</h3>
+              <p className="text-gray-600 mb-6">Request additional services from your consultant</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                  <div className="bg-blue-100 rounded-lg p-3 w-fit mb-4">
+                    <FileText className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Tax Consultation</h4>
+                  <p className="text-gray-600 text-sm mb-4">Expert tax advice and optimization strategies</p>
+                  <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                    Request Service
+                  </button>
+                </div>
+
+                <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                  <div className="bg-green-100 rounded-lg p-3 w-fit mb-4">
+                    <BarChart3 className="h-6 w-6 text-green-600" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Financial Analysis</h4>
+                  <p className="text-gray-600 text-sm mb-4">Detailed financial reporting and analysis</p>
+                  <button className="w-full bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                    Request Service
+                  </button>
+                </div>
+
+                <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                  <div className="bg-purple-100 rounded-lg p-3 w-fit mb-4">
+                    <Settings className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Custom Service</h4>
+                  <p className="text-gray-600 text-sm mb-4">Request a custom accounting service</p>
+                  <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                    Request Service
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Virtual Mailbox Tab */}
+        {activeTab === 'mailbox' && (
+          <div className="space-y-6">
+            <VirtualMailboxManager viewMode="client" />
+          </div>
+        )}
       </div>
-
-      {/* Shipping Modal */}
-      {showShippingModal && selectedMailboxItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white shadow-2xl">
-            <div className="p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">Ship Document</h3>
-                <button
-                  onClick={() => setShowShippingModal(false)}
-                  className="text-gray-400 transition-colors hover:text-gray-600"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Document Info */}
-              <div className="mb-6 rounded-lg bg-gray-50 p-4">
-                <h4 className="mb-2 font-medium text-gray-900">
-                  {selectedMailboxItem.document_name}
-                </h4>
-                <p className="text-sm text-gray-600">
-                  {selectedMailboxItem.description}
-                </p>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Document Type:</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {selectedMailboxItem.document_type}
-                  </span>
-                </div>
-              </div>
-
-              {/* Shipping Options */}
-              <div className="mb-6">
-                <label className="mb-3 block text-sm font-medium text-gray-700">
-                  Shipping Option
-                </label>
-                <div className="space-y-3">
-                  <label className="flex cursor-pointer items-center rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value="standard"
-                      checked={shippingOption === 'standard'}
-                      onChange={(e) =>
-                        setShippingOption(e.target.value as 'standard' | 'express')
-                      }
-                      className="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-500"
-                    />
-                    <div className="ml-3 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900">
-                          Standard Shipping
-                        </span>
-                        <span className="font-bold text-gray-900">$15</span>
-                      </div>
-                      <p className="text-sm text-gray-600">5-7 business days</p>
-                    </div>
-                  </label>
-                  <label className="flex cursor-pointer items-center rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value="express"
-                      checked={shippingOption === 'express'}
-                      onChange={(e) =>
-                        setShippingOption(e.target.value as 'standard' | 'express')
-                      }
-                      className="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-500"
-                    />
-                    <div className="ml-3 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900">
-                          Express Shipping
-                        </span>
-                        <span className="font-bold text-gray-900">$25</span>
-                      </div>
-                      <p className="text-sm text-gray-600">2-3 business days</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Shipping Address */}
-              <div>
-                <label className="mb-3 block text-sm font-medium text-gray-700">
-                  Shipping Address
-                </label>
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    value={shippingAddress.fullName}
-                    onChange={(e) =>
-                      setShippingAddress((prev) => ({
-                        ...prev,
-                        fullName: e.target.value,
-                      }))
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Street Address"
-                    value={shippingAddress.address}
-                    onChange={(e) =>
-                      setShippingAddress((prev) => ({
-                        ...prev,
-                        address: e.target.value,
-                      }))
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
-                  />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder="City"
-                      value={shippingAddress.city}
-                      onChange={(e) =>
-                        setShippingAddress((prev) => ({
-                          ...prev,
-                          city: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Postal Code"
-                      value={shippingAddress.postalCode}
-                      onChange={(e) =>
-                        setShippingAddress((prev) => ({
-                          ...prev,
-                          postalCode: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Country"
-                    value={shippingAddress.country}
-                    onChange={(e) =>
-                      setShippingAddress((prev) => ({
-                        ...prev,
-                        country: e.target.value,
-                      }))
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-              </div>
-
-              {/* Payment Summary */}
-              <div className="rounded-lg bg-gray-50 p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-gray-700">Shipping Fee:</span>
-                  <span className="font-bold text-gray-900">
-                    ${shippingOption === 'standard' ? '15' : '25'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Delivery Time:</span>
-                  <span className="text-gray-900">
-                    {shippingOption === 'standard' ? '5-7 days' : '2-3 days'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center space-x-4 border-t border-gray-200 pt-4">
-                <button
-                  onClick={() => setShowShippingModal(false)}
-                  className="flex-1 rounded-lg bg-gray-100 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleShippingPayment}
-                  disabled={
-                    paymentLoading ||
-                    !shippingAddress.fullName ||
-                    !shippingAddress.address ||
-                    !shippingAddress.city ||
-                    !shippingAddress.country
-                  }
-                  className="flex-1 flex items-center justify-center space-x-2 rounded-lg bg-purple-600 px-6 py-3 font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {paymentLoading ? (
-                    <>
-                      <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-5 w-5" />
-                      <span>
-                        Pay ${shippingOption === 'standard' ? '15' : '25'}
-                      </span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
