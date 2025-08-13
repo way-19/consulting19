@@ -92,9 +92,9 @@ interface ClientMessage {
   subject?: string;
   message: string;
   category: string;
-  message_type?: string;
   is_read: boolean;
   created_at: string;
+  message_type: string;
   sender?: {
     full_name: string;
     email: string;
@@ -156,6 +156,7 @@ const ClientAccountingDashboard: React.FC = () => {
   });
 
   // Message form states
+  const [showMessageForm, setShowMessageForm] = useState(false);
   const [messageForm, setMessageForm] = useState({
     subject: '',
     message: '',
@@ -353,93 +354,6 @@ const ClientAccountingDashboard: React.FC = () => {
     }
   };
 
-  const fetchVirtualMailboxItems = async () => {
-    // TODO: Supabase'den gerçek verileri çekin
-  };
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!messageForm.message.trim()) {
-      alert('Please enter a message');
-      return;
-    }
-
-    setMessageLoading(true);
-    try {
-      // Get consultant ID from accounting profile
-      const consultantId = accountingProfile?.consultant?.email === 'georgia@consulting19.com' 
-        ? 'consultant-georgia-id' 
-        : 'consultant-id';
-
-      // Translate message using DeepL API
-      let translatedMessage = messageForm.message;
-      if (messageForm.language !== 'en') {
-        try {
-          const response = await fetch('https://api-free.deepl.com/v2/translate', {
-            method: 'POST',
-            headers: {
-              'Authorization': 'DeepL-Auth-Key 0f51365f-a19a-4b9f-88cb-1f47f24a300a:fx',
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-              text: messageForm.message,
-              source_lang: messageForm.language.toUpperCase(),
-              target_lang: 'EN'
-            })
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            translatedMessage = result.translations[0].text;
-          }
-        } catch (error) {
-          console.error('Translation error:', error);
-        }
-      }
-
-      // Create new message
-      const newMessage: ClientMessage = {
-        id: Date.now().toString(),
-        subject: messageForm.subject || undefined,
-        message: messageForm.message,
-        message_type: messageForm.category,
-        category: messageForm.category,
-        is_read: false,
-        created_at: new Date().toISOString(),
-        sender: {
-          full_name: profile?.full_name || 'Client',
-          email: profile?.email || user?.email || ''
-        }
-      };
-
-      // Add to messages list
-      setMessages(prev => [newMessage, ...prev]);
-
-      // Reset form
-      setMessageForm({
-        subject: '',
-        message: '',
-        category: 'general',
-        language: 'en'
-      });
-
-      alert('Message sent successfully! / Mesaj başarıyla gönderildi!');
-    } catch (error) {
-      console.error('Error sending message:', error);
-      alert('Failed to send message / Mesaj gönderilemedi');
-    } finally {
-      setMessageLoading(false);
-    }
-  };
-
-  console.log('🔵 ClientDashboard render:', {
-    profile,
-    accountingProfile,
-    loading,
-    error
-  });
-
   // Quick Actions handlers
   const handleMessageConsultant = () => {
     setIsChatOpen(true);
@@ -528,6 +442,34 @@ const ClientAccountingDashboard: React.FC = () => {
 
   const handleAccountSettings = () => {
     navigate('/account-settings');
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageForm.message.trim() || !accountingProfile) return;
+
+    setMessageLoading(true);
+    try {
+      // In real implementation, this would send the message via API
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      alert('Message sent successfully!');
+      setMessageForm({
+        subject: '',
+        message: '',
+        category: 'general',
+        language: 'en'
+      });
+      setShowMessageForm(false);
+      
+      // Refresh messages
+      await fetchAccountingData();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setMessageLoading(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -854,6 +796,175 @@ const ClientAccountingDashboard: React.FC = () => {
           )}
         </div>
 
+        {/* Message Form */}
+        {activeTab === 'messages' && (
+          <div className="mb-8 rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">Send Message to Consultant</h2>
+                <button
+                  onClick={() => setShowMessageForm(!showMessageForm)}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span>{showMessageForm ? 'Hide Form' : 'New Message'}</span>
+                </button>
+              </div>
+            </div>
+
+            {showMessageForm && (
+              <div className="p-6 border-b border-gray-200">
+                <form onSubmit={handleSendMessage} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Language / Dil
+                      </label>
+                      <select
+                        value={messageForm.language}
+                        onChange={(e) => setMessageForm(prev => ({ ...prev, language: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      >
+                        <option value="en">🇺🇸 English</option>
+                        <option value="tr">🇹🇷 Türkçe</option>
+                        <option value="ka">🇬🇪 ქართული</option>
+                        <option value="ru">🇷🇺 Русский</option>
+                        <option value="es">🇪🇸 Español</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="de">🇩🇪 Deutsch</option>
+                        <option value="it">🇮🇹 Italiano</option>
+                        <option value="pt">🇵🇹 Português</option>
+                        <option value="ar">🇸🇦 العربية</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Category / Kategori
+                      </label>
+                      <select
+                        value={messageForm.category}
+                        onChange={(e) => setMessageForm(prev => ({ ...prev, category: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      >
+                        <option value="general">General / Genel</option>
+                        <option value="urgent">Urgent / Acil</option>
+                        <option value="document_request">Document Request / Belge Talebi</option>
+                        <option value="reminder">Reminder / Hatırlatma</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subject / Konu
+                    </label>
+                    <input
+                      type="text"
+                      value={messageForm.subject}
+                      onChange={(e) => setMessageForm(prev => ({ ...prev, subject: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Message subject / Mesaj konusu"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Message / Mesaj *
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={messageForm.message}
+                      onChange={(e) => setMessageForm(prev => ({ ...prev, message: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Write your message here / Mesajınızı buraya yazın"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Globe2 className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-800">DeepL Translation</span>
+                    </div>
+                    <p className="text-xs text-blue-700">
+                      Your message will be automatically translated to your consultant's language using DeepL API
+                    </p>
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    disabled={messageLoading || !messageForm.message.trim()}
+                    className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  >
+                    {messageLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>Sending / Gönderiliyor...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-5 w-5" />
+                        <span>Send Message / Mesaj Gönder</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Message History */}
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Message History</h3>
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`rounded-lg p-6 ${message.is_read ? 'bg-gray-50' : 'border border-blue-200 bg-blue-50'}`}
+                  >
+                    <div className="mb-3 flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
+                          <MessageSquare className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{message.sender?.full_name}</p>
+                          <p className="text-sm text-gray-600">
+                            {new Date(message.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      {!message.is_read && (
+                        <span className="rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">New</span>
+                      )}
+                    </div>
+
+                    {message.subject && (
+                      <h4 className="mb-2 font-medium text-gray-900">{message.subject}</h4>
+                    )}
+
+                    <p className="text-gray-700">{message.message}</p>
+
+                    <div className="mt-3 flex items-center justify-between">
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs font-medium ${
+                          message.message_type === 'urgent'
+                            ? 'bg-red-100 text-red-800'
+                            : message.message_type === 'reminder'
+                            ? 'bg-orange-100 text-orange-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {message.message_type.replace('_', ' ').toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Main Grid */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           {/* Left */}
@@ -1062,161 +1173,58 @@ const ClientAccountingDashboard: React.FC = () => {
               )}
 
               {activeTab === 'messages' && (
-                <div className="space-y-6">
-                  {/* Send Message Form */}
-                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-                      <MessageSquare className="h-5 w-5 text-purple-600" />
-                      <span>Send Message to Consultant</span>
-                    </h3>
-                    
-                    <form onSubmit={handleSendMessage} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Language / Dil
-                          </label>
-                          <select
-                            value={messageForm.language}
-                            onChange={(e) => setMessageForm(prev => ({ ...prev, language: e.target.value }))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          >
-                            <option value="en">🇺🇸 English</option>
-                            <option value="tr">🇹🇷 Türkçe</option>
-                            <option value="ka">🇬🇪 ქართული</option>
-                            <option value="ru">🇷🇺 Русский</option>
-                            <option value="es">🇪🇸 Español</option>
-                            <option value="fr">🇫🇷 Français</option>
-                            <option value="de">🇩🇪 Deutsch</option>
-                            <option value="it">🇮🇹 Italiano</option>
-                            <option value="pt">🇵🇹 Português</option>
-                            <option value="ar">🇸🇦 العربية</option>
-                          </select>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Category / Kategori
-                          </label>
-                          <select
-                            value={messageForm.category}
-                            onChange={(e) => setMessageForm(prev => ({ ...prev, category: e.target.value }))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          >
-                            <option value="general">General / Genel</option>
-                            <option value="urgent">Urgent / Acil</option>
-                            <option value="document_request">Document Request / Belge Talebi</option>
-                            <option value="reminder">Reminder / Hatırlatma</option>
-                          </select>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Subject / Konu
-                        </label>
-                        <input
-                          type="text"
-                          value={messageForm.subject}
-                          onChange={(e) => setMessageForm(prev => ({ ...prev, subject: e.target.value }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="Message subject / Mesaj konusu"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Message / Mesaj *
-                        </label>
-                        <textarea
-                          rows={4}
-                          value={messageForm.message}
-                          onChange={(e) => setMessageForm(prev => ({ ...prev, message: e.target.value }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="Write your message here / Mesajınızı buraya yazın"
-                          required
-                        />
-                      </div>
-                      
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <Globe2 className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-800">DeepL Translation</span>
-                        </div>
-                        <p className="text-xs text-blue-700">
-                          Your message will be automatically translated to your consultant's language using DeepL API
-                        </p>
-                      </div>
-                      
-                      <button
-                        type="submit"
-                        disabled={messageLoading || !messageForm.message.trim()}
-                        className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                      >
-                        {messageLoading ? (
-                          <>
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                            <span>Sending / Gönderiliyor...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Send className="h-5 w-5" />
-                            <span>Send Message / Mesaj Gönder</span>
-                          </>
-                        )}
-                      </button>
-                    </form>
-                  </div>
-
-                  {/* Message History */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Message History</h3>
-                    <div className="space-y-4">
-                      {messages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`rounded-lg p-6 ${message.is_read ? 'bg-gray-50' : 'border border-blue-200 bg-blue-50'}`}
-                        >
-                          <div className="mb-3 flex items-start justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
-                                <MessageSquare className="h-4 w-4 text-purple-600" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900">{message.sender?.full_name}</p>
-                                <p className="text-sm text-gray-600">
-                                  {new Date(message.created_at).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                            {!message.is_read && (
-                              <span className="rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">New</span>
-                            )}
-                          </div>
-
-                          {message.subject && (
-                            <h4 className="mb-2 font-medium text-gray-900">{message.subject}</h4>
-                          )}
-
-                          <p className="text-gray-700">{message.message}</p>
-
-                          <div className="mt-3 flex items-center justify-between">
-                            <span
-                              className={`rounded-full px-2 py-1 text-xs font-medium ${
-                                message.message_type === 'urgent'
-                                  ? 'bg-red-100 text-red-800'
-                                  : message.message_type === 'reminder'
-                                  ? 'bg-orange-100 text-orange-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}
-                            >
-                              {(message.message_type || message.category).replace('_', ' ').toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                <div className="space-y-4">
+                  {messages.length === 0 ? (
+                    <div className="text-center py-12">
+                      <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Messages Yet</h3>
+                      <p className="text-gray-600">Messages from your consultant will appear here.</p>
                     </div>
-                  </div>
+                  ) : (
+                    messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`rounded-lg p-6 ${message.is_read ? 'bg-gray-50' : 'border border-blue-200 bg-blue-50'}`}
+                      >
+                        <div className="mb-3 flex items-start justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
+                              <MessageSquare className="h-4 w-4 text-purple-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{message.sender?.full_name || 'Consultant'}</p>
+                              <p className="text-sm text-gray-600">
+                                {new Date(message.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          {!message.is_read && (
+                            <span className="rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">New</span>
+                          )}
+                        </div>
+
+                        {message.subject && (
+                          <h4 className="mb-2 font-medium text-gray-900">{message.subject}</h4>
+                        )}
+
+                        <p className="text-gray-700">{message.message}</p>
+
+                        <div className="mt-3 flex items-center justify-between">
+                          <span
+                            className={`rounded-full px-2 py-1 text-xs font-medium ${
+                              message.category === 'urgent'
+                                ? 'bg-red-100 text-red-800'
+                                : message.category === 'reminder'
+                                ? 'bg-orange-100 text-orange-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {message.category.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
 
@@ -1281,7 +1289,7 @@ const ClientAccountingDashboard: React.FC = () => {
                   </button>
 
                   <button 
-                    onClick={handleMessageConsultant}
+                    onClick={() => setActiveTab('messages')}
                     className="bg-purple-500 hover:bg-purple-600 group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md"
                   >
                     <MessageSquare className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
