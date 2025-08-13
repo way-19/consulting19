@@ -128,7 +128,6 @@ import LegacyOrders from './pages/LegacyOrders';
 import ConsultantServices from './pages/ConsultantServices';
 import ClientServices from './pages/ClientServices';
 import AccountingManagement from './pages/AccountingManagement';
-import AdminDashboard from './pages/AdminDashboard';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 
@@ -155,7 +154,10 @@ export default function App() {
         <Route
           path="/admin-dashboard"
           element={
-            <AdminDashboard />
+            <div className="min-h-screen bg-gray-50 p-8">
+              <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+              <p>Admin panel is working</p>
+            </div>
           }
         />
         <Route
