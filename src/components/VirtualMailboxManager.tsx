@@ -162,7 +162,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         }
       ];
       setItems(sampleItems);
-    } else {
       setLoading(false);
     }
   }, [clientId, profile]);
