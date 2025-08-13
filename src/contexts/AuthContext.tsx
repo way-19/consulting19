@@ -175,16 +175,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             navigateBasedOnRole(userProfile);
           } else {
             console.error('❌ Could not load profile after sign in');
-          }
-          setLoading(false);
+    const { data, error } = await supabase
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
           setLoading(false);
-          navigate('/');
-        }
-      }
-    );
 
     return () => {
       subscription.unsubscribe();
@@ -194,10 +189,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     console.log('🔐 Signing in:', email);
     setLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
         password: password.trim()
       });
       
@@ -212,27 +203,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       setLoading(false);
       throw error;
-    }
-  };
-
-  const signOut = async () => {
-    console.log('🚪 Signing out...');
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
-    navigate('/');
-    console.log('✅ Sign out successful');
-  };
-
-  return (
-    <AuthCtx.Provider value={{ loading, user, profile, signIn, signOut }}>
-      {children}
-    </AuthCtx.Provider>
-  );
-};
-
-export const useAuth = () => {
-  const ctx = useContext(AuthCtx);
-  if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
-  return ctx;
-};
+    console.log('📝 Profile not found - will be created by database trigger');
+    return null;
