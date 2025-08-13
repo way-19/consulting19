@@ -22,7 +22,9 @@ import {
   CreditCard,
 } from 'lucide-react';
 
-interface ClientAccountingProfile {
+  Settings,
+  Mail,
+  Truck
   id: string;
   client_id: string;
   consultant_id: string;
@@ -86,6 +88,23 @@ interface ClientMessage {
   };
 }
 
+interface VirtualMailboxItem {
+  id: string;
+  document_type: string;
+  document_name: string;
+  description?: string;
+  file_url?: string;
+  file_size?: number;
+  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
+  tracking_number: string;
+  shipping_fee: number;
+  payment_status: 'unpaid' | 'paid' | 'waived';
+  sent_date?: string;
+  delivered_date?: string;
+  viewed_date?: string;
+  downloaded_date?: string;
+  created_at: string;
+}
 const ClientAccountingDashboard: React.FC = () => {
   const { user, profile } = useAuth();
 
@@ -93,6 +112,7 @@ const ClientAccountingDashboard: React.FC = () => {
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
+  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'>('overview');
@@ -907,6 +927,7 @@ const ClientAccountingDashboard: React.FC = () => {
                     { name: 'Message Consultant', icon: MessageSquare, color: 'bg-purple-500 hover:bg-purple-600' },
                     { name: 'View Reports', icon: FileText, color: 'bg-indigo-500 hover:bg-indigo-600' },
                     { name: 'Download Files', icon: Download, color: 'bg-teal-500 hover:bg-teal-600' },
+                    { name: 'Account Settings', icon: Settings, color: 'bg-gray-500 hover:bg-gray-600' },
                   ].map((action, index) => (
                     <button
                       key={index}
@@ -916,15 +937,6 @@ const ClientAccountingDashboard: React.FC = () => {
                       <div className="text-xs font-medium">{action.name}</div>
                     </button>
                   ))}
-
-                  {/* Account Settings Button */}
-                  <Link
-                    to="/account-settings"
-                    className="bg-gray-500 hover:bg-gray-600 text-white p-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md group cursor-pointer"
-                  >
-                    <Settings className="h-5 w-5 mx-auto mb-2 transition-transform group-hover:scale-110" />
-                    <div className="text-xs font-medium text-center">Account Settings</div>
-                  </Link>
 
                   {/* Additional Services Button */}
                   <Link
