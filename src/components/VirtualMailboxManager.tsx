@@ -20,7 +20,7 @@ import {
   Mail,
   Truck,
   CreditCard,
-  AlertTriangle,
+  AlertCircle,
   MapPin
 } from 'lucide-react';
 
@@ -985,7 +985,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               {viewMode === 'client' && selectedItem.payment_status === 'unpaid' && selectedItem.status === 'sent' && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-start space-x-3">
-                    <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <h4 className="font-medium text-yellow-900">Shipping Address & Payment Required</h4>
                       <p className="text-sm text-yellow-700 mt-1">
