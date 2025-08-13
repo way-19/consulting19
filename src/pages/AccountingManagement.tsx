@@ -807,6 +807,229 @@ const AccountingManagement = () => {
       )}
     </div>
   );
+      {/* Client Detail Modal */}
+      {showClientModal && selectedClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Client Details - {selectedClient.company_name}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowClientModal(false);
+                    setSelectedClient(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Client Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Client Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600">Company Name:</span>
+                      <p className="font-medium">{selectedClient.company_name}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Contact Person:</span>
+                      <p className="font-medium">{selectedClient.client?.profile?.full_name || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Email:</span>
+                      <p className="font-medium">{selectedClient.client?.profile?.email || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Tax Number:</span>
+                      <p className="font-medium">{selectedClient.tax_number || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Business Type:</span>
+                      <p className="font-medium">{selectedClient.business_type.replace('_', ' ').toUpperCase()}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Details</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600">Service Package:</span>
+                      <p className="font-medium">{selectedClient.service_package.toUpperCase()}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Accounting Period:</span>
+                      <p className="font-medium">{selectedClient.accounting_period.toUpperCase()}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Monthly Fee:</span>
+                      <p className="font-medium">${selectedClient.monthly_fee}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedClient.status)}`}>
+                        {selectedClient.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Reminder Frequency:</span>
+                      <p className="font-medium">{selectedClient.reminder_frequency} days</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Next Deadline */}
+              {selectedClient.next_deadline && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="h-5 w-5 text-orange-600" />
+                    <div>
+                      <h4 className="font-medium text-orange-900">Next Deadline</h4>
+                      <p className="text-sm text-orange-700">
+                        {new Date(selectedClient.next_deadline).toLocaleDateString()} - Document submission required
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Last Document Received */}
+              {selectedClient.last_document_received && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <h4 className="font-medium text-green-900">Last Document Received</h4>
+                      <p className="text-sm text-green-700">
+                        {new Date(selectedClient.last_document_received).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowClientModal(false);
+                    setSelectedClient(selectedClient);
+                    setIsChatOpen(true);
+                  }}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  <span>Send Message</span>
+                </button>
+                <button className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2">
+                  <FileText className="h-5 w-5" />
+                  <span>Generate Report</span>
+                </button>
+                <button className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2">
+                  <Bell className="h-5 w-5" />
+                  <span>Send Reminder</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Message Modal */}
+      {showMessageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Send Message to Client</h2>
+                <button
+                  onClick={() => setShowMessageModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Client
+                </label>
+                <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                  <option value="">Choose a client...</option>
+                  {filteredClients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.company_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Message Type
+                </label>
+                <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                  <option value="reminder">Document Reminder</option>
+                  <option value="urgent">Urgent Notice</option>
+                  <option value="general">General Message</option>
+                  <option value="document_request">Document Request</option>
+                </select>
+              </div>
 };
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Message subject..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Message
+                </label>
+                <textarea
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Type your message..."
+                />
+              </div>
+
+              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => setShowMessageModal(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMessageModal(false);
+                    alert('Message sent successfully!');
+                  }}
+                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Send className="h-5 w-5" />
+                  <span>Send Message</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
 export default AccountingManagement;
