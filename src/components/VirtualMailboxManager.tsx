@@ -63,8 +63,17 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [paymentFilter, setPaymentFilter] = useState('all');
+  const [showShippingModal, setShowShippingModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingType, setShippingType] = useState<'standard' | 'express'>('standard');
+  const [shippingAddress, setShippingAddress] = useState({
+    recipient_name: '',
+    address_line1: '',
+    address_line2: '',
+    city: '',
+    postal_code: '',
+    country: ''
+  });
   const [showItemDetail, setShowItemDetail] = useState(false);
   const [showShippingModal, setShowShippingModal] = useState(false);
   const [shippingData, setShippingData] = useState({
