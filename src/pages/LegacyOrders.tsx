@@ -157,11 +157,6 @@ const LegacyOrders = () => {
     }
   };
 
-  const fetchAssignedClients = async () => {
-    // Mock function for compatibility
-    console.log('fetchAssignedClients called');
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

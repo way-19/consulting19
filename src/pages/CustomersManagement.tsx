@@ -307,32 +307,6 @@ const CustomersManagement = () => {
     return 'bg-red-500';
   };
 
-  const handleEdit = (client: AssignedClient) => {
-    setSelectedClient(client);
-    setShowClientModal(true);
-  };
-
-  const handleDelete = async (clientId: string) => {
-    if (!confirm('Are you sure you want to delete this client?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', clientId);
-
-      if (error) throw error;
-      await fetchClients();
-    } catch (error) {
-      console.error('Error deleting client:', error);
-    }
-  };
-
-  const fetchAssignedClients = async () => {
-    // Alias for fetchClients for compatibility
-    await fetchClients();
-  };
-
   // Pagination
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
