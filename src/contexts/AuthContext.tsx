@@ -33,29 +33,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchProfile = async (userId: string) => {
     try {
       console.log('🔍 Fetching profile for user:', userId);
+      console.log('📧 Attempting to fetch profile by email...');
       
-      // Get current session to access email
-      const { data: { session } } = await supabase.auth.getSession();
+      // Get current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log('🔍 Session check:', session ? `Found session for ${session.user.email}` : 'No session');
+      
+      if (sessionError) {
+        console.error('❌ Session error:', sessionError);
+        return null;
+      }
+      
       if (!session?.user?.email) {
-        console.error('❌ No session or email found');
+        console.error('❌ No session or email found in session');
         return null;
       }
       
       console.log('📧 User email from session:', session.user.email);
+      console.log('🔍 Querying profiles table...');
       
-      // Try to fetch profile by email (most reliable method)
+      // Query profile by email
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', session.user.email)
-        .single();
+        .maybeSingle();
+      
+      console.log('🔍 Profile query result:', { profile, error });
       
       if (error) {
-        console.error('❌ Error fetching profile:', error.message);
-        console.error('❌ Full error details:', error);
+        console.error('❌ Error fetching profile:', error);
         
-        // If profile doesn't exist, create it
-        if (error.code === 'PGRST116') {
+        // If no profile found, try to create one
+        if (error.code === 'PGRST116' || !profile) {
           console.log('📝 Profile not found, creating new profile...');
           
           const newProfile = {
@@ -64,16 +74,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: session.user.email,
             role: 'client' as const,
             full_name: session.user.user_metadata?.full_name || null,
-            country: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            country: null
           };
+          
+          console.log('📝 Creating profile with data:', newProfile);
           
           const { data: createdProfile, error: createError } = await supabase
             .from('profiles')
             .insert([newProfile])
             .select()
-            .single();
+            .maybeSingle();
+          
+          console.log('📝 Profile creation result:', { createdProfile, createError });
           
           if (createError) {
             console.error('❌ Error creating profile:', createError.message);
@@ -84,6 +96,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return createdProfile;
         }
         
+        return null;
+      }
+      
+      if (!profile) {
+        console.error('❌ Profile is null but no error returned');
         return null;
       }
       
