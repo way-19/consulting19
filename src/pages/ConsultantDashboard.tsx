@@ -82,6 +82,12 @@ const ConsultantDashboard = () => {
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [clientFilter, setClientFilter] = useState('all');
   const [clientStatusFilter, setClientStatusFilter] = useState('all');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [assignedClients, setAssignedClients] = useState<AssignedClient[]>([]);
   const [loadingClients, setLoadingClients] = useState(false);
