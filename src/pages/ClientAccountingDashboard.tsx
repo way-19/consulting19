@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
-import {
-  FileText,
-  Calendar,
-  AlertTriangle,
-  CheckCircle,
+import { 
+  FileText, 
+  Calendar, 
+  AlertTriangle, 
+  CheckCircle, 
   Clock,
   Upload,
   Download,
@@ -24,7 +24,17 @@ import {
   CreditCard,
   Settings,
   Mail,
-  Truck,
+  Truck
+  Mail,
+  Truck
+  Mail,
+  Truck
+  Mail,
+  Truck
+  Mail,
+  Truck
+  Mail,
+  Truck
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
