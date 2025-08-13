@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import MultilingualChat from '../components/MultilingualChat';
 import AccountSettingsPage from './AccountSettingsPage';
+import ClientServices from './ClientServices';
+import ConsultantServices from './ConsultantServices';
 import {
   FileText,
   Calendar,
@@ -139,6 +141,7 @@ const ClientAccountingDashboard: React.FC = () => {
   const [selectedInvoiceToPay, setSelectedInvoiceToPay] = useState<ClientInvoice | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank'>('card');
   const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [showAccountSettingsModal, setShowAccountSettingsModal] = useState(false);
 
   useEffect(() => {
     if (profile?.id) {
@@ -1099,7 +1102,7 @@ const ClientAccountingDashboard: React.FC = () => {
                   </button>
 
                   <button 
-                    onClick={handleAccountSettings}
+                    onClick={() => setShowAccountSettingsModal(true)}
                     className="bg-gray-500 hover:bg-gray-600 group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md"
                   >
                     <Settings className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
