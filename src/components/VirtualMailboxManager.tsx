@@ -27,6 +27,7 @@ import {
 interface VirtualMailboxItem {
   id: string;
   client_id: string;
+  consultant_id: string;
   document_type: string;
   document_name: string;
   description?: string;
@@ -41,15 +42,13 @@ interface VirtualMailboxItem {
   viewed_date?: string;
   downloaded_date?: string;
   created_at: string;
-  client: {
+  client?: {
     company_name: string;
     profile?: {
       full_name: string;
       email: string;
     };
   };
-}
-
 interface VirtualMailboxManagerProps {
   clientId?: string;
   viewMode: 'consultant' | 'client';
@@ -264,25 +263,24 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     }
     
     try {
-      // In real implementation, upload file to secure storage first
+      // 1) Prepare file URL (simulation)
       let fileUrl = null;
+      
+      // 2) Destructure formData, excluding file and recipient_name (not in DB schema)
+      const { file, recipient_name, ...restOfFormData } = formData;
+      
       if (formData.file) {
-        // This would upload to Supabase Storage or similar
-        // const { data: uploadData, error: uploadError } = await supabase.storage
-        //   .from('documents')
-        //   .upload(`${profile?.id}/${Date.now()}-${formData.file.name}`, formData.file);
-        
-        // For now, simulate file URL
+        // In real implementation, upload to Supabase Storage
         fileUrl = `https://example.com/documents/${formData.file.name}`;
       }
       
-      const { file, ...itemDataWithoutFile } = formData;
+      // 3) Prepare DB insert payload
       const itemData = {
-        ...itemDataWithoutFile,
+        ...restOfFormData,
         consultant_id: profile?.id,
         status: 'pending',
         file_url: fileUrl,
-        file_size: formData.file?.size || 0
+        file_size: formData.file?.size || 0,
       };
 
       const { error } = await supabase
