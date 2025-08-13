@@ -1,4 +1,6 @@
+// /src/pages/ClientAccountingDashboard.tsx
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
@@ -6,27 +8,19 @@ import {
   FileText,
   Calendar,
   AlertTriangle,
-  CheckCircle,
   Clock,
   Upload,
   Download,
   MessageSquare,
-  Bell,
   DollarSign,
   Eye,
-  Search,
-  Filter,
   Users,
   TrendingUp,
   Globe2,
   Star,
   Package,
   Settings,
-  Mail,
-  Truck,
   CreditCard,
-  MapPin,
-  X
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
@@ -116,8 +110,6 @@ const ClientAccountingDashboard: React.FC = () => {
     'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'
   >('overview');
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [showShippingModal, setShowShippingModal] = useState(false);
   const [selectedMailboxItem, setSelectedMailboxItem] =
     useState<VirtualMailboxItem | null>(null);
@@ -402,7 +394,7 @@ const ClientAccountingDashboard: React.FC = () => {
                 alt="Consulting19 Logo"
                 className="h-16 w-32"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
                   e.currentTarget.nextElementSibling?.classList.remove('hidden');
                 }}
               />
@@ -885,6 +877,15 @@ const ClientAccountingDashboard: React.FC = () => {
                       <div className="text-xs font-medium">{action.name}</div>
                     </button>
                   ))}
+
+                  {/* ✅ Yeni buton: Additional Services */}
+                  <Link
+                    to="/client-services"
+                    className="group cursor-pointer rounded-lg bg-orange-500 p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:bg-orange-600 hover:shadow-md"
+                  >
+                    <Package className="mx-auto mb-2 h-6 w-6 transition-transform group-hover:scale-110" />
+                    <div className="text-sm font-medium text-center">Additional Services</div>
+                  </Link>
                 </div>
               </div>
             </div>
