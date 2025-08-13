@@ -33,35 +33,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchProfile = async (userId: string) => {
     try {
       console.log('🔍 Fetching profile for user:', userId);
-      
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      console.log('🔍 Session check:', session ? `Found session for ${session.user?.email}` : 'No session');
-      
-      if (sessionError) {
-        console.error('❌ Session error:', sessionError);
+      console.log('📧 Step 1: Getting current session...');
+      let session;
+      try {
+        const sessionResult = await supabase.auth.getSession();
+        session = sessionResult.data.session;
+        console.log('✅ Session retrieved successfully:', session ? `User: ${session.user?.email}` : 'No session');
+        
+        if (sessionResult.error) {
+          console.error('❌ Session error:', sessionResult.error);
+          return null;
+        }
+      } catch (sessionErr) {
+        console.error('💥 Session fetch crashed:', sessionErr);
         return null;
       }
       
       if (!session?.user?.email) {
-        console.error('❌ No session or email found in session');
+        console.error('❌ No session or email found');
         return null;
       }
       
-      console.log('📧 User email from session:', session.user.email);
-      console.log('🔍 Querying profiles table by email...');
+      console.log('📧 Step 2: Querying profile by email:', session.user.email);
       
-      // Try to query profile by email with detailed logging
-      console.log('🔍 About to execute Supabase query...');
-      const profileQuery = supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', session.user.email);
-      
-      console.log('🔍 Query object created, executing...');
-      const { data: profile, error } = await profileQuery.maybeSingle();
-      
-      console.log('🔍 Profile query result:', { profile, error });
+      let profile, error;
+      try {
+        console.log('🔍 Creating Supabase query...');
+        const result = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', session.user.email)
+          .maybeSingle();
+        
+        profile = result.data;
+        error = result.error;
+        console.log('✅ Query executed successfully');
+        console.log('🔍 Profile result:', profile ? `Found: ${profile.email}` : 'Not found');
+        console.log('🔍 Error result:', error ? error.message : 'No error');
+      } catch (queryErr) {
+        console.error('💥 Profile query crashed:', queryErr);
+        console.error('💥 Query error details:', queryErr instanceof Error ? queryErr.message : 'Unknown error');
+        return null;
+      }
       
       if (error) {
         console.error('❌ Error fetching profile:', error);
@@ -69,35 +82,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // If no profile found, try to create one
         if (!profile) {
-          console.log('📝 Profile not found, creating new profile...');
+          console.log('📝 Step 3: Profile not found, creating new profile...');
           
-          const newProfile = {
-            id: userId,
-            auth_user_id: userId,
-            email: session.user.email,
-            role: 'client' as const,
-            full_name: session.user.user_metadata?.full_name || null,
-            country: null
-          };
-          
-          console.log('📝 Creating profile with data:', newProfile);
-          
-          const { data: createdProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert([newProfile])
-            .select()
-            .single();
-          
-          console.log('📝 Profile creation result:', { createdProfile, createError });
-          
-          if (createError) {
-            console.error('❌ Error creating profile:', createError.message);
-            console.error('❌ Create error details:', createError.code, createError.details);
+          try {
+            const newProfile = {
+              id: userId,
+              auth_user_id: userId,
+              email: session.user.email,
+              role: 'client' as const,
+              full_name: session.user.user_metadata?.full_name || null,
+              country: null
+            };
+            
+            console.log('📝 Creating profile with data:', newProfile);
+            
+            const createResult = await supabase
+              .from('profiles')
+              .insert([newProfile])
+              .select()
+              .single();
+            
+            console.log('📝 Profile creation result:', createResult);
+            
+            if (createResult.error) {
+              console.error('❌ Error creating profile:', createResult.error.message);
+              return null;
+            }
+            
+            console.log('✅ Profile created successfully:', createResult.data);
+            return createResult.data;
+          } catch (createErr) {
+            console.error('💥 Profile creation crashed:', createErr);
             return null;
           }
-          
-          console.log('✅ Profile created successfully:', createdProfile);
-          return createdProfile;
         }
         
         return null;
