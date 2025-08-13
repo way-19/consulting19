@@ -44,10 +44,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
       
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000)
+        setTimeout(() => reject(new Error('Query timeout after 30 seconds')), 30000)
       );
       
-      console.log('⏰ Starting query with 10s timeout...');
+      console.log('⏰ Starting query with 30s timeout...');
       const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
       console.log('✅ Query completed successfully');
       
