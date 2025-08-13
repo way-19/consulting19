@@ -104,7 +104,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       '/consultant-services', 
       '/legacy-orders',
       '/accounting-management',
-      '/customers-management'
+      '/customers-management',
+      '/consultant-payments'
     ];
     
     // For clients, allow all client-related pages  
