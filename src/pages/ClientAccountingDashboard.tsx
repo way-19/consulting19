@@ -29,9 +29,7 @@ import {
   CreditCard,
   MapPin,
   X,
-  Save,
-  CalendarDays,
-  ExclamationTriangle
+  Save
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
@@ -140,6 +138,17 @@ const ClientAccountingDashboard: React.FC = () => {
   const [selectedInvoiceToPay, setSelectedInvoiceToPay] = useState<ClientInvoice | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank'>('card');
   const [paymentProcessing, setPaymentProcessing] = useState(false);
+
+  // Upcoming deadlines state
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState<Array<{
+    id: string;
+    title: string;
+    date: string;
+    type: 'document' | 'invoice' | 'task';
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    status: string;
+    daysUntil: number;
+  }>>([]);
 
   useEffect(() => {
     if (profile?.id) {
