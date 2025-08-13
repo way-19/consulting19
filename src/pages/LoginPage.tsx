@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Globe, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -17,16 +18,7 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password.trim()
-      });
-
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-        return;
-      }
+      await signIn(email.trim(), password.trim());
 
       // Navigate based on email using React Router
       if (email.includes('admin')) {
@@ -39,7 +31,7 @@ const LoginPage = () => {
         navigate('/');
       }
     } catch (err: any) {
-      setError('Giriş başarısız');
+      setError(err.message || 'Giriş başarısız');
       setLoading(false);
     }
   };
@@ -50,15 +42,10 @@ const LoginPage = () => {
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-        return;
-      }
+      await signIn(email, password);
       navigate(dashboard);
-    } catch (err) {
-      setError('Giriş başarısız');
+    } catch (err: any) {
+      setError(err.message || 'Giriş başarısız');
       setLoading(false);
     }
   };
