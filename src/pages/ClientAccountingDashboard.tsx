@@ -22,7 +22,9 @@ import {
   Search,
   Filter,
   Users,
-  TrendingUp,
+  Settings,
+  Mail,
+  Truck
   Globe2,
   Star,
   Package,
@@ -116,6 +118,23 @@ interface VirtualMailboxItem {
   downloaded_date?: string;
   created_at: string;
 }
+interface VirtualMailboxItem {
+  id: string;
+  document_type: string;
+  document_name: string;
+  description?: string;
+  file_url?: string;
+  file_size?: number;
+  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
+  tracking_number: string;
+  shipping_fee: number;
+  payment_status: 'unpaid' | 'paid' | 'waived';
+  sent_date?: string;
+  delivered_date?: string;
+  viewed_date?: string;
+  downloaded_date?: string;
+  created_at: string;
+}
 
 const ClientAccountingDashboard: React.FC = () => {
   const { user, profile } = useAuth();
@@ -125,6 +144,7 @@ const ClientAccountingDashboard: React.FC = () => {
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
+  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1036,12 +1056,14 @@ const ClientAccountingDashboard: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <button 
-                  onClick={handleMessageConsultant}
+                <button
+                  onClick={() => {
+                    setActiveTab('messages');
+                  }}
                   className="flex w-full items-center justify-center space-x-2 rounded-lg bg-purple-600 px-4 py-3 font-medium text-white transition-colors hover:bg-purple-700"
                 >
                   <MessageSquare className="h-5 w-5" />
-                  <span>Send Message</span>
+                  <span>Message Consultant</span>
                 </button>
               </div>
             )}
