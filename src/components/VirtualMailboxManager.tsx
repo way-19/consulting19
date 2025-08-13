@@ -838,20 +838,10 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               <div className="border-t border-gray-200 pt-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h4>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Recipient Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.recipient_name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, recipient_name: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Full name of recipient"
-                    />
-                  </div>
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <strong>Note:</strong> Client will provide shipping address when requesting delivery.
+                  </p>
                 </div>
               </div>
 
