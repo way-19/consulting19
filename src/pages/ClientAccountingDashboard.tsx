@@ -27,6 +27,8 @@ import {
   Truck
   Mail,
   Truck
+  Mail,
+  Truck
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
@@ -117,6 +119,23 @@ interface VirtualMailboxItem {
   downloaded_date?: string;
   created_at: string;
 }
+interface VirtualMailboxItem {
+  id: string;
+  document_type: string;
+  document_name: string;
+  description?: string;
+  file_url?: string;
+  file_size?: number;
+  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
+  tracking_number: string;
+  shipping_fee: number;
+  payment_status: 'unpaid' | 'paid' | 'waived';
+  sent_date?: string;
+  delivered_date?: string;
+  viewed_date?: string;
+  downloaded_date?: string;
+  created_at: string;
+}
 
 const ClientAccountingDashboard = () => {
   const { user, profile } = useAuth();
@@ -126,10 +145,21 @@ const ClientAccountingDashboard = () => {
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
+  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: ''
+  });
   const [showShippingModal, setShowShippingModal] = useState(false);
   const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
   const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
@@ -191,6 +221,46 @@ const ClientAccountingDashboard = () => {
   console.log('🔵 ClientDashboard render:', { 
     loading, 
     user: !!user, 
+                          <div className="flex items-center space-x-2">
+                            <Users className="h-4 w-4 text-purple-600" />
+                            <span className="text-sm font-medium text-gray-900">{service.consultant.full_name}</span>
+                          </div>
+                        </div>
+
+                        {/* Price and Delivery */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="text-2xl font-bold text-gray-900">
+                            ${service.price}
+                            <span className="text-sm font-normal text-gray-500 ml-1">{service.currency}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 text-sm text-gray-500">
+                            <Clock className="h-4 w-4" />
+                            <span>{service.delivery_time_days} days</span>
+                          </div>
+                        </div>
+
+                        {/* Order Button */}
+                        <button
+                          onClick={() => handleOrderService(service)}
+                          className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                        >
+                          <CreditCard className="h-5 w-5" />
+                          <span>Order Service</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {availableServices.length === 0 && (
+                    <div className="text-center py-12">
+                      <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Additional Services</h3>
+                      <p className="text-gray-600">Your consultant hasn't added any additional services yet.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
     profile: !!profile, 
     profileRole: profile?.role 
   });
