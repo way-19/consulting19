@@ -93,12 +93,84 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     if (profile?.id) {
       fetchItems();
     } else {
+      // Add sample data for testing when no profile
+      const sampleItems: VirtualMailboxItem[] = [
+        {
+          id: 'sample-1',
+          client_id: 'client-1',
+          document_type: 'Company Registration Certificate',
+          document_name: 'Georgia Tech Solutions LLC - Registration Certificate',
+          description: 'Official company registration certificate from Georgian House of Justice',
+          file_url: 'https://example.com/sample-certificate.pdf',
+          file_size: 245760, // 240 KB
+          status: 'sent',
+          tracking_number: 'VM-2024-001',
+          shipping_fee: 25.00,
+          payment_status: 'unpaid',
+          sent_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          client: {
+            company_name: 'Georgia Tech Solutions LLC',
+            profile: {
+              full_name: 'Test Client',
+              email: 'client.georgia@consulting19.com'
+            }
+          }
+        },
+        {
+          id: 'sample-2',
+          client_id: 'client-1',
+          document_type: 'Tax Registration Document',
+          document_name: 'Tax Number Certificate - GE123456789',
+          description: 'Official tax registration certificate with tax number',
+          file_url: 'https://example.com/sample-tax-cert.pdf',
+          file_size: 189440, // 185 KB
+          status: 'delivered',
+          tracking_number: 'VM-2024-002',
+          shipping_fee: 25.00,
+          payment_status: 'paid',
+          sent_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          delivered_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+          viewed_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+          client: {
+            company_name: 'Georgia Tech Solutions LLC',
+            profile: {
+              full_name: 'Test Client',
+              email: 'client.georgia@consulting19.com'
+            }
+          }
+        },
+        {
+          id: 'sample-3',
+          client_id: 'client-1',
+          document_type: 'Corporate Seal',
+          document_name: 'Official Corporate Seal',
+          description: 'Physical corporate seal for official documents',
+          status: 'pending',
+          tracking_number: 'VM-2024-003',
+          shipping_fee: 35.00,
+          payment_status: 'unpaid',
+          created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          client: {
+            company_name: 'Georgia Tech Solutions LLC',
+            profile: {
+              full_name: 'Test Client',
+              email: 'client.georgia@consulting19.com'
+            }
+          }
+        }
+      ];
+      setItems(sampleItems);
+    } else {
       setLoading(false);
     }
   }, [clientId, profile]);
 
   const fetchItems = async () => {
     if (!profile?.id) {
+      // For testing without database connection
+      console.log('🧪 Using sample data for Virtual Mailbox testing');
       setLoading(false);
       return;
     }
@@ -149,6 +221,34 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // For testing without database
+    if (!profile?.id) {
+      const newItem: VirtualMailboxItem = {
+        id: `sample-${Date.now()}`,
+        client_id: formData.client_id || 'client-1',
+        document_type: formData.document_type,
+        document_name: formData.document_name,
+        description: formData.description,
+        status: 'pending',
+        tracking_number: `VM-2024-${String(items.length + 1).padStart(3, '0')}`,
+        shipping_fee: formData.shipping_fee,
+        payment_status: 'unpaid',
+        created_at: new Date().toISOString(),
+        client: {
+          company_name: 'Georgia Tech Solutions LLC',
+          profile: {
+            full_name: 'Test Client',
+            email: 'client.georgia@consulting19.com'
+          }
+        }
+      };
+      
+      setItems(prev => [newItem, ...prev]);
+      resetForm();
+      alert('Document added to virtual mailbox successfully! (Test Mode)');
+      return;
+    }
+    
     try {
       const itemData = {
         ...formData,
@@ -172,6 +272,22 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
   };
 
   const updateStatus = async (itemId: string, newStatus: string) => {
+    // For testing without database
+    if (!profile?.id) {
+      setItems(prev => prev.map(item => 
+        item.id === itemId 
+          ? { 
+              ...item, 
+              status: newStatus as any,
+              delivered_date: newStatus === 'delivered' ? new Date().toISOString() : item.delivered_date,
+              viewed_date: newStatus === 'viewed' ? new Date().toISOString() : item.viewed_date,
+              downloaded_date: newStatus === 'downloaded' ? new Date().toISOString() : item.downloaded_date
+            }
+          : item
+      ));
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('virtual_mailbox_items')
@@ -186,6 +302,16 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
   };
 
   const updatePaymentStatus = async (itemId: string, newPaymentStatus: string) => {
+    // For testing without database
+    if (!profile?.id) {
+      setItems(prev => prev.map(item => 
+        item.id === itemId 
+          ? { ...item, payment_status: newPaymentStatus as any }
+          : item
+      ));
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('virtual_mailbox_items')
@@ -564,7 +690,9 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
                     <option value="">Choose a client...</option>
-                    {/* This would be populated with actual clients */}
+                    <option value="client-1">Georgia Tech Solutions LLC</option>
+                    <option value="client-2">Test Company Ltd</option>
+                    <option value="client-3">Sample Business Inc</option>
                   </select>
                 </div>
               )}
