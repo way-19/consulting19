@@ -22,9 +22,7 @@ import {
   TrendingUp,
   Globe2,
   Star,
-  Settings,
-  Mail,
-  Truck
+  Package,
   Settings,
   Mail,
   Truck,
@@ -115,23 +113,6 @@ interface VirtualMailboxItem {
   downloaded_date?: string;
   created_at: string;
 }
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
 
 const ClientAccountingDashboard: React.FC = () => {
   const { user, profile } = useAuth();
@@ -141,7 +122,6 @@ const ClientAccountingDashboard: React.FC = () => {
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1150,24 +1130,6 @@ const ClientAccountingDashboard: React.FC = () => {
                     <span className="font-medium text-gray-900">
                       {new Date(accountingProfile.last_document_received).toLocaleDateString()}
                     </span>
-                  </div>
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
-                )}
-              </div>
-            </div>
-                          View All {upcomingDeadlines.length} Deadlines
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
