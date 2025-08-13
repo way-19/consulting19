@@ -20,7 +20,7 @@ import {
   Mail,
   Truck,
   CreditCard,
-  AlertCircle,
+  AlertTriangle,
   MapPin
 } from 'lucide-react';
 
@@ -659,7 +659,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
-                            alert(\`Document "${item.document_name}" downloaded successfully!`);
+                            alert(\`Document "${item.document_name}\" downloaded successfully!`);
                           }}
                           className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
                         >
@@ -985,18 +985,25 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               {viewMode === 'client' && selectedItem.payment_status === 'unpaid' && selectedItem.status === 'sent' && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-start space-x-3">
-                    <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <h4 className="font-medium text-yellow-900">Payment Required</h4>
+                      <h4 className="font-medium text-yellow-900">Shipping Address & Payment Required</h4>
                       <p className="text-sm text-yellow-700 mt-1">
-                        Please pay the virtual shipping fee of ${selectedItem.shipping_fee} to access your document.
+                        Please enter your shipping address and pay ${selectedItem.shipping_fee} shipping fee to receive your document.
                       </p>
                       <button
-                        onClick={() => updatePaymentStatus(selectedItem.id, 'paid')}
-                        className="mt-3 bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 transition-colors flex items-center space-x-2"
+                        onClick={() => {
+                          // In real implementation, this would open address form
+                          const address = prompt('Enter your shipping address:');
+                          if (address) {
+                            updatePaymentStatus(selectedItem.id, 'paid');
+                            alert(`Address saved: ${address}\nPayment processed: $${selectedItem.shipping_fee}\nDocument will be shipped soon!`);
+                          }
+                        }}
+                        className="mt-3 bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
                       >
-                        <CreditCard className="h-4 w-4" />
-                        <span>Pay Now - ${selectedItem.shipping_fee}</span>
+                        <MapPin className="h-4 w-4" />
+                        <span>Enter Address & Pay ${selectedItem.shipping_fee}</span>
                       </button>
                     </div>
                   </div>
