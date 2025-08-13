@@ -36,16 +36,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('📧 Querying profiles table...');
       
-      const { data, error } = await supabase
+      // Add timeout to prevent hanging
+      const queryPromise = supabase
         .from('profiles')
         .select('*')
         .eq('email', userEmail)
         .maybeSingle();
       
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000)
+      );
+      
+      console.log('⏰ Starting query with 10s timeout...');
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
+      console.log('✅ Query completed successfully');
+      
       console.log('📊 Query result:', { data, error });
       
       if (error) {
         console.error('❌ Profile query error:', error);
+        console.error('❌ Error details:', error.message, error.code, error.details);
         return null;
       }
       
@@ -66,6 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         country: null
       };
       
+      console.log('📝 Creating profile with data:', newProfile);
       const { data: createdProfile, error: createError } = await supabase
         .from('profiles')
         .insert([newProfile])
@@ -74,6 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (createError) {
         console.error('❌ Profile creation error:', createError);
+        console.error('❌ Creation error details:', createError.message, createError.code, createError.details);
         return null;
       }
       
@@ -82,6 +94,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
     } catch (error) {
       console.error('💥 fetchProfile crashed:', error);
+      if (error instanceof Error) {
+        console.error('💥 Error message:', error.message);
+        console.error('💥 Error stack:', error.stack);
+      }
       return null;
     }
   };
