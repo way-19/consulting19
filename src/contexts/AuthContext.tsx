@@ -34,38 +34,85 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🔍 Fetching profile for user:', userId);
       
-      // Try both auth_user_id and id columns
+      // Attempt 1: Query by auth_user_id
       const { data: profileByAuthId, error: authIdError } = await supabase
         .from('profiles')
         .select('*')
         .eq('auth_user_id', userId)
         .maybeSingle();
       
+      if (authIdError) {
+        console.error('❌ Error fetching profile by auth_user_id:', authIdError.message);
+        console.error('❌ Full error details:', authIdError);
+      }
       if (profileByAuthId) {
-        console.log('✅ Profile found by auth_user_id:', profileByAuthId);
+        console.log('✅ Profile found by auth_user_id:', {
+          id: profileByAuthId.id,
+          email: profileByAuthId.email,
+          role: profileByAuthId.role,
+          auth_user_id: profileByAuthId.auth_user_id
+        });
         return profileByAuthId;
       }
 
-      console.log('⚠️ Profile not found by auth_user_id, trying by id...');
+      console.log('⚠️ Profile not found by auth_user_id. Attempting to fetch by id...');
       
+      // Attempt 2: Query by id
       const { data: profileById, error: idError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
       
+      if (idError) {
+        console.error('❌ Error fetching profile by id:', idError.message);
+        console.error('❌ Full error details:', idError);
+      }
       if (profileById) {
-        console.log('✅ Profile found by id:', profileById);
+        console.log('✅ Profile found by id:', {
+          id: profileById.id,
+          email: profileById.email,
+          role: profileById.role,
+          auth_user_id: profileById.auth_user_id
+        });
         return profileById;
       }
 
-      console.error('❌ Profile not found by either method');
-      console.error('Auth ID error:', authIdError);
-      console.error('ID error:', idError);
+      // Attempt 3: Query by email as last resort
+      console.log('⚠️ Profile not found by id either. Trying by email...');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email) {
+        const { data: profileByEmail, error: emailError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', session.user.email)
+          .maybeSingle();
+        
+        if (emailError) {
+          console.error('❌ Error fetching profile by email:', emailError.message);
+          console.error('❌ Full error details:', emailError);
+        }
+        if (profileByEmail) {
+          console.log('✅ Profile found by email:', {
+            id: profileByEmail.id,
+            email: profileByEmail.email,
+            role: profileByEmail.role,
+            auth_user_id: profileByEmail.auth_user_id
+          });
+          return profileByEmail;
+        }
+      }
+      
+      console.error('❌ Profile not found by any method (auth_user_id, id, or email) for user:', userId);
+      console.error('❌ Available debugging info:');
+      console.error('   - Auth user ID:', userId);
+      console.error('   - Auth user email:', session?.user?.email);
+      console.error('   - Auth ID error:', authIdError?.message || 'None');
+      console.error('   - ID error:', idError?.message || 'None');
       
       return null;
     } catch (error) {
-      console.error('💥 Profile fetch failed:', error);
+      console.error('💥 General error during profile fetch:', error);
       return null;
     }
   };
@@ -105,10 +152,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           const userProfile = await fetchProfile(session.user.id);
           if (userProfile) {
+            console.log('✅ Profile loaded successfully, navigating...');
             setProfile(userProfile);
             navigateBasedOnRole(userProfile);
           } else {
-            console.error('❌ Could not load profile, staying on current page');
+            console.error('❌ Could not load profile after session found. User will stay on current page.');
+            console.error('❌ This means the user exists in auth.users but not in profiles table.');
           }
         }
       } catch (error) {
@@ -129,10 +178,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           const userProfile = await fetchProfile(session.user.id);
           if (userProfile) {
+            console.log('✅ Profile loaded after sign in, navigating...');
             setProfile(userProfile);
             navigateBasedOnRole(userProfile);
           } else {
-            console.error('❌ Could not load profile after sign in');
+            console.error('❌ Could not load profile after sign in. This is a critical issue.');
+            console.error('❌ User authenticated but profile missing from database.');
           }
           setLoading(false);
         } else if (event === 'SIGNED_OUT') {
@@ -161,6 +212,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('❌ Sign in error:', error.message);
+        console.error('❌ Full sign in error:', error);
         setLoading(false);
         throw error;
       }
