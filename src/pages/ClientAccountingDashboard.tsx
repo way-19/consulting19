@@ -140,23 +140,33 @@ const ClientAccountingDashboard: React.FC = () => {
             )
           )
         `)
-        .eq('client_id', clientData.id)
-        .single();
+        .eq('client_id', clientData.id);
 
       if (accountingError) {
         console.error('Error fetching accounting profile:', accountingError);
+        setError('Failed to load accounting data. Please try again.');
+        return;
+      }
+
+      // Handle multiple or no results
+      if (!accountingData || accountingData.length === 0) {
         // If no accounting profile exists, create a default one
         await createDefaultAccountingProfile(clientData.id);
         return;
       }
 
-      setAccountingProfile(accountingData);
+      // If multiple profiles exist, use the first one and log a warning
+      if (accountingData.length > 1) {
+        console.warn(`Multiple accounting profiles found for client ${clientData.id}. Using the first one.`);
+      }
+
+      setAccountingProfile(accountingData[0]);
 
       // Fetch documents
       const { data: documentsData, error: documentsError } = await supabase
         .from('accounting_documents')
         .select('*')
-        .eq('client_id', accountingData.id)
+        .eq('client_id', accountingData[0].id)
         .order('due_date', { ascending: true });
 
       if (documentsError) {
@@ -169,7 +179,7 @@ const ClientAccountingDashboard: React.FC = () => {
       const { data: invoicesData, error: invoicesError } = await supabase
         .from('accounting_invoices')
         .select('*')
-        .eq('client_id', accountingData.id)
+        .eq('client_id', accountingData[0].id)
         .order('created_at', { ascending: false });
 
       if (invoicesError) {
@@ -188,7 +198,7 @@ const ClientAccountingDashboard: React.FC = () => {
             email
           )
         `)
-        .eq('client_id', accountingData.id)
+        .eq('client_id', accountingData[0].id)
         .order('created_at', { ascending: false });
 
       if (messagesError) {
