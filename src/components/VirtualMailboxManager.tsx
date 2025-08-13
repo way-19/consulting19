@@ -20,7 +20,8 @@ import {
   Mail,
   Truck,
   CreditCard,
-  AlertCircle
+  AlertTriangle,
+  MapPin
 } from 'lucide-react';
 
 interface VirtualMailboxItem {
@@ -71,13 +72,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     document_name: '',
     description: '',
     shipping_fee: 25.00,
-    file: null as File | null,
-    shipping_address: '',
-    recipient_name: '',
-    phone_number: '',
-    country: '',
-    city: '',
-    postal_code: ''
+    file: null as File | null
   });
 
   const documentTypes = [
@@ -237,12 +232,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       return;
     }
     
-    // Validate shipping address
-    if (!formData.shipping_address || !formData.recipient_name || !formData.phone_number) {
-      alert('Please fill in all shipping address fields');
-      return;
-    }
-    
     // For testing without database
     if (!profile?.id) {
       const newItem: VirtualMailboxItem = {
@@ -264,20 +253,12 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
             full_name: 'Test Client',
             email: 'client.georgia@consulting19.com'
           }
-        },
-        shipping_info: {
-          recipient_name: formData.recipient_name,
-          phone_number: formData.phone_number,
-          address: formData.shipping_address,
-          country: formData.country,
-          city: formData.city,
-          postal_code: formData.postal_code
         }
       };
       
       setItems(prev => [newItem, ...prev]);
       resetForm();
-      alert(`Document "${formData.document_name}" uploaded and added to virtual mailbox!\n\nFile: ${formData.file?.name}\nShipping to: ${formData.recipient_name}\nAddress: ${formData.shipping_address}\n\n(Test Mode - Real integration will upload to secure storage)`);
+      alert(`Document "${formData.document_name}" uploaded and added to virtual mailbox!\n\nFile: ${formData.file?.name}\n\n(Test Mode - Customer will enter shipping address when requesting delivery)`);
       return;
     }
     
@@ -299,15 +280,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         consultant_id: profile?.id,
         status: 'pending',
         file_url: fileUrl,
-        file_size: formData.file?.size || 0,
-        shipping_info: {
-          recipient_name: formData.recipient_name,
-          phone_number: formData.phone_number,
-          address: formData.shipping_address,
-          country: formData.country,
-          city: formData.city,
-          postal_code: formData.postal_code
-        }
+        file_size: formData.file?.size || 0
       };
 
       const { error } = await supabase
@@ -386,13 +359,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       document_name: '',
       description: '',
       shipping_fee: 25.00,
-      file: null,
-      shipping_address: '',
-      recipient_name: '',
-      phone_number: '',
-      country: '',
-      city: '',
-      postal_code: ''
+      file: null
     });
     setShowAddForm(false);
   };
@@ -672,10 +639,10 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       {item.payment_status === 'unpaid' && item.status === 'sent' && (
                         <button
                           onClick={() => updatePaymentStatus(item.id, 'paid')}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                          className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
                         >
-                          <CreditCard className="h-4 w-4" />
-                          <span>Pay ${item.shipping_fee}</span>
+                          <MapPin className="h-4 w-4" />
+                          <span>Enter Address & Pay</span>
                         </button>
                       )}
                       
@@ -875,99 +842,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       onChange={(e) => setFormData(prev => ({ ...prev, recipient_name: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       placeholder="Full name of recipient"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.phone_number}
-                      onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="+1 234 567 8900"
-                    />
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Address *
-                  </label>
-                  <textarea
-                    rows={3}
-                    required
-                    value={formData.shipping_address}
-                    onChange={(e) => setFormData(prev => ({ ...prev, shipping_address: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Street address, apartment/suite number, city, state/province, postal code, country"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Country *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.country}
-                      onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Country"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      City *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.city}
-                      onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="City"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Postal Code *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.postal_code}
-                      onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Postal/ZIP code"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Shipping Fee */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Virtual Shipping Fee (USD Only)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.shipping_fee}
-                  onChange={(e) => setFormData(prev => ({ ...prev, shipping_fee: parseFloat(e.target.value) || 0 }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-                <p className="text-xs text-gray-500 mt-1">Standard virtual shipping fee is $25.00 USD</p>
-              </div>
-
               {/* Actions */}
               <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
                 <button
@@ -1106,16 +980,23 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div className="flex items-start space-x-3">
                     <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <h4 className="font-medium text-yellow-900">Payment Required</h4>
+                      <h4 className="font-medium text-yellow-900">Shipping Address & Payment Required</h4>
                       <p className="text-sm text-yellow-700 mt-1">
-                        Please pay the virtual shipping fee of ${selectedItem.shipping_fee} to access your document.
+                        Please enter your shipping address and pay ${selectedItem.shipping_fee} shipping fee to receive your document.
                       </p>
                       <button
-                        onClick={() => updatePaymentStatus(selectedItem.id, 'paid')}
-                        className="mt-3 bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 transition-colors flex items-center space-x-2"
+                        onClick={() => {
+                          // In real implementation, this would open address form
+                          const address = prompt('Enter your shipping address:');
+                          if (address) {
+                            updatePaymentStatus(selectedItem.id, 'paid');
+                            alert(`Address saved: ${address}\nPayment processed: $${selectedItem.shipping_fee}\nDocument will be shipped soon!`);
+                          }
+                        }}
+                        className="mt-3 bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
                       >
-                        <CreditCard className="h-4 w-4" />
-                        <span>Pay Now - ${selectedItem.shipping_fee}</span>
+                        <MapPin className="h-4 w-4" />
+                        <span>Enter Address & Pay ${selectedItem.shipping_fee}</span>
                       </button>
                     </div>
                   </div>
