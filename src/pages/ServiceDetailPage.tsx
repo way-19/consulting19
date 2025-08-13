@@ -105,10 +105,10 @@ const ServiceDetailPage: React.FC = () => {
 
               <div className="mt-8 pt-6 border-t border-white/20">
                 <div className="text-3xl font-bold text-white">
-                  ${service.pricing.startingAt.toLocaleString()}
+                  Contact for Pricing
                 </div>
                 <div className="text-white/80 text-sm">
-                  {service.pricing.unit} • Starting price
+                  Custom quote based on requirements
                 </div>
               </div>
             </div>
