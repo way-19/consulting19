@@ -80,22 +80,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigateBasedOnRole = (userProfile: Profile) => {
     console.log('🧭 Navigating based on role:', userProfile.role);
     
+    // Don't navigate if already on the correct page
+    const currentPath = window.location.pathname;
+    let targetPath = '';
+    
     switch (userProfile.role) {
       case 'admin':
-        console.log('➡️ Navigating to admin dashboard');
-        navigate('/admin-dashboard');
+        targetPath = '/admin-dashboard';
         break;
       case 'consultant':
-        console.log('➡️ Navigating to consultant dashboard');
-        navigate('/consultant-dashboard');
+        targetPath = '/consultant-dashboard';
         break;
       case 'client':
-        console.log('➡️ Navigating to client dashboard');
-        navigate('/client-accounting');
+        targetPath = '/client-accounting';
         break;
       default:
-        console.log('➡️ Navigating to home (unknown role)');
-        navigate('/');
+        targetPath = '/';
+    }
+    
+    // Only navigate if not already on the target path or a sub-path
+    if (currentPath !== targetPath && !currentPath.startsWith(targetPath.replace('-dashboard', ''))) {
+      console.log(`➡️ Navigating from ${currentPath} to ${targetPath}`);
+      navigate(targetPath);
+    } else {
+      console.log(`✅ Already on correct path: ${currentPath}`);
     }
   };
 
