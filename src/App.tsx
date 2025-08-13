@@ -133,6 +133,9 @@ import ConsultantPayments from './pages/ConsultantPayments';
 import SiteManagement from './pages/SiteManagement';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
+import AIAssistantPage from './pages/AIAssistantPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
 
 export default function App() {
   console.log('🚀 App component loaded');
@@ -153,6 +156,9 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/ai-assistant" element={<AIAssistantPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsOfServicePage />} />
         
         {/* Protected Routes */}
         <Route
