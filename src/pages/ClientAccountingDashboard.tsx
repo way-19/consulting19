@@ -138,6 +138,7 @@ const ClientAccountingDashboard: React.FC = () => {
   const [selectedInvoiceToPay, setSelectedInvoiceToPay] = useState<ClientInvoice | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank'>('card');
   const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [showAccountSettingsModal, setShowAccountSettingsModal] = useState(false);
 
   useEffect(() => {
     if (profile?.id) {
