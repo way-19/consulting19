@@ -5,8 +5,6 @@ import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import MultilingualChat from '../components/MultilingualChat';
 import AccountSettingsPage from './AccountSettingsPage';
-import ClientServices from './ClientServices';
-import ConsultantServices from './ConsultantServices';
 import {
   FileText,
   Calendar,
