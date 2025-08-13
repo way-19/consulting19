@@ -142,6 +142,9 @@ const ClientAccountingDashboard: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank'>('card');
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [showAccountSettingsModal, setShowAccountSettingsModal] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageText, setMessageText] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     if (profile?.id) {
