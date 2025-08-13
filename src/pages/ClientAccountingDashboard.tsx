@@ -92,9 +92,9 @@ interface ClientMessage {
   subject?: string;
   message: string;
   category: string;
+  message_type?: string;
   is_read: boolean;
   created_at: string;
-  message_type: string;
   sender?: {
     full_name: string;
     email: string;
@@ -154,6 +154,8 @@ const ClientAccountingDashboard: React.FC = () => {
     postalCode: '',
     country: ''
   });
+
+  // Message form states
   const [messageForm, setMessageForm] = useState({
     subject: '',
     message: '',
@@ -161,10 +163,6 @@ const ClientAccountingDashboard: React.FC = () => {
     language: 'en'
   });
   const [messageLoading, setMessageLoading] = useState(false);
-
-  const handleShippingPayment = async () => {
-    // Implementation for shipping payment
-  };
 
   useEffect(() => {
     if (profile?.id) {
@@ -354,6 +352,93 @@ const ClientAccountingDashboard: React.FC = () => {
       setError('Failed to setup accounting profile. Please contact support.');
     }
   };
+
+  const fetchVirtualMailboxItems = async () => {
+    // TODO: Supabase'den gerçek verileri çekin
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!messageForm.message.trim()) {
+      alert('Please enter a message');
+      return;
+    }
+
+    setMessageLoading(true);
+    try {
+      // Get consultant ID from accounting profile
+      const consultantId = accountingProfile?.consultant?.email === 'georgia@consulting19.com' 
+        ? 'consultant-georgia-id' 
+        : 'consultant-id';
+
+      // Translate message using DeepL API
+      let translatedMessage = messageForm.message;
+      if (messageForm.language !== 'en') {
+        try {
+          const response = await fetch('https://api-free.deepl.com/v2/translate', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'DeepL-Auth-Key 0f51365f-a19a-4b9f-88cb-1f47f24a300a:fx',
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              text: messageForm.message,
+              source_lang: messageForm.language.toUpperCase(),
+              target_lang: 'EN'
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            translatedMessage = result.translations[0].text;
+          }
+        } catch (error) {
+          console.error('Translation error:', error);
+        }
+      }
+
+      // Create new message
+      const newMessage: ClientMessage = {
+        id: Date.now().toString(),
+        subject: messageForm.subject || undefined,
+        message: messageForm.message,
+        message_type: messageForm.category,
+        category: messageForm.category,
+        is_read: false,
+        created_at: new Date().toISOString(),
+        sender: {
+          full_name: profile?.full_name || 'Client',
+          email: profile?.email || user?.email || ''
+        }
+      };
+
+      // Add to messages list
+      setMessages(prev => [newMessage, ...prev]);
+
+      // Reset form
+      setMessageForm({
+        subject: '',
+        message: '',
+        category: 'general',
+        language: 'en'
+      });
+
+      alert('Message sent successfully! / Mesaj başarıyla gönderildi!');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Failed to send message / Mesaj gönderilemedi');
+    } finally {
+      setMessageLoading(false);
+    }
+  };
+
+  console.log('🔵 ClientDashboard render:', {
+    profile,
+    accountingProfile,
+    loading,
+    error
+  });
 
   // Quick Actions handlers
   const handleMessageConsultant = () => {
@@ -979,26 +1064,13 @@ const ClientAccountingDashboard: React.FC = () => {
               {activeTab === 'messages' && (
                 <div className="space-y-6">
                   {/* Send Message Form */}
-                  <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Send Message to Consultant</h3>
-                    <form onSubmit={async (e) => {
-                      e.preventDefault();
-                      if (!messageForm.message.trim()) return;
-                      
-                      setMessageLoading(true);
-                      try {
-                        // Simulate sending message
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        alert('Message sent successfully!');
-                        setMessageForm({ subject: '', message: '', category: 'general', language: 'en' });
-                        await fetchAccountingData();
-                      } catch (error) {
-                        console.error('Error sending message:', error);
-                        alert('Failed to send message. Please try again.');
-                      } finally {
-                        setMessageLoading(false);
-                      }
-                    }} className="space-y-4">
+                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                      <MessageSquare className="h-5 w-5 text-purple-600" />
+                      <span>Send Message to Consultant</span>
+                    </h3>
+                    
+                    <form onSubmit={handleSendMessage} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1138,69 +1210,13 @@ const ClientAccountingDashboard: React.FC = () => {
                                   : 'bg-gray-100 text-gray-800'
                               }`}
                             >
-                              {message.message_type.replace('_', ' ').toUpperCase()}
+                              {(message.message_type || message.category).replace('_', ' ').toUpperCase()}
                             </span>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
-                </div>
-              )}
-
-              {activeTab === 'messages' && (
-                <div className="space-y-4">
-                  {messages.length === 0 ? (
-                    <div className="text-center py-12">
-                      <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Messages Yet</h3>
-                      <p className="text-gray-600">Messages from your consultant will appear here.</p>
-                    </div>
-                  ) : (
-                    messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`rounded-lg p-6 ${message.is_read ? 'bg-gray-50' : 'border border-blue-200 bg-blue-50'}`}
-                      >
-                        <div className="mb-3 flex items-start justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
-                              <MessageSquare className="h-4 w-4 text-purple-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{message.sender?.full_name || 'Consultant'}</p>
-                              <p className="text-sm text-gray-600">
-                                {new Date(message.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          {!message.is_read && (
-                            <span className="rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">New</span>
-                          )}
-                        </div>
-
-                        {message.subject && (
-                          <h4 className="mb-2 font-medium text-gray-900">{message.subject}</h4>
-                        )}
-
-                        <p className="text-gray-700">{message.message}</p>
-
-                        <div className="mt-3 flex items-center justify-between">
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs font-medium ${
-                              message.category === 'urgent'
-                                ? 'bg-red-100 text-red-800'
-                                : message.category === 'reminder'
-                                ? 'bg-orange-100 text-orange-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {message.category.replace('_', ' ').toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  )}
                 </div>
               )}
 
