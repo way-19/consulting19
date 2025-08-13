@@ -40,8 +40,9 @@ interface VirtualMailboxItem {
   delivered_date?: string;
   viewed_date?: string;
   downloaded_date?: string;
+    const { file, ...itemDataWithoutFile } = formData;
   created_at: string;
-  client?: {
+      ...itemDataWithoutFile,
     company_name: string;
     profile?: {
       full_name: string;
