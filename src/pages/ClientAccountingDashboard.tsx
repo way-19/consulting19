@@ -128,17 +128,39 @@ const ClientAccountingDashboard = () => {
     profileRole: profile?.role 
   });
 
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800';
-      case 'unpaid': return 'bg-red-100 text-red-800';
-      case 'waived': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   // Mock data for demo
   useEffect(() => {
+    const mockMailboxItems = [
+      {
+        id: '1',
+        document_type: 'VAT Certificate',
+        document_name: 'VAT Registration Certificate',
+        description: 'Official VAT registration certificate from Georgian tax authorities',
+        file_url: 'https://example.com/vat-cert.pdf',
+        file_size: 245760,
+        status: 'pending',
+        tracking_number: 'VM20250813-D6A6F082',
+        shipping_fee: 0,
+        payment_status: 'unpaid',
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: '2',
+        document_type: 'Business License',
+        document_name: 'Business Operating License',
+        description: 'Official business operating license',
+        file_url: 'https://example.com/business-license.pdf',
+        file_size: 189440,
+        status: 'viewed',
+        tracking_number: 'VM20250812-A1B2C3D4',
+        shipping_fee: 15,
+        payment_status: 'paid',
+        sent_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        viewed_date: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
     // Create mock accounting profile
     const mockProfile: ClientAccountingProfile = {
       id: 'mock-client-1',
@@ -242,6 +264,7 @@ const ClientAccountingDashboard = () => {
     setDocuments(mockDocuments);
     setInvoices(mockInvoices);
     setMessages(mockMessages);
+    setMailboxItems(mockMailboxItems);
   }, []);
 
   const getStatusColor = (status: string) => {
