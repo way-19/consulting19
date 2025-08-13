@@ -49,6 +49,8 @@ interface VirtualMailboxItem {
       email: string;
     };
   };
+}
+
 interface VirtualMailboxManagerProps {
   clientId?: string;
   viewMode: 'consultant' | 'client';
@@ -100,6 +102,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         {
           id: 'sample-1',
           client_id: 'client-1',
+          consultant_id: 'consultant-1',
           document_type: 'Company Registration Certificate',
           document_name: 'Georgia Tech Solutions LLC - Registration Certificate',
           description: 'Official company registration certificate from Georgian House of Justice',
@@ -122,6 +125,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         {
           id: 'sample-2',
           client_id: 'client-1',
+          consultant_id: 'consultant-1',
           document_type: 'Tax Registration Document',
           document_name: 'Tax Number Certificate - GE123456789',
           description: 'Official tax registration certificate with tax number',
@@ -146,6 +150,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         {
           id: 'sample-3',
           client_id: 'client-1',
+          consultant_id: 'consultant-1',
           document_type: 'Corporate Seal',
           document_name: 'Official Corporate Seal',
           description: 'Physical corporate seal for official documents',
@@ -237,6 +242,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       const newItem: VirtualMailboxItem = {
         id: `sample-${Date.now()}`,
         client_id: formData.client_id || 'client-1',
+        consultant_id: 'consultant-1',
         document_type: formData.document_type,
         document_name: formData.document_name,
         description: formData.description,
