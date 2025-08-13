@@ -70,7 +70,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     document_type: '',
     document_name: '',
     description: '',
-    shipping_fee: 25.00
+    shipping_fee: 25.00,
+    file: null as File | null,
+    shipping_address: '',
+    recipient_name: '',
+    phone_number: '',
+    country: '',
+    city: '',
+    postal_code: ''
   });
 
   const documentTypes = [
@@ -224,6 +231,18 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate file upload
+    if (!formData.file) {
+      alert('Please upload a document file');
+      return;
+    }
+    
+    // Validate shipping address
+    if (!formData.shipping_address || !formData.recipient_name || !formData.phone_number) {
+      alert('Please fill in all shipping address fields');
+      return;
+    }
+    
     // For testing without database
     if (!profile?.id) {
       const newItem: VirtualMailboxItem = {
@@ -232,6 +251,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         document_type: formData.document_type,
         document_name: formData.document_name,
         description: formData.description,
+        file_url: `https://example.com/documents/${formData.file?.name}`,
+        file_size: formData.file?.size || 0,
         status: 'pending',
         tracking_number: `VM-2024-${String(items.length + 1).padStart(3, '0')}`,
         shipping_fee: formData.shipping_fee,
@@ -243,20 +264,50 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
             full_name: 'Test Client',
             email: 'client.georgia@consulting19.com'
           }
+        },
+        shipping_info: {
+          recipient_name: formData.recipient_name,
+          phone_number: formData.phone_number,
+          address: formData.shipping_address,
+          country: formData.country,
+          city: formData.city,
+          postal_code: formData.postal_code
         }
       };
       
       setItems(prev => [newItem, ...prev]);
       resetForm();
-      alert('Document added to virtual mailbox successfully! (Test Mode)');
+      alert(`Document "${formData.document_name}" uploaded and added to virtual mailbox!\n\nFile: ${formData.file?.name}\nShipping to: ${formData.recipient_name}\nAddress: ${formData.shipping_address}\n\n(Test Mode - Real integration will upload to secure storage)`);
       return;
     }
     
     try {
+      // In real implementation, upload file to secure storage first
+      let fileUrl = null;
+      if (formData.file) {
+        // This would upload to Supabase Storage or similar
+        // const { data: uploadData, error: uploadError } = await supabase.storage
+        //   .from('documents')
+        //   .upload(`${profile?.id}/${Date.now()}-${formData.file.name}`, formData.file);
+        
+        // For now, simulate file URL
+        fileUrl = `https://example.com/documents/${formData.file.name}`;
+      }
+      
       const itemData = {
         ...formData,
         consultant_id: profile?.id,
-        status: 'pending'
+        status: 'pending',
+        file_url: fileUrl,
+        file_size: formData.file?.size || 0,
+        shipping_info: {
+          recipient_name: formData.recipient_name,
+          phone_number: formData.phone_number,
+          address: formData.shipping_address,
+          country: formData.country,
+          city: formData.city,
+          postal_code: formData.postal_code
+        }
       };
 
       const { error } = await supabase
@@ -334,7 +385,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       document_type: '',
       document_name: '',
       description: '',
-      shipping_fee: 25.00
+      shipping_fee: 25.00,
+      file: null,
+      shipping_address: '',
+      recipient_name: '',
+      phone_number: '',
+      country: '',
+      city: '',
+      postal_code: ''
     });
     setShowAddForm(false);
   };
@@ -625,8 +683,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                         <button
                           onClick={() => {
                             updateStatus(item.id, 'downloaded');
-                            // In real implementation, this would download the file
-                            window.open(item.file_url, '_blank');
+                            // Simulate file download
+                            const link = document.createElement('a');
+                            link.href = item.file_url;
+                            link.download = item.document_name;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            alert(`Document "${item.document_name}" downloaded successfully!`);
                           }}
                           className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
                         >
@@ -635,13 +699,17 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                         </button>
                       )}
                       
-                      {item.payment_status === 'paid' && !item.viewed_date && (
+                      {item.payment_status === 'paid' && item.file_url && !item.viewed_date && (
                         <button
-                          onClick={() => updateStatus(item.id, 'viewed')}
+                          onClick={() => {
+                            updateStatus(item.id, 'viewed');
+                            // Simulate document preview
+                            window.open(item.file_url, '_blank');
+                          }}
                           className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
                         >
                           <Eye className="h-4 w-4" />
-                          <span>View</span>
+                          <span>Preview</span>
                         </button>
                       )}
                     </>
@@ -733,6 +801,50 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                 />
               </div>
 
+              {/* File Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload Document File *
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setFormData(prev => ({ ...prev, file }));
+                    }}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label htmlFor="file-upload" className="cursor-pointer">
+                    <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">
+                      {formData.file ? formData.file.name : 'Click to upload document'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      PDF, DOC, DOCX, JPG, PNG (Max 10MB)
+                    </p>
+                  </label>
+                </div>
+                {formData.file && (
+                  <div className="mt-2 flex items-center justify-between bg-green-50 rounded-lg p-3 border border-green-200">
+                    <div className="flex items-center space-x-2">
+                      <FileText className="h-4 w-4 text-green-600" />
+                      <span className="text-sm text-green-800">{formData.file.name}</span>
+                      <span className="text-xs text-green-600">({(formData.file.size / 1024).toFixed(1)} KB)</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, file: null }))}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -745,6 +857,99 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Additional notes about this document..."
                 />
+              </div>
+
+              {/* Shipping Address Section */}
+              <div className="border-t border-gray-200 pt-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Recipient Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.recipient_name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, recipient_name: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Full name of recipient"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={formData.phone_number}
+                      onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="+1 234 567 8900"
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Address *
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={formData.shipping_address}
+                    onChange={(e) => setFormData(prev => ({ ...prev, shipping_address: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Street address, apartment/suite number, city, state/province, postal code, country"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Country *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.country}
+                      onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Country"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      City *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.city}
+                      onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="City"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Postal Code *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.postal_code}
+                      onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Postal/ZIP code"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Shipping Fee */}
@@ -774,10 +979,11 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                  disabled={!formData.file || !formData.document_name || !formData.recipient_name || !formData.shipping_address}
+                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save className="h-5 w-5" />
-                  <span>Add to Mailbox</span>
+                  <Upload className="h-5 w-5" />
+                  <span>Upload & Send to Client</span>
                 </button>
               </div>
             </form>
