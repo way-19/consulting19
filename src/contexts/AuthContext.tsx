@@ -52,7 +52,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    let mounted = true;
+    let isMounted = true;
+    let authSubscription: any = null;
 
     const initializeAuth = async () => {
       try {
@@ -60,13 +61,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (mounted) {
+        if (isMounted) {
           if (session?.user) {
             console.log('👤 Session found:', session.user.email);
             setUser(session.user);
             
             const userProfile = await fetchProfile(session.user.id);
-            if (mounted && userProfile) {
+            if (isMounted && userProfile) {
               setProfile(userProfile);
             }
           } else {
@@ -76,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error('💥 Auth initialization error:', error);
-        if (mounted) {
+        if (isMounted) {
           setLoading(false);
         }
       }
@@ -85,9 +86,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    authSubscription = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
+        if (!isMounted) return;
         
         console.log('🔄 Auth state change:', event, session?.user?.email);
 
@@ -95,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(session.user);
           
           const userProfile = await fetchProfile(session.user.id);
-          if (mounted && userProfile) {
+          if (isMounted && userProfile) {
             setProfile(userProfile);
           }
         } else if (event === 'SIGNED_OUT') {
@@ -103,15 +104,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null);
         }
         
-        if (mounted) {
+        if (isMounted) {
           setLoading(false);
         }
       }
     );
 
     return () => {
-      mounted = false;
-      subscription.unsubscribe();
+      isMounted = false;
+      if (authSubscription) {
+        authSubscription.data.subscription.unsubscribe();
+      }
     };
   }, []);
 
