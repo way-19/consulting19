@@ -285,8 +285,9 @@
 // export default SignupPage
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Globe, Mail, Lock, User, AlertCircle, Eye, EyeOff, Building } from 'lucide-react'
+import { Globe, Mail, Lock, User, AlertCircle, Eye, EyeOff, MapPin } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { countries } from '../data/countries'
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -294,8 +295,7 @@ const SignupPage = () => {
     password: '',
     confirmPassword: '',
     fullName: '',
-    role: 'client' as 'admin' | 'consultant' | 'client',
-    country: 'Georgia'
+    selectedCountry: 'georgia'
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -330,12 +330,15 @@ const SignupPage = () => {
         setError(error.message)
       } else {
         if (data.user) {
+          // Find the selected country
+          const selectedCountry = countries.find(c => c.slug === formData.selectedCountry)
+          
           const { error: profileError } = await supabase
             .from('profiles')
             .update({
-              role: formData.role,
+              role: 'client',
               full_name: formData.fullName,
-              country: formData.role === 'consultant' ? formData.country : undefined,
+              country: selectedCountry?.name,
             })
             .eq('auth_user_id', data.user.id)
 
@@ -345,7 +348,7 @@ const SignupPage = () => {
         }
         navigate('/login', {
           state: {
-            message: 'Account created successfully! Please sign in.'
+            message: `Account created successfully! You will be connected with our ${countries.find(c => c.slug === formData.selectedCountry)?.name} consultant.`
           }
         })
       }
@@ -381,8 +384,8 @@ const SignupPage = () => {
             />
             <Globe className="h-20 w-40 text-purple-600 hidden" />
           </Link>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
-          <p className="text-gray-600">Join our global business consulting platform</p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Start Your Business Journey</h2>
+          <p className="text-gray-600">Get expert consulting for your international business</p>
         </div>
 
         {/* Signup Form */}
@@ -435,45 +438,30 @@ const SignupPage = () => {
             </div>
 
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
-                Role
+              <label htmlFor="selectedCountry" className="block text-sm font-medium text-gray-700 mb-2">
+                Which country do you need consulting for? *
               </label>
               <div className="relative">
-                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
+                  id="selectedCountry"
+                  name="selectedCountry"
+                  required
+                  value={formData.selectedCountry}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors appearance-none bg-white"
                 >
-                  <option value="admin">Admin</option>
-                  <option value="consultant">Consultant</option>
-                  <option value="client">Client</option>
+                  {countries.map((country) => (
+                    <option key={country.slug} value={country.slug}>
+                      {country.flag} {country.name}
+                    </option>
+                  ))}
                 </select>
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                You will be connected with our expert consultant for this country
+              </p>
             </div>
-
-            {formData.role === 'consultant' && (
-              <div>
-                <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
-                  Country Specialization
-                </label>
-                <select
-                  id="country"
-                  name="country"
-                  required
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors appearance-none bg-white"
-                >
-                  <option value="Georgia">🇬🇪 Georgia</option>
-                  <option value="USA">🇺🇸 United States</option>
-                  <option value="Estonia">🇪🇪 Estonia</option>
-                  <option value="UAE">🇦🇪 UAE</option>
-                </select>
-              </div>
-            )}
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
@@ -529,6 +517,22 @@ const SignupPage = () => {
               </div>
             </div>
 
+            {/* Selected Country Info */}
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <div className="flex items-center space-x-3">
+                <span className="text-2xl">
+                  {countries.find(c => c.slug === formData.selectedCountry)?.flag}
+                </span>
+                <div>
+                  <h4 className="font-medium text-blue-900">
+                    {countries.find(c => c.slug === formData.selectedCountry)?.name} Consulting
+                  </h4>
+                  <p className="text-sm text-blue-700">
+                    You will be assigned to our expert {countries.find(c => c.slug === formData.selectedCountry)?.name} consultant
+                  </p>
+                </div>
+              </div>
+            </div>
             <div className="flex items-center">
               <input
                 id="terms"
@@ -554,7 +558,7 @@ const SignupPage = () => {
               disabled={loading}
               className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? 'Creating Account...' : 'Start Business Journey'}
             </button>
           </form>
 
