@@ -920,7 +920,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div className="space-y-3">
                     <div>
                       <span className="text-sm text-gray-600">Status:</span>
-                      <span className={\`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
+                      <span className={'ml-2 px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(selectedItem.status)}>
                         {selectedItem.status.toUpperCase()}
                       </span>
                     </div>
