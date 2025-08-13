@@ -1,3 +1,4 @@
+// /src/pages/ClientAccountingDashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -21,17 +22,7 @@ import {
   Globe2,
   Star,
   Package,
-  Settings,
-  Mail,
-  Truck
-  Mail,
-  Truck
-  Mail,
-  Truck
-  Mail,
-  Truck
-  Mail,
-  Truck
+  CreditCard,
   Settings,
   Mail,
   Truck,
@@ -108,91 +99,6 @@ interface VirtualMailboxItem {
   downloaded_date?: string;
   created_at: string;
 }
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
 
 const ClientAccountingDashboard: React.FC = () => {
   const { user, profile } = useAuth();
@@ -203,11 +109,6 @@ const ClientAccountingDashboard: React.FC = () => {
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<
@@ -216,56 +117,6 @@ const ClientAccountingDashboard: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
 
   const [showShippingModal, setShowShippingModal] = useState(false);
   const [selectedMailboxItem, setSelectedMailboxItem] =
@@ -317,8 +168,7 @@ const ClientAccountingDashboard: React.FC = () => {
   };
 
   const fetchVirtualMailboxItems = async () => {
-    // TODO: Supabase'den gerçek verileri çek
-    // Şimdilik boş bırakıyoruz / mock ile çalışabilirsiniz.
+    // TODO: Supabase'den gerçek verileri çekin
   };
 
   console.log('🔵 ClientDashboard render:', {
@@ -328,7 +178,7 @@ const ClientAccountingDashboard: React.FC = () => {
     profileRole: profile?.role,
   });
 
-  // Mock data for demo
+  // Mock data
   useEffect(() => {
     const mockProfile: ClientAccountingProfile = {
       id: 'mock-client-1',
@@ -542,10 +392,9 @@ const ClientAccountingDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Enhanced Header */}
+      {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          {/* Logo Section */}
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img
@@ -564,7 +413,7 @@ const ClientAccountingDashboard: React.FC = () => {
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2 rounded-full bg-green-100 px-4 py-2 text-green-800">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
+                <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
                 <span className="text-sm font-medium">Active</span>
               </div>
               <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-800">
@@ -573,7 +422,6 @@ const ClientAccountingDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Welcome Section */}
           <div className="flex items-center justify-between">
             <div>
               <h2 className="mb-2 text-2xl font-bold text-gray-900">
@@ -582,9 +430,7 @@ const ClientAccountingDashboard: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <Users className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm text-gray-600">
-                    Consultant: Nino Kvaratskhelia
-                  </span>
+                  <span className="text-sm text-gray-600">Consultant: Nino Kvaratskhelia</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Star className="h-4 w-4 text-yellow-500" />
@@ -596,7 +442,7 @@ const ClientAccountingDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Navigation Menu */}
+      {/* Nav */}
       <div className="border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8 py-4">
@@ -660,7 +506,7 @@ const ClientAccountingDashboard: React.FC = () => {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Stats Cards */}
+        {/* Stats */}
         <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <div
@@ -692,18 +538,14 @@ const ClientAccountingDashboard: React.FC = () => {
           ))}
         </div>
 
-        {/* Company Info Card */}
+        {/* Company Info */}
         {accountingProfile && (
           <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">
-              Company Information
-            </h2>
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">Company Information</h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
               <div>
                 <p className="text-sm text-gray-600">Company Name</p>
-                <p className="font-medium text-gray-900">
-                  {accountingProfile.company_name}
-                </p>
+                <p className="font-medium text-gray-900">{accountingProfile.company_name}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Business Type</p>
@@ -713,15 +555,11 @@ const ClientAccountingDashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Service Package</p>
-                <p className="font-medium text-gray-900">
-                  {accountingProfile.service_package}
-                </p>
+                <p className="font-medium text-gray-900">{accountingProfile.service_package}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Monthly Fee</p>
-                <p className="font-medium text-gray-900">
-                  ${accountingProfile.monthly_fee}
-                </p>
+                <p className="font-medium text-gray-900">${accountingProfile.monthly_fee}</p>
               </div>
             </div>
             {accountingProfile.next_deadline && (
@@ -729,8 +567,7 @@ const ClientAccountingDashboard: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-5 w-5 text-orange-600" />
                   <span className="font-medium text-orange-800">
-                    Next Deadline:{' '}
-                    {new Date(accountingProfile.next_deadline).toLocaleDateString()}
+                    Next Deadline: {new Date(accountingProfile.next_deadline).toLocaleDateString()}
                   </span>
                 </div>
               </div>
@@ -738,9 +575,9 @@ const ClientAccountingDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Main Content Grid */}
+        {/* Main Grid */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {/* Tab Content */}
+          {/* Left */}
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="border-b border-gray-200 px-6 py-4">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -757,9 +594,7 @@ const ClientAccountingDashboard: React.FC = () => {
                 <div className="space-y-6">
                   {/* Recent Documents */}
                   <div>
-                    <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                      Recent Documents
-                    </h3>
+                    <h3 className="mb-4 text-lg font-semibold text-gray-900">Recent Documents</h3>
                     <div className="space-y-3">
                       {documents.slice(0, 3).map((document) => (
                         <div
@@ -767,30 +602,18 @@ const ClientAccountingDashboard: React.FC = () => {
                           className="flex items-center justify-between rounded-lg bg-gray-50 p-4"
                         >
                           <div className="flex items-center space-x-3">
-                            <div
-                              className={`h-3 w-3 rounded-full ${getPriorityColor(
-                                document.priority,
-                              )}`}
-                            ></div>
+                            <div className={`h-3 w-3 rounded-full ${getPriorityColor(document.priority)}`} />
                             <div>
-                              <p className="font-medium text-gray-900">
-                                {document.title}
-                              </p>
+                              <p className="font-medium text-gray-900">{document.title}</p>
                               <p className="text-sm text-gray-600">
                                 Due:{' '}
                                 {document.due_date
-                                  ? new Date(
-                                      document.due_date,
-                                    ).toLocaleDateString()
+                                  ? new Date(document.due_date).toLocaleDateString()
                                   : 'N/A'}
                               </p>
                             </div>
                           </div>
-                          <span
-                            className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
-                              document.status,
-                            )}`}
-                          >
+                          <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(document.status)}`}>
                             {document.status.toUpperCase()}
                           </span>
                         </div>
@@ -800,9 +623,7 @@ const ClientAccountingDashboard: React.FC = () => {
 
                   {/* Recent Invoices */}
                   <div>
-                    <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                      Recent Invoices
-                    </h3>
+                    <h3 className="mb-4 text-lg font-semibold text-gray-900">Recent Invoices</h3>
                     <div className="space-y-3">
                       {invoices.slice(0, 2).map((invoice) => (
                         <div
@@ -810,28 +631,18 @@ const ClientAccountingDashboard: React.FC = () => {
                           className="flex items-center justify-between rounded-lg bg-gray-50 p-4"
                         >
                           <div>
-                            <p className="font-medium text-gray-900">
-                              {invoice.invoice_number}
-                            </p>
+                            <p className="font-medium text-gray-900">{invoice.invoice_number}</p>
                             <p className="text-sm text-gray-600">
                               {invoice.period_start && invoice.period_end
-                                ? `${new Date(
-                                    invoice.period_start,
-                                  ).toLocaleDateString()} - ${new Date(
+                                ? `${new Date(invoice.period_start).toLocaleDateString()} - ${new Date(
                                     invoice.period_end,
                                   ).toLocaleDateString()}`
                                 : 'One-time invoice'}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="font-medium text-gray-900">
-                              ${invoice.amount}
-                            </p>
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
-                                invoice.status,
-                              )}`}
-                            >
+                            <p className="font-medium text-gray-900">${invoice.amount}</p>
+                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(invoice.status)}`}>
                               {invoice.status.toUpperCase()}
                             </span>
                           </div>
@@ -849,47 +660,30 @@ const ClientAccountingDashboard: React.FC = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="mb-2 flex items-center space-x-4">
-                            <div
-                              className={`h-3 w-3 rounded-full ${getPriorityColor(
-                                document.priority,
-                              )}`}
-                            ></div>
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {document.title}
-                            </h3>
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
-                                document.status,
-                              )}`}
-                            >
+                            <div className={`h-3 w-3 rounded-full ${getPriorityColor(document.priority)}`} />
+                            <h3 className="text-lg font-semibold text-gray-900">{document.title}</h3>
+                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(document.status)}`}>
                               {document.status.toUpperCase()}
                             </span>
                           </div>
 
                           <div className="mb-4 grid grid-cols-1 gap-4 text-sm text-gray-600 md:grid-cols-3">
                             <div>
-                              <span className="font-medium">Type:</span>{' '}
-                              {document.document_type}
+                              <span className="font-medium">Type:</span> {document.document_type}
                             </div>
                             <div>
-                              <span className="font-medium">Category:</span>{' '}
-                              {document.category}
+                              <span className="font-medium">Category:</span> {document.category}
                             </div>
                             <div>
                               <span className="font-medium">Due Date:</span>{' '}
                               <span
                                 className={
-                                  document.due_date &&
-                                  new Date(document.due_date) < new Date()
+                                  document.due_date && new Date(document.due_date) < new Date()
                                     ? 'font-medium text-red-600'
                                     : ''
                                 }
                               >
-                                {document.due_date
-                                  ? new Date(
-                                      document.due_date,
-                                    ).toLocaleDateString()
-                                  : 'N/A'}
+                                {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}
                               </span>
                             </div>
                           </div>
@@ -921,46 +715,31 @@ const ClientAccountingDashboard: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="mb-2 flex items-center space-x-4">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {invoice.invoice_number}
-                            </h3>
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
-                                invoice.status,
-                              )}`}
-                            >
+                            <h3 className="text-lg font-semibold text-gray-900">{invoice.invoice_number}</h3>
+                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(invoice.status)}`}>
                               {invoice.status.toUpperCase()}
                             </span>
                           </div>
 
                           <div className="grid grid-cols-1 gap-4 text-sm text-gray-600 md:grid-cols-4">
                             <div>
-                              <span className="font-medium">Amount:</span> $
-                              {invoice.amount} {invoice.currency}
+                              <span className="font-medium">Amount:</span> ${invoice.amount} {invoice.currency}
                             </div>
                             <div>
                               <span className="font-medium">Period:</span>{' '}
                               {invoice.period_start && invoice.period_end
-                                ? `${new Date(
-                                    invoice.period_start,
-                                  ).toLocaleDateString()} - ${new Date(
+                                ? `${new Date(invoice.period_start).toLocaleDateString()} - ${new Date(
                                     invoice.period_end,
                                   ).toLocaleDateString()}`
                                 : 'One-time'}
                             </div>
                             <div>
                               <span className="font-medium">Due Date:</span>{' '}
-                              {invoice.due_date
-                                ? new Date(
-                                    invoice.due_date,
-                                  ).toLocaleDateString()
-                                : 'N/A'}
+                              {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}
                             </div>
                             <div>
                               <span className="font-medium">Paid:</span>{' '}
-                              {invoice.paid_at
-                                ? new Date(invoice.paid_at).toLocaleDateString()
-                                : 'Not paid'}
+                              {invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString() : 'Not paid'}
                             </div>
                           </div>
                         </div>
@@ -970,8 +749,7 @@ const ClientAccountingDashboard: React.FC = () => {
                             <Eye className="h-4 w-4" />
                             <span>View</span>
                           </button>
-                          {(invoice.status === 'sent' ||
-                            invoice.status === 'overdue') && (
+                          {(invoice.status === 'sent' || invoice.status === 'overdue') && (
                             <button className="rounded-lg bg-green-50 px-4 py-2 font-medium text-green-600 transition-colors hover:bg-green-100">
                               Pay Now
                             </button>
@@ -988,11 +766,7 @@ const ClientAccountingDashboard: React.FC = () => {
                   {messages.map((message) => (
                     <div
                       key={message.id}
-                      className={`rounded-lg p-6 ${
-                        message.is_read
-                          ? 'bg-gray-50'
-                          : 'border border-blue-200 bg-blue-50'
-                      }`}
+                      className={`rounded-lg p-6 ${message.is_read ? 'bg-gray-50' : 'border border-blue-200 bg-blue-50'}`}
                     >
                       <div className="mb-3 flex items-start justify-between">
                         <div className="flex items-center space-x-3">
@@ -1000,25 +774,19 @@ const ClientAccountingDashboard: React.FC = () => {
                             <MessageSquare className="h-4 w-4 text-purple-600" />
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">
-                              {message.sender?.full_name}
-                            </p>
+                            <p className="font-medium text-gray-900">{message.sender?.full_name}</p>
                             <p className="text-sm text-gray-600">
                               {new Date(message.created_at).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
                         {!message.is_read && (
-                          <span className="rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">
-                            New
-                          </span>
+                          <span className="rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">New</span>
                         )}
                       </div>
 
                       {message.subject && (
-                        <h4 className="mb-2 font-medium text-gray-900">
-                          {message.subject}
-                        </h4>
+                        <h4 className="mb-2 font-medium text-gray-900">{message.subject}</h4>
                       )}
 
                       <p className="text-gray-700">{message.message}</p>
@@ -1049,13 +817,11 @@ const ClientAccountingDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Sidebar */}
+          {/* Right */}
           <div className="space-y-6">
             {/* Debug Info */}
             <div className="rounded-xl border border-blue-200 bg-blue-50 p-6">
-              <h3 className="mb-4 text-lg font-semibold text-blue-900">
-                System Status
-              </h3>
+              <h3 className="mb-4 text-lg font-semibold text-blue-900">System Status</h3>
               <div className="space-y-2 text-sm">
                 <div>
                   <span className="font-medium text-blue-700">User:</span>
@@ -1063,36 +829,26 @@ const ClientAccountingDashboard: React.FC = () => {
                 </div>
                 <div>
                   <span className="font-medium text-blue-700">Profile:</span>
-                  <p className="text-blue-600">
-                    {profile ? `${profile.email} (${profile.role})` : 'No profile'}
-                  </p>
+                  <p className="text-blue-600">{profile ? `${profile.email} (${profile.role})` : 'No profile'}</p>
                 </div>
                 <div>
                   <span className="font-medium text-blue-700">Company:</span>
-                  <p className="text-blue-600">
-                    {accountingProfile?.company_name || 'Not set'}
-                  </p>
+                  <p className="text-blue-600">{accountingProfile?.company_name || 'Not set'}</p>
                 </div>
               </div>
             </div>
 
-            {/* Consultant Info */}
+            {/* Consultant */}
             {accountingProfile?.consultant && (
               <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                  Your Consultant
-                </h3>
+                <h3 className="mb-4 text-lg font-semibold text-gray-900">Your Consultant</h3>
                 <div className="mb-4 flex items-center space-x-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-lg font-bold text-white">
                     {accountingProfile.consultant.full_name[0]}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">
-                      {accountingProfile.consultant.full_name}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {accountingProfile.consultant.email}
-                    </p>
+                    <p className="font-medium text-gray-900">{accountingProfile.consultant.full_name}</p>
+                    <p className="text-sm text-gray-600">{accountingProfile.consultant.email}</p>
                     <div className="mt-1 flex items-center space-x-1">
                       <Star className="h-3 w-3 fill-current text-yellow-500" />
                       <span className="text-xs text-gray-500">4.9 Rating</span>
@@ -1114,36 +870,12 @@ const ClientAccountingDashboard: React.FC = () => {
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    {
-                      name: 'Upload Document',
-                      icon: Upload,
-                      color: 'bg-green-500 hover:bg-green-600',
-                    },
-                    {
-                      name: 'Pay Invoice',
-                      icon: CreditCard,
-                      color: 'bg-blue-500 hover:bg-blue-600',
-                    },
-                    {
-                      name: 'Message Consultant',
-                      icon: MessageSquare,
-                      color: 'bg-purple-500 hover:bg-purple-600',
-                    },
-                    {
-                      name: 'View Reports',
-                      icon: FileText,
-                      color: 'bg-indigo-500 hover:bg-indigo-600',
-                    },
-                    {
-                      name: 'Download Files',
-                      icon: Download,
-                      color: 'bg-teal-500 hover:bg-teal-600',
-                    },
-                    {
-                      name: 'Account Settings',
-                      icon: Settings,
-                      color: 'bg-gray-500 hover:bg-gray-600',
-                    },
+                    { name: 'Upload Document', icon: Upload, color: 'bg-green-500 hover:bg-green-600' },
+                    { name: 'Pay Invoice', icon: CreditCard, color: 'bg-blue-500 hover:bg-blue-600' },
+                    { name: 'Message Consultant', icon: MessageSquare, color: 'bg-purple-500 hover:bg-purple-600' },
+                    { name: 'View Reports', icon: FileText, color: 'bg-indigo-500 hover:bg-indigo-600' },
+                    { name: 'Download Files', icon: Download, color: 'bg-teal-500 hover:bg-teal-600' },
+                    { name: 'Account Settings', icon: Settings, color: 'bg-gray-500 hover:bg-gray-600' },
                   ].map((action, index) => (
                     <button
                       key={index}
@@ -1200,30 +932,17 @@ const ClientAccountingDashboard: React.FC = () => {
                   onClick={() => setShowShippingModal(false)}
                   className="text-gray-400 transition-colors hover:text-gray-600"
                 >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
 
-              {/* Document Info */}
               <div className="mb-6 rounded-lg bg-gray-50 p-4">
                 <h4 className="mb-2 font-medium text-gray-900">
                   {selectedMailboxItem.document_name}
                 </h4>
-                <p className="text-sm text-gray-600">
-                  {selectedMailboxItem.description}
-                </p>
+                <p className="text-sm text-gray-600">{selectedMailboxItem.description}</p>
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-sm text-gray-500">Document Type:</span>
                   <span className="text-sm font-medium text-gray-900">
@@ -1232,11 +951,8 @@ const ClientAccountingDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Shipping Options */}
               <div className="mb-6">
-                <label className="mb-3 block text-sm font-medium text-gray-700">
-                  Shipping Option
-                </label>
+                <label className="mb-3 block text-sm font-medium text-gray-700">Shipping Option</label>
                 <div className="space-y-3">
                   <label className="flex cursor-pointer items-center rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50">
                     <input
@@ -1244,16 +960,12 @@ const ClientAccountingDashboard: React.FC = () => {
                       name="shipping"
                       value="standard"
                       checked={shippingOption === 'standard'}
-                      onChange={(e) =>
-                        setShippingOption(e.target.value as 'standard' | 'express')
-                      }
+                      onChange={(e) => setShippingOption(e.target.value as 'standard' | 'express')}
                       className="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-500"
                     />
                     <div className="ml-3 flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900">
-                          Standard Shipping
-                        </span>
+                        <span className="font-medium text-gray-900">Standard Shipping</span>
                         <span className="font-bold text-gray-900">$15</span>
                       </div>
                       <p className="text-sm text-gray-600">5-7 business days</p>
@@ -1265,16 +977,12 @@ const ClientAccountingDashboard: React.FC = () => {
                       name="shipping"
                       value="express"
                       checked={shippingOption === 'express'}
-                      onChange={(e) =>
-                        setShippingOption(e.target.value as 'standard' | 'express')
-                      }
+                      onChange={(e) => setShippingOption(e.target.value as 'standard' | 'express')}
                       className="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-500"
                     />
                     <div className="ml-3 flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900">
-                          Express Shipping
-                        </span>
+                        <span className="font-medium text-gray-900">Express Shipping</span>
                         <span className="font-bold text-gray-900">$25</span>
                       </div>
                       <p className="text-sm text-gray-600">2-3 business days</p>
@@ -1283,34 +991,21 @@ const ClientAccountingDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Shipping Address */}
               <div>
-                <label className="mb-3 block text-sm font-medium text-gray-700">
-                  Shipping Address
-                </label>
+                <label className="mb-3 block text-sm font-medium text-gray-700">Shipping Address</label>
                 <div className="space-y-3">
                   <input
                     type="text"
                     placeholder="Full Name"
                     value={shippingAddress.fullName}
-                    onChange={(e) =>
-                      setShippingAddress((prev) => ({
-                        ...prev,
-                        fullName: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setShippingAddress((p) => ({ ...p, fullName: e.target.value }))}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
                   />
                   <input
                     type="text"
                     placeholder="Street Address"
                     value={shippingAddress.address}
-                    onChange={(e) =>
-                      setShippingAddress((prev) => ({
-                        ...prev,
-                        address: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setShippingAddress((p) => ({ ...p, address: e.target.value }))}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
                   />
                   <div className="grid grid-cols-2 gap-3">
@@ -1318,24 +1013,14 @@ const ClientAccountingDashboard: React.FC = () => {
                       type="text"
                       placeholder="City"
                       value={shippingAddress.city}
-                      onChange={(e) =>
-                        setShippingAddress((prev) => ({
-                          ...prev,
-                          city: e.target.value,
-                        }))
-                      }
+                      onChange={(e) => setShippingAddress((p) => ({ ...p, city: e.target.value }))}
                       className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
                     />
                     <input
                       type="text"
                       placeholder="Postal Code"
                       value={shippingAddress.postalCode}
-                      onChange={(e) =>
-                        setShippingAddress((prev) => ({
-                          ...prev,
-                          postalCode: e.target.value,
-                        }))
-                      }
+                      onChange={(e) => setShippingAddress((p) => ({ ...p, postalCode: e.target.value }))}
                       className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
@@ -1343,18 +1028,12 @@ const ClientAccountingDashboard: React.FC = () => {
                     type="text"
                     placeholder="Country"
                     value={shippingAddress.country}
-                    onChange={(e) =>
-                      setShippingAddress((prev) => ({
-                        ...prev,
-                        country: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setShippingAddress((p) => ({ ...p, country: e.target.value }))}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
               </div>
 
-              {/* Payment Summary */}
               <div className="rounded-lg bg-gray-50 p-4">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-gray-700">Shipping Fee:</span>
@@ -1370,7 +1049,6 @@ const ClientAccountingDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="flex items-center space-x-4 border-t border-gray-200 pt-4">
                 <button
                   onClick={() => setShowShippingModal(false)}
@@ -1397,9 +1075,7 @@ const ClientAccountingDashboard: React.FC = () => {
                   ) : (
                     <>
                       <CreditCard className="h-5 w-5" />
-                      <span>
-                        Pay ${shippingOption === 'standard' ? '15' : '25'}
-                      </span>
+                      <span>Pay ${shippingOption === 'standard' ? '15' : '25'}</span>
                     </>
                   )}
                 </button>
