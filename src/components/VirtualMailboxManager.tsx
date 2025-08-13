@@ -538,6 +538,26 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               </select>
             )}
           </div>
+              {/* Shipping Fee */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Shipping Fee (USD) *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                  value={formData.shipping_fee}
+                  onChange={(e) => setFormData(prev => ({ ...prev, shipping_fee: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="25.00"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Standard fee: $10 | Express/Large documents: Higher fee based on size
+                </p>
+              </div>
+
         </div>
       </div>
 
@@ -840,7 +860,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                 
                 <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                   <p className="text-sm text-blue-800">
-                    <strong>Note:</strong> Client will provide shipping address when requesting delivery.
+                    <strong>Process:</strong> Client will see document in their panel, enter shipping address, 
+                    and pay the shipping fee. You will be notified when payment is completed.
                   </p>
                 </div>
               </div>
