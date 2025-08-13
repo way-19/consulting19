@@ -63,17 +63,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [paymentFilter, setPaymentFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingType, setShippingType] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    recipient_name: '',
-    address_line1: '',
-    address_line2: '',
-    city: '',
-    postal_code: '',
-    country: ''
-  });
   const [showItemDetail, setShowItemDetail] = useState(false);
   const [showShippingModal, setShowShippingModal] = useState(false);
   const [shippingData, setShippingData] = useState({
@@ -941,14 +932,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div className="space-y-3">
                     <div>
                       <span className="text-sm text-gray-600">Status:</span>
-                      <span className={'ml-2 px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(selectedItem.status)}>
+      {showShippingModal && selectedItem && (
                         {selectedItem.status.toUpperCase()}
                       </span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Shipping Fee:</span>
+                <h2 className="text-xl font-bold text-gray-900">Ship Document to Address</h2>
                       <p className="font-medium">${selectedItem.shipping_fee}</p>
-                    </div>
+                  onClick={() => setShowShippingModal(false)}
                     <div>
                       <span className="text-sm text-gray-600">Payment Status:</span>
                       <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(selectedItem.payment_status)}`}>
@@ -957,12 +948,63 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                     </div>
                   </div>
                 </div>
+              {/* Document Info */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h3 className="font-medium text-blue-900 mb-2">Document: {selectedItem.document_name}</h3>
+                <p className="text-sm text-blue-700">This document is available for digital download. Physical shipping is optional.</p>
               </div>
 
-              {/* Timeline */}
+              {/* Shipping Options */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Timeline</h3>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Shipping Option *
+                </label>
                 <div className="space-y-3">
+                  <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="shippingType"
+                      value="standard"
+                      checked={shippingType === 'standard'}
+                      onChange={(e) => setShippingType(e.target.value as 'standard' | 'express')}
+                      className="text-purple-600"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Standard Delivery - $15</div>
+                      <div className="text-sm text-gray-600">5-7 business days</div>
+                    </div>
+                  </label>
+                  <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="shippingType"
+                      value="express"
+                      checked={shippingType === 'express'}
+                      onChange={(e) => setShippingType(e.target.value as 'standard' | 'express')}
+                      className="text-purple-600"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Express Delivery - $25</div>
+                      <div className="text-sm text-gray-600">2-3 business days</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              </div>
+
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Delivery Address *
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Timeline</h3>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    placeholder="Recipient Name"
+                    value={shippingAddress.recipient_name}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, recipient_name: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    required
+                  />
                   <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                     <Clock className="h-5 w-5 text-gray-500" />
                     <div>
@@ -1137,25 +1179,25 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       Address Line 2
                     </label>
                     <input
-                      type="text"
+                    placeholder="Address Line 1"
+                    value={shippingAddress.address_line1}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line1: e.target.value }))}
                       value={shippingData.address_line2}
                       onChange={(e) => setShippingData(prev => ({ ...prev, address_line2: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       placeholder="Apartment, suite, etc. (optional)"
                     />
-                  </div>
+                    placeholder="Address Line 2 (Optional)"
+                    value={shippingAddress.address_line2}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line2: e.target.value }))}
                   
-                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      City *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={shippingData.city}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       onChange={(e) => setShippingData(prev => ({ ...prev, city: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       placeholder="City"
+                      value={shippingAddress.city}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
                     />
                   </div>
                   
@@ -1284,6 +1326,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                         type="text"
                         placeholder="1234 1234 1234 1234"
                         className="w-full border-0 outline-none text-gray-900"
+                      value={shippingAddress.postal_code}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
                         disabled
                       />
                     </div>
@@ -1291,6 +1335,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       <div className="border border-gray-300 rounded-lg p-3 bg-white">
                         <input
                           type="text"
+                    value={shippingAddress.country}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, country: e.target.value }))}
                           placeholder="MM / YY"
                           className="w-full border-0 outline-none text-gray-900"
                           disabled
@@ -1299,7 +1345,15 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       <div className="border border-gray-300 rounded-lg p-3 bg-white">
                         <input
                           type="text"
-                          placeholder="CVC"
+                <h4 className="font-medium text-gray-900 mb-3">Shipping Payment</h4>
+                <div className="mb-4">
+                  <div className="text-2xl font-bold text-gray-900">
+                    ${shippingType === 'standard' ? '15' : '25'} USD
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {shippingType === 'standard' ? 'Standard Delivery (5-7 days)' : 'Express Delivery (2-3 days)'}
+                  </div>
+                </div>
                           className="w-full border-0 outline-none text-gray-900"
                           disabled
                         />
@@ -1330,7 +1384,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   Cancel
                 </button>
                 <button
-                  onClick={processStripePayment}
+                  onClick={processShipping}
                   disabled={processingPayment || !shippingData.recipient_name || !shippingData.address_line1 || !shippingData.city || !shippingData.state || !shippingData.postal_code || !shippingData.country}
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
@@ -1344,7 +1398,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       <CreditCard className="h-5 w-5" />
                       <span>Pay ${SHIPPING_PRICES[shippingData.delivery_type]} & Ship</span>
                     </>
-                  )}
+                  <span>Pay ${shippingType === 'standard' ? '15' : '25'}</span>
                 </button>
               </div>
             </div>
