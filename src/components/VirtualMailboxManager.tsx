@@ -660,7 +660,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                             link.click();
                             document.body.removeChild(link);
                             const name = String(item?.document_name ?? 'Unnamed');
-                             alert(\`Document "${name}\" downloaded successfully!`);
+                             alert(`Document "${name}" downloaded successfully!`);
                           }}
                           className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
                         >
@@ -920,7 +920,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div className="space-y-3">
                     <div>
                       <span className="text-sm text-gray-600">Status:</span>
-                      <span className={\`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
+                      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
                         {selectedItem.status.toUpperCase()}
                       </span>
                     </div>
