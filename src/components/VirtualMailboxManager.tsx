@@ -690,7 +690,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
-                            alert(`Document "${item.document_name}" downloaded successfully!`);
+                            alert(`Document "${item.document_name}\" downloaded successfully!`);
                           }}
                           className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
                         >
@@ -979,11 +979,10 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                 </button>
                 <button
                   type="submit"
-                  disabled={!formData.file || !formData.document_name || !formData.recipient_name || !formData.shipping_address}
-                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
                 >
-                  <Upload className="h-5 w-5" />
-                  <span>Upload & Send to Client</span>
+                  <Save className="h-5 w-5" />
+                  <span>Add to Mailbox</span>
                 </button>
               </div>
             </form>
