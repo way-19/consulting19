@@ -77,6 +77,8 @@ const ConsultantDashboard = () => {
   const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
+  const [clientFilter, setClientFilter] = useState('all');
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [assignedClients, setAssignedClients] = useState<AssignedClient[]>([]);
   const [loadingClients, setLoadingClients] = useState(false);
