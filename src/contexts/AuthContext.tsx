@@ -33,11 +33,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchProfile = async (userId: string) => {
     try {
       console.log('🔍 Fetching profile for user:', userId);
-      console.log('📧 Attempting to fetch profile by email...');
       
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      console.log('🔍 Session check:', session ? `Found session for ${session.user.email}` : 'No session');
+      console.log('🔍 Session check:', session ? `Found session for ${session.user?.email}` : 'No session');
       
       if (sessionError) {
         console.error('❌ Session error:', sessionError);
@@ -50,22 +49,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       console.log('📧 User email from session:', session.user.email);
-      console.log('🔍 Querying profiles table...');
+      console.log('🔍 Querying profiles table by email...');
       
-      // Query profile by email
-      const { data: profile, error } = await supabase
+      // Try to query profile by email with detailed logging
+      console.log('🔍 About to execute Supabase query...');
+      const profileQuery = supabase
         .from('profiles')
         .select('*')
-        .eq('email', session.user.email)
-        .maybeSingle();
+        .eq('email', session.user.email);
+      
+      console.log('🔍 Query object created, executing...');
+      const { data: profile, error } = await profileQuery.maybeSingle();
       
       console.log('🔍 Profile query result:', { profile, error });
       
       if (error) {
         console.error('❌ Error fetching profile:', error);
+        console.error('❌ Error details:', error.message, error.code, error.details);
         
         // If no profile found, try to create one
-        if (error.code === 'PGRST116' || !profile) {
+        if (!profile) {
           console.log('📝 Profile not found, creating new profile...');
           
           const newProfile = {
@@ -83,12 +86,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .from('profiles')
             .insert([newProfile])
             .select()
-            .maybeSingle();
+            .single();
           
           console.log('📝 Profile creation result:', { createdProfile, createError });
           
           if (createError) {
             console.error('❌ Error creating profile:', createError.message);
+            console.error('❌ Create error details:', createError.code, createError.details);
             return null;
           }
           
@@ -101,6 +105,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (!profile) {
         console.error('❌ Profile is null but no error returned');
+        console.log('🔍 Attempting to create missing profile...');
+        
+        const newProfile = {
+          id: userId,
+          auth_user_id: userId,
+          email: session.user.email,
+          role: 'client' as const,
+          full_name: session.user.user_metadata?.full_name || null,
+          country: null
+        };
+        
+        console.log('📝 Creating profile with data:', newProfile);
+        
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert([newProfile])
+          .select()
+          .single();
+        
+        console.log('📝 Profile creation result:', { createdProfile, createError });
+        
+        if (createError) {
+          console.error('❌ Error creating profile:', createError.message);
+          return null;
+        }
+        
+        console.log('✅ Profile created successfully:', createdProfile);
+        return createdProfile;
         return null;
       }
       
@@ -114,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return profile;
     } catch (error) {
       console.error('💥 Unexpected error in fetchProfile:', error);
+      console.error('💥 Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       return null;
     }
   };
