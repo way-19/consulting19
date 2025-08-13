@@ -24,11 +24,11 @@ import {
   User,
   Mail,
   Phone,
-  MapPin
-} from 'lucide-react';
+  MapPin,
   Building,
-  Shield,
-  Mail
+  Shield
+} from 'lucide-react';
+
 interface AssignedClient {
   id: string;
   profile_id: string;
@@ -259,6 +259,77 @@ This is a sample report. In production, this would contain real data.
     } catch (error) {
       console.error('Error generating report:', error);
       alert('Failed to generate report');
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Yeni şifreler eşleşmiyor');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError('Yeni şifre en az 6 karakter olmalı');
+      return;
+    }
+
+    setPasswordLoading(true);
+
+    try {
+      // First verify current password by attempting to sign in
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: profile?.email || '',
+        password: currentPassword
+      });
+
+      if (verifyError) {
+        setPasswordError('Mevcut şifre yanlış');
+        setPasswordLoading(false);
+        return;
+      }
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (updateError) {
+        setPasswordError(updateError.message);
+      } else {
+        setPasswordSuccess('Şifre başarıyla değiştirildi!');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch (error) {
+      setPasswordError('Şifre değiştirme sırasında hata oluştu');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!profile?.email) {
+      setPasswordError('Email adresi bulunamadı');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(profile.email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (error) {
+        setPasswordError(error.message);
+      } else {
+        setPasswordSuccess('Şifre sıfırlama emaili gönderildi! Email kutunuzu kontrol edin.');
+      }
+    } catch (error) {
+      setPasswordError('Email gönderme sırasında hata oluştu');
     }
   };
 
