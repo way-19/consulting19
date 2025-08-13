@@ -34,19 +34,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🔍 Fetching profile for user:', userId);
       
-      const { data, error } = await supabase
+      // Try both auth_user_id and id columns
+      const { data: profileByAuthId, error: authIdError } = await supabase
         .from('profiles')
         .select('*')
         .eq('auth_user_id', userId)
-        .single();
+        .maybeSingle();
       
-      if (error) {
-        console.error('❌ Profile fetch error:', error.message);
-        return null;
+      if (profileByAuthId) {
+        console.log('✅ Profile found by auth_user_id:', profileByAuthId);
+        return profileByAuthId;
       }
 
-      console.log('✅ Profile fetched:', data);
-      return data;
+      console.log('⚠️ Profile not found by auth_user_id, trying by id...');
+      
+      const { data: profileById, error: idError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (profileById) {
+        console.log('✅ Profile found by id:', profileById);
+        return profileById;
+      }
+
+      console.error('❌ Profile not found by either method');
+      console.error('Auth ID error:', authIdError);
+      console.error('ID error:', idError);
+      
+      return null;
     } catch (error) {
       console.error('💥 Profile fetch failed:', error);
       return null;
@@ -55,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const navigateBasedOnRole = (userProfile: Profile) => {
     console.log('🧭 Navigating based on role:', userProfile.role);
+    
     switch (userProfile.role) {
       case 'admin':
         console.log('➡️ Navigating to admin dashboard');
@@ -69,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         navigate('/client-accounting');
         break;
       default:
-        console.log('➡️ Navigating to home');
+        console.log('➡️ Navigating to home (unknown role)');
         navigate('/');
     }
   };
@@ -89,6 +107,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (userProfile) {
             setProfile(userProfile);
             navigateBasedOnRole(userProfile);
+          } else {
+            console.error('❌ Could not load profile, staying on current page');
           }
         }
       } catch (error) {
@@ -111,12 +131,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (userProfile) {
             setProfile(userProfile);
             navigateBasedOnRole(userProfile);
+          } else {
+            console.error('❌ Could not load profile after sign in');
           }
           setLoading(false);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
           setLoading(false);
+          navigate('/');
         }
       }
     );
