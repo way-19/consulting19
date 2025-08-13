@@ -104,11 +104,11 @@ const CustomersManagement = () => {
     if (profile?.id) {
       fetchClients();
     }
-  }, [profile?.id]);
+  }, [profile]);
 
   useEffect(() => {
     applyFiltersAndSort();
-  }, [clients.length, searchTerm, statusFilter, priorityFilter, serviceFilter, sortBy, sortOrder]);
+  }, [clients, searchTerm, statusFilter, priorityFilter, serviceFilter, sortBy, sortOrder]);
 
   const fetchClients = async () => {
     try {
@@ -168,20 +168,6 @@ const CustomersManagement = () => {
   };
 
   const calculateStats = (clientData: AssignedClient[]) => {
-    if (!clientData || clientData.length === 0) {
-      setStats({
-        total: 0,
-        new: 0,
-        in_progress: 0,
-        completed: 0,
-        on_hold: 0,
-        high_priority: 0,
-        total_revenue: 0,
-        avg_satisfaction: 0
-      });
-      return;
-    }
-    
     const stats: ClientStats = {
       total: clientData.length,
       new: clientData.filter(c => c.status === 'new').length,
@@ -198,12 +184,7 @@ const CustomersManagement = () => {
   };
 
   const applyFiltersAndSort = () => {
-    if (clients.length === 0) {
-      setFilteredClients([]);
-      return;
-    }
-    
-    let filtered = clients.slice();
+    let filtered = [...clients];
 
     // Apply search filter
     if (searchTerm) {
@@ -268,9 +249,7 @@ const CustomersManagement = () => {
     });
 
     setFilteredClients(filtered);
-    if (currentPage > 1) {
-      setCurrentPage(1);
-    }
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const updateClientStatus = async (clientId: string, newStatus: string) => {
