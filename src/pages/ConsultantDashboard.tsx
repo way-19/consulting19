@@ -115,7 +115,7 @@ const ConsultantDashboard = () => {
    workingHoursStart: '09:00',
    workingHoursEnd: '18:00',
    timezone: 'Asia/Tbilisi',
-   preferredLanguage: 'en'
+  preferredLanguage: 'en',
     languages: ['English', 'Turkish', 'Georgian']
   });
   useEffect(() => {
