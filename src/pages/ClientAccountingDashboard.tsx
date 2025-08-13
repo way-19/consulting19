@@ -22,7 +22,9 @@ import {
   TrendingUp,
   Globe2,
   Star,
-  Package,
+  Settings,
+  Mail,
+  Truck
   Settings,
   Mail,
   Truck,
@@ -113,15 +115,22 @@ interface VirtualMailboxItem {
   downloaded_date?: string;
   created_at: string;
 }
-
-interface UpcomingDeadline {
+interface VirtualMailboxItem {
   id: string;
-  title: string;
-  date: string;
-  type: 'document' | 'invoice';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: string;
-  daysUntil: number;
+  document_type: string;
+  document_name: string;
+  description?: string;
+  file_url?: string;
+  file_size?: number;
+  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
+  tracking_number: string;
+  shipping_fee: number;
+  payment_status: 'unpaid' | 'paid' | 'waived';
+  sent_date?: string;
+  delivered_date?: string;
+  viewed_date?: string;
+  downloaded_date?: string;
+  created_at: string;
 }
 
 const ClientAccountingDashboard: React.FC = () => {
@@ -133,7 +142,7 @@ const ClientAccountingDashboard: React.FC = () => {
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
-  const [upcomingDeadlines, setUpcomingDeadlines] = useState<UpcomingDeadline[]>([]);
+  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'>('overview');
@@ -256,55 +265,6 @@ const ClientAccountingDashboard: React.FC = () => {
       } else {
         setMessages(messagesData || []);
       }
-
-      // Calculate upcoming deadlines
-      const deadlines: UpcomingDeadline[] = [];
-      
-      // Add document deadlines
-      (documentsData || []).forEach(doc => {
-        if (doc.due_date && doc.status !== 'completed') {
-          const dueDate = new Date(doc.due_date);
-          const today = new Date();
-          const daysUntil = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (daysUntil >= -7 && daysUntil <= 30) { // Show items from 7 days overdue to 30 days ahead
-            deadlines.push({
-              id: `doc-${doc.id}`,
-              title: doc.title,
-              date: doc.due_date,
-              type: 'document' as const,
-              priority: doc.priority,
-              status: doc.status,
-              daysUntil
-            });
-          }
-        }
-      });
-
-      // Add invoice deadlines
-      (invoicesData || []).forEach(invoice => {
-        if (invoice.due_date && (invoice.status === 'sent' || invoice.status === 'overdue')) {
-          const dueDate = new Date(invoice.due_date);
-          const today = new Date();
-          const daysUntil = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (daysUntil >= -7 && daysUntil <= 30) {
-            deadlines.push({
-              id: `inv-${invoice.id}`,
-              title: `Invoice ${invoice.invoice_number}`,
-              date: invoice.due_date,
-              type: 'invoice' as const,
-              priority: daysUntil <= 3 ? 'urgent' : daysUntil <= 7 ? 'high' : 'medium',
-              status: invoice.status,
-              daysUntil
-            });
-          }
-        }
-      });
-
-      // Sort by days until deadline (most urgent first)
-      deadlines.sort((a, b) => a.daysUntil - b.daysUntil);
-      setUpcomingDeadlines(deadlines);
 
     } catch (error) {
       console.error('Error in fetchAccountingData:', error);
@@ -1190,6 +1150,24 @@ const ClientAccountingDashboard: React.FC = () => {
                     <span className="font-medium text-gray-900">
                       {new Date(accountingProfile.last_document_received).toLocaleDateString()}
                     </span>
+                  </div>
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: ''
+  });
+                )}
+              </div>
+            </div>
+                          View All {upcomingDeadlines.length} Deadlines
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
