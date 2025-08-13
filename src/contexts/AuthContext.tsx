@@ -98,8 +98,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         targetPath = '/';
     }
     
-    // Only navigate if not already on the target path or a sub-path
-    if (currentPath !== targetPath && !currentPath.startsWith(targetPath.replace('-dashboard', ''))) {
+    // For consultants, allow all consultant-related pages
+    const consultantPages = [
+      '/consultant-dashboard',
+      '/consultant-services', 
+      '/legacy-orders',
+      '/accounting-management',
+      '/customers-management'
+    ];
+    
+    // For clients, allow all client-related pages  
+    const clientPages = [
+      '/client-accounting',
+      '/client-services'
+    ];
+    
+    // For admins, allow all admin-related pages
+    const adminPages = [
+      '/admin-dashboard'
+    ];
+    
+    let allowedPages: string[] = [];
+    if (userProfile.role === 'consultant') allowedPages = consultantPages;
+    else if (userProfile.role === 'client') allowedPages = clientPages;
+    else if (userProfile.role === 'admin') allowedPages = adminPages;
+    
+    // Only navigate if not already on an allowed page
+    const isOnAllowedPage = allowedPages.some(page => currentPath === page || currentPath.startsWith(page));
+    
+    if (!isOnAllowedPage) {
       console.log(`➡️ Navigating from ${currentPath} to ${targetPath}`);
       navigate(targetPath);
     } else {
