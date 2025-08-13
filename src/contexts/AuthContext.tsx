@@ -34,100 +34,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🔍 Fetching profile for user:', userId);
       
-      // Attempt 1: Query by auth_user_id
-      console.log('🔍 Step 1: Querying by auth_user_id...');
-      try {
-        const { data: profileByAuthId, error: authIdError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('auth_user_id', userId)
-          .maybeSingle();
-        
-        console.log('🔍 Step 1 Results:', { data: profileByAuthId, error: authIdError });
-        
-        if (authIdError) {
-          console.error('❌ Error fetching profile by auth_user_id:', authIdError.message);
-          console.error('❌ Full error details:', authIdError);
-        }
-        if (profileByAuthId) {
-          console.log('✅ Profile found by auth_user_id:', {
-            id: profileByAuthId.id,
-            email: profileByAuthId.email,
-            role: profileByAuthId.role,
-            auth_user_id: profileByAuthId.auth_user_id
-          });
-          return profileByAuthId;
-        }
-      } catch (step1Error) {
-        console.error('💥 Step 1 crashed:', step1Error);
+      // Get current session to access email
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.email) {
+        console.error('❌ No session or email found');
+        return null;
       }
-
-      console.log('⚠️ Profile not found by auth_user_id. Attempting to fetch by id...');
-      console.log('🔍 Step 2: Querying by id...');
       
-      try {
-        // Attempt 2: Query by id
-        const { data: profileById, error: idError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .maybeSingle();
+      console.log('📧 User email from session:', session.user.email);
+      
+      // Try to fetch profile by email (most reliable method)
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', session.user.email)
+        .single();
+      
+      if (error) {
+        console.error('❌ Error fetching profile:', error.message);
+        console.error('❌ Full error details:', error);
         
-        console.log('🔍 Step 2 Results:', { data: profileById, error: idError });
-        
-        if (idError) {
-          console.error('❌ Error fetching profile by id:', idError.message);
-          console.error('❌ Full error details:', idError);
-        }
-        if (profileById) {
-          console.log('✅ Profile found by id:', {
-            id: profileById.id,
-            email: profileById.email,
-            role: profileById.role,
-            auth_user_id: profileById.auth_user_id
-          });
-          return profileById;
-        }
-      } catch (step2Error) {
-        console.error('💥 Step 2 crashed:', step2Error);
-      }
-
-      // Attempt 3: Query by email as last resort
-      console.log('⚠️ Profile not found by id either. Trying by email...');
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email) {
-          console.log('🔍 Step 3: Querying by email:', session.user.email);
-          const { data: profileByEmail, error: emailError } = await supabase
+        // If profile doesn't exist, create it
+        if (error.code === 'PGRST116') {
+          console.log('📝 Profile not found, creating new profile...');
+          
+          const newProfile = {
+            id: userId,
+            auth_user_id: userId,
+            email: session.user.email,
+            role: 'client' as const,
+            full_name: session.user.user_metadata?.full_name || null,
+            country: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          
+          const { data: createdProfile, error: createError } = await supabase
             .from('profiles')
-            .select('*')
-            .eq('email', session.user.email)
-            .maybeSingle();
+            .insert([newProfile])
+            .select()
+            .single();
           
-          console.log('🔍 Step 3 Results:', { data: profileByEmail, error: emailError });
+          if (createError) {
+            console.error('❌ Error creating profile:', createError.message);
+            return null;
+          }
           
-          if (emailError) {
-            console.error('❌ Error fetching profile by email:', emailError.message);
-            console.error('❌ Full error details:', emailError);
-          }
-          if (profileByEmail) {
-            console.log('✅ Profile found by email:', {
-              id: profileByEmail.id,
-              email: profileByEmail.email,
-              role: profileByEmail.role,
-              auth_user_id: profileByEmail.auth_user_id
-            });
-            return profileByEmail;
-          }
+          console.log('✅ Profile created successfully:', createdProfile);
+          return createdProfile;
         }
-      } catch (step3Error) {
-        console.error('💥 Step 3 crashed:', step3Error);
+        
+        return null;
       }
       
-      console.error('❌ Profile not found by any method (auth_user_id, id, or email) for user:', userId);
-      return null;
+      console.log('✅ Profile found successfully:', {
+        id: profile.id,
+        email: profile.email,
+        role: profile.role,
+        auth_user_id: profile.auth_user_id
+      });
+      
+      return profile;
     } catch (error) {
-      console.error('💥 General error during profile fetch:', error);
+      console.error('💥 Unexpected error in fetchProfile:', error);
       return null;
     }
   };
