@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import MultilingualChat from '../components/MultilingualChat';
+import AccountSettingsPage from './AccountSettingsPage';
 import {
   FileText,
   Calendar,
