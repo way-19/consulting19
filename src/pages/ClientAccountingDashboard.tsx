@@ -5,8 +5,6 @@ import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import MultilingualChat from '../components/MultilingualChat';
 import AccountSettingsPage from './AccountSettingsPage';
-import ClientServices from './ClientServices';
-import ConsultantServices from './ConsultantServices';
 import {
   FileText,
   Calendar,
@@ -1392,6 +1390,26 @@ const ClientAccountingDashboard: React.FC = () => {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Account Settings Modal */}
+      {showAccountSettingsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white shadow-2xl">
+            <div className="p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900">Account Settings</h3>
+                <button
+                  onClick={() => setShowAccountSettingsModal(false)}
+                  className="text-gray-400 transition-colors hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              <AccountSettingsPage />
             </div>
           </div>
         </div>
