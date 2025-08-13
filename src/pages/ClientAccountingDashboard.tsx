@@ -143,17 +143,6 @@ const ClientAccountingDashboard: React.FC = () => {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [showAccountSettingsModal, setShowAccountSettingsModal] = useState(false);
 
-  const [profileForm, setProfileForm] = useState({
-    full_name: '',
-    email: '',
-    country: '',
-    address: '',
-    city: '',
-    state: '',
-    postal_code: '',
-    phone: ''
-  });
-
   useEffect(() => {
     if (profile?.id) {
       fetchAccountingData();
@@ -1455,6 +1444,51 @@ const ClientAccountingDashboard: React.FC = () => {
                       value={profile?.country || ''}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter your country"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                    <input
+                      type="text"
+                      value={profile?.address || ''}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your address"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                    <input
+                      type="text"
+                      value={profile?.city || ''}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your city"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                    <input
+                      type="text"
+                      value={profile?.state || ''}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your state"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code</label>
+                    <input
+                      type="text"
+                      value={profile?.postal_code || ''}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your postal code"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                    <input
+                      type="text"
+                      value={profile?.phone || ''}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your phone number"
                     />
                   </div>
                 </div>
