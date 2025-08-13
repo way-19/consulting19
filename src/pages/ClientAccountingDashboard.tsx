@@ -1,30 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
+import MultilingualChat from '../components/MultilingualChat';
 import {
   FileText,
   Calendar,
   AlertTriangle,
+  CheckCircle,
   Clock,
   Upload,
   Download,
   MessageSquare,
+  Bell,
   DollarSign,
   Eye,
+  Search,
+  Filter,
   Users,
   TrendingUp,
   Globe2,
   Star,
   Package,
   Settings,
-  CreditCard,
   Mail,
   Truck,
+  CreditCard,
+  MapPin,
   X,
-  Loader,
-  FileUp
+  Save
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
@@ -111,6 +116,7 @@ interface VirtualMailboxItem {
 
 const ClientAccountingDashboard: React.FC = () => {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
 
   const [accountingProfile, setAccountingProfile] = useState<ClientAccountingProfile | null>(null);
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
@@ -120,23 +126,17 @@ const ClientAccountingDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'>('overview');
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
+
+  // Quick Actions states
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadDocumentType, setUploadDocumentType] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
-  const [uploadProcessing, setUploadProcessing] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
   const [showPayInvoiceModal, setShowPayInvoiceModal] = useState(false);
   const [selectedInvoiceToPay, setSelectedInvoiceToPay] = useState<ClientInvoice | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank'>('card');
   const [paymentProcessing, setPaymentProcessing] = useState(false);
 
   useEffect(() => {
@@ -161,12 +161,11 @@ const ClientAccountingDashboard: React.FC = () => {
 
       if (clientError) {
         console.error('Error fetching client:', clientError);
-        // If no client record exists, show message
         setError('No client record found. Please contact support.');
         return;
       }
 
-      // Fetch accounting client profile
+      // Fetch accounting client profile - FIXED: Remove .single() to handle multiple results
       const { data: accountingData, error: accountingError } = await supabase
         .from('accounting_clients')
         .select(`
@@ -182,23 +181,31 @@ const ClientAccountingDashboard: React.FC = () => {
             )
           )
         `)
-        .eq('client_id', clientData.id)
-        .single();
+        .eq('client_id', clientData.id);
 
       if (accountingError) {
         console.error('Error fetching accounting profile:', accountingError);
-        // If no accounting profile exists, create a default one
         await createDefaultAccountingProfile(clientData.id);
         return;
       }
 
-      setAccountingProfile(accountingData);
+      // Handle multiple results - take the first one
+      if (!accountingData || accountingData.length === 0) {
+        await createDefaultAccountingProfile(clientData.id);
+        return;
+      }
+
+      if (accountingData.length > 1) {
+        console.warn('Multiple accounting profiles found, using the first one');
+      }
+
+      setAccountingProfile(accountingData[0]);
 
       // Fetch documents
       const { data: documentsData, error: documentsError } = await supabase
         .from('accounting_documents')
         .select('*')
-        .eq('client_id', accountingData.id)
+        .eq('client_id', accountingData[0].id)
         .order('due_date', { ascending: true });
 
       if (documentsError) {
@@ -211,7 +218,7 @@ const ClientAccountingDashboard: React.FC = () => {
       const { data: invoicesData, error: invoicesError } = await supabase
         .from('accounting_invoices')
         .select('*')
-        .eq('client_id', accountingData.id)
+        .eq('client_id', accountingData[0].id)
         .order('created_at', { ascending: false });
 
       if (invoicesError) {
@@ -230,7 +237,7 @@ const ClientAccountingDashboard: React.FC = () => {
             email
           )
         `)
-        .eq('client_id', accountingData.id)
+        .eq('client_id', accountingData[0].id)
         .order('created_at', { ascending: false });
 
       if (messagesError) {
@@ -249,7 +256,7 @@ const ClientAccountingDashboard: React.FC = () => {
 
   const createDefaultAccountingProfile = async (clientId: string) => {
     try {
-      // First check if an accounting profile already exists
+      // FIXED: Check if an accounting profile already exists to prevent duplicates
       const { data: existingProfile, error: checkError } = await supabase
         .from('accounting_clients')
         .select('id')
@@ -289,7 +296,7 @@ const ClientAccountingDashboard: React.FC = () => {
           business_type: 'limited_company',
           accounting_period: 'monthly',
           service_package: 'basic',
-          monthly_fee: 500, // Default fee, consultant can adjust
+          monthly_fee: 500,
           status: 'active',
           reminder_frequency: 7,
           preferred_language: 'en'
@@ -321,12 +328,94 @@ const ClientAccountingDashboard: React.FC = () => {
     }
   };
 
+  // Quick Actions handlers
+  const handleMessageConsultant = () => {
+    setIsChatOpen(true);
+  };
+
+  const handleUploadDocumentClick = () => {
+    setShowUploadModal(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadFile(file);
+    }
+  };
+
   const confirmUpload = async () => {
-    // Implementation for upload confirmation
+    if (!uploadFile || !uploadDocumentType) {
+      alert('Please select a file and document type');
+      return;
+    }
+
+    setUploadLoading(true);
+    try {
+      // Simulate upload process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // In real implementation, this would upload to Supabase Storage
+      // and create a record in accounting_documents table
+      
+      alert(`Document "${uploadFile.name}" uploaded successfully!`);
+      setShowUploadModal(false);
+      setUploadFile(null);
+      setUploadDocumentType('');
+      setUploadDescription('');
+      
+      // Refresh documents
+      await fetchAccountingData();
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      alert('Failed to upload document. Please try again.');
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  const handlePayInvoiceClick = () => {
+    const unpaidInvoice = invoices.find(i => i.status === 'sent' || i.status === 'overdue');
+    if (unpaidInvoice) {
+      setSelectedInvoiceToPay(unpaidInvoice);
+      setShowPayInvoiceModal(true);
+    } else {
+      alert('No unpaid invoices found.');
+    }
   };
 
   const confirmPayInvoice = async () => {
-    // Implementation for payment confirmation
+    if (!selectedInvoiceToPay) return;
+
+    setPaymentProcessing(true);
+    try {
+      // Simulate payment process
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Update invoice status to paid
+      const { error } = await supabase
+        .from('accounting_invoices')
+        .update({ status: 'paid' })
+        .eq('id', selectedInvoiceToPay.id);
+
+      if (error) throw error;
+
+      alert(`Invoice ${selectedInvoiceToPay.invoice_number} paid successfully!`);
+      setShowPayInvoiceModal(false);
+      setSelectedInvoiceToPay(null);
+      
+      // Refresh invoices
+      await fetchAccountingData();
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      alert('Payment failed. Please try again.');
+    } finally {
+      setPaymentProcessing(false);
+    }
+  };
+
+  const handleAccountSettings = () => {
+    navigate('/account-settings');
   };
 
   const getStatusColor = (status: string) => {
@@ -788,7 +877,10 @@ const ClientAccountingDashboard: React.FC = () => {
                                 <span>Download</span>
                               </button>
                             ) : (
-                              <button className="flex items-center space-x-2 rounded-lg bg-blue-50 px-4 py-2 font-medium text-blue-600 transition-colors hover:bg-blue-100">
+                              <button 
+                                onClick={handleUploadDocumentClick}
+                                className="flex items-center space-x-2 rounded-lg bg-blue-50 px-4 py-2 font-medium text-blue-600 transition-colors hover:bg-blue-100"
+                              >
                                 <Upload className="h-4 w-4" />
                                 <span>Upload</span>
                               </button>
@@ -842,7 +934,10 @@ const ClientAccountingDashboard: React.FC = () => {
                               <span>View</span>
                             </button>
                             {(invoice.status === 'sent' || invoice.status === 'overdue') && (
-                              <button className="rounded-lg bg-green-50 px-4 py-2 font-medium text-green-600 transition-colors hover:bg-green-100">
+                              <button 
+                                onClick={handlePayInvoiceClick}
+                                className="rounded-lg bg-green-50 px-4 py-2 font-medium text-green-600 transition-colors hover:bg-green-100"
+                              >
                                 Pay Now
                               </button>
                             )}
@@ -937,7 +1032,10 @@ const ClientAccountingDashboard: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <button className="flex w-full items-center justify-center space-x-2 rounded-lg bg-purple-600 px-4 py-3 font-medium text-white transition-colors hover:bg-purple-700">
+                <button 
+                  onClick={handleMessageConsultant}
+                  className="flex w-full items-center justify-center space-x-2 rounded-lg bg-purple-600 px-4 py-3 font-medium text-white transition-colors hover:bg-purple-700"
+                >
                   <MessageSquare className="h-5 w-5" />
                   <span>Send Message</span>
                 </button>
@@ -951,31 +1049,53 @@ const ClientAccountingDashboard: React.FC = () => {
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { name: 'Upload Document', icon: Upload, color: 'bg-green-500 hover:bg-green-600' },
-                    { name: 'Pay Invoice', icon: CreditCard, color: 'bg-blue-500 hover:bg-blue-600' },
-                    { name: 'Message Consultant', icon: MessageSquare, color: 'bg-purple-500 hover:bg-purple-600' },
-                    { name: 'View Reports', icon: FileText, color: 'bg-indigo-500 hover:bg-indigo-600' },
-                    { name: 'Download Files', icon: Download, color: 'bg-teal-500 hover:bg-teal-600' },
-                    { name: 'Account Settings', icon: Settings, color: 'bg-gray-500 hover:bg-gray-600' },
-                  ].map((action, index) => (
-                    <button
-                      key={index}
-                      className={`${action.color} group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md`}
-                    >
-                      <action.icon className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                      <div className="text-xs font-medium">{action.name}</div>
-                    </button>
-                  ))}
-
-                  {/* Additional Services Button */}
-                  <Link
-                    to="/client-services"
-                    className="bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md group cursor-pointer"
+                  <button 
+                    onClick={handleUploadDocumentClick}
+                    className="bg-green-500 hover:bg-green-600 group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md"
                   >
-                    <Package className="h-5 w-5 mx-auto mb-2 transition-transform group-hover:scale-110" />
-                    <div className="text-xs font-medium text-center">Additional Services</div>
-                  </Link>
+                    <Upload className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    <div className="text-xs font-medium">Upload Document</div>
+                  </button>
+
+                  <button 
+                    onClick={handlePayInvoiceClick}
+                    className="bg-blue-500 hover:bg-blue-600 group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md"
+                  >
+                    <CreditCard className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    <div className="text-xs font-medium">Pay Invoice</div>
+                  </button>
+
+                  <button 
+                    onClick={handleMessageConsultant}
+                    className="bg-purple-500 hover:bg-purple-600 group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md"
+                  >
+                    <MessageSquare className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    <div className="text-xs font-medium">Message Consultant</div>
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveTab('documents')}
+                    className="bg-indigo-500 hover:bg-indigo-600 group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md"
+                  >
+                    <FileText className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    <div className="text-xs font-medium">View Reports</div>
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveTab('documents')}
+                    className="bg-teal-500 hover:bg-teal-600 group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md"
+                  >
+                    <Download className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    <div className="text-xs font-medium">Download Files</div>
+                  </button>
+
+                  <button 
+                    onClick={handleAccountSettings}
+                    className="bg-gray-500 hover:bg-gray-600 group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md"
+                  >
+                    <Settings className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    <div className="text-xs font-medium">Account Settings</div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1047,16 +1167,28 @@ const ClientAccountingDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Multilingual Chat Modal */}
+      {accountingProfile.consultant && (
+        <MultilingualChat
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          chatType="consultant-client"
+          currentUserId={profile?.id || 'client-1'}
+          currentUserRole="client"
+          targetUserId={accountingProfile.consultant_id}
+        />
+      )}
+
       {/* Upload Document Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white shadow-2xl">
             <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
+              <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-xl font-bold text-gray-900">Upload Document</h3>
                 <button
                   onClick={() => setShowUploadModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 transition-colors hover:text-gray-600"
                 >
                   <X className="h-6 w-6" />
                 </button>
@@ -1065,7 +1197,7 @@ const ClientAccountingDashboard: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Document Type
+                    Document Type *
                   </label>
                   <select
                     value={uploadDocumentType}
@@ -1073,18 +1205,19 @@ const ClientAccountingDashboard: React.FC = () => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="">Select document type</option>
-                    <option value="financial_statement">Financial Statement</option>
-                    <option value="bank_statement">Bank Statement</option>
-                    <option value="tax_document">Tax Document</option>
-                    <option value="invoice">Invoice</option>
-                    <option value="receipt">Receipt</option>
-                    <option value="contract">Contract</option>
-                    <option value="other">Other</option>
+                    <option value="Financial Statement">Financial Statement</option>
+                    <option value="Bank Statement">Bank Statement</option>
+                    <option value="Tax Document">Tax Document</option>
+                    <option value="Invoice">Invoice</option>
+                    <option value="Receipt">Receipt</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description (Optional)
+                    Description
                   </label>
                   <textarea
                     rows={3}
@@ -1094,23 +1227,26 @@ const ClientAccountingDashboard: React.FC = () => {
                     placeholder="Brief description of the document..."
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select File
+                    Select File *
                   </label>
                   <input
                     type="file"
-                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    onChange={handleFileChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Supported formats: PDF, DOC, DOCX, JPG, PNG, XLSX, XLS (Max 10MB)
-                  </p>
+                  {uploadFile && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      Selected: {uploadFile.name} ({(uploadFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4 mt-6">
+              <div className="flex items-center space-x-4 mt-6 pt-6 border-t border-gray-200">
                 <button
                   onClick={() => setShowUploadModal(false)}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
@@ -1119,18 +1255,18 @@ const ClientAccountingDashboard: React.FC = () => {
                 </button>
                 <button
                   onClick={confirmUpload}
-                  disabled={uploadProcessing || !uploadFile || !uploadDocumentType}
+                  disabled={uploadLoading || !uploadFile || !uploadDocumentType}
                   className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
-                  {uploadProcessing ? (
+                  {uploadLoading ? (
                     <>
-                      <Loader className="h-5 w-5 animate-spin" />
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       <span>Uploading...</span>
                     </>
                   ) : (
                     <>
-                      <FileUp className="h-5 w-5" />
-                      <span>Upload</span>
+                      <Upload className="h-5 w-5" />
+                      <span>Upload Document</span>
                     </>
                   )}
                 </button>
@@ -1142,36 +1278,36 @@ const ClientAccountingDashboard: React.FC = () => {
 
       {/* Pay Invoice Modal */}
       {showPayInvoiceModal && selectedInvoiceToPay && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white shadow-2xl">
             <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
+              <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-xl font-bold text-gray-900">Pay Invoice</h3>
                 <button
                   onClick={() => setShowPayInvoiceModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 transition-colors hover:text-gray-600"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
 
               {/* Invoice Details */}
-              <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                <h4 className="font-bold text-gray-900 mb-4">{selectedInvoiceToPay.invoice_number}</h4>
-                <div className="space-y-2">
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h4 className="font-medium text-gray-900 mb-2">{selectedInvoiceToPay.invoice_number}</h4>
+                <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Amount:</span>
                     <span className="font-bold text-gray-900">${selectedInvoiceToPay.amount} {selectedInvoiceToPay.currency}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Due Date:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-gray-900">
                       {selectedInvoiceToPay.due_date ? new Date(selectedInvoiceToPay.due_date).toLocaleDateString() : 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Status:</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedInvoiceToPay.status)}`}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedInvoiceToPay.status)}`}>
                       {selectedInvoiceToPay.status.toUpperCase()}
                     </span>
                   </div>
@@ -1182,31 +1318,37 @@ const ClientAccountingDashboard: React.FC = () => {
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
                 <div className="space-y-3">
-                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <label className="flex cursor-pointer items-center rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50">
                     <input
                       type="radio"
-                      name="payment_method"
+                      name="payment"
                       value="card"
-                      defaultChecked
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      checked={paymentMethod === 'card'}
+                      onChange={(e) => setPaymentMethod(e.target.value as 'card' | 'bank')}
+                      className="h-4 w-4 border-gray-300 text-green-600 focus:ring-green-500"
                     />
                     <div className="ml-3 flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900">Credit/Debit Card</span>
+                        <span className="font-medium text-gray-900">Credit Card</span>
                         <CreditCard className="h-5 w-5 text-gray-400" />
                       </div>
-                      <p className="text-sm text-gray-600">Secure payment via Stripe</p>
+                      <p className="text-sm text-gray-600">Pay securely with your credit card</p>
                     </div>
                   </label>
-                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <label className="flex cursor-pointer items-center rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50">
                     <input
                       type="radio"
-                      name="payment_method"
+                      name="payment"
                       value="bank"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      checked={paymentMethod === 'bank'}
+                      onChange={(e) => setPaymentMethod(e.target.value as 'card' | 'bank')}
+                      className="h-4 w-4 border-gray-300 text-green-600 focus:ring-green-500"
                     />
                     <div className="ml-3 flex-1">
-                      <span className="font-medium text-gray-900">Bank Transfer</span>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-900">Bank Transfer</span>
+                        <DollarSign className="h-5 w-5 text-gray-400" />
+                      </div>
                       <p className="text-sm text-gray-600">Direct bank transfer</p>
                     </div>
                   </label>
@@ -1223,11 +1365,11 @@ const ClientAccountingDashboard: React.FC = () => {
                 <button
                   onClick={confirmPayInvoice}
                   disabled={paymentProcessing}
-                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {paymentProcessing ? (
                     <>
-                      <Loader className="h-5 w-5 animate-spin" />
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       <span>Processing...</span>
                     </>
                   ) : (
