@@ -24,19 +24,15 @@ import {
   Users,
   Settings,
   Mail,
-  Truck
-  Mail,
-  Truck
+  Truck,
   Globe2,
   Star,
   Package,
-  Settings,
-  Mail,
-  Truck,
   CreditCard,
   MapPin,
   X,
-  Save
+  Save,
+  TrendingUp
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
@@ -120,40 +116,6 @@ interface VirtualMailboxItem {
   downloaded_date?: string;
   created_at: string;
 }
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
 
 const ClientAccountingDashboard: React.FC = () => {
   const { user, profile } = useAuth();
@@ -163,8 +125,6 @@ const ClientAccountingDashboard: React.FC = () => {
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -182,6 +142,16 @@ const ClientAccountingDashboard: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank'>('card');
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [showAccountSettingsModal, setShowAccountSettingsModal] = useState(false);
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: ''
+  });
 
   useEffect(() => {
     if (profile?.id) {
@@ -706,16 +676,6 @@ const ClientAccountingDashboard: React.FC = () => {
                   : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
               }`}
             >
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
               <Package className="h-4 w-4" />
               <span>Virtual Mailbox</span>
             </button>
@@ -817,21 +777,10 @@ const ClientAccountingDashboard: React.FC = () => {
                   <div>
                     <h3 className="mb-4 text-lg font-semibold text-gray-900">Recent Documents</h3>
                     {documents.length === 0 ? (
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
                       <div className="text-center py-8">
                         <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                         <p className="text-gray-500 text-sm">No documents yet</p>
                       </div>
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     ) : (
                       <div className="space-y-3">
                         {documents.slice(0, 3).map((document) => (
@@ -847,20 +796,10 @@ const ClientAccountingDashboard: React.FC = () => {
                                   Due: {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}
                                 </p>
                               </div>
-                            disabled={sendingMessage || !newMessage.subject || !newMessage.message}
                             </div>
                             <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(document.status)}`}>
-                            {sendingMessage ? (
-                              <>
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                <span>Sending...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Send className="h-5 w-5" />
-                                <span>Send Message</span>
-                              </>
-                            )}
+                              {document.status.toUpperCase()}
+                            </span>
                           </div>
                         ))}
                       </div>
