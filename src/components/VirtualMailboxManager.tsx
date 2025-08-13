@@ -66,6 +66,25 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<VirtualMailboxItem | null>(null);
   const [showItemDetail, setShowItemDetail] = useState(false);
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [shippingData, setShippingData] = useState({
+    delivery_type: 'standard' as 'standard' | 'express',
+    recipient_name: '',
+    address_line1: '',
+    address_line2: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    country: '',
+    phone: ''
+  });
+  const [processingPayment, setProcessingPayment] = useState(false);
+
+  // Pricing configuration
+  const SHIPPING_PRICES = {
+    standard: 15, // $15 for standard delivery (5-7 business days)
+    express: 25   // $25 for express delivery (2-3 business days)
+  };
 
   const [formData, setFormData] = useState({
     client_id: clientId || '',
@@ -642,11 +661,11 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                     <>
                       {item.payment_status === 'unpaid' && item.status === 'sent' && (
                         <button
-                          onClick={() => updatePaymentStatus(item.id, 'paid')}
+                          onClick={() => handleShippingPayment(item)}
                           className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
                         >
                           <MapPin className="h-4 w-4" />
-                          <span>Enter Address & Pay</span>
+                          <span>Enter Address & Pay ${SHIPPING_PRICES.standard}</span>
                         </button>
                       )}
                       
