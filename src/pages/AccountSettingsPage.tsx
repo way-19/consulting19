@@ -1,862 +1,1250 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import {
-  ArrowLeft,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Lock,
-  Save,
-  Eye,
-  EyeOff,
-  AlertCircle,
-  CheckCircle,
-  Globe,
-  Building,
+  FileText,
   Calendar,
-  Shield,
-  Bell,
-  CreditCard,
+  AlertTriangle,
+  Clock,
+  Upload,
   Download,
-  Trash2,
+  MessageSquare,
+  DollarSign,
+  Eye,
+  Users,
+  TrendingUp,
+  Globe2,
+  Star,
+  Package,
   Settings,
-  RefreshCw
+  CreditCard,
+  Mail,
+  Truck,
+  X,
+  Loader,
+  FileUp
 } from 'lucide-react';
 
-interface UserProfile {
+interface ClientAccountingProfile {
   id: string;
-  email: string;
-  full_name?: string;
-  phone?: string;
-  country?: string;
-  role: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface AccountingProfile {
-  id: string;
+  client_id: string;
+  consultant_id: string;
   company_name: string;
   tax_number?: string;
   business_type: string;
+  accounting_period: string;
   service_package: string;
   monthly_fee: number;
-  preferred_language?: string;
+  status: string;
+  last_document_received?: string;
+  next_deadline?: string;
   reminder_frequency: number;
+  preferred_language?: string;
+  created_at: string;
+  updated_at: string;
+  consultant?: {
+    full_name: string;
+    email: string;
+  };
+  client?: {
+    profile?: {
+      full_name: string;
+      email: string;
+    };
+  };
 }
 
-const AccountSettingsPage: React.FC = () => {
+interface ClientDocument {
+  id: string;
+  document_type: string;
+  category: string;
+  title: string;
+  due_date?: string;
+  received_date?: string;
+  status: 'pending' | 'received' | 'processed' | 'completed' | 'overdue';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  file_url?: string;
+}
+
+interface ClientInvoice {
+  id: string;
+  invoice_number: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  due_date?: string;
+  created_at: string;
+}
+
+interface ClientMessage {
+  id: string;
+  subject?: string;
+  message: string;
+  category: string;
+  is_read: boolean;
+  created_at: string;
+  sender?: {
+    full_name: string;
+    email: string;
+  };
+}
+
+interface VirtualMailboxItem {
+  id: string;
+  document_type: string;
+  document_name: string;
+  description?: string;
+  file_url?: string;
+  file_size?: number;
+  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
+  tracking_number: string;
+  shipping_fee: number;
+  payment_status: 'unpaid' | 'paid' | 'waived';
+  sent_date?: string;
+  delivered_date?: string;
+  viewed_date?: string;
+  downloaded_date?: string;
+  created_at: string;
+}
+
+const ClientAccountingDashboard: React.FC = () => {
   const { user, profile } = useAuth();
-  const navigate = useNavigate();
-  
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [accountingProfile, setAccountingProfile] = useState<AccountingProfile | null>(null);
+
+  const [accountingProfile, setAccountingProfile] = useState<ClientAccountingProfile | null>(null);
+  const [documents, setDocuments] = useState<ClientDocument[]>([]);
+  const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
+  const [messages, setMessages] = useState<ClientMessage[]>([]);
+  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'billing'>('profile');
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // Profile form state
-  const [profileForm, setProfileForm] = useState({
-    full_name: '',
-    phone: '',
-    country: '',
-    company_name: '',
-    tax_number: '',
-    preferred_language: 'en'
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'>('overview');
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: ''
   });
-
-  // Password form state
-  const [passwordForm, setPasswordForm] = useState({
-    newPassword: '',
-    confirmPassword: ''
-  });
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // Preferences state
-  const [preferences, setPreferences] = useState({
-    email_notifications: true,
-    sms_notifications: false,
-    reminder_frequency: 7,
-    preferred_language: 'en',
-    timezone: 'UTC'
-  });
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadDocumentType, setUploadDocumentType] = useState('');
+  const [uploadDescription, setUploadDescription] = useState('');
+  const [uploadProcessing, setUploadProcessing] = useState(false);
+  const [showPayInvoiceModal, setShowPayInvoiceModal] = useState(false);
+  const [selectedInvoiceToPay, setSelectedInvoiceToPay] = useState<ClientInvoice | null>(null);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
 
   useEffect(() => {
     if (profile?.id) {
-      fetchUserData();
+      fetchAccountingData();
     }
   }, [profile]);
 
-  const fetchUserData = async () => {
+  const fetchAccountingData = async () => {
+    if (!profile?.id) return;
+
     try {
       setLoading(true);
+      setError(null);
 
-      // Fetch user profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', profile?.id)
-        .single();
-
-      if (profileError) throw profileError;
-      setUserProfile(profileData);
-
-      // Set profile form data
-      setProfileForm({
-        full_name: profileData.full_name || '',
-        phone: profileData.phone || '',
-        country: profileData.country || '',
-        company_name: '',
-        tax_number: '',
-        preferred_language: 'en'
-      });
-
-      // Fetch accounting profile if exists
-      const { data: clientData } = await supabase
+      // First, get the client record to find the accounting client
+      const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('id')
-        .eq('profile_id', profile?.id)
+        .eq('profile_id', profile.id)
         .single();
 
-      if (clientData) {
-        const { data: accountingData } = await supabase
-          .from('accounting_clients')
-          .select('*')
-          .eq('client_id', clientData.id)
-          .single();
-
-        if (accountingData) {
-          setAccountingProfile(accountingData);
-          setProfileForm(prev => ({
-            ...prev,
-            company_name: accountingData.company_name || '',
-            tax_number: accountingData.tax_number || '',
-            preferred_language: accountingData.preferred_language || 'en'
-          }));
-          setPreferences(prev => ({
-            ...prev,
-            reminder_frequency: accountingData.reminder_frequency || 7,
-            preferred_language: accountingData.preferred_language || 'en'
-          }));
-        }
+      if (clientError) {
+        console.error('Error fetching client:', clientError);
+        // If no client record exists, show message
+        setError('No client record found. Please contact support.');
+        return;
       }
+
+      // Fetch accounting client profile
+      const { data: accountingData, error: accountingError } = await supabase
+        .from('accounting_clients')
+        .select(`
+          *,
+          consultant:consultant_id (
+            full_name,
+            email
+          ),
+          client:client_id (
+            profile:profile_id (
+              full_name,
+              email
+            )
+          )
+        `)
+        .eq('client_id', clientData.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (accountingError) {
+        console.error('Error fetching accounting profile:', accountingError);
+        // If no accounting profile exists, create a default one
+        await createDefaultAccountingProfile(clientData.id);
+        return;
+      }
+
+      setAccountingProfile(accountingData);
+
+      // Fetch documents
+      const { data: documentsData, error: documentsError } = await supabase
+        .from('accounting_documents')
+        .select('*')
+        .eq('client_id', accountingData.id)
+        .order('due_date', { ascending: true });
+
+      if (documentsError) {
+        console.error('Error fetching documents:', documentsError);
+      } else {
+        setDocuments(documentsData || []);
+      }
+
+      // Fetch invoices
+      const { data: invoicesData, error: invoicesError } = await supabase
+        .from('accounting_invoices')
+        .select('*')
+        .eq('client_id', accountingData.id)
+        .order('created_at', { ascending: false });
+
+      if (invoicesError) {
+        console.error('Error fetching invoices:', invoicesError);
+      } else {
+        setInvoices(invoicesData || []);
+      }
+
+      // Fetch messages
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('accounting_messages')
+        .select(`
+          *,
+          sender:sender_id (
+            full_name,
+            email
+          )
+        `)
+        .eq('client_id', accountingData.id)
+        .order('created_at', { ascending: false });
+
+      if (messagesError) {
+        console.error('Error fetching messages:', messagesError);
+      } else {
+        setMessages(messagesData || []);
+      }
+
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      setMessage({ type: 'error', text: 'Failed to load user data' });
+      console.error('Error in fetchAccountingData:', error);
+      setError('Failed to load accounting data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage(null);
-
+  const createDefaultAccountingProfile = async (clientId: string) => {
     try {
-      // Update profiles table
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: profileForm.full_name,
-          phone: profileForm.phone,
-          country: profileForm.country,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', profile?.id);
+      // First check if an accounting profile already exists
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('accounting_clients')
+        .select('id')
+        .eq('client_id', clientId);
 
-      if (profileError) throw profileError;
-
-      // Update accounting profile if exists
-      if (accountingProfile) {
-        const { data: clientData } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('profile_id', profile?.id)
-          .single();
-
-        if (clientData) {
-          const { error: accountingError } = await supabase
-            .from('accounting_clients')
-            .update({
-              company_name: profileForm.company_name,
-              tax_number: profileForm.tax_number,
-              preferred_language: profileForm.preferred_language,
-              updated_at: new Date().toISOString()
-            })
-            .eq('client_id', clientData.id);
-
-          if (accountingError) throw accountingError;
-        }
+      if (checkError) {
+        console.error('Error checking existing profile:', checkError);
+        setError('Failed to check existing accounting profile.');
+        return;
       }
 
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
-      await fetchUserData(); // Refresh data
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      setMessage({ type: 'error', text: 'Failed to update profile' });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handlePasswordUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage(null);
-
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setMessage({ type: 'error', text: 'Passwords do not match' });
-      setSaving(false);
-      return;
-    }
-
-    if (passwordForm.newPassword.length < 6) {
-      setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
-      setSaving(false);
-      return;
-    }
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: passwordForm.newPassword
-      });
-
-      if (error) throw error;
-
-      setMessage({ type: 'success', text: 'Password updated successfully!' });
-      setPasswordForm({ newPassword: '', confirmPassword: '' });
-    } catch (error: any) {
-      console.error('Error updating password:', error);
-      setMessage({ type: 'error', text: error.message || 'Failed to update password' });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handlePreferencesUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage(null);
-
-    try {
-      // Update accounting preferences if accounting profile exists
-      if (accountingProfile) {
-        const { data: clientData } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('profile_id', profile?.id)
-          .single();
-
-        if (clientData) {
-          const { error } = await supabase
-            .from('accounting_clients')
-            .update({
-              reminder_frequency: preferences.reminder_frequency,
-              preferred_language: preferences.preferred_language,
-              updated_at: new Date().toISOString()
-            })
-            .eq('client_id', clientData.id);
-
-          if (error) throw error;
-        }
+      if (existingProfile && existingProfile.length > 0) {
+        console.log('Accounting profile already exists, fetching data...');
+        await fetchAccountingData();
+        return;
       }
 
-      setMessage({ type: 'success', text: 'Preferences updated successfully!' });
+      // Get the consultant assigned to this client
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('assigned_consultant_id, company_name')
+        .eq('id', clientId)
+        .single();
+
+      if (clientError || !clientData?.assigned_consultant_id) {
+        setError('No assigned consultant found. Please contact support.');
+        return;
+      }
+
+      // Create default accounting profile
+      const { data: newProfile, error: createError } = await supabase
+        .from('accounting_clients')
+        .insert([{
+          client_id: clientId,
+          consultant_id: clientData.assigned_consultant_id,
+          company_name: clientData.company_name || 'Company Name Not Set',
+          business_type: 'limited_company',
+          accounting_period: 'monthly',
+          service_package: 'basic',
+          monthly_fee: 500, // Default fee, consultant can adjust
+          status: 'active',
+          reminder_frequency: 7,
+          preferred_language: 'en'
+        }])
+        .select(`
+          *,
+          consultant:consultant_id (
+            full_name,
+            email
+          ),
+          client:client_id (
+            profile:profile_id (
+              full_name,
+              email
+            )
+          )
+        `)
+        .single();
+
+      if (createError) {
+        console.error('Error creating accounting profile:', createError);
+        setError('Failed to create accounting profile. Please contact support.');
+      } else {
+        setAccountingProfile(newProfile);
+      }
     } catch (error) {
-      console.error('Error updating preferences:', error);
-      setMessage({ type: 'error', text: 'Failed to update preferences' });
-    } finally {
-      setSaving(false);
+      console.error('Error creating default profile:', error);
+      setError('Failed to setup accounting profile. Please contact support.');
     }
   };
 
-  const countries = [
-    'Georgia', 'United States', 'Montenegro', 'Estonia', 'Portugal', 
-    'Malta', 'Panama', 'UAE', 'Switzerland', 'Spain', 'Turkey', 'Other'
-  ];
+  const confirmUpload = async () => {
+    // Implementation for upload confirmation
+  };
 
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'tr', name: 'Türkçe' },
-    { code: 'ka', name: 'ქართული (Georgian)' },
-    { code: 'ru', name: 'Русский' },
-    { code: 'es', name: 'Español' },
-    { code: 'fr', name: 'Français' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'it', name: 'Italiano' },
-    { code: 'pt', name: 'Português' },
-    { code: 'ar', name: 'العربية' }
-  ];
+  const confirmPayInvoice = async () => {
+    // Implementation for payment confirmation
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'received':
+        return 'bg-blue-100 text-blue-800';
+      case 'processed':
+        return 'bg-purple-100 text-purple-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'overdue':
+        return 'bg-red-100 text-red-800';
+      case 'paid':
+        return 'bg-green-100 text-green-800';
+      case 'sent':
+        return 'bg-blue-100 text-blue-800';
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent':
+        return 'bg-red-500';
+      case 'high':
+        return 'bg-orange-500';
+      case 'medium':
+        return 'bg-yellow-500';
+      case 'low':
+        return 'bg-gray-400';
+      default:
+        return 'bg-gray-400';
+    }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your accounting dashboard...</p>
+        </div>
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={fetchAccountingData}
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!accountingProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">No Accounting Profile</h2>
+          <p className="text-gray-600 mb-4">
+            You don't have an accounting profile yet. This will be created automatically when you order accounting services.
+          </p>
+          <Link
+            to="/client-services"
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors inline-flex items-center space-x-2"
+          >
+            <Package className="h-5 w-5" />
+            <span>Browse Services</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const overdueDocuments = documents.filter((d) => d.status === 'overdue').length;
+  const pendingDocuments = documents.filter((d) => d.status === 'pending').length;
+  const unpaidInvoices = invoices.filter((i) => i.status === 'sent' || i.status === 'overdue').length;
+  const unreadMessages = messages.filter((m) => !m.is_read).length;
+
+  const stats = [
+    {
+      name: 'Pending Documents',
+      value: pendingDocuments.toString(),
+      icon: Clock,
+      color: 'bg-yellow-500',
+      change: '+2',
+      changeType: 'neutral',
+      description: 'Documents awaiting submission',
+    },
+    {
+      name: 'Overdue Items',
+      value: overdueDocuments.toString(),
+      icon: AlertTriangle,
+      color: 'bg-red-500',
+      change: '0',
+      changeType: 'positive',
+      description: 'Items past due date',
+    },
+    {
+      name: 'Unpaid Invoices',
+      value: unpaidInvoices.toString(),
+      icon: DollarSign,
+      color: 'bg-orange-500',
+      change: '+1',
+      changeType: 'neutral',
+      description: 'Outstanding payments',
+    },
+    {
+      name: 'New Messages',
+      value: unreadMessages.toString(),
+      icon: MessageSquare,
+      color: 'bg-blue-500',
+      change: '+3',
+      changeType: 'neutral',
+      description: 'Unread messages',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="mb-4">
-            <Link 
-              to="/client-accounting"
-              className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Link>
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img
+                src="/image.png"
+                alt="Consulting19 Logo"
+                className="h-16 w-32"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <Globe2 className="hidden h-16 w-32 text-purple-600" />
+              <div>
+                <p className="text-sm text-gray-500">Client Accounting Dashboard</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 rounded-full bg-green-100 px-4 py-2 text-green-800">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+                <span className="text-sm font-medium">{accountingProfile.status.toUpperCase()}</span>
+              </div>
+              <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-800">
+                {profile?.role || 'client'} • {accountingProfile.company_name}
+              </span>
+            </div>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-              <p className="text-gray-600 mt-1">Manage your profile, security, and preferences</p>
-            </div>
-            <div className="flex items-center space-x-2 bg-green-100 text-green-800 px-4 py-2 rounded-full">
-              <Shield className="h-4 w-4" />
-              <span className="text-sm font-medium">Secure Account</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Message */}
-        {message && (
-          <div className={`mb-6 p-4 rounded-lg border ${
-            message.type === 'success' 
-              ? 'bg-green-50 border-green-200 text-green-800' 
-              : 'bg-red-50 border-red-200 text-red-800'
-          }`}>
-            <div className="flex items-center space-x-2">
-              {message.type === 'success' ? (
-                <CheckCircle className="h-5 w-5" />
-              ) : (
-                <AlertCircle className="h-5 w-5" />
-              )}
-              <span>{message.text}</span>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar Navigation */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Settings</h3>
-              <nav className="space-y-2">
-                {[
-                  { key: 'profile', label: 'Profile Information', icon: User },
-                  { key: 'security', label: 'Security', icon: Lock },
-                  { key: 'preferences', label: 'Preferences', icon: Settings },
-                  { key: 'billing', label: 'Billing Info', icon: CreditCard }
-                ].map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key as any)}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === tab.key
-                        ? 'bg-purple-50 text-purple-600 border border-purple-200'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <tab.icon className="h-5 w-5" />
-                    <span className="font-medium">{tab.label}</span>
-                  </button>
-                ))}
-              </nav>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              {/* Tab Content */}
-              <div className="p-8">
-                {activeTab === 'profile' && (
-                  <div>
-                    <div className="mb-8">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Information</h2>
-                      <p className="text-gray-600">Update your personal and company information</p>
-                    </div>
-
-                    <form onSubmit={handleProfileUpdate} className="space-y-6">
-                      {/* Personal Information */}
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Full Name
-                            </label>
-                            <div className="relative">
-                              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                              <input
-                                type="text"
-                                value={profileForm.full_name}
-                                onChange={(e) => setProfileForm(prev => ({ ...prev, full_name: e.target.value }))}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                placeholder="Enter your full name"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Email Address
-                            </label>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                              <input
-                                type="email"
-                                value={userProfile?.email || ''}
-                                disabled
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
-                                placeholder="Email cannot be changed"
-                              />
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1">Email address cannot be changed</p>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Phone Number
-                            </label>
-                            <div className="relative">
-                              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                              <input
-                                type="tel"
-                                value={profileForm.phone}
-                                onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                placeholder="+1 (555) 123-4567"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Country
-                            </label>
-                            <div className="relative">
-                              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                              <select
-                                value={profileForm.country}
-                                onChange={(e) => setProfileForm(prev => ({ ...prev, country: e.target.value }))}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                              >
-                                <option value="">Select Country</option>
-                                {countries.map(country => (
-                                  <option key={country} value={country}>{country}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Company Information */}
-                      {accountingProfile && (
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Company Name
-                              </label>
-                              <div className="relative">
-                                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                                <input
-                                  type="text"
-                                  value={profileForm.company_name}
-                                  onChange={(e) => setProfileForm(prev => ({ ...prev, company_name: e.target.value }))}
-                                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                  placeholder="Your company name"
-                                />
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Tax Number
-                              </label>
-                              <input
-                                type="text"
-                                value={profileForm.tax_number}
-                                onChange={(e) => setProfileForm(prev => ({ ...prev, tax_number: e.target.value }))}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                placeholder="Tax identification number"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex items-center space-x-4 pt-6 border-t border-gray-200">
-                        <button
-                          type="submit"
-                          disabled={saving}
-                          className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
-                        >
-                          {saving ? (
-                            <>
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                              <span>Saving...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Save className="h-5 w-5" />
-                              <span>Save Changes</span>
-                            </>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={fetchUserData}
-                          className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center space-x-2"
-                        >
-                          <RefreshCw className="h-5 w-5" />
-                          <span>Reset</span>
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-
-                {activeTab === 'security' && (
-                  <div>
-                    <div className="mb-8">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Security Settings</h2>
-                      <p className="text-gray-600">Manage your account security and password</p>
-                    </div>
-
-                    <form onSubmit={handlePasswordUpdate} className="space-y-6">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              New Password
-                            </label>
-                            <div className="relative">
-                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                              <input
-                                type={showNewPassword ? 'text' : 'password'}
-                                value={passwordForm.newPassword}
-                                onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                placeholder="Enter new password"
-                                minLength={6}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowNewPassword(!showNewPassword)}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                              >
-                                {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                              </button>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Confirm New Password
-                            </label>
-                            <div className="relative">
-                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                              <input
-                                type={showConfirmPassword ? 'text' : 'password'}
-                                value={passwordForm.confirmPassword}
-                                onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                placeholder="Confirm new password"
-                                minLength={6}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                              >
-                                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-500">Password must be at least 6 characters long</p>
-                      </div>
-
-                      <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-                        <h4 className="font-semibold text-blue-900 mb-2">Security Tips</h4>
-                        <ul className="text-sm text-blue-800 space-y-1">
-                          <li>• Use a strong, unique password</li>
-                          <li>• Include uppercase, lowercase, numbers, and symbols</li>
-                          <li>• Don't reuse passwords from other accounts</li>
-                          <li>• Consider using a password manager</li>
-                        </ul>
-                      </div>
-
-                      <div className="flex items-center space-x-4 pt-6 border-t border-gray-200">
-                        <button
-                          type="submit"
-                          disabled={saving || !passwordForm.newPassword || !passwordForm.confirmPassword}
-                          className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
-                        >
-                          {saving ? (
-                            <>
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                              <span>Updating...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="h-5 w-5" />
-                              <span>Update Password</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-
-                {activeTab === 'preferences' && (
-                  <div>
-                    <div className="mb-8">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Preferences</h2>
-                      <p className="text-gray-600">Customize your experience and notifications</p>
-                    </div>
-
-                    <form onSubmit={handlePreferencesUpdate} className="space-y-6">
-                      {/* Language Preferences */}
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Language & Region</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Preferred Language
-                            </label>
-                            <div className="relative">
-                              <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                              <select
-                                value={preferences.preferred_language}
-                                onChange={(e) => setPreferences(prev => ({ ...prev, preferred_language: e.target.value }))}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                              >
-                                {languages.map(lang => (
-                                  <option key={lang.code} value={lang.code}>{lang.name}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Timezone
-                            </label>
-                            <select
-                              value={preferences.timezone}
-                              onChange={(e) => setPreferences(prev => ({ ...prev, timezone: e.target.value }))}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            >
-                              <option value="UTC">UTC (Coordinated Universal Time)</option>
-                              <option value="America/New_York">Eastern Time (ET)</option>
-                              <option value="Europe/London">Greenwich Mean Time (GMT)</option>
-                              <option value="Europe/Istanbul">Turkey Time (TRT)</option>
-                              <option value="Asia/Tbilisi">Georgia Time (GET)</option>
-                              <option value="Europe/Zurich">Central European Time (CET)</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Notification Preferences */}
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Notifications</h3>
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                            <div className="flex items-center space-x-3">
-                              <Bell className="h-5 w-5 text-gray-600" />
-                              <div>
-                                <p className="font-medium text-gray-900">Email Notifications</p>
-                                <p className="text-sm text-gray-600">Receive updates via email</p>
-                              </div>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={preferences.email_notifications}
-                                onChange={(e) => setPreferences(prev => ({ ...prev, email_notifications: e.target.checked }))}
-                                className="sr-only peer"
-                              />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                            </label>
-                          </div>
-
-                          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                            <div className="flex items-center space-x-3">
-                              <Phone className="h-5 w-5 text-gray-600" />
-                              <div>
-                                <p className="font-medium text-gray-900">SMS Notifications</p>
-                                <p className="text-sm text-gray-600">Receive urgent updates via SMS</p>
-                              </div>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={preferences.sms_notifications}
-                                onChange={(e) => setPreferences(prev => ({ ...prev, sms_notifications: e.target.checked }))}
-                                className="sr-only peer"
-                              />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                            </label>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Reminder Frequency (days)
-                            </label>
-                            <select
-                              value={preferences.reminder_frequency}
-                              onChange={(e) => setPreferences(prev => ({ ...prev, reminder_frequency: parseInt(e.target.value) }))}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            >
-                              <option value={1}>Daily</option>
-                              <option value={3}>Every 3 days</option>
-                              <option value={7}>Weekly</option>
-                              <option value={14}>Bi-weekly</option>
-                              <option value={30}>Monthly</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-4 pt-6 border-t border-gray-200">
-                        <button
-                          type="submit"
-                          disabled={saving}
-                          className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
-                        >
-                          {saving ? (
-                            <>
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                              <span>Saving...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Save className="h-5 w-5" />
-                              <span>Save Preferences</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-
-                {activeTab === 'billing' && (
-                  <div>
-                    <div className="mb-8">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Billing Information</h2>
-                      <p className="text-gray-600">View your current service package and billing details</p>
-                    </div>
-
-                    {accountingProfile ? (
-                      <div className="space-y-6">
-                        {/* Current Package */}
-                        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-200">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Service Package</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                              <p className="text-sm text-gray-600">Package Type</p>
-                              <p className="text-xl font-bold text-purple-600">
-                                {accountingProfile.service_package.charAt(0).toUpperCase() + accountingProfile.service_package.slice(1)}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Monthly Fee</p>
-                              <p className="text-xl font-bold text-green-600">
-                                ${accountingProfile.monthly_fee.toLocaleString()}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Business Type</p>
-                              <p className="font-medium text-gray-900">
-                                {accountingProfile.business_type.replace('_', ' ').toUpperCase()}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Billing Period</p>
-                              <p className="font-medium text-gray-900">Monthly</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Package Features */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-6">
-                          <h4 className="font-semibold text-gray-900 mb-4">Package Features</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {[
-                              'Monthly bookkeeping',
-                              'Tax preparation',
-                              'Financial reporting',
-                              'Email support',
-                              'Document management',
-                              'Compliance monitoring'
-                            ].map((feature, index) => (
-                              <div key={index} className="flex items-center space-x-2">
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                                <span className="text-sm text-gray-700">{feature}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Upgrade Options */}
-                        <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
-                          <h4 className="font-semibold text-yellow-900 mb-2">Need More Features?</h4>
-                          <p className="text-sm text-yellow-800 mb-4">
-                            Contact your consultant to upgrade your service package or add additional services.
-                          </p>
-                          <Link
-                            to="/client-services"
-                            className="bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 transition-colors inline-flex items-center space-x-2"
-                          >
-                            <CreditCard className="h-4 w-4" />
-                            <span>View Additional Services</span>
-                          </Link>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-12">
-                        <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Billing Information</h3>
-                        <p className="text-gray-600 mb-6">You don't have an active accounting service yet.</p>
-                        <Link
-                          to="/client-services"
-                          className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                        >
-                          Browse Services
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                )}
+              <h2 className="mb-2 text-2xl font-bold text-gray-900">
+                Welcome back, {profile?.full_name || profile?.email || user?.email || 'Client'}
+              </h2>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm text-gray-600">
+                    Consultant: {accountingProfile.consultant?.full_name || 'Not assigned'}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Star className="h-4 w-4 text-yellow-500" />
+                  <span className="text-sm text-gray-600">
+                    {accountingProfile.service_package.charAt(0).toUpperCase() + accountingProfile.service_package.slice(1)} Package
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Nav */}
+      <div className="border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8 py-4">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === 'overview'
+                  ? 'border border-blue-200 bg-blue-50 text-blue-600'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
+              }`}
+            >
+              <Eye className="h-4 w-4" />
+              <span>Overview</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('documents')}
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === 'documents'
+                  ? 'border border-blue-200 bg-blue-50 text-blue-600'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
+              }`}
+            >
+              <FileText className="h-4 w-4" />
+              <span>Documents ({documents.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('invoices')}
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === 'invoices'
+                  ? 'border border-blue-200 bg-blue-50 text-blue-600'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
+              }`}
+            >
+              <DollarSign className="h-4 w-4" />
+              <span>Invoices ({invoices.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('messages')}
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === 'messages'
+                  ? 'border border-blue-200 bg-blue-50 text-blue-600'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
+              }`}
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>Messages ({unreadMessages})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('mailbox')}
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === 'mailbox'
+                  ? 'border border-blue-200 bg-blue-50 text-blue-600'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
+              }`}
+            >
+              <Package className="h-4 w-4" />
+              <span>Virtual Mailbox</span>
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Stats */}
+        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {stats.map((stat) => (
+            <div
+              key={stat.name}
+              className="transform rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <div className={`${stat.color} rounded-xl p-3 shadow-lg`}>
+                  <stat.icon className="h-6 w-6 text-white" />
+                </div>
+                <span
+                  className={`rounded-full px-2 py-1 text-sm font-medium ${
+                    stat.changeType === 'positive'
+                      ? 'bg-green-100 text-green-700'
+                      : stat.changeType === 'neutral'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {stat.change}
+                </span>
+              </div>
+              <div>
+                <p className="mb-1 text-sm font-medium text-gray-600">{stat.name}</p>
+                <p className="mb-1 text-3xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-xs text-gray-500">{stat.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Company Info */}
+        <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Company Information</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div>
+              <p className="text-sm text-gray-600">Company Name</p>
+              <p className="font-medium text-gray-900">{accountingProfile.company_name}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Business Type</p>
+              <p className="font-medium text-gray-900">
+                {accountingProfile.business_type.replace('_', ' ').toUpperCase()}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Service Package</p>
+              <p className="font-medium text-gray-900">
+                {accountingProfile.service_package.charAt(0).toUpperCase() + accountingProfile.service_package.slice(1)}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Monthly Fee</p>
+              <p className="font-medium text-green-600 text-lg">${accountingProfile.monthly_fee.toLocaleString()}</p>
+              <p className="text-xs text-gray-500">
+                {accountingProfile.accounting_period.charAt(0).toUpperCase() + accountingProfile.accounting_period.slice(1)} billing
+              </p>
+            </div>
+          </div>
+          {accountingProfile.next_deadline && (
+            <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5 text-orange-600" />
+                <span className="font-medium text-orange-800">
+                  Next Deadline: {new Date(accountingProfile.next_deadline).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          {/* Left */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {activeTab === 'overview' && 'Dashboard Overview'}
+                {activeTab === 'documents' && 'My Documents'}
+                {activeTab === 'invoices' && 'My Invoices'}
+                {activeTab === 'messages' && 'Messages from Consultant'}
+                {activeTab === 'mailbox' && 'Virtual Mailbox'}
+              </h2>
+            </div>
+
+            <div className="p-6">
+              {activeTab === 'overview' && (
+                <div className="space-y-6">
+                  {/* Recent Documents */}
+                  <div>
+                    <h3 className="mb-4 text-lg font-semibold text-gray-900">Recent Documents</h3>
+                    {documents.length === 0 ? (
+                      <div className="text-center py-8">
+                        <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">No documents yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {documents.slice(0, 3).map((document) => (
+                          <div
+                            key={document.id}
+                            className="flex items-center justify-between rounded-lg bg-gray-50 p-4"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className={`h-3 w-3 rounded-full ${getPriorityColor(document.priority)}`} />
+                              <div>
+                                <p className="font-medium text-gray-900">{document.title}</p>
+                                <p className="text-sm text-gray-600">
+                                  Due: {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}
+                                </p>
+                              </div>
+                            </div>
+                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(document.status)}`}>
+                              {document.status.toUpperCase()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recent Invoices */}
+                  <div>
+                    <h3 className="mb-4 text-lg font-semibold text-gray-900">Recent Invoices</h3>
+                    {invoices.length === 0 ? (
+                      <div className="text-center py-8">
+                        <DollarSign className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">No invoices yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {invoices.slice(0, 2).map((invoice) => (
+                          <div
+                            key={invoice.id}
+                            className="flex items-center justify-between rounded-lg bg-gray-50 p-4"
+                          >
+                            <div>
+                              <p className="font-medium text-gray-900">{invoice.invoice_number}</p>
+                              <p className="text-sm text-gray-600">
+                                {new Date(invoice.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium text-gray-900">${invoice.amount} {invoice.currency}</p>
+                              <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                                {invoice.status.toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'documents' && (
+                <div className="space-y-4">
+                  {documents.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Yet</h3>
+                      <p className="text-gray-600">Your consultant will add documents here when needed.</p>
+                    </div>
+                  ) : (
+                    documents.map((document) => (
+                      <div key={document.id} className="rounded-lg bg-gray-50 p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="mb-2 flex items-center space-x-4">
+                              <div className={`h-3 w-3 rounded-full ${getPriorityColor(document.priority)}`} />
+                              <h3 className="text-lg font-semibold text-gray-900">{document.title}</h3>
+                              <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(document.status)}`}>
+                                {document.status.toUpperCase()}
+                              </span>
+                            </div>
+
+                            <div className="mb-4 grid grid-cols-1 gap-4 text-sm text-gray-600 md:grid-cols-3">
+                              <div>
+                                <span className="font-medium">Type:</span> {document.document_type}
+                              </div>
+                              <div>
+                                <span className="font-medium">Category:</span> {document.category}
+                              </div>
+                              <div>
+                                <span className="font-medium">Due Date:</span>{' '}
+                                <span
+                                  className={
+                                    document.due_date && new Date(document.due_date) < new Date()
+                                      ? 'font-medium text-red-600'
+                                      : ''
+                                  }
+                                >
+                                  {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            {document.file_url ? (
+                              <button className="flex items-center space-x-2 rounded-lg bg-green-50 px-4 py-2 font-medium text-green-600 transition-colors hover:bg-green-100">
+                                <Download className="h-4 w-4" />
+                                <span>Download</span>
+                              </button>
+                            ) : (
+                              <button className="flex items-center space-x-2 rounded-lg bg-blue-50 px-4 py-2 font-medium text-blue-600 transition-colors hover:bg-blue-100">
+                                <Upload className="h-4 w-4" />
+                                <span>Upload</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'invoices' && (
+                <div className="space-y-4">
+                  {invoices.length === 0 ? (
+                    <div className="text-center py-12">
+                      <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Invoices Yet</h3>
+                      <p className="text-gray-600">Invoices will appear here when generated by your consultant.</p>
+                    </div>
+                  ) : (
+                    invoices.map((invoice) => (
+                      <div key={invoice.id} className="rounded-lg bg-gray-50 p-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="mb-2 flex items-center space-x-4">
+                              <h3 className="text-lg font-semibold text-gray-900">{invoice.invoice_number}</h3>
+                              <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                                {invoice.status.toUpperCase()}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4 text-sm text-gray-600 md:grid-cols-3">
+                              <div>
+                                <span className="font-medium">Amount:</span> ${invoice.amount} {invoice.currency}
+                              </div>
+                              <div>
+                                <span className="font-medium">Due Date:</span>{' '}
+                                {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Created:</span>{' '}
+                                {new Date(invoice.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <button className="flex items-center space-x-2 rounded-lg bg-purple-50 px-4 py-2 font-medium text-purple-600 transition-colors hover:bg-purple-100">
+                              <Eye className="h-4 w-4" />
+                              <span>View</span>
+                            </button>
+                            {(invoice.status === 'sent' || invoice.status === 'overdue') && (
+                              <button className="rounded-lg bg-green-50 px-4 py-2 font-medium text-green-600 transition-colors hover:bg-green-100">
+                                Pay Now
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'messages' && (
+                <div className="space-y-4">
+                  {messages.length === 0 ? (
+                    <div className="text-center py-12">
+                      <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Messages Yet</h3>
+                      <p className="text-gray-600">Messages from your consultant will appear here.</p>
+                    </div>
+                  ) : (
+                    messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`rounded-lg p-6 ${message.is_read ? 'bg-gray-50' : 'border border-blue-200 bg-blue-50'}`}
+                      >
+                        <div className="mb-3 flex items-start justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
+                              <MessageSquare className="h-4 w-4 text-purple-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{message.sender?.full_name || 'Consultant'}</p>
+                              <p className="text-sm text-gray-600">
+                                {new Date(message.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          {!message.is_read && (
+                            <span className="rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">New</span>
+                          )}
+                        </div>
+
+                        {message.subject && (
+                          <h4 className="mb-2 font-medium text-gray-900">{message.subject}</h4>
+                        )}
+
+                        <p className="text-gray-700">{message.message}</p>
+
+                        <div className="mt-3 flex items-center justify-between">
+                          <span
+                            className={`rounded-full px-2 py-1 text-xs font-medium ${
+                              message.category === 'urgent'
+                                ? 'bg-red-100 text-red-800'
+                                : message.category === 'reminder'
+                                ? 'bg-orange-100 text-orange-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {message.category.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'mailbox' && (
+                <div>
+                  <VirtualMailboxManager viewMode="client" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right */}
+          <div className="space-y-6">
+            {/* Consultant */}
+            {accountingProfile.consultant && (
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="mb-4 text-lg font-semibold text-gray-900">Your Consultant</h3>
+                <div className="mb-4 flex items-center space-x-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-lg font-bold text-white">
+                    {accountingProfile.consultant.full_name[0]}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{accountingProfile.consultant.full_name}</p>
+                    <p className="text-sm text-gray-600">{accountingProfile.consultant.email}</p>
+                    <div className="mt-1 flex items-center space-x-1">
+                      <Star className="h-3 w-3 fill-current text-yellow-500" />
+                      <span className="text-xs text-gray-500">4.9 Rating</span>
+                    </div>
+                  </div>
+                </div>
+                <button className="flex w-full items-center justify-center space-x-2 rounded-lg bg-purple-600 px-4 py-3 font-medium text-white transition-colors hover:bg-purple-700">
+                  <MessageSquare className="h-5 w-5" />
+                  <span>Send Message</span>
+                </button>
+              </div>
+            )}
+
+            {/* Quick Actions */}
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-200 px-6 py-4">
+                <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { name: 'Upload Document', icon: Upload, color: 'bg-green-500 hover:bg-green-600' },
+                    { name: 'Pay Invoice', icon: CreditCard, color: 'bg-blue-500 hover:bg-blue-600' },
+                    { name: 'Message Consultant', icon: MessageSquare, color: 'bg-purple-500 hover:bg-purple-600' },
+                    { name: 'View Reports', icon: FileText, color: 'bg-indigo-500 hover:bg-indigo-600' },
+                    { name: 'Download Files', icon: Download, color: 'bg-teal-500 hover:bg-teal-600' },
+                    { name: 'Account Settings', icon: Settings, color: 'bg-gray-500 hover:bg-gray-600' },
+                  ].map((action, index) => (
+                    <button
+                      key={index}
+                      className={`${action.color} group cursor-pointer rounded-lg p-4 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md`}
+                    >
+                      <action.icon className="mx-auto mb-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                      <div className="text-xs font-medium">{action.name}</div>
+                    </button>
+                  ))}
+
+                  {/* Additional Services Button */}
+                  <Link
+                    to="/client-services"
+                    className="bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md group cursor-pointer"
+                  >
+                    <Package className="h-5 w-5 mx-auto mb-2 transition-transform group-hover:scale-110" />
+                    <div className="text-xs font-medium text-center">Additional Services</div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Service Details */}
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold text-gray-900">Service Details</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Package Type:</span>
+                  <span className="font-medium text-gray-900">
+                    {accountingProfile.service_package.charAt(0).toUpperCase() + accountingProfile.service_package.slice(1)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Billing Period:</span>
+                  <span className="font-medium text-gray-900">
+                    {accountingProfile.accounting_period.charAt(0).toUpperCase() + accountingProfile.accounting_period.slice(1)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Monthly Fee:</span>
+                  <span className="font-bold text-green-600 text-lg">${accountingProfile.monthly_fee.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Reminder Frequency:</span>
+                  <span className="font-medium text-gray-900">{accountingProfile.reminder_frequency} days</span>
+                </div>
+                {accountingProfile.last_document_received && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Last Document:</span>
+                    <span className="font-medium text-gray-900">
+                      {new Date(accountingProfile.last_document_received).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Monthly Summary */}
+            <div className="rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 p-6 text-white shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold">This Month</h3>
+                <TrendingUp className="h-6 w-6 text-blue-200" />
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-100">Documents Submitted</span>
+                  <span className="font-bold">
+                    {documents.filter((d) => d.status === 'completed').length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-100">Invoices Paid</span>
+                  <span className="font-bold">
+                    {invoices.filter((i) => i.status === 'paid').length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-100">Service Rating</span>
+                  <div className="flex items-center space-x-1">
+                    <Star className="h-4 w-4 fill-current text-yellow-300" />
+                    <span className="font-bold">5.0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Upload Document Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Upload Document</h3>
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Document Type
+                  </label>
+                  <select
+                    value={uploadDocumentType}
+                    onChange={(e) => setUploadDocumentType(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    <option value="">Select document type</option>
+                    <option value="financial_statement">Financial Statement</option>
+                    <option value="bank_statement">Bank Statement</option>
+                    <option value="tax_document">Tax Document</option>
+                    <option value="invoice">Invoice</option>
+                    <option value="receipt">Receipt</option>
+                    <option value="contract">Contract</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={uploadDescription}
+                    onChange={(e) => setUploadDescription(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Brief description of the document..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select File
+                  </label>
+                  <input
+                    type="file"
+                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported formats: PDF, DOC, DOCX, JPG, PNG, XLSX, XLS (Max 10MB)
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4 mt-6">
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmUpload}
+                  disabled={uploadProcessing || !uploadFile || !uploadDocumentType}
+                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {uploadProcessing ? (
+                    <>
+                      <Loader className="h-5 w-5 animate-spin" />
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileUp className="h-5 w-5" />
+                      <span>Upload</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pay Invoice Modal */}
+      {showPayInvoiceModal && selectedInvoiceToPay && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Pay Invoice</h3>
+                <button
+                  onClick={() => setShowPayInvoiceModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Invoice Details */}
+              <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                <h4 className="font-bold text-gray-900 mb-4">{selectedInvoiceToPay.invoice_number}</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount:</span>
+                    <span className="font-bold text-gray-900">${selectedInvoiceToPay.amount} {selectedInvoiceToPay.currency}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Due Date:</span>
+                    <span className="font-medium text-gray-900">
+                      {selectedInvoiceToPay.due_date ? new Date(selectedInvoiceToPay.due_date).toLocaleDateString() : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedInvoiceToPay.status)}`}>
+                      {selectedInvoiceToPay.status.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Method */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
+                <div className="space-y-3">
+                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      value="card"
+                      defaultChecked
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <div className="ml-3 flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-900">Credit/Debit Card</span>
+                        <CreditCard className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <p className="text-sm text-gray-600">Secure payment via Stripe</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      value="bank"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <div className="ml-3 flex-1">
+                      <span className="font-medium text-gray-900">Bank Transfer</span>
+                      <p className="text-sm text-gray-600">Direct bank transfer</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setShowPayInvoiceModal(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmPayInvoice}
+                  disabled={paymentProcessing}
+                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {paymentProcessing ? (
+                    <>
+                      <Loader className="h-5 w-5 animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-5 w-5" />
+                      <span>Pay ${selectedInvoiceToPay.amount}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default AccountSettingsPage;
+export default ClientAccountingDashboard;
