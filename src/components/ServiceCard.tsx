@@ -57,12 +57,6 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
         </Link>
       </div>
 
-      {/* Popular badge */}
-      {service.popular && (
-        <div className="absolute top-4 left-4 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-md text-xs font-bold">
-          Popular
-        </div>
-      )}
     </div>
   );
 };
