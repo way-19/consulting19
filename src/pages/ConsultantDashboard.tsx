@@ -263,7 +263,7 @@ const ConsultantDashboard = () => {
             </Link>
             <button className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors">
               <Globe className="h-4 w-4" />
-              <span>Site Management</span>
+              <Link to="/site-management">Site Management</Link>
             </button>
           </nav>
         </div>

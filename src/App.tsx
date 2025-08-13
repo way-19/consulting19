@@ -129,6 +129,7 @@ import ConsultantServices from './pages/ConsultantServices';
 import ClientServices from './pages/ClientServices';
 import AccountingManagement from './pages/AccountingManagement';
 import ConsultantPayments from './pages/ConsultantPayments';
+import SiteManagement from './pages/SiteManagement';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 
@@ -207,6 +208,12 @@ export default function App() {
           path="/consultant-payments"
           element={
             <ConsultantPayments />
+          }
+        />
+        <Route
+          path="/site-management"
+          element={
+            <SiteManagement />
           }
         />
         
