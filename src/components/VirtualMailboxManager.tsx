@@ -418,6 +418,40 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     }
   };
 
+  const handleShippingPayment = (item: VirtualMailboxItem) => {
+    setSelectedItem(item);
+    setShowShippingModal(true);
+  };
+
+  const processShipping = async () => {
+    if (!selectedItem) return;
+    
+    setProcessingPayment(true);
+    
+    // Simulate payment processing
+    setTimeout(() => {
+      // Update item with shipping fee and payment status
+      const shippingFee = SHIPPING_PRICES[shippingData.delivery_type];
+      
+      setItems(prev => prev.map(item => 
+        item.id === selectedItem.id 
+          ? { 
+              ...item, 
+              shipping_fee: shippingFee,
+              payment_status: 'paid' as any,
+              status: 'sent' as any,
+              sent_date: new Date().toISOString()
+            }
+          : item
+      ));
+      
+      setProcessingPayment(false);
+      setShowShippingModal(false);
+      
+      alert(`Payment successful!\n\nShipping Fee: $${shippingFee}\nDelivery: ${shippingData.delivery_type} (${shippingData.delivery_type === 'standard' ? '5-7' : '2-3'} business days)\n\nYour document will be shipped to:\n${shippingData.recipient_name}\n${shippingData.address_line1}\n${shippingData.city}, ${shippingData.state} ${shippingData.postal_code}\n${shippingData.country}`);
+    }, 2000);
+  };
+
   const filteredItems = items.filter(item => {
     const matchesSearch = 
       item.document_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -932,14 +966,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div className="space-y-3">
                     <div>
                       <span className="text-sm text-gray-600">Status:</span>
-      {showShippingModal && selectedItem && (
+                      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
                         {selectedItem.status.toUpperCase()}
                       </span>
                     </div>
                     <div>
-                <h2 className="text-xl font-bold text-gray-900">Ship Document to Address</h2>
+                      <span className="text-sm text-gray-600">Shipping Fee:</span>
                       <p className="font-medium">${selectedItem.shipping_fee}</p>
-                  onClick={() => setShowShippingModal(false)}
+                    </div>
                     <div>
                       <span className="text-sm text-gray-600">Payment Status:</span>
                       <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(selectedItem.payment_status)}`}>
@@ -948,63 +982,12 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                     </div>
                   </div>
                 </div>
-              {/* Document Info */}
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <h3 className="font-medium text-blue-900 mb-2">Document: {selectedItem.document_name}</h3>
-                <p className="text-sm text-blue-700">This document is available for digital download. Physical shipping is optional.</p>
               </div>
 
-              {/* Shipping Options */}
+              {/* Timeline */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Shipping Option *
-                </label>
-                <div className="space-y-3">
-                  <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="shippingType"
-                      value="standard"
-                      checked={shippingType === 'standard'}
-                      onChange={(e) => setShippingType(e.target.value as 'standard' | 'express')}
-                      className="text-purple-600"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">Standard Delivery - $15</div>
-                      <div className="text-sm text-gray-600">5-7 business days</div>
-                    </div>
-                  </label>
-                  <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="shippingType"
-                      value="express"
-                      checked={shippingType === 'express'}
-                      onChange={(e) => setShippingType(e.target.value as 'standard' | 'express')}
-                      className="text-purple-600"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">Express Delivery - $25</div>
-                      <div className="text-sm text-gray-600">2-3 business days</div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              </div>
-
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Delivery Address *
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Timeline</h3>
                 <div className="space-y-4">
-                  <input
-                    type="text"
-                    placeholder="Recipient Name"
-                    value={shippingAddress.recipient_name}
-                    onChange={(e) => setShippingAddress(prev => ({ ...prev, recipient_name: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                  />
                   <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                     <Clock className="h-5 w-5 text-gray-500" />
                     <div>
@@ -1084,7 +1067,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Shipping Address & Payment</h2>
+                <h2 className="text-xl font-bold text-gray-900">Ship Document to Address</h2>
                 <button
                   onClick={() => setShowShippingModal(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -1096,310 +1079,167 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
             <div className="p-6 space-y-6">
               {/* Document Info */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-medium text-gray-900 mb-2">{selectedItem.document_name}</h3>
-                <p className="text-sm text-gray-600">{selectedItem.document_type}</p>
-                <p className="text-xs text-gray-500 mt-1">Tracking: {selectedItem.tracking_number}</p>
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h3 className="font-medium text-blue-900 mb-2">Document: {selectedItem.document_name}</h3>
+                <p className="text-sm text-blue-700">This document is available for digital download. Physical shipping is optional.</p>
               </div>
 
-              {/* Delivery Options */}
+              {/* Shipping Options */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Delivery Option *
+                  Shipping Option *
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div 
-                    className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                      shippingData.delivery_type === 'standard' 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    onClick={() => setShippingData(prev => ({ ...prev, delivery_type: 'standard' }))}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900">Standard Delivery</h4>
-                      <span className="text-lg font-bold text-blue-600">${SHIPPING_PRICES.standard}</span>
+                <div className="space-y-3">
+                  <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="shippingType"
+                      value="standard"
+                      checked={shippingData.delivery_type === 'standard'}
+                      onChange={(e) => setShippingData(prev => ({ ...prev, delivery_type: e.target.value as 'standard' | 'express' }))}
+                      className="text-purple-600"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Standard Delivery - $15</div>
+                      <div className="text-sm text-gray-600">5-7 business days</div>
                     </div>
-                    <p className="text-sm text-gray-600">5-7 business days</p>
-                    <p className="text-xs text-gray-500 mt-1">Regular postal service</p>
-                  </div>
-                  
-                  <div 
-                    className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                      shippingData.delivery_type === 'express' 
-                        ? 'border-purple-500 bg-purple-50' 
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    onClick={() => setShippingData(prev => ({ ...prev, delivery_type: 'express' }))}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900">Express Delivery</h4>
-                      <span className="text-lg font-bold text-purple-600">${SHIPPING_PRICES.express}</span>
+                  </label>
+                  <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="shippingType"
+                      value="express"
+                      checked={shippingData.delivery_type === 'express'}
+                      onChange={(e) => setShippingData(prev => ({ ...prev, delivery_type: e.target.value as 'standard' | 'express' }))}
+                      className="text-purple-600"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Express Delivery - $25</div>
+                      <div className="text-sm text-gray-600">2-3 business days</div>
                     </div>
-                    <p className="text-sm text-gray-600">2-3 business days</p>
-                    <p className="text-xs text-gray-500 mt-1">Priority express service</p>
-                  </div>
+                  </label>
                 </div>
               </div>
 
               {/* Shipping Address Form */}
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Shipping Address</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Recipient Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={shippingData.recipient_name}
-                      onChange={(e) => setShippingData(prev => ({ ...prev, recipient_name: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Full name of recipient"
-                    />
-                  </div>
-                  
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Address Line 1 *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={shippingData.address_line1}
-                      onChange={(e) => setShippingData(prev => ({ ...prev, address_line1: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Street address"
-                    />
-                  </div>
-                  
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Address Line 2
-                    </label>
-                    <input
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Delivery Address *
+                </label>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Recipient Name"
+                    value={shippingData.recipient_name}
+                    onChange={(e) => setShippingData(prev => ({ ...prev, recipient_name: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    required
+                  />
+                  <input
+                    type="text"
                     placeholder="Address Line 1"
-                    value={shippingAddress.address_line1}
-                    onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line1: e.target.value }))}
-                      value={shippingData.address_line2}
-                      onChange={(e) => setShippingData(prev => ({ ...prev, address_line2: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Apartment, suite, etc. (optional)"
-                    />
+                    value={shippingData.address_line1}
+                    onChange={(e) => setShippingData(prev => ({ ...prev, address_line1: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    required
+                  />
+                  <input
+                    type="text"
                     placeholder="Address Line 2 (Optional)"
-                    value={shippingAddress.address_line2}
-                    onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line2: e.target.value }))}
-                  
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    value={shippingData.address_line2}
+                    onChange={(e) => setShippingData(prev => ({ ...prev, address_line2: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      placeholder="City"
+                      value={shippingData.city}
                       onChange={(e) => setShippingData(prev => ({ ...prev, city: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="City"
-                      value={shippingAddress.city}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
+                      required
                     />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      State/Province *
-                    </label>
                     <input
                       type="text"
-                      required
+                      placeholder="State/Province"
                       value={shippingData.state}
                       onChange={(e) => setShippingData(prev => ({ ...prev, state: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="State or Province"
+                      required
                     />
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Postal Code *
-                    </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input
                       type="text"
-                      required
+                      placeholder="Postal Code"
                       value={shippingData.postal_code}
                       onChange={(e) => setShippingData(prev => ({ ...prev, postal_code: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Postal/ZIP code"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Country *
-                    </label>
-                    <select
                       required
+                    />
+                    <select
                       value={shippingData.country}
                       onChange={(e) => setShippingData(prev => ({ ...prev, country: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
                     >
-                      <option value="">Select country...</option>
+                      <option value="">Select Country</option>
                       <option value="US">United States</option>
                       <option value="CA">Canada</option>
                       <option value="GB">United Kingdom</option>
                       <option value="DE">Germany</option>
                       <option value="FR">France</option>
-                      <option value="TR">Turkey</option>
-                      <option value="GE">Georgia</option>
-                      <option value="ES">Spain</option>
-                      <option value="IT">Italy</option>
-                      <option value="PT">Portugal</option>
                       <option value="other">Other</option>
                     </select>
                   </div>
-                  
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={shippingData.phone}
-                      onChange={(e) => setShippingData(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Phone number for delivery updates"
-                    />
-                  </div>
+                  <input
+                    type="tel"
+                    placeholder="Phone Number (Optional)"
+                    value={shippingData.phone}
+                    onChange={(e) => setShippingData(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
                 </div>
               </div>
 
               {/* Payment Summary */}
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Summary</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-700">Document:</span>
-                    <span className="font-medium">{selectedItem.document_name}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-700">Delivery Type:</span>
-                    <span className="font-medium capitalize">{shippingData.delivery_type}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-700">Delivery Time:</span>
-                    <span className="font-medium">
-                      {shippingData.delivery_type === 'standard' ? '5-7 business days' : '2-3 business days'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between border-t border-gray-300 pt-2">
-                    <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
-                    <span className="text-2xl font-bold text-purple-600">
-                      ${SHIPPING_PRICES[shippingData.delivery_type]}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stripe Payment Integration */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center space-x-3 mb-4">
-                  <CreditCard className="h-6 w-6 text-blue-600" />
-                  <h4 className="text-lg font-medium text-gray-900">Secure Payment</h4>
-                  <div className="flex items-center space-x-2">
-                    <img src="https://js.stripe.com/v3/fingerprinted/img/visa-729c05c240c4bdb47b03ac81d9945bfe.svg" alt="Visa" className="h-6" />
-                    <img src="https://js.stripe.com/v3/fingerprinted/img/mastercard-4d8844094130711885b5e41b28c9848f.svg" alt="Mastercard" className="h-6" />
-                    <img src="https://js.stripe.com/v3/fingerprinted/img/amex-a49b82f46c5cd6a96a6e418a6ca1717c.svg" alt="Amex" className="h-6" />
-                  </div>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-gray-700">
-                    <strong>Secure Payment:</strong> Your payment is processed securely through Stripe. 
-                    We don't store your payment information.
-                  </p>
-                </div>
-
-                {/* Mock Stripe Elements */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Card Information
-                    </label>
-                    <div className="border border-gray-300 rounded-lg p-3 bg-white">
-                      <input
-                        type="text"
-                        placeholder="1234 1234 1234 1234"
-                        className="w-full border-0 outline-none text-gray-900"
-                      value={shippingAddress.postal_code}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
-                        disabled
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <div className="border border-gray-300 rounded-lg p-3 bg-white">
-                        <input
-                          type="text"
-                    value={shippingAddress.country}
-                    onChange={(e) => setShippingAddress(prev => ({ ...prev, country: e.target.value }))}
-                          placeholder="MM / YY"
-                          className="w-full border-0 outline-none text-gray-900"
-                          disabled
-                        />
-                      </div>
-                      <div className="border border-gray-300 rounded-lg p-3 bg-white">
-                        <input
-                          type="text"
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <h4 className="font-medium text-gray-900 mb-3">Shipping Payment</h4>
                 <div className="mb-4">
                   <div className="text-2xl font-bold text-gray-900">
-                    ${shippingType === 'standard' ? '15' : '25'} USD
+                    ${SHIPPING_PRICES[shippingData.delivery_type]} USD
                   </div>
                   <div className="text-sm text-gray-600">
-                    {shippingType === 'standard' ? 'Standard Delivery (5-7 days)' : 'Express Delivery (2-3 days)'}
+                    {shippingData.delivery_type === 'standard' ? 'Standard Delivery (5-7 days)' : 'Express Delivery (2-3 days)'}
                   </div>
                 </div>
-                          className="w-full border-0 outline-none text-gray-900"
-                          disabled
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cardholder Name
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Name on card"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white"
-                      disabled
-                    />
-                  </div>
-                </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => setShowShippingModal(false)}
-                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={processShipping}
-                  disabled={processingPayment || !shippingData.recipient_name || !shippingData.address_line1 || !shippingData.city || !shippingData.state || !shippingData.postal_code || !shippingData.country}
-                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                  {processingPayment ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Processing Payment...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-5 w-5" />
-                      <span>Pay ${SHIPPING_PRICES[shippingData.delivery_type]} & Ship</span>
-                    </>
-                  <span>Pay ${shippingType === 'standard' ? '15' : '25'}</span>
-                </button>
+                {/* Actions */}
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={() => setShowShippingModal(false)}
+                    className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={processShipping}
+                    disabled={processingPayment || !shippingData.recipient_name || !shippingData.address_line1 || !shippingData.city || !shippingData.state || !shippingData.postal_code || !shippingData.country}
+                    className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  >
+                    {processingPayment ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-5 w-5" />
+                        <span>Pay ${SHIPPING_PRICES[shippingData.delivery_type]}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
