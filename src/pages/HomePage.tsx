@@ -361,6 +361,16 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Add any additional sections here if needed */}
+    </div>
+  );
+};
+
+export default HomePage;
+          </div>
+        </div>
+      </section>
+
       {/* AI Oracle Band */}
       <section className="py-16 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
