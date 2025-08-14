@@ -36,12 +36,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   // StrictMode'da effect'in iki kez tetiklenmesini güvenle engelle
   const initRef = useRef(false);
 
   const fetchProfile = async (uid: string): Promise<Profile | null> => {
     console.log('🔍 Fetching profile for user:', uid);
+    
+    try {
     const { data, error } = await supabase
       .from('profiles')
       .select('id, email, role, full_name, country, created_at, updated_at')
@@ -79,6 +82,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_evt, session) => {
+        console.log('🔄 Auth state changed:', _evt, session?.user?.email || 'No user');
+        
         const next = session?.user ?? null;
         setUser(next);
         if (next) {
@@ -86,30 +91,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setProfile(null);
         }
-        setLoading(false);
+        
+        if (initialized) {
+          setLoading(false);
+        }
+    } catch (error) {
+      console.error('💥 Error in fetchProfile:', error);
+      setProfile(null);
+      return null;
+    }
       }
-    );
+      
+      console.log('✅ Profile fetched successfully:', data.email, data.role);
+    if (initRef.current || initialized) return;     // ikinci çalışmayı engelle
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [initialized]);
 
-  const signIn = async (email: string, password: string): Promise<void> => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
+      
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Session error:', error);
+          setLoading(false);
+          setInitialized(true);
+          return;
+        }
+        
+        const current = session?.user ?? null;
+        console.log('👤 Current user:', current ? current.email : 'None');
+        
+        setUser(current);
+        if (current) {
+          await fetchProfile(current.id);
+        }
+      } catch (error) {
+        console.error('💥 Auth initialization error:', error);
+      } finally {
+        setLoading(false);
+    
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        console.error('❌ Sign in error:', error);
+        setLoading(false);
+        throw error;
+      }
+      console.log('✅ Sign in successful');
+      // onAuthStateChange tetiklenecek
+    } catch (error) {
       setLoading(false);
       throw error;
-    }
     // onAuthStateChange tetiklenecek
-  };
 
   const signOut = async (): Promise<void> => {
+    console.log('🔐 Attempting sign in for:', email);
+    console.log('🚪 Signing out...');
     setLoading(true);
     const { error } = await supabase.auth.signOut();
     if (error) console.error('Error signing out:', error);
     setUser(null);
     setProfile(null);
     setLoading(false);
+    console.log('✅ Signed out successfully');
   };
 
   const refreshProfile = async (): Promise<void> => {
