@@ -24,13 +24,10 @@ export default function ProtectedRoute({ allowedRoles, requiredRole, children }:
   if (loading) return <FullScreenLoader />;
   if (!user) return <Navigate to="/login" replace />;
 
-  // Allow consultants to access admin routes for content management
   const rolesToCheck = allowedRoles || (requiredRole ? [requiredRole] : undefined);
   
   if (rolesToCheck && profile) {
-    // Allow both admin and consultant roles to access admin routes
-    const hasAccess = rolesToCheck.includes(profile.role) || 
-                     (profile.role === 'consultant' && rolesToCheck.includes('admin'));
+    const hasAccess = rolesToCheck.includes(profile.role);
     
     if (!hasAccess) {
       return <Navigate to="/" replace />;
