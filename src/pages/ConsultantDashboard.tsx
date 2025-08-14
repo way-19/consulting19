@@ -211,118 +211,188 @@ const ConsultantDashboard = () => {
   return (
     <>
       <div className="min-h-screen bg-gray-50">
-      {/* Enhanced Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Logo Section */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/image.png" 
-                alt="Consulting19 Logo" 
-                className="h-16 w-32"
-                onError={(e) => {
-                  // Fallback to icon if logo fails to load
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-              <Globe2 className="h-16 w-32 text-purple-600 hidden" />
-              <div>
-                <p className="text-sm text-gray-500">Professional Consultant Dashboard</p>
+        {/* Sidebar Layout */}
+        <div className="flex h-screen">
+          {/* Sidebar */}
+          <div className="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+            {/* Logo Section */}
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-3 mb-4">
+                <img 
+                  src="/image.png" 
+                  alt="Consulting19 Logo" 
+                  className="h-12 w-24"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <Globe2 className="h-12 w-24 text-purple-600 hidden" />
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-green-100 text-green-800 px-4 py-2 rounded-full">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium">Online</span>
-              </div>
-              <span className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium">
-                {profile.role} • Georgia Specialist
-              </span>
-            </div>
-          </div>
-          
-          {/* Welcome Section */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Welcome back, {profile.full_name || profile.email}
-              </h2>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Star className="h-4 w-4 text-yellow-500" />
-                  <span className="text-sm text-gray-600">4.9 Rating</span>
+              <div className="text-center">
+                <h3 className="font-semibold text-gray-900">{profile.full_name || profile.email}</h3>
+                <p className="text-sm text-gray-500">Georgia Specialist</p>
+                <div className="flex items-center justify-center space-x-2 mt-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-green-600 font-medium">Online</span>
+                  <Star className="h-3 w-3 text-yellow-500" />
+                  <span className="text-xs text-gray-600">4.9</span>
                 </div>
               </div>
             </div>
+
+            {/* Navigation Menu */}
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+              <div className="mb-4">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main</h4>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg border border-purple-200">
+                    <Users className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </div>
+                  <Link 
+                    to="/customers-management"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Customer Management</span>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Services</h4>
+                <div className="space-y-1">
+                  <Link 
+                    to="/consultant-services"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>My Services</span>
+                  </Link>
+                  <Link 
+                    to="/legacy-orders"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>Legacy Orders</span>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Management</h4>
+                <div className="space-y-1">
+                  <Link 
+                    to="/accounting-management"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Calculator className="h-4 w-4" />
+                    <span>Accounting</span>
+                  </Link>
+                  <Link 
+                    to="/consultant/tasks"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Tasks</span>
+                  </Link>
+                  <Link 
+                    to="/consultant/documents"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>Documents</span>
+                  </Link>
+                  <Link 
+                    to="/consultant/projects"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Target className="h-4 w-4" />
+                    <span>Projects</span>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Financial</h4>
+                <div className="space-y-1">
+                  <Link 
+                    to="/consultant/payments" 
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    <span>Payments</span>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">System</h4>
+                <div className="space-y-1">
+                  <Link 
+                    to="/admin/countries" 
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Globe className="h-4 w-4" />
+                    <span>Site Management</span>
+                  </Link>
+                </div>
+              </div>
+            </nav>
+
+            {/* Quick Actions in Sidebar */}
+            <div className="p-4 border-t border-gray-200">
+              <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Quick Actions</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <button 
+                  onClick={() => {
+                    setChatType('admin-consultant');
+                    setIsChatOpen(true);
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg transition-colors group"
+                >
+                  <MessageSquare className="h-4 w-4 mx-auto mb-1 group-hover:scale-110 transition-transform" />
+                  <div className="text-xs font-medium">Admin Chat</div>
+                </button>
+                <button 
+                  onClick={() => {
+                    setChatType('consultant-client');
+                    setIsChatOpen(true);
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors group"
+                >
+                  <Users className="h-4 w-4 mx-auto mb-1 group-hover:scale-110 transition-transform" />
+                  <div className="text-xs font-medium">Client Chat</div>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Navigation Menu */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8 py-4 overflow-x-auto whitespace-nowrap">
-            <button className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg border border-purple-200">
-              <Users className="h-4 w-4" />
-              <span>Dashboard</span>
-            </button>
-            <Link 
-              to="/consultant-services"
-              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <Settings className="h-4 w-4" />
-              <span>My Services</span>
-            </Link>
-            <Link 
-              to="/legacy-orders"
-              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <FileText className="h-4 w-4" />
-              <span>Legacy Orders</span>
-            </Link>
-            <Link 
-              to="/accounting-management"
-              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <Calculator className="h-4 w-4" />
-              <span>Accounting Management</span>
-            </Link>
-            <Link 
-              to="/consultant/tasks"
-              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <CheckCircle className="h-4 w-4" />
-              <span>Task Management</span>
-            </Link>
-            <Link 
-              to="/consultant/documents"
-              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <FileText className="h-4 w-4" />
-              <span>Document Management</span>
-            </Link>
-            <Link 
-              to="/customers-management"
-              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <Users className="h-4 w-4" />
-              <span>Customer Management</span>
-            </Link>
-            <Link to="/consultant/payments" className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors">
-              <CreditCard className="h-4 w-4" />
-              <span>Payments</span>
-            </Link>
-            <Link to="/admin/countries" className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors">
-              <Globe className="h-4 w-4" />
-              <span>Site Management</span>
-            </Link>
-          </nav>
-        </div>
-      </div>
+          {/* Main Content */}
+          <div className="flex-1 overflow-auto">
+            {/* Header */}
+            <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    Welcome back, {profile.full_name || profile.email}
+                  </h1>
+                  <p className="text-gray-600 mt-1">Manage your clients and track your performance</p>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2 bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium">Online</span>
+                  </div>
+                  <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Georgia Specialist
+                  </span>
+                </div>
+              </div>
+            </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="p-6">
         {/* Enhanced Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat) => (
@@ -347,7 +417,7 @@ const ConsultantDashboard = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Enhanced Recent Clients */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
@@ -432,7 +502,7 @@ const ConsultantDashboard = () => {
           </div>
 
           {/* Right Sidebar */}
-          <div className="space-y-6">
+                <div className="space-y-6">
             {/* Debug Info */}
             <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
               <h3 className="text-lg font-semibold text-blue-900 mb-4">Debug Info</h3>
@@ -463,89 +533,63 @@ const ConsultantDashboard = () => {
             </div>
 
             {/* Enhanced Upcoming Tasks */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Today's Schedule</h3>
-                <Calendar className="h-5 w-5 text-gray-400" />
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  {upcomingTasks.map((task) => (
-                    <div key={task.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className={`flex-shrink-0 w-3 h-3 rounded-full mt-2 ${
-                        task.priority === 'high' ? 'bg-red-500' :
-                        task.priority === 'medium' ? 'bg-yellow-500' : 'bg-gray-400'
-                      }`}></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{task.task}</p>
-                        <p className="text-xs text-gray-500 mt-1">{task.client}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <p className="text-xs text-purple-600 font-medium">{task.time}</p>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            task.type === 'meeting' ? 'bg-blue-100 text-blue-700' :
-                            task.type === 'review' ? 'bg-green-100 text-green-700' :
-                            task.type === 'setup' ? 'bg-purple-100 text-purple-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {task.type}
-                          </span>
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Today's Schedule</h3>
+                      <Calendar className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <div className="p-6">
+                      <div className="space-y-4">
+                        {upcomingTasks.map((task) => (
+                          <div key={task.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div className={`flex-shrink-0 w-3 h-3 rounded-full mt-2 ${
+                              task.priority === 'high' ? 'bg-red-500' :
+                              task.priority === 'medium' ? 'bg-yellow-500' : 'bg-gray-400'
+                            }`}></div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">{task.task}</p>
+                              <p className="text-xs text-gray-500 mt-1">{task.client}</p>
+                              <div className="flex items-center justify-between mt-2">
+                                <p className="text-xs text-purple-600 font-medium">{task.time}</p>
+                                <span className={`text-xs px-2 py-1 rounded-full ${
+                                  task.type === 'meeting' ? 'bg-blue-100 text-blue-700' :
+                                  task.type === 'review' ? 'bg-green-100 text-green-700' :
+                                  task.type === 'setup' ? 'bg-purple-100 text-purple-700' :
+                                  'bg-gray-100 text-gray-700'
+                                }`}>
+                                  {task.type}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Performance Summary */}
+                  <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-sm text-white p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold">This Month</h3>
+                      <Award className="h-6 w-6 text-yellow-300" />
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-purple-100">New Clients</span>
+                        <span className="font-bold">8</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-purple-100">Revenue</span>
+                        <span className="font-bold">$47,200</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-purple-100">Satisfaction</span>
+                        <div className="flex items-center space-x-1">
+                          <Star className="h-4 w-4 text-yellow-300 fill-current" />
+                          <span className="font-bold">4.9</span>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-3">
-                  {quickActions.map((action, index) => (
-                    <button 
-                      key={index} 
-                      onClick={() => {
-                        if (action.name === 'Admin Chat') {
-                          setChatType('admin-consultant');
-                          setIsChatOpen(true);
-                        } else if (action.name === 'Client Messages') {
-                          setChatType('consultant-client');
-                          setIsChatOpen(true);
-                        }
-                      }}
-                      className={`${action.color} text-white p-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md group cursor-pointer`}
-                    >
-                      <action.icon className="h-5 w-5 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                      <div className="text-xs font-medium">{action.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Performance Summary */}
-            <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-sm text-white p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">This Month</h3>
-                <Award className="h-6 w-6 text-yellow-300" />
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-purple-100">New Clients</span>
-                  <span className="font-bold">8</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-purple-100">Revenue</span>
-                  <span className="font-bold">$47,200</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-purple-100">Satisfaction</span>
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 text-yellow-300 fill-current" />
-                    <span className="font-bold">4.9</span>
                   </div>
                 </div>
               </div>
