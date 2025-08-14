@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Star, CheckCircle, Clock, Users, Shield, MessageSquare, Phone } from 'lucide-react';
-import { countries } from '../data/countries';
+import { useCountries } from '../hooks/useCountries';
 
 const CountryServiceDetailPage = () => {
   const { countrySlug, serviceSlug } = useParams<{ countrySlug: string; serviceSlug: string }>();
+  const { countries, loading: countriesLoading } = useCountries();
   
   const country = countries.find(c => c.slug === countrySlug);
+
+  if (countriesLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   if (!country) {
     return (

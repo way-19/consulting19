@@ -1,14 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Globe, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
-import { countries } from '../data/countries';
-import { serviceCategories } from '../data/services';
+import { useCountries } from '../hooks/useCountries';
+import { useServiceCategories } from '../hooks/useServices';
 import LanguageSelector from './LanguageSelector';
 import { useTranslation } from '../contexts/LanguageContext';
 
 const Footer = () => {
-  const popularCountries = countries.slice(0, 5);
+  const { countries } = useCountries();
+  const { categories: serviceCategories } = useServiceCategories();
   const { t } = useTranslation();
+  
+  const popularCountries = countries.slice(0, 5);
 
   return (
     <footer className="bg-slate-900 text-white">
