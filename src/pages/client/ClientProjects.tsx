@@ -17,7 +17,6 @@ import {
   TrendingUp,
   Target,
   BarChart3,
-  MessageSquare,
   Phone,
   Mail,
   Globe,
