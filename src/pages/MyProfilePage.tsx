@@ -187,7 +187,7 @@ const MyProfilePage = () => {
     if (!file) return;
 
     // Check file size (5MB limit for avatars)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 50 * 1024 * 1024) {
       setMessage({ type: 'error', text: 'Avatar image must be less than 5MB.' });
       return;
     }
