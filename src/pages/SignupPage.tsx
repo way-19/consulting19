@@ -471,6 +471,12 @@ const SignupPage = () => {
                   <option value="USA">🇺🇸 United States</option>
                   <option value="Estonia">🇪🇪 Estonia</option>
                   <option value="UAE">🇦🇪 UAE</option>
+                  <option value="Malta">🇲🇹 Malta</option>
+                  <option value="Switzerland">🇨🇭 Switzerland</option>
+                  <option value="Portugal">🇵🇹 Portugal</option>
+                  <option value="Spain">🇪🇸 Spain</option>
+                  <option value="Turkey">🇹🇷 Turkey</option>
+                  <option value="Germany">🇩🇪 Germany</option>
                 </select>
               </div>
             )}

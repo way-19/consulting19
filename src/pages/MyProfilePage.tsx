@@ -67,7 +67,7 @@ const MyProfilePage = () => {
 
   const countries = [
     'Georgia', 'USA', 'Estonia', 'UAE', 'Malta', 'Switzerland', 'Portugal', 
-    'Spain', 'Turkey', 'Germany', 'France', 'United Kingdom', 'Other'
+    'Spain', 'Turkey', 'Germany', 'Other'
   ];
 
   const languages = [

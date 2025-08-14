@@ -403,7 +403,7 @@ const Navbar = () => {
                           <h3 className="text-sm font-semibold text-gray-900">{t('nav.chooseJurisdiction') || 'Choose Your Jurisdiction'}</h3>
                         </div>
                         <div className="max-h-96 overflow-y-auto">
-                          {countries.slice(0, 10).map((country) => (
+                          {countries.filter(country => country.is_active).slice(0, 10).map((country) => (
                             <Link
                               key={country.id}
                               to={`/countries/${country.slug}`}
@@ -413,7 +413,7 @@ const Navbar = () => {
                               <span className="text-2xl">{country.flag_emoji || '🌍'}</span>
                               <div className="flex-1">
                                 <div className="text-sm font-medium text-gray-900">{country.name}</div>
-                                <div className="text-xs text-gray-500">{country.description ? country.description.slice(0, 50) + '...' : ''}</div>
+                                <div className="text-xs text-gray-500">{country.description ? country.description.slice(0, 60) + '...' : 'Business-friendly jurisdiction'}</div>
                               </div>
                             </Link>
                           ))}
@@ -540,7 +540,7 @@ const Navbar = () => {
                       </button>
                       {isCountriesOpen && (
                         <div className="pl-4 space-y-1">
-                          {countries.slice(0, 8).map((country) => (
+                          {countries.filter(country => country.is_active).slice(0, 8).map((country) => (
                             <Link
                               key={country.id}
                               to={`/countries/${country.slug}`}

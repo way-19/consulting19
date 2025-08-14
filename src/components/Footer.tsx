@@ -57,13 +57,13 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-6">Popular Countries</h3>
             <div className="space-y-3">
-              {popularCountries.map((country) => (
+              {popularCountries.filter(country => country.is_active).map((country) => (
                 <Link
                   key={country.id}
                   to={`/countries/${country.slug}`}
                   className="flex items-center space-x-2 text-slate-300 hover:text-white transition-colors group"
                 >
-                  <span>{country.flag_emoji}</span>
+                  <span>{country.flag_emoji || '🌍'}</span>
                   <span>{country.name}</span>
                   <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
