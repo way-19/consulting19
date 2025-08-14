@@ -930,7 +930,7 @@ const TaskManagement = () => {
                         <span className="text-sm text-gray-600">Due Date:</span>
                         <p className={`font-medium ${new Date(selectedTask.due_date) < new Date() ? 'text-red-600' : ''}`}>
                           {new Date(selectedTask.due_date).toLocaleDateString()}
-                        <span>TIMER RUNNING</span>
+                        </p>
                       </div>
                     )}
                   </div>
