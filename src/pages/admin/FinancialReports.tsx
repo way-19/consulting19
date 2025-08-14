@@ -1123,11 +1123,83 @@ const FinancialReports = () => {
         {showRequestModal && selectedRequest && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-gray-900">Payment Request Details</h3>
+                  <button
+                    onClick={() => setShowRequestModal(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Consultant</label>
+                    <p className="text-lg font-semibold text-gray-900">{selectedRequest.consultant.full_name}</p>
+                    <p className="text-sm text-gray-600">{selectedRequest.consultant.email}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                    <p className="text-2xl font-bold text-green-600">${selectedRequest.amount.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedRequest.status)}`}>
+                      {selectedRequest.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Requested Date</label>
+                    <p className="text-gray-900">{new Date(selectedRequest.requested_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                {selectedRequest.processed_at && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Processed Date</label>
+                    <p className="text-gray-900">{new Date(selectedRequest.processed_at).toLocaleDateString()}</p>
+                  </div>
+                )}
+
+                {selectedRequest.notes && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-700">{selectedRequest.notes}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {selectedRequest.status === 'pending' && (
+                <div className="p-6 border-t border-gray-200 bg-gray-50 flex space-x-4">
+                  <button
+                    onClick={() => {
+                      handleApprovePayment(selectedRequest.id);
+                      setShowRequestModal(false);
+                    }}
+                    disabled={processingPayment}
+                    className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
+                  >
+                    <CheckCircle className="h-5 w-5" />
                     <span>Approve Request</span>
                   </button>
                   <button
-                    onClick={() => handleProcessPaymentRequest(selectedRequest.id, 'reject')}
-                    disabled={processingRequest}
+                    onClick={() => {
+                      const reason = prompt('Rejection reason:');
+                      if (reason) {
+                        handleRejectPayment(selectedRequest.id, reason);
+                        setShowRequestModal(false);
+                      }
+                    }}
+                    disabled={processingPayment}
                     className="flex-1 bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                   >
                     <X className="h-5 w-5" />
@@ -1137,8 +1209,7 @@ const FinancialReports = () => {
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );
