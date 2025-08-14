@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from './contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from './lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import MultilingualChat from '../components/MultilingualChat';
 import AccountSettingsPage from './AccountSettingsPage';
