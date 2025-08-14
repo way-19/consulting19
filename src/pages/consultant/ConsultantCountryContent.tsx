@@ -190,7 +190,7 @@ const ConsultantCountryContent = () => {
         .from('blog_posts')
         .select('*')
         .eq('author_id', profile?.id)
-        .cs('tags', [selectedCountry.name])
+        .contains('tags', [selectedCountry.name])
         .order('created_at', { ascending: false });
 
       if (blogError) throw blogError;
