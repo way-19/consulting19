@@ -22,9 +22,7 @@ import {
   Search,
   Filter,
   Users,
-  Settings,
-  Mail,
-  Truck
+  TrendingUp,
   Globe2,
   Star,
   Package,
@@ -118,23 +116,6 @@ interface VirtualMailboxItem {
   downloaded_date?: string;
   created_at: string;
 }
-interface VirtualMailboxItem {
-  id: string;
-  document_type: string;
-  document_name: string;
-  description?: string;
-  file_url?: string;
-  file_size?: number;
-  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
-  shipping_fee: number;
-  payment_status: 'unpaid' | 'paid' | 'waived';
-  sent_date?: string;
-  delivered_date?: string;
-  viewed_date?: string;
-  downloaded_date?: string;
-  created_at: string;
-}
 
 const ClientAccountingDashboard: React.FC = () => {
   const { user, profile } = useAuth();
@@ -144,7 +125,6 @@ const ClientAccountingDashboard: React.FC = () => {
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
-  const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [mailboxItems, setMailboxItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1588,34 +1568,6 @@ const ClientAccountingDashboard: React.FC = () => {
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                 >
                   Save Changes
-                </button>
-              </div>
-            </div>
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
-          </div>
-        </div>
-      )}
-                >
-                  {sendingMessage ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Sending...</span>
-                    </>
-                  ) : (
-                    <>
-                      <MessageSquare className="h-5 w-5" />
-                      <span>Send Message</span>
-                    </>
-                  )}
                 </button>
               </div>
             </div>
