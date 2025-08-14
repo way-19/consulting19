@@ -40,6 +40,10 @@ export const useCountries = (activeOnly: boolean = true) => {
       if (activeOnly) {
         query = query.eq('is_active', true);
       }
+      // Temporarily remove is_active filter until database migration is run
+      // if (activeOnly) {
+      //   query = query.eq('is_active', true);
+      // }
 
       const { data, error } = await query;
 
@@ -86,6 +90,8 @@ export const useCountry = (slug: string) => {
         .select('*')
         .eq('slug', slug)
         .eq('is_active', true)
+        // Temporarily remove is_active filter until database migration is run
+        // .eq('is_active', true)
         .single();
 
       if (error) throw error;
