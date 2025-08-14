@@ -496,6 +496,13 @@ const AdminDashboard = () => {
                   <Settings className="h-4 w-4" />
                   <span className="text-sm">System Settings</span>
                 </Link>
+                <Link
+                  to="/admin/security"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  <Shield className="h-4 w-4" />
+                  <span className="text-sm">Security Audit</span>
+                </Link>
               </div>
             </div>
           </div>
