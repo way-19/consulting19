@@ -413,7 +413,7 @@ const Navbar = () => {
                               <span className="text-2xl">{country.flag}</span>
                               <div className="flex-1">
                                 <div className="text-sm font-medium text-gray-900">{country.name}</div>
-                                <div className="text-xs text-gray-500">{country.description.slice(0, 50)}...</div>
+                                <div className="text-xs text-gray-500">{country.description ? country.description.slice(0, 50) + '...' : ''}</div>
                               </div>
                             </Link>
                           ))}
