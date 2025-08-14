@@ -404,6 +404,7 @@ const Navbar = () => {
                         </div>
                         <div className="max-h-96 overflow-y-auto">
                           {countries.filter(country => country.is_active).slice(0, 10).map((country) => (
+                          {countries.filter(country => country.is_active && country.slug !== 'singapore').slice(0, 10).map((country) => (
                             <Link
                               key={country.id}
                               to={`/countries/${country.slug}`}
@@ -540,7 +541,7 @@ const Navbar = () => {
                       </button>
                       {isCountriesOpen && (
                         <div className="pl-4 space-y-1">
-                          {countries.filter(country => country.is_active).slice(0, 8).map((country) => (
+                          {countries.filter(country => country.is_active && country.slug !== 'singapore').slice(0, 8).map((country) => (
                             <Link
                               key={country.id}
                               to={`/countries/${country.slug}`}
