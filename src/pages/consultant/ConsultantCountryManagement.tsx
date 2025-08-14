@@ -513,7 +513,7 @@ const ConsultantCountryManagement = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Country Content Management</h1>
-              <p className="text-gray-600 mt-1">Manage country information, blog posts, and FAQs</p>
+              <p className="text-gray-600 mt-1">Manage your country's content, blog posts, and FAQs</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -522,10 +522,10 @@ const ConsultantCountryManagement = () => {
                   else if (activeTab === 'blog') setShowBlogModal(true);
                   else if (activeTab === 'faq') setShowFaqModal(true);
                 }}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
               >
                 <Plus className="h-5 w-5" />
-                <span>Add {activeTab === 'countries' ? 'Country' : activeTab === 'blog' ? 'Blog Post' : 'FAQ'}</span>
+                <span>Edit Country Info</span>
               </button>
               <button
                 onClick={() => {
@@ -826,7 +826,7 @@ const ConsultantCountryManagement = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {editingCountry ? 'Edit Country' : 'Add New Country'}
+                  {editingCountry ? 'Edit Country Information' : 'Update Country Information'}
                 </h2>
                 <button
                   onClick={resetCountryForm}
@@ -855,16 +855,16 @@ const ConsultantCountryManagement = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    URL Slug *
+                    URL Slug (Read Only)
                   </label>
                   <input
                     type="text"
-                    required
                     value={countryForm.slug}
-                    onChange={(e) => setCountryForm(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    readOnly
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
                     placeholder="e.g., georgia"
                   />
+                  <p className="text-xs text-gray-500 mt-1">URL slug cannot be changed after creation</p>
                 </div>
 
                 <div>
@@ -910,7 +910,7 @@ const ConsultantCountryManagement = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Country Image
+                  Country Image (Optional)
                 </label>
                 <input
                   type="file"
@@ -931,7 +931,7 @@ const ConsultantCountryManagement = () => {
                   accept="image/*"
                 />
                 {selectedCountryImageFile && (
-                  <p className="mt-2 text-sm text-gray-600">Selected file: {selectedCountryImageFile.name}</p>
+                  <p className="mt-2 text-sm text-green-600">✓ Selected: {selectedCountryImageFile.name}</p>
                 )}
                 {countryForm.image_url && !selectedCountryImageFile && (
                   <div className="mt-2">
@@ -943,6 +943,7 @@ const ConsultantCountryManagement = () => {
                     />
                   </div>
                 )}
+                <p className="text-xs text-gray-500 mt-1">Upload a new image to replace the current one (max 50MB)</p>
               </div>
 
               {/* Supported Languages */}
@@ -1090,7 +1091,7 @@ const ConsultantCountryManagement = () => {
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                 >
                   <Save className="h-5 w-5" />
-                  <span>{loading ? 'Saving...' : editingCountry ? 'Update' : 'Create'} Country</span>
+                  <span>Update Country Information</span>
                 </button>
               </div>
             </form>
@@ -1105,7 +1106,7 @@ const ConsultantCountryManagement = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {editingBlog ? 'Edit Blog Post' : 'Create New Blog Post'}
+                  {editingBlog ? 'Edit Blog Post' : 'Add New Blog Post'}
                 </h2>
                 <button
                   onClick={resetBlogForm}
@@ -1140,16 +1141,16 @@ const ConsultantCountryManagement = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    URL Slug *
+                    URL Slug (Auto-generated)
                   </label>
                   <input
                     type="text"
-                    required
                     value={blogForm.slug}
-                    onChange={(e) => setBlogForm(prev => ({ ...prev, slug: generateSlug(e.target.value) }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    readOnly
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
                     placeholder="url-slug"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Automatically generated from title</p>
                 </div>
 
                 <div>
@@ -1234,7 +1235,7 @@ const ConsultantCountryManagement = () => {
               {/* Featured Image */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Featured Image
+                  Featured Image (Optional)
                 </label>
                 <input
                   type="file"
@@ -1255,7 +1256,7 @@ const ConsultantCountryManagement = () => {
                   accept="image/*"
                 />
                 {selectedBlogImageFile && (
-                  <p className="mt-2 text-sm text-gray-600">Selected file: {selectedBlogImageFile.name}</p>
+                  <p className="mt-2 text-sm text-green-600">✓ Selected: {selectedBlogImageFile.name}</p>
                 )}
                 {blogForm.featured_image_url && !selectedBlogImageFile && (
                   <div className="mt-2">
@@ -1267,6 +1268,7 @@ const ConsultantCountryManagement = () => {
                     />
                   </div>
                 )}
+                <p className="text-xs text-gray-500 mt-1">Upload an image for the blog post (max 50MB)</p>
               </div>
 
               {/* Tags */}
@@ -1364,7 +1366,7 @@ const ConsultantCountryManagement = () => {
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                 >
                   <Save className="h-5 w-5" />
-                  <span>{loading ? 'Saving...' : editingBlog ? 'Update' : 'Create'} Post</span>
+                  <span>{loading ? 'Saving...' : editingBlog ? 'Update' : 'Add'} Blog Post</span>
                 </button>
               </div>
             </form>
@@ -1379,7 +1381,7 @@ const ConsultantCountryManagement = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {editingFaq ? 'Edit FAQ' : 'Create New FAQ'}
+                  {editingFaq ? 'Edit FAQ' : 'Add New FAQ'}
                 </h2>
                 <button
                   onClick={resetFaqForm}
@@ -1515,7 +1517,7 @@ const ConsultantCountryManagement = () => {
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                 >
                   <Save className="h-5 w-5" />
-                  <span>{loading ? 'Saving...' : editingFaq ? 'Update' : 'Create'} FAQ</span>
+                  <span>{loading ? 'Saving...' : editingFaq ? 'Update' : 'Add'} FAQ</span>
                 </button>
               </div>
             </form>
