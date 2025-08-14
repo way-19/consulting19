@@ -30,6 +30,7 @@ import FinancialReports from './pages/admin/FinancialReports';
 import ConsultantDashboard from './pages/ConsultantDashboard';
 import CustomersManagement from './pages/CustomersManagement';
 import TaskManagement from './pages/consultant/TaskManagement';
+import DocumentManagement from './pages/consultant/DocumentManagement';
 import ProjectManagement from './pages/consultant/ProjectManagement';
 import ConsultantServices from './pages/ConsultantServices';
 import ConsultantPayments from './pages/consultant/ConsultantPayments';
