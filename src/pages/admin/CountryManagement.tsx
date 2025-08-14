@@ -54,6 +54,8 @@ const CountryManagement = () => {
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [editingCountry, setEditingCountry] = useState<CountryWithStats | null>(null);
+  const [selectedCountryForAssignment, setSelectedCountryForAssignment] = useState<CountryWithStats | null>(null);
+  const [availableConsultants, setAvailableConsultants] = useState<any[]>([]);
 
   const [countryForm, setCountryForm] = useState({
     name: '',
@@ -143,6 +145,31 @@ const CountryManagement = () => {
     setAssignments(data || []);
   };
 
+  const fetchAvailableConsultants = async (countryId: string) => {
+    // Get all consultants
+    const { data: allConsultants, error: consultantsError } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, country')
+      .eq('role', 'consultant')
+      .eq('is_active', true);
+
+    if (consultantsError) throw consultantsError;
+
+    // Get already assigned consultants for this country
+    const { data: assignedConsultants, error: assignedError } = await supabase
+      .from('consultant_country_assignments')
+      .select('consultant_id')
+      .eq('country_id', countryId)
+      .eq('status', 'active');
+
+    if (assignedError) throw assignedError;
+
+    const assignedIds = (assignedConsultants || []).map(a => a.consultant_id);
+    const available = (allConsultants || []).filter(c => !assignedIds.includes(c.id));
+    
+    setAvailableConsultants(available);
+  };
+
   const handleSubmitCountry = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -219,11 +246,41 @@ const CountryManagement = () => {
       
       await logAdminAction('ASSIGN_CONSULTANT', 'consultant_country_assignments', null, null, { consultantId, countryId, isPrimary });
       await fetchAssignments();
+      await fetchCountries(); // Refresh country stats
       alert('Consultant assigned successfully!');
     } catch (error) {
       console.error('Error assigning consultant:', error);
       alert('Failed to assign consultant');
     }
+  };
+
+  const handleRemoveConsultantAssignment = async (assignmentId: string) => {
+    if (!confirm('Are you sure you want to remove this consultant assignment?')) return;
+
+    try {
+      const assignmentToRemove = assignments.find(a => a.id === assignmentId);
+      
+      const { error } = await supabase
+        .from('consultant_country_assignments')
+        .delete()
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+      
+      await logAdminAction('REMOVE_CONSULTANT_ASSIGNMENT', 'consultant_country_assignments', assignmentId, assignmentToRemove, null);
+      await fetchAssignments();
+      await fetchCountries(); // Refresh country stats
+      alert('Consultant assignment removed successfully!');
+    } catch (error) {
+      console.error('Error removing consultant assignment:', error);
+      alert('Failed to remove consultant assignment');
+    }
+  };
+
+  const handleOpenAssignmentModal = async (country: CountryWithStats) => {
+    setSelectedCountryForAssignment(country);
+    await fetchAvailableConsultants(country.id);
+    setShowAssignmentModal(true);
   };
 
   const handleEdit = (country: CountryWithStats) => {
@@ -508,13 +565,12 @@ const CountryManagement = () => {
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => {
-                        setSelectedCountry(country);
-                        setShowAssignmentModal(true);
+                        handleOpenAssignmentModal(country);
                       }}
                       className="flex-1 bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center justify-center space-x-2"
                     >
                       <Users className="h-4 w-4" />
-                      <span>Assign</span>
+                      <span>Manage</span>
                     </button>
                     <button
                       onClick={() => handleEdit(country)}
@@ -795,16 +851,19 @@ const CountryManagement = () => {
       )}
 
       {/* Consultant Assignment Modal */}
-      {showAssignmentModal && selectedCountry && (
+      {showAssignmentModal && selectedCountryForAssignment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">
-                  Manage Consultants - {selectedCountry.name}
+                  Manage Consultants - {selectedCountryForAssignment.name}
                 </h2>
                 <button
-                  onClick={() => setShowAssignmentModal(false)}
+                  onClick={() => {
+                    setShowAssignmentModal(false);
+                    setSelectedCountryForAssignment(null);
+                  }}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="h-5 w-5 text-gray-500" />
@@ -816,53 +875,111 @@ const CountryManagement = () => {
               {/* Current Assignments */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Assignments</h3>
-                <div className="space-y-3">
-                  {assignments
-                    .filter(a => a.country_id === selectedCountry.id)
-                    .map((assignment) => (
-                      <div key={assignment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">{assignment.consultant.full_name}</p>
-                          <p className="text-sm text-gray-600">{assignment.consultant.email}</p>
+                {assignments.filter(a => a.country_id === selectedCountryForAssignment.id).length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">No Consultants Assigned</h4>
+                    <p className="text-gray-600">No consultants are currently assigned to this country.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {assignments
+                      .filter(a => a.country_id === selectedCountryForAssignment.id)
+                      .map((assignment) => (
+                        <div key={assignment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <p className="font-medium text-gray-900">{assignment.consultant.full_name}</p>
+                              {assignment.is_primary && (
+                                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                                  Primary
+                                </span>
+                              )}
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                assignment.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {assignment.status.toUpperCase()}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600">{assignment.consultant.email}</p>
+                            <p className="text-xs text-gray-500">
+                              Assigned: {new Date(assignment.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveConsultantAssignment(assignment.id)}
+                            className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center space-x-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>Remove</span>
+                          </button>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          {assignment.is_primary && (
-                            <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
-                              Primary
-                            </span>
-                          )}
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            assignment.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {assignment.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                </div>
+                      ))}
+                  </div>
+                )}
               </div>
 
               {/* Available Consultants */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Consultants</h3>
-                <div className="space-y-3">
-                  {consultants
-                    .filter(c => !assignments.some(a => a.consultant_id === c.id && a.country_id === selectedCountry.id))
-                    .map((consultant) => (
-                      <div key={consultant.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">{consultant.full_name}</p>
-                          <p className="text-sm text-gray-600">{consultant.email}</p>
-                          <p className="text-xs text-gray-500">Country: {consultant.country}</p>
+                {availableConsultants.length === 0 ? (
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">All Consultants Assigned</h4>
+                    <p className="text-gray-600">All available consultants are already assigned to this country.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {availableConsultants.map((consultant) => (
+                      <div key={consultant.id} className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <User className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{consultant.full_name}</p>
+                              <p className="text-sm text-gray-600">{consultant.email}</p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-500">Specialization: {consultant.country || 'Not specified'}</p>
                         </div>
-                        <button
-                          onClick={() => handleAssignConsultant(consultant.id, selectedCountry.id)}
-                          className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                        >
-                          Assign
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleAssignConsultant(consultant.id, selectedCountryForAssignment.id, false)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            <span>Assign</span>
+                          </button>
+                          <button
+                            onClick={() => handleAssignConsultant(consultant.id, selectedCountryForAssignment.id, true)}
+                            className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                          >
+                            <Award className="h-4 w-4" />
+                            <span>Primary</span>
+                          </button>
+                        </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Assignment Statistics */}
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
+                <h4 className="font-medium text-purple-900 mb-2">Assignment Statistics</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-purple-700">Total Assigned:</span>
+                    <span className="font-bold text-purple-900 ml-2">
+                      {assignments.filter(a => a.country_id === selectedCountryForAssignment.id).length}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-purple-700">Available:</span>
+                    <span className="font-bold text-purple-900 ml-2">{availableConsultants.length}</span>
+                  </div>
                 </div>
               </div>
             </div>
