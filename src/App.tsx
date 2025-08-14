@@ -16,6 +16,7 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import AIAssistantPage from './pages/AIAssistantPage';
 
 // Protected Pages - Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -73,6 +74,8 @@ export default function App() {
           <Route path="/services/:slug" element={<ServiceDetailPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/ai-assistant" element={<AIAssistantPage />} />
+          <Route path="/get-started" element={<AIAssistantPage />} />
           
           {/* Auth Routes */}
           <Route path="/login" element={<LoginPage />} />

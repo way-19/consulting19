@@ -471,7 +471,7 @@ const ClientAccountingDashboard = () => {
                 { key: 'documents', label: 'Documents', icon: FileText, count: documents.length },
                 { key: 'invoices', label: 'Invoices', icon: DollarSign, count: invoices.length },
                 { key: 'messages', label: 'Messages', icon: MessageSquare, count: unreadMessages },
-                { key: 'mailbox', label: 'Virtual Mailbox', icon: Package, count: 0 }
+                { key: 'mailbox', label: 'Virtual Mailbox', icon: Mail, count: 0 }
               ].map((tab) => (
                 <button
                   key={tab.key}
