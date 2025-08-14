@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import MultilingualChat from '../components/MultilingualChat';
 import AssignedClientsList from '../components/consultant/dashboard/AssignedClientsList';
-import { Users, TrendingUp, Clock, CheckCircle, Calendar, FileText, MessageSquare, Settings, Star, Award, Target, Zap, Calculator, CreditCard, Globe, Globe2 } from 'lucide-react';
+import { Users, TrendingUp, Clock, CheckCircle, Calendar, FileText, MessageSquare, Settings, Star, Award, Target, Zap, Calculator, CreditCard, Globe, Globe2, BarChart3, Shield } from 'lucide-react';
 
 interface AssignedClient {
   id: string;
