@@ -138,7 +138,7 @@ export default function App() {
           <Route
             path="/admin/security"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute requiredRole="admin">
                 <SecurityAudit />
               </ProtectedRoute>
             }
@@ -156,7 +156,7 @@ export default function App() {
           <Route
             path="/consultant/customers"
             element={
-              <ProtectedRoute requiredRole="consultant">
+              <ProtectedRoute allowedRoles={["consultant"]}>
                 <CustomersManagement />
               </ProtectedRoute>
             }
@@ -164,7 +164,7 @@ export default function App() {
           <Route
             path="/consultant/tasks"
             element={
-              <ProtectedRoute requiredRole="consultant">
+              <ProtectedRoute allowedRoles={["consultant"]}>
                 <TaskManagement />
               </ProtectedRoute>
             }
@@ -172,7 +172,7 @@ export default function App() {
           <Route
             path="/consultant/projects"
             element={
-              <ProtectedRoute requiredRole="consultant">
+              <ProtectedRoute allowedRoles={["consultant"]}>
                 <ProjectManagement />
               </ProtectedRoute>
             }
@@ -180,7 +180,7 @@ export default function App() {
           <Route
             path="/consultant/services"
             element={
-              <ProtectedRoute requiredRole="consultant">
+              <ProtectedRoute allowedRoles={["consultant"]}>
                 <ConsultantServices />
               </ProtectedRoute>
             }
@@ -188,7 +188,7 @@ export default function App() {
           <Route
             path="/consultant/payments"
             element={
-              <ProtectedRoute requiredRole="consultant">
+              <ProtectedRoute allowedRoles={["consultant"]}>
                 <ConsultantPayments />
               </ProtectedRoute>
             }
@@ -196,7 +196,7 @@ export default function App() {
           <Route
             path="/consultant/accounting"
             element={
-              <ProtectedRoute requiredRole="consultant">
+              <ProtectedRoute allowedRoles={["consultant"]}>
                 <AccountingManagement />
               </ProtectedRoute>
             }
@@ -204,7 +204,7 @@ export default function App() {
           <Route
             path="/consultant/tasks"
             element={
-              <ProtectedRoute requiredRole="consultant">
+              <ProtectedRoute allowedRoles={["consultant"]}>
                 <TaskManagement />
               </ProtectedRoute>
             }
@@ -212,7 +212,7 @@ export default function App() {
           <Route
             path="/consultant/legacy-orders"
             element={
-              <ProtectedRoute requiredRole="consultant">
+              <ProtectedRoute allowedRoles={["consultant"]}>
                 <LegacyOrders />
               </ProtectedRoute>
             }
@@ -262,10 +262,10 @@ export default function App() {
 
           {/* Legacy Routes for Backward Compatibility */}
           <Route path="/client/accounting" element={<Navigate to="/client-accounting" replace />} />
-          <Route path="/consultant-services" element={<Navigate to="/consultant/services" replace />} />
-          <Route path="/customers-management" element={<Navigate to="/consultant/customers" replace />} />
-          <Route path="/accounting-management" element={<Navigate to="/consultant/accounting" replace />} />
-          <Route path="/legacy-orders" element={<Navigate to="/consultant/legacy-orders" replace />} />
+          <Route path="/consultant-services" element={<ConsultantServices />} />
+          <Route path="/customers-management" element={<CustomersManagement />} />
+          <Route path="/accounting-management" element={<AccountingManagement />} />
+          <Route path="/legacy-orders" element={<LegacyOrders />} />
 
           {/* Catch All */}
           <Route path="*" element={<Navigate to="/" replace />} />

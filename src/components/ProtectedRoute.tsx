@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 type Role = "admin" | "consultant" | "client";
 interface Props {
   allowedRoles?: Role[];
+  requiredRole?: Role;
   children?: React.ReactNode;
 }
 
@@ -18,16 +19,19 @@ const FullScreenLoader: React.FC<{ message?: string }> = ({ message = "Initializ
 );
 
 export default function ProtectedRoute({ allowedRoles, children }: Props) {
+export default function ProtectedRoute({ allowedRoles, requiredRole, children }: Props) {
   const { user, profile, loading } = useAuth();
 
   if (loading) return <FullScreenLoader />;
   if (!user) return <Navigate to="/login" replace />;
 
-  if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
+  const rolesToCheck = allowedRoles || (requiredRole ? [requiredRole] : undefined);
+  
+  if (rolesToCheck && profile && !rolesToCheck.includes(profile.role)) {
     return <Navigate to="/" replace />;
   }
 
-  if (allowedRoles && !profile) {
+  if (rolesToCheck && !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white border rounded-lg p-6 shadow">
