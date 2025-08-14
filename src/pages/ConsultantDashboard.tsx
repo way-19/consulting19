@@ -327,6 +327,22 @@ const ConsultantDashboard = () => {
                 </div>
               </div>
 
+              {/* Admin Access - Only for admin users */}
+              {profile.role === 'admin' && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Admin</h4>
+                  <div className="space-y-1">
+                    <Link 
+                      to="/admin-dashboard"
+                      className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      <Shield className="h-4 w-4" />
+                      <span>Admin Dashboard</span>
+                    </Link>
+                  </div>
+                </div>
+              )}
+
               <div className="mb-4">
                 <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Content Control</h4>
                 <div className="space-y-1">
