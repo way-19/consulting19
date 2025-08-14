@@ -187,7 +187,7 @@ const ConsultantCountryContent = () => {
         .from('blog_posts')
         .select('*')
         .eq('author_id', profile?.id)
-        .ilike('tags', `%${selectedCountry.name}%`)
+        .cs('tags', [selectedCountry.name])
         .order('created_at', { ascending: false });
 
       if (blogError) throw blogError;
@@ -197,7 +197,7 @@ const ConsultantCountryContent = () => {
       const { data: faqData, error: faqError } = await supabase
         .from('faqs')
         .select('*')
-        .ilike('answer', `%${selectedCountry.name}%`)
+        .textSearch('answer', selectedCountry.name)
         .order('sort_order', { ascending: true });
 
       if (faqError) throw faqError;
