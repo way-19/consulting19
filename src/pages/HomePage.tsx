@@ -327,13 +327,12 @@ const HomePage = () => {
               our AI-powered consultants and comprehensive business services.
             </p>
           </div>
-
-          {countriesLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {countries.filter(country => country.is_active).slice(0, 4).map((country, index) => {
+              const matchPercentages = ['95%', '92%', '88%', '85%'];
+              const reasons = ['Tax advantages', 'Digital innovation', 'Strategic location', 'Business friendly'];
+              
+              return (
               {featuredCountries.map((country, index) => (
                 <CountryCard 
                   key={country.id} 
@@ -985,12 +984,12 @@ const HomePage = () => {
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors">
                     {insight.title}
-                  </h3>
+                  <div className="text-4xl mb-3">{country.flag_emoji || '🌍'}</div>
                   <p className="text-gray-600 text-sm mb-4">
-                    {insight.excerpt}
-                  </p>
+                  <div className="text-2xl font-bold text-purple-600 mb-2">{matchPercentages[index]}</div>
+                  <p className="text-sm text-gray-600">{reasons[index]}</p>
                   <Link
-                    to={`/countries/${insight.country.slug}/insights/${insight.id}`}
+                    to={`/countries/${country.slug}`}
                     className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1"
                   >
                     <span>Read More</span>
@@ -998,7 +997,8 @@ const HomePage = () => {
                   </Link>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
 
           <div className="text-center mt-12">
