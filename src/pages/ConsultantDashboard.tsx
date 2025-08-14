@@ -200,12 +200,12 @@ const ConsultantDashboard = () => {
   ];
 
   const quickActions = [
-    { name: 'Schedule Meeting', icon: Calendar, color: 'bg-green-500 hover:bg-green-600', description: 'Book consultation' },
-    { name: 'Generate Report', icon: FileText, color: 'bg-purple-500 hover:bg-purple-600', description: 'Create client report' },
-    { name: 'Admin Chat', icon: MessageSquare, color: 'bg-blue-500 hover:bg-blue-600', description: 'Message with admin' },
-    { name: 'Client Messages', icon: Users, color: 'bg-indigo-500 hover:bg-indigo-600', description: 'Messages from clients' },
-    { name: 'View Analytics', icon: TrendingUp, color: 'bg-indigo-500 hover:bg-indigo-600', description: 'Performance metrics' },
-    { name: 'Settings', icon: Settings, color: 'bg-gray-500 hover:bg-gray-600', description: 'Account settings' }
+    { name: 'Customers', icon: Users, color: 'bg-blue-500 hover:bg-blue-600', description: 'Manage clients', href: '/customers-management' },
+    { name: 'Tasks', icon: CheckCircle, color: 'bg-green-500 hover:bg-green-600', description: 'Task management', href: '/consultant/tasks' },
+    { name: 'Documents', icon: FileText, color: 'bg-purple-500 hover:bg-purple-600', description: 'Document review', href: '/consultant/documents' },
+    { name: 'Projects', icon: Target, color: 'bg-indigo-500 hover:bg-indigo-600', description: 'Project tracking', href: '/consultant/projects' },
+    { name: 'Payments', icon: CreditCard, color: 'bg-orange-500 hover:bg-orange-600', description: 'Financial reports', href: '/consultant/payments' },
+    { name: 'Services', icon: Settings, color: 'bg-gray-500 hover:bg-gray-600', description: 'My services', href: '/consultant-services' }
   ];
 
   return (
@@ -540,6 +540,84 @@ const ConsultantDashboard = () => {
 
           {/* Right Sidebar */}
                 <div className="space-y-6">
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {quickActions.slice(0, 6).map((action, index) => (
+                  <Link
+                    key={index}
+                    to={action.href}
+                    className={`${action.color} text-white p-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-lg group text-center`}
+                  >
+                    <action.icon className="h-6 w-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                    <h4 className="font-medium text-sm">{action.name}</h4>
+                    <p className="text-white/80 text-xs mt-1">{action.description}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Today's Appointments */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Today's Appointments</h3>
+                <Calendar className="h-5 w-5 text-gray-400" />
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
+                    <div className="flex-shrink-0 w-3 h-3 rounded-full mt-2 bg-red-500"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Client Consultation Call</p>
+                      <p className="text-xs text-gray-500 mt-1">Tech Startup LLC - Company Formation</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-purple-600 font-medium">10:00 AM - 11:00 AM</p>
+                        <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                          Video Call
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
+                    <div className="flex-shrink-0 w-3 h-3 rounded-full mt-2 bg-yellow-500"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Document Review Meeting</p>
+                      <p className="text-xs text-gray-500 mt-1">Global Trading Co. - Banking Setup</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-purple-600 font-medium">2:30 PM - 3:00 PM</p>
+                        <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                          In Person
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
+                    <div className="flex-shrink-0 w-3 h-3 rounded-full mt-2 bg-blue-500"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Follow-up Call</p>
+                      <p className="text-xs text-gray-500 mt-1">Investment Fund - Tax Residency</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-purple-600 font-medium">4:00 PM - 4:30 PM</p>
+                        <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                          Phone Call
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>Schedule New Appointment</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Debug Info */}
             <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
               <h3 className="text-lg font-semibold text-blue-900 mb-4">Debug Info</h3>
@@ -568,41 +646,6 @@ const ConsultantDashboard = () => {
                 Refresh Clients
               </button>
             </div>
-
-            {/* Enhanced Upcoming Tasks */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">Today's Schedule</h3>
-                      <Calendar className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <div className="p-6">
-                      <div className="space-y-4">
-                        {upcomingTasks.map((task) => (
-                          <div key={task.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                            <div className={`flex-shrink-0 w-3 h-3 rounded-full mt-2 ${
-                              task.priority === 'high' ? 'bg-red-500' :
-                              task.priority === 'medium' ? 'bg-yellow-500' : 'bg-gray-400'
-                            }`}></div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">{task.task}</p>
-                              <p className="text-xs text-gray-500 mt-1">{task.client}</p>
-                              <div className="flex items-center justify-between mt-2">
-                                <p className="text-xs text-purple-600 font-medium">{task.time}</p>
-                                <span className={`text-xs px-2 py-1 rounded-full ${
-                                  task.type === 'meeting' ? 'bg-blue-100 text-blue-700' :
-                                  task.type === 'review' ? 'bg-green-100 text-green-700' :
-                                  task.type === 'setup' ? 'bg-purple-100 text-purple-700' :
-                                  'bg-gray-100 text-gray-700'
-                                }`}>
-                                  {task.type}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Performance Summary */}
                   <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-sm text-white p-6">
