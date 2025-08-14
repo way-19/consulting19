@@ -22,20 +22,15 @@ import {
   Search,
   Filter,
   Users,
-  Settings,
-  Mail,
-  Truck
+  TrendingUp,
   Globe2,
   Star,
   Package,
+  CreditCard,
   Settings,
   Mail,
   Truck,
-  CreditCard,
-  MapPin,
-  X,
-  Save
-} from 'lucide-react';
+} from "lucide-react";
 
 interface ClientAccountingProfile {
   id: string;
