@@ -8,10 +8,6 @@ export interface Service {
   color: string;
   icon: string;
   popular?: boolean;
-  pricing: {
-    startingAt: number;
-    unit: string;
-  };
 }
 
 export const services: Service[] = [
@@ -29,11 +25,7 @@ export const services: Service[] = [
     ],
     color: 'bg-blue-500',
     icon: 'Building2',
-    popular: true,
-    pricing: {
-      startingAt: 1500,
-      unit: 'USD'
-    }
+    popular: true
   },
   {
     id: 2,
@@ -49,10 +41,6 @@ export const services: Service[] = [
     ],
     color: 'bg-green-500',
     icon: 'TrendingUp',
-    pricing: {
-      startingAt: 2500,
-      unit: 'USD'
-    }
   },
   {
     id: 3,
@@ -68,10 +56,6 @@ export const services: Service[] = [
     ],
     color: 'bg-purple-500',
     icon: 'Scale',
-    pricing: {
-      startingAt: 300,
-      unit: 'USD per hour'
-    }
   },
   {
     id: 4,
@@ -87,10 +71,6 @@ export const services: Service[] = [
     ],
     color: 'bg-orange-500',
     icon: 'Calculator',
-    pricing: {
-      startingAt: 500,
-      unit: 'USD per month'
-    }
   },
   {
     id: 5,
@@ -106,10 +86,6 @@ export const services: Service[] = [
     ],
     color: 'bg-teal-500',
     icon: 'Plane',
-    pricing: {
-      startingAt: 2000,
-      unit: 'USD'
-    }
   },
   {
     id: 6,
@@ -125,10 +101,6 @@ export const services: Service[] = [
     ],
     color: 'bg-pink-500',
     icon: 'BarChart3',
-    pricing: {
-      startingAt: 800,
-      unit: 'USD'
-    }
   },
   {
     id: 7,
@@ -144,10 +116,6 @@ export const services: Service[] = [
     ],
     color: 'bg-indigo-500',
     icon: 'CreditCard',
-    pricing: {
-      startingAt: 1000,
-      unit: 'USD'
-    }
   },
   {
     id: 8,
@@ -163,10 +131,6 @@ export const services: Service[] = [
     ],
     color: 'bg-red-500',
     icon: 'Shield',
-    pricing: {
-      startingAt: 200,
-      unit: 'USD per month'
-    }
   }
 ];
 

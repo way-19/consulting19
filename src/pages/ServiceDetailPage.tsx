@@ -104,11 +104,13 @@ const ServiceDetailPage: React.FC = () => {
               </div>
 
               <div className="mt-8 pt-6 border-t border-white/20">
-                <div className="text-3xl font-bold text-white">
-                  ${service.pricing.startingAt.toLocaleString()}
-                </div>
-                <div className="text-white/80 text-sm">
-                  {service.pricing.unit} • Starting price
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-white mb-2">
+                    Custom Pricing Available
+                  </div>
+                  <div className="text-white/80 text-sm">
+                    Contact our consultants for personalized quotes
+                  </div>
                 </div>
               </div>
             </div>

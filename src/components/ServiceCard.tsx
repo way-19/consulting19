@@ -47,12 +47,19 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
           ))}
         </div>
 
+        {/* Description */}
+        <div className="mb-4">
+          <p className="text-gray-600 text-sm">
+            Get personalized pricing from our expert consultants
+          </p>
+        </div>
+
         {/* CTA */}
         <Link
           to={`/services/${service.slug}`}
           className={`group/cta w-full ${service.color} text-white px-4 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-200 flex items-center justify-center space-x-2`}
         >
-          <span>Learn More</span>
+          <span>Get Quote</span>
           <ArrowRight className="h-4 w-4 group-hover/cta:translate-x-1 transition-transform" />
         </Link>
       </div>
