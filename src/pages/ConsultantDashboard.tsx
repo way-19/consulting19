@@ -263,61 +263,61 @@ const ConsultantDashboard = () => {
       {/* Navigation Menu */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8 py-4">
-            <button className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg border border-purple-200">
+          <nav className="flex space-x-8 py-4 overflow-x-auto whitespace-nowrap">
+            <button className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg border border-purple-200">
               <Users className="h-4 w-4" />
               <span>Dashboard</span>
             </button>
             <Link 
               to="/consultant-services"
-              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <Settings className="h-4 w-4" />
               <span>My Services</span>
             </Link>
             <Link 
               to="/legacy-orders"
-              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <FileText className="h-4 w-4" />
               <span>Legacy Orders</span>
             </Link>
             <Link 
               to="/accounting-management"
-              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <Calculator className="h-4 w-4" />
               <span>Accounting Management</span>
             </Link>
             <Link 
               to="/consultant/tasks"
-              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <CheckCircle className="h-4 w-4" />
               <span>Task Management</span>
             </Link>
             <Link 
               to="/consultant/documents"
-              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <FileText className="h-4 w-4" />
               <span>Document Management</span>
             </Link>
             <Link 
               to="/customers-management"
-              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <Users className="h-4 w-4" />
               <span>Customer Management</span>
             </Link>
-            <button className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors">
+            <Link to="/consultant/payments" className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors">
               <CreditCard className="h-4 w-4" />
               <span>Payments</span>
-            </button>
-            <button className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors">
+            </Link>
+            <Link to="/admin/countries" className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors">
               <Globe className="h-4 w-4" />
               <span>Site Management</span>
-            </button>
+            </Link>
           </nav>
         </div>
       </div>
