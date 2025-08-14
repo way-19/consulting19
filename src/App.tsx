@@ -191,6 +191,14 @@ export default function App() {
             }
           />
           <Route
+            path="/consultant/tasks"
+            element={
+              <ProtectedRoute requiredRole="consultant">
+                <TaskManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/consultant/legacy-orders"
             element={
               <ProtectedRoute requiredRole="consultant">

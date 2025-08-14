@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase, Task, Project } from '../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import { 
   ArrowLeft, 
   Search, 
@@ -21,23 +21,34 @@ import {
   X,
   Play,
   Pause,
-  Square
+  Square,
+  Timer,
+  Target,
+  FileText,
+  MessageSquare,
+  Bell,
+  TrendingUp
 } from 'lucide-react';
 
-interface TaskWithDetails extends Task {
+interface TaskWithDetails {
+  id: string;
+  client_id: string;
+  consultant_id: string;
+  title: string;
+  description?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'overdue';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  due_date?: string;
+  estimated_hours?: number;
+  actual_hours: number;
+  created_at: string;
+  updated_at: string;
   client?: {
     company_name: string;
     profile?: {
       full_name: string;
       email: string;
     };
-  };
-  project?: {
-    name: string;
-  };
-  assigned_user?: {
-    full_name: string;
-    email: string;
   };
 }
 
@@ -53,29 +64,41 @@ interface TimeEntry {
 const TaskManagement = () => {
   const { profile } = useAuth();
   const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
-  const [projectFilter, setProjectFilter] = useState('all');
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskWithDetails | null>(null);
   const [activeTimer, setActiveTimer] = useState<string | null>(null);
   const [timerStart, setTimerStart] = useState<Date | null>(null);
+  const [timerDuration, setTimerDuration] = useState(0);
+  const [selectedTask, setSelectedTask] = useState<TaskWithDetails | null>(null);
+  const [showTaskDetail, setShowTaskDetail] = useState(false);
 
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
-    project_id: '',
     client_id: '',
-    status: 'pending' as Task['status'],
-    priority: 'medium' as Task['priority'],
+    status: 'pending' as 'pending' | 'in_progress' | 'completed' | 'overdue',
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     due_date: '',
-    estimated_hours: 0,
-    assigned_to: ''
+    estimated_hours: 0
   });
+
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (activeTimer && timerStart) {
+      interval = setInterval(() => {
+        const now = new Date();
+        const duration = Math.floor((now.getTime() - timerStart.getTime()) / 1000);
+        setTimerDuration(duration);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [activeTimer, timerStart]);
 
   useEffect(() => {
     if (profile?.id) {
@@ -88,7 +111,6 @@ const TaskManagement = () => {
       setLoading(true);
       await Promise.all([
         fetchTasks(),
-        fetchProjects(),
         fetchClients()
       ]);
     } catch (error) {
@@ -109,13 +131,6 @@ const TaskManagement = () => {
             full_name,
             email
           )
-        ),
-        project:project_id (
-          name
-        ),
-        assigned_user:assigned_to (
-          full_name,
-          email
         )
       `)
       .eq('consultant_id', profile?.id)
@@ -123,17 +138,6 @@ const TaskManagement = () => {
 
     if (error) throw error;
     setTasks(data || []);
-  };
-
-  const fetchProjects = async () => {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('consultant_id', profile?.id)
-      .eq('status', 'active');
-
-    if (error) throw error;
-    setProjects(data || []);
   };
 
   const fetchClients = async () => {
@@ -161,8 +165,7 @@ const TaskManagement = () => {
         ...taskForm,
         consultant_id: profile?.id,
         due_date: taskForm.due_date ? new Date(taskForm.due_date).toISOString() : null,
-        estimated_hours: taskForm.estimated_hours || null,
-        assigned_to: taskForm.assigned_to || null
+        estimated_hours: taskForm.estimated_hours || null
       };
 
       if (editingTask) {
@@ -182,15 +185,15 @@ const TaskManagement = () => {
 
       await fetchTasks();
       resetForm();
-      alert('Task saved successfully!');
+      alert('Görev başarıyla kaydedildi!');
     } catch (error) {
       console.error('Error saving task:', error);
-      alert('Failed to save task: ' + (error as Error).message);
+      alert('Görev kaydedilemedi: ' + (error as Error).message);
     }
   };
 
   const handleDeleteTask = async (taskId: string) => {
-    if (!confirm('Are you sure you want to delete this task?')) return;
+    if (!confirm('Bu görevi silmek istediğinizden emin misiniz?')) return;
 
     try {
       const { error } = await supabase
@@ -200,14 +203,14 @@ const TaskManagement = () => {
 
       if (error) throw error;
       await fetchTasks();
-      alert('Task deleted successfully!');
+      alert('Görev başarıyla silindi!');
     } catch (error) {
       console.error('Error deleting task:', error);
-      alert('Failed to delete task');
+      alert('Görev silinemedi');
     }
   };
 
-  const handleUpdateTaskStatus = async (taskId: string, newStatus: Task['status']) => {
+  const handleUpdateTaskStatus = async (taskId: string, newStatus: 'pending' | 'in_progress' | 'completed' | 'overdue') => {
     try {
       const { error } = await supabase
         .from('tasks')
@@ -224,6 +227,7 @@ const TaskManagement = () => {
   const startTimer = (taskId: string) => {
     setActiveTimer(taskId);
     setTimerStart(new Date());
+    setTimerDuration(0);
   };
 
   const stopTimer = async (taskId: string) => {
@@ -233,20 +237,6 @@ const TaskManagement = () => {
     const durationMinutes = Math.round((endTime.getTime() - timerStart.getTime()) / 60000);
 
     try {
-      // Add time entry
-      const { error } = await supabase
-        .from('time_entries')
-        .insert([{
-          task_id: taskId,
-          user_id: profile?.id,
-          duration_minutes: durationMinutes,
-          description: 'Time tracking session',
-          date: new Date().toISOString().split('T')[0],
-          billable: true
-        }]);
-
-      if (error) throw error;
-
       // Update task actual hours
       const task = tasks.find(t => t.id === taskId);
       if (task) {
@@ -259,11 +249,12 @@ const TaskManagement = () => {
 
       setActiveTimer(null);
       setTimerStart(null);
+      setTimerDuration(0);
       await fetchTasks();
-      alert(`Time logged: ${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m`);
+      alert(`Zaman kaydedildi: ${Math.floor(durationMinutes / 60)}s ${durationMinutes % 60}d`);
     } catch (error) {
       console.error('Error logging time:', error);
-      alert('Failed to log time');
+      alert('Zaman kaydedilemedi');
     }
   };
 
@@ -272,13 +263,11 @@ const TaskManagement = () => {
     setTaskForm({
       title: task.title,
       description: task.description || '',
-      project_id: task.project_id || '',
       client_id: task.client_id,
       status: task.status,
       priority: task.priority,
       due_date: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : '',
-      estimated_hours: task.estimated_hours || 0,
-      assigned_to: task.assigned_to || ''
+      estimated_hours: task.estimated_hours || 0
     });
     setShowTaskModal(true);
   };
@@ -287,13 +276,11 @@ const TaskManagement = () => {
     setTaskForm({
       title: '',
       description: '',
-      project_id: '',
       client_id: '',
       status: 'pending',
       priority: 'medium',
       due_date: '',
-      estimated_hours: 0,
-      assigned_to: ''
+      estimated_hours: 0
     });
     setEditingTask(null);
     setShowTaskModal(false);
@@ -305,7 +292,6 @@ const TaskManagement = () => {
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'overdue': return 'bg-red-100 text-red-800';
-      case 'cancelled': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -326,9 +312,15 @@ const TaskManagement = () => {
       case 'in_progress': return <Play className="h-4 w-4" />;
       case 'pending': return <Clock className="h-4 w-4" />;
       case 'overdue': return <AlertTriangle className="h-4 w-4" />;
-      case 'cancelled': return <Square className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
     }
+  };
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -339,15 +331,16 @@ const TaskManagement = () => {
     
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
-    const matchesProject = projectFilter === 'all' || task.project_id === projectFilter;
     
-    return matchesSearch && matchesStatus && matchesPriority && matchesProject;
+    return matchesSearch && matchesStatus && matchesPriority;
   });
 
   const pendingTasks = tasks.filter(t => t.status === 'pending').length;
   const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
   const overdueTasks = tasks.filter(t => t.status === 'overdue' || (t.due_date && new Date(t.due_date) < new Date())).length;
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
+  const totalHours = tasks.reduce((sum, t) => sum + t.actual_hours, 0);
+  const estimatedHours = tasks.reduce((sum, t) => sum + (t.estimated_hours || 0), 0);
 
   if (loading) {
     return (
@@ -368,14 +361,14 @@ const TaskManagement = () => {
               className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              Dashboard'a Dön
             </Link>
           </div>
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Task Management</h1>
-              <p className="text-gray-600 mt-1">Manage tasks, track time, and monitor progress</p>
+              <h1 className="text-2xl font-bold text-gray-900">Görev Yönetimi</h1>
+              <p className="text-gray-600 mt-1">Müşteri görevlerini yönetin, zaman takibi yapın ve ilerlemeyi izleyin</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -383,14 +376,14 @@ const TaskManagement = () => {
                 className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
               >
                 <Plus className="h-5 w-5" />
-                <span>Add Task</span>
+                <span>Yeni Görev</span>
               </button>
               <button
                 onClick={fetchData}
                 className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
               >
                 <RefreshCw className="h-5 w-5" />
-                <span>Refresh</span>
+                <span>Yenile</span>
               </button>
             </div>
           </div>
@@ -399,11 +392,11 @@ const TaskManagement = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending Tasks</p>
+                <p className="text-sm font-medium text-gray-600">Bekleyen</p>
                 <p className="text-3xl font-bold text-yellow-600">{pendingTasks}</p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -413,7 +406,7 @@ const TaskManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">In Progress</p>
+                <p className="text-sm font-medium text-gray-600">Devam Eden</p>
                 <p className="text-3xl font-bold text-blue-600">{inProgressTasks}</p>
               </div>
               <Play className="h-8 w-8 text-blue-600" />
@@ -423,7 +416,7 @@ const TaskManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Overdue</p>
+                <p className="text-sm font-medium text-gray-600">Geciken</p>
                 <p className="text-3xl font-bold text-red-600">{overdueTasks}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-600" />
@@ -433,24 +426,77 @@ const TaskManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-sm font-medium text-gray-600">Tamamlanan</p>
                 <p className="text-3xl font-bold text-green-600">{completedTasks}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
           </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Toplam Saat</p>
+                <p className="text-3xl font-bold text-purple-600">{totalHours.toFixed(1)}h</p>
+              </div>
+              <Timer className="h-8 w-8 text-purple-600" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Verimlilik</p>
+                <p className="text-3xl font-bold text-indigo-600">
+                  {estimatedHours > 0 ? Math.round((totalHours / estimatedHours) * 100) : 0}%
+                </p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-indigo-600" />
+            </div>
+          </div>
         </div>
+
+        {/* Active Timer Display */}
+        {activeTimer && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-100 rounded-full p-3">
+                  <Timer className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-900">Aktif Zaman Takibi</h3>
+                  <p className="text-blue-700">
+                    {tasks.find(t => t.id === activeTimer)?.title || 'Bilinmeyen Görev'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="text-3xl font-bold text-blue-600 font-mono">
+                  {formatTime(timerDuration)}
+                </div>
+                <button
+                  onClick={() => stopTimer(activeTimer)}
+                  className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
+                >
+                  <Square className="h-5 w-5" />
+                  <span>Durdur</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Tasks</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Görev Ara</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Title, description, client..."
+                  placeholder="Başlık, açıklama, müşteri..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -459,52 +505,37 @@ const TaskManagement = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="overdue">Overdue</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="all">Tüm Durumlar</option>
+                <option value="pending">Bekleyen</option>
+                <option value="in_progress">Devam Eden</option>
+                <option value="completed">Tamamlanan</option>
+                <option value="overdue">Geciken</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Öncelik</label>
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">All Priority</option>
-                <option value="urgent">Urgent</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
-              <select
-                value={projectFilter}
-                onChange={(e) => setProjectFilter(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">All Projects</option>
-                {projects.map(project => (
-                  <option key={project.id} value={project.id}>{project.name}</option>
-                ))}
+                <option value="all">Tüm Öncelikler</option>
+                <option value="urgent">Acil</option>
+                <option value="high">Yüksek</option>
+                <option value="medium">Orta</option>
+                <option value="low">Düşük</option>
               </select>
             </div>
 
             <div className="text-sm text-gray-600">
-              Showing {filteredTasks.length} of {tasks.length} tasks
+              {filteredTasks.length} / {tasks.length} görev gösteriliyor
             </div>
           </div>
         </div>
@@ -513,13 +544,13 @@ const TaskManagement = () => {
         {filteredTasks.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Tasks Found</h3>
-            <p className="text-gray-600 mb-6">Create your first task to get started.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Görev Bulunamadı</h3>
+            <p className="text-gray-600 mb-6">İlk görevinizi oluşturmak için başlayın.</p>
             <button
               onClick={() => setShowTaskModal(true)}
               className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
             >
-              Create First Task
+              İlk Görevi Oluştur
             </button>
           </div>
         ) : (
@@ -534,9 +565,18 @@ const TaskManagement = () => {
                       <div className="flex items-center space-x-1">
                         {getStatusIcon(task.status)}
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                          {task.status.replace('_', ' ').toUpperCase()}
+                          {task.status === 'pending' ? 'BEKLEYEN' :
+                           task.status === 'in_progress' ? 'DEVAM EDEN' :
+                           task.status === 'completed' ? 'TAMAMLANAN' :
+                           task.status === 'overdue' ? 'GECİKEN' : task.status.toUpperCase()}
                         </span>
                       </div>
+                      {activeTimer === task.id && (
+                        <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+                          <span>ZAMİR ÇALIŞIYOR</span>
+                        </div>
+                      )}
                     </div>
 
                     {task.description && (
@@ -546,34 +586,51 @@ const TaskManagement = () => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
                       <div className="flex items-center space-x-1">
                         <Building className="h-4 w-4" />
-                        <span>{task.client?.company_name || task.client?.profile?.full_name || 'Unknown Client'}</span>
+                        <span>{task.client?.company_name || task.client?.profile?.full_name || 'Bilinmeyen Müşteri'}</span>
                       </div>
-                      {task.project && (
-                        <div className="flex items-center space-x-1">
-                          <Building className="h-4 w-4" />
-                          <span>{task.project.name}</span>
-                        </div>
-                      )}
                       {task.due_date && (
                         <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
                           <span className={new Date(task.due_date) < new Date() ? 'text-red-600 font-medium' : ''}>
-                            Due: {new Date(task.due_date).toLocaleDateString()}
+                            Son Tarih: {new Date(task.due_date).toLocaleDateString('tr-TR')}
                           </span>
                         </div>
                       )}
                       <div className="flex items-center space-x-1">
                         <Clock className="h-4 w-4" />
                         <span>
-                          {task.actual_hours}h / {task.estimated_hours || 0}h
+                          {task.actual_hours.toFixed(1)}h / {task.estimated_hours || 0}h
                         </span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Target className="h-4 w-4" />
+                        <span>Öncelik: {
+                          task.priority === 'urgent' ? 'Acil' :
+                          task.priority === 'high' ? 'Yüksek' :
+                          task.priority === 'medium' ? 'Orta' : 'Düşük'
+                        }</span>
                       </div>
                     </div>
 
-                    {task.assigned_user && (
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <User className="h-4 w-4" />
-                        <span>Assigned to: {task.assigned_user.full_name}</span>
+                    {/* Progress Bar */}
+                    {task.estimated_hours && task.estimated_hours > 0 && (
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-gray-700">İlerleme</span>
+                          <span className="text-sm text-gray-600">
+                            {Math.min(100, Math.round((task.actual_hours / task.estimated_hours) * 100))}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              task.actual_hours >= task.estimated_hours ? 'bg-red-500' :
+                              task.actual_hours >= task.estimated_hours * 0.8 ? 'bg-yellow-500' :
+                              'bg-blue-500'
+                            }`}
+                            style={{ width: `${Math.min(100, (task.actual_hours / task.estimated_hours) * 100)}%` }}
+                          ></div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -581,39 +638,54 @@ const TaskManagement = () => {
                   <div className="flex items-center space-x-2">
                     {/* Time Tracking */}
                     {activeTimer === task.id ? (
-                      <button
-                        onClick={() => stopTimer(task.id)}
-                        className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center space-x-2"
-                      >
-                        <Square className="h-4 w-4" />
-                        <span>Stop</span>
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        <div className="bg-blue-100 text-blue-800 px-3 py-2 rounded-lg font-mono text-sm">
+                          {formatTime(timerDuration)}
+                        </div>
+                        <button
+                          onClick={() => stopTimer(task.id)}
+                          className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center space-x-2"
+                        >
+                          <Square className="h-4 w-4" />
+                          <span>Durdur</span>
+                        </button>
+                      </div>
                     ) : (
                       <button
                         onClick={() => startTimer(task.id)}
-                        className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center space-x-2"
+                        disabled={!!activeTimer}
+                        className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Play className="h-4 w-4" />
-                        <span>Start</span>
+                        <span>Başlat</span>
                       </button>
                     )}
 
                     {/* Status Update */}
                     <select
                       value={task.status}
-                      onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value as Task['status'])}
+                      onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value as any)}
                       className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
-                      <option value="pending">Pending</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                      <option value="overdue">Overdue</option>
-                      <option value="cancelled">Cancelled</option>
+                      <option value="pending">Bekleyen</option>
+                      <option value="in_progress">Devam Eden</option>
+                      <option value="completed">Tamamlanan</option>
+                      <option value="overdue">Geciken</option>
                     </select>
 
                     <button
-                      onClick={() => handleEdit(task)}
+                      onClick={() => {
+                        setSelectedTask(task);
+                        setShowTaskDetail(true);
+                      }}
                       className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+
+                    <button
+                      onClick={() => handleEdit(task)}
+                      className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
@@ -639,7 +711,7 @@ const TaskManagement = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {editingTask ? 'Edit Task' : 'Create New Task'}
+                  {editingTask ? 'Görevi Düzenle' : 'Yeni Görev Oluştur'}
                 </h2>
                 <button
                   onClick={resetForm}
@@ -653,7 +725,7 @@ const TaskManagement = () => {
             <form onSubmit={handleSubmitTask} className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Task Title *
+                  Görev Başlığı *
                 </label>
                 <input
                   type="text"
@@ -661,27 +733,27 @@ const TaskManagement = () => {
                   value={taskForm.title}
                   onChange={(e) => setTaskForm(prev => ({ ...prev, title: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="e.g., Review client documents"
+                  placeholder="ör: Müşteri belgelerini incele"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
+                  Açıklama
                 </label>
                 <textarea
                   rows={3}
                   value={taskForm.description}
                   onChange={(e) => setTaskForm(prev => ({ ...prev, description: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Detailed description of the task..."
+                  placeholder="Görevin detaylı açıklaması..."
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Client *
+                    Müşteri *
                   </label>
                   <select
                     required
@@ -689,7 +761,7 @@ const TaskManagement = () => {
                     onChange={(e) => setTaskForm(prev => ({ ...prev, client_id: e.target.value }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="">Select a client...</option>
+                    <option value="">Müşteri seçin...</option>
                     {clients.map(client => (
                       <option key={client.id} value={client.id}>
                         {client.company_name || client.profile?.full_name || client.profile?.email}
@@ -700,56 +772,39 @@ const TaskManagement = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Project (Optional)
-                  </label>
-                  <select
-                    value={taskForm.project_id}
-                    onChange={(e) => setTaskForm(prev => ({ ...prev, project_id: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="">No project</option>
-                    {projects.map(project => (
-                      <option key={project.id} value={project.id}>{project.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
+                    Durum
                   </label>
                   <select
                     value={taskForm.status}
-                    onChange={(e) => setTaskForm(prev => ({ ...prev, status: e.target.value as Task['status'] }))}
+                    onChange={(e) => setTaskForm(prev => ({ ...prev, status: e.target.value as any }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="pending">Pending</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="overdue">Overdue</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="pending">Bekleyen</option>
+                    <option value="in_progress">Devam Eden</option>
+                    <option value="completed">Tamamlanan</option>
+                    <option value="overdue">Geciken</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Priority
+                    Öncelik
                   </label>
                   <select
                     value={taskForm.priority}
-                    onChange={(e) => setTaskForm(prev => ({ ...prev, priority: e.target.value as Task['priority'] }))}
+                    onChange={(e) => setTaskForm(prev => ({ ...prev, priority: e.target.value as any }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
+                    <option value="low">Düşük</option>
+                    <option value="medium">Orta</option>
+                    <option value="high">Yüksek</option>
+                    <option value="urgent">Acil</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Due Date
+                    Son Tarih
                   </label>
                   <input
                     type="date"
@@ -758,21 +813,21 @@ const TaskManagement = () => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Estimated Hours
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={taskForm.estimated_hours}
-                    onChange={(e) => setTaskForm(prev => ({ ...prev, estimated_hours: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="0"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tahmini Süre (Saat)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={taskForm.estimated_hours}
+                  onChange={(e) => setTaskForm(prev => ({ ...prev, estimated_hours: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="0"
+                />
               </div>
 
               {/* Actions */}
@@ -782,17 +837,175 @@ const TaskManagement = () => {
                   onClick={resetForm}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
-                  Cancel
+                  İptal
                 </button>
                 <button
                   type="submit"
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
                 >
                   <Save className="h-5 w-5" />
-                  <span>{editingTask ? 'Update' : 'Create'} Task</span>
+                  <span>{editingTask ? 'Güncelle' : 'Oluştur'}</span>
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Task Detail Modal */}
+      {showTaskDetail && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Görev Detayları</h2>
+                <button
+                  onClick={() => setShowTaskDetail(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Task Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Görev Bilgileri</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600">Başlık:</span>
+                      <p className="font-medium">{selectedTask.title}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Durum:</span>
+                      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedTask.status)}`}>
+                        {selectedTask.status === 'pending' ? 'BEKLEYEN' :
+                         selectedTask.status === 'in_progress' ? 'DEVAM EDEN' :
+                         selectedTask.status === 'completed' ? 'TAMAMLANAN' :
+                         selectedTask.status === 'overdue' ? 'GECİKEN' : selectedTask.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Öncelik:</span>
+                      <div className="inline-flex items-center space-x-2 ml-2">
+                        <div className={`w-3 h-3 rounded-full ${getPriorityColor(selectedTask.priority)}`}></div>
+                        <span className="font-medium">
+                          {selectedTask.priority === 'urgent' ? 'Acil' :
+                           selectedTask.priority === 'high' ? 'Yüksek' :
+                           selectedTask.priority === 'medium' ? 'Orta' : 'Düşük'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Müşteri:</span>
+                      <p className="font-medium">{selectedTask.client?.company_name || selectedTask.client?.profile?.full_name}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Zaman Takibi</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600">Tahmini Süre:</span>
+                      <p className="font-medium">{selectedTask.estimated_hours || 0} saat</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Harcanan Süre:</span>
+                      <p className="font-medium">{selectedTask.actual_hours.toFixed(1)} saat</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Verimlilik:</span>
+                      <p className="font-medium">
+                        {selectedTask.estimated_hours && selectedTask.estimated_hours > 0 
+                          ? `${Math.round((selectedTask.actual_hours / selectedTask.estimated_hours) * 100)}%`
+                          : 'N/A'
+                        }
+                      </p>
+                    </div>
+                    {selectedTask.due_date && (
+                      <div>
+                        <span className="text-sm text-gray-600">Son Tarih:</span>
+                        <p className={`font-medium ${new Date(selectedTask.due_date) < new Date() ? 'text-red-600' : ''}`}>
+                          {new Date(selectedTask.due_date).toLocaleDateString('tr-TR')}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              {selectedTask.description && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Açıklama</h3>
+                  <p className="text-gray-700 bg-gray-50 rounded-lg p-4">{selectedTask.description}</p>
+                </div>
+              )}
+
+              {/* Timeline */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Görev Zaman Çizelgesi</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="font-medium text-blue-900">Görev Oluşturuldu</p>
+                      <p className="text-sm text-blue-700">{new Date(selectedTask.created_at).toLocaleString('tr-TR')}</p>
+                    </div>
+                  </div>
+                  
+                  {selectedTask.status !== 'pending' && (
+                    <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                      <Play className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="font-medium text-green-900">Görev Başlatıldı</p>
+                        <p className="text-sm text-green-700">{new Date(selectedTask.updated_at).toLocaleString('tr-TR')}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedTask.status === 'completed' && (
+                    <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                      <CheckCircle className="h-5 w-5 text-purple-600" />
+                      <div>
+                        <p className="font-medium text-purple-900">Görev Tamamlandı</p>
+                        <p className="text-sm text-purple-700">{new Date(selectedTask.updated_at).toLocaleString('tr-TR')}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowTaskDetail(false);
+                    handleEdit(selectedTask);
+                  }}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                >
+                  <Edit className="h-5 w-5" />
+                  <span>Düzenle</span>
+                </button>
+                
+                {selectedTask.status !== 'completed' && (
+                  <button
+                    onClick={() => {
+                      handleUpdateTaskStatus(selectedTask.id, 'completed');
+                      setShowTaskDetail(false);
+                    }}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                  >
+                    <CheckCircle className="h-5 w-5" />
+                    <span>Tamamla</span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
