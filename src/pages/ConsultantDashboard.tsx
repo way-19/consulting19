@@ -647,6 +647,40 @@ const ConsultantDashboard = () => {
               </button>
             </div>
 
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="space-y-3">
+                <button 
+                  onClick={() => {
+                    setChatType('consultant-client');
+                    setIsChatOpen(true);
+                  }}
+                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  <span>Client Chat</span>
+                </button>
+                
+                <button 
+                  onClick={() => {
+                    setChatType('admin-consultant');
+                    setIsChatOpen(true);
+                  }}
+                  className="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  <span>Admin Chat</span>
+                </button>
+                
+                <button 
+                  className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Calendar className="h-5 w-5" />
+                  <span>AI Agent Appointments</span>
+                </button>
+              </div>
+            </div>
                   {/* Performance Summary */}
                   <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-sm text-white p-6">
                     <div className="flex items-center justify-between mb-4">
