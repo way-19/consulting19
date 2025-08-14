@@ -156,11 +156,11 @@ const ClientAccountingDashboard: React.FC = () => {
   });
 
   // Message form states
-  const [messageForm, setMessageForm] = useState({
-    language: 'en',
-    category: 'general',
+  const [newMessage, setNewMessage] = useState({
     subject: '',
-    message: ''
+    message: '',
+    category: 'general',
+    language: 'en'
   });
   const [messageLoading, setMessageLoading] = useState(false);
 
@@ -441,6 +441,34 @@ const ClientAccountingDashboard: React.FC = () => {
 
   const handleAccountSettings = () => {
     navigate('/account-settings');
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.message.trim() || !accountingProfile) return;
+
+    setMessageLoading(true);
+    try {
+      // In real implementation, this would send the message via API
+      // and potentially translate it using DeepL
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      alert('Message sent successfully!');
+      setNewMessage({
+        subject: '',
+        message: '',
+        category: 'general',
+        language: 'en'
+      });
+      
+      // Refresh messages
+      await fetchAccountingData();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setMessageLoading(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -976,33 +1004,18 @@ const ClientAccountingDashboard: React.FC = () => {
 
               {activeTab === 'messages' && (
                 <div className="space-y-6">
-                  {/* Send Message Form */}
-                  <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Send Message to Consultant</h3>
-                    <form onSubmit={async (e) => {
-                      e.preventDefault();
-                      if (!messageForm.message.trim()) return;
-                      
-                      setMessageLoading(true);
-                      try {
-                        // Simulate message sending
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        alert('Message sent successfully!');
-                        setMessageForm({ language: 'en', category: 'general', subject: '', message: '' });
-                      } catch (error) {
-                        alert('Failed to send message. Please try again.');
-                      } finally {
-                        setMessageLoading(false);
-                      }
-                    }} className="space-y-4">
+                  {/* New Message Form */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Send New Message</h3>
+                    <form onSubmit={handleSendMessage} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Language / Dil
+                            Message Language
                           </label>
                           <select
-                            value={messageForm.language}
-                            onChange={(e) => setMessageForm(prev => ({ ...prev, language: e.target.value }))}
+                            value={newMessage.language}
+                            onChange={(e) => setNewMessage(prev => ({ ...prev, language: e.target.value }))}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           >
                             <option value="en">🇺🇸 English</option>
@@ -1017,75 +1030,74 @@ const ClientAccountingDashboard: React.FC = () => {
                             <option value="ar">🇸🇦 العربية</option>
                           </select>
                         </div>
-                        
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Category / Kategori
+                            Message Category
                           </label>
                           <select
-                            value={messageForm.category}
-                            onChange={(e) => setMessageForm(prev => ({ ...prev, category: e.target.value }))}
+                            value={newMessage.category}
+                            onChange={(e) => setNewMessage(prev => ({ ...prev, category: e.target.value }))}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           >
-                            <option value="general">General / Genel</option>
-                            <option value="urgent">Urgent / Acil</option>
-                            <option value="document_request">Document Request / Belge Talebi</option>
-                            <option value="reminder">Reminder / Hatırlatma</option>
+                            <option value="general">General</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="document_request">Document Request</option>
+                            <option value="reminder">Reminder</option>
                           </select>
                         </div>
                       </div>
                       
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Subject / Konu
+                          Subject
                         </label>
                         <input
                           type="text"
-                          value={messageForm.subject}
-                          onChange={(e) => setMessageForm(prev => ({ ...prev, subject: e.target.value }))}
+                          value={newMessage.subject}
+                          onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="Message subject / Mesaj konusu"
+                          placeholder="Enter message subject..."
                         />
                       </div>
                       
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Message / Mesaj *
+                          Message
                         </label>
                         <textarea
                           rows={4}
-                          value={messageForm.message}
-                          onChange={(e) => setMessageForm(prev => ({ ...prev, message: e.target.value }))}
+                          value={newMessage.message}
+                          onChange={(e) => setNewMessage(prev => ({ ...prev, message: e.target.value }))}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="Write your message here / Mesajınızı buraya yazın"
+                          placeholder="Type your message here..."
                           required
                         />
                       </div>
                       
                       <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <Globe2 className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-800">DeepL Translation</span>
+                        <div className="flex items-center space-x-2">
+                          <Globe2 className="h-5 w-5 text-blue-600" />
+                          <p className="text-blue-800 font-medium">DeepL Translation</p>
                         </div>
-                        <p className="text-xs text-blue-700">
-                          Your message will be automatically translated to your consultant's language using DeepL API
+                        <p className="text-blue-700 text-sm mt-1">
+                          Your message will be automatically translated to your consultant's language if needed.
                         </p>
                       </div>
                       
                       <button
                         type="submit"
-                        disabled={messageLoading || !messageForm.message.trim()}
+                        disabled={messageLoading || !newMessage.message.trim()}
                         className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                       >
                         {messageLoading ? (
                           <>
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                            <span>Sending / Gönderiliyor...</span>
+                            <span>Sending...</span>
                           </>
                         ) : (
                           <>
                             <Send className="h-5 w-5" />
-                            <span>Send Message / Mesaj Gönder</span>
+                            <span>Send Message</span>
                           </>
                         )}
                       </button>
@@ -1141,62 +1153,6 @@ const ClientAccountingDashboard: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                </div>
-              )}
-
-              {activeTab === 'messages' && (
-                <div className="space-y-4">
-                  {messages.length === 0 ? (
-                    <div className="text-center py-12">
-                      <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Messages Yet</h3>
-                      <p className="text-gray-600">Messages from your consultant will appear here.</p>
-                    </div>
-                  ) : (
-                    messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`rounded-lg p-6 ${message.is_read ? 'bg-gray-50' : 'border border-blue-200 bg-blue-50'}`}
-                      >
-                        <div className="mb-3 flex items-start justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
-                              <MessageSquare className="h-4 w-4 text-purple-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{message.sender?.full_name || 'Consultant'}</p>
-                              <p className="text-sm text-gray-600">
-                                {new Date(message.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          {!message.is_read && (
-                            <span className="rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">New</span>
-                          )}
-                        </div>
-
-                        {message.subject && (
-                          <h4 className="mb-2 font-medium text-gray-900">{message.subject}</h4>
-                        )}
-
-                        <p className="text-gray-700">{message.message}</p>
-
-                        <div className="mt-3 flex items-center justify-between">
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs font-medium ${
-                              message.category === 'urgent'
-                                ? 'bg-red-100 text-red-800'
-                                : message.category === 'reminder'
-                                ? 'bg-orange-100 text-orange-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {message.category.replace('_', ' ').toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  )}
                 </div>
               )}
 
