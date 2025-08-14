@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle } from 'lucide-react';
 import { Country } from '../hooks/useCountries';
+import { getPublicImageUrl } from '../lib/supabase';
 
 interface CountryCardProps {
   country: Country;
