@@ -1007,5 +1007,3 @@ const ClientDocuments = () => {
 };
 
 export default ClientDocuments;
-
-export default ClientDocuments
