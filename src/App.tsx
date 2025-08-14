@@ -134,6 +134,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin/security"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <SecurityAudit />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Consultant Routes */}
           <Route
