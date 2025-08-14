@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import MultilingualChat from '../components/MultilingualChat';
 import AssignedClientsList from '../components/consultant/dashboard/AssignedClientsList';
-import { Users, TrendingUp, Clock, CheckCircle, Calendar, FileText, MessageSquare, Settings, Star, Award, Target, Zap, Calculator, CreditCard, Globe, Globe2, BarChart3, Shield } from 'lucide-react';
+import { Users, TrendingUp, Clock, CheckCircle, Calendar, FileText, MessageSquare, Settings, Star, Award, Target, Zap, Calculator, CreditCard, Globe, Globe2, BarChart3, Shield, User } from 'lucide-react';
 
 interface AssignedClient {
   id: string;
@@ -352,6 +352,26 @@ const ConsultantDashboard = () => {
                   >
                     <FileText className="h-4 w-4" />
                     <span>Country & Services</span>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Account</h4>
+                <div className="space-y-1">
+                  <Link 
+                    to="/settings"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                  <Link 
+                    to="/my-profile"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>My Profile</span>
                   </Link>
                 </div>
               </div>

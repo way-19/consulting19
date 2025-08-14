@@ -503,6 +503,13 @@ const AdminDashboard = () => {
                   <Shield className="h-4 w-4" />
                   <span className="text-sm">Security Audit</span>
                 </Link>
+                <Link
+                  to="/my-profile"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  <User className="h-4 w-4" />
+                  <span className="text-sm">My Profile</span>
+                </Link>
               </div>
             </div>
           </div>
