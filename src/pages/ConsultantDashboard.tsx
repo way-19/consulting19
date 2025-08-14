@@ -540,6 +540,41 @@ const ConsultantDashboard = () => {
 
                 {/* Right Sidebar */}
                 <div className="space-y-6">
+                  {/* Quick Actions */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                    <div className="space-y-3">
+                      <button 
+                        onClick={() => {
+                          setChatType('consultant-client');
+                          setIsChatOpen(true);
+                        }}
+                        className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                      >
+                        <MessageSquare className="h-5 w-5" />
+                        <span>Client Chat</span>
+                      </button>
+                      
+                      <button 
+                        onClick={() => {
+                          setChatType('admin-consultant');
+                          setIsChatOpen(true);
+                        }}
+                        className="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                      >
+                        <MessageSquare className="h-5 w-5" />
+                        <span>Admin Chat</span>
+                      </button>
+                      
+                      <button 
+                        className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                      >
+                        <Calendar className="h-5 w-5" />
+                        <span>AI Agent Appointments</span>
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Today's Appointments */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200">
                     <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
@@ -606,41 +641,6 @@ const ConsultantDashboard = () => {
                     >
                       Refresh Clients
                     </button>
-                  </div>
-
-                  {/* Quick Actions */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                    <div className="space-y-3">
-                      <button 
-                        onClick={() => {
-                          setChatType('consultant-client');
-                          setIsChatOpen(true);
-                        }}
-                        className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                      >
-                        <MessageSquare className="h-5 w-5" />
-                        <span>Client Chat</span>
-                      </button>
-                      
-                      <button 
-                        onClick={() => {
-                          setChatType('admin-consultant');
-                          setIsChatOpen(true);
-                        }}
-                        className="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
-                      >
-                        <MessageSquare className="h-5 w-5" />
-                        <span>Admin Chat</span>
-                      </button>
-                      
-                      <button 
-                        className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
-                      >
-                        <Calendar className="h-5 w-5" />
-                        <span>AI Agent Appointments</span>
-                      </button>
-                    </div>
                   </div>
 
                   {/* Performance Summary */}
