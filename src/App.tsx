@@ -212,15 +212,15 @@ export default function App() {
           <Route
             path="/client-dashboard"
             element={
-              <ProtectedRoute requiredRole="client">
+              <ProtectedRoute allowedRoles={["client"]}>
                 <ClientDashboard />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/client/accounting"
+            path="/client-accounting"
             element={
-              <ProtectedRoute requiredRole="client">
+              <ProtectedRoute allowedRoles={["client"]}>
                 <ClientAccountingDashboard />
               </ProtectedRoute>
             }
@@ -228,7 +228,7 @@ export default function App() {
           <Route
             path="/client/services"
             element={
-              <ProtectedRoute requiredRole="client">
+              <ProtectedRoute allowedRoles={["client"]}>
                 <ClientServices />
               </ProtectedRoute>
             }
@@ -236,14 +236,14 @@ export default function App() {
           <Route
             path="/client/projects"
             element={
-              <ProtectedRoute requiredRole="client">
+              <ProtectedRoute allowedRoles={["client"]}>
                 <ClientProjects />
               </ProtectedRoute>
             }
           />
 
           {/* Legacy Routes for Backward Compatibility */}
-          <Route path="/client-accounting" element={<Navigate to="/client/accounting" replace />} />
+          <Route path="/client/accounting" element={<Navigate to="/client-accounting" replace />} />
           <Route path="/consultant-services" element={<Navigate to="/consultant/services" replace />} />
           <Route path="/customers-management" element={<Navigate to="/consultant/customers" replace />} />
           <Route path="/accounting-management" element={<Navigate to="/consultant/accounting" replace />} />

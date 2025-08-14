@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase, Project, Task } from '../../lib/supabase';
 import { 
+  ArrowLeft,
   Building, 
   Calendar, 
   User,
@@ -14,7 +16,22 @@ import {
   DollarSign,
   TrendingUp,
   Target,
-  BarChart3
+  BarChart3,
+  MessageSquare,
+  Phone,
+  Mail,
+  Globe,
+  Award,
+  Clock as ClockIcon,
+  Download,
+  Upload,
+  Bell,
+  Settings,
+  RefreshCw,
+  Filter,
+  Search,
+  Plus,
+  Star
 } from 'lucide-react';
 
 interface ProjectWithDetails extends Project {
@@ -34,6 +51,9 @@ const ClientProjects = () => {
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<ProjectWithDetails | null>(null);
   const [showProjectDetail, setShowProjectDetail] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState<'name' | 'created_at' | 'progress' | 'due_date'>('created_at');
 
   useEffect(() => {
     if (profile?.id) {
@@ -138,6 +158,31 @@ const ClientProjects = () => {
   const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
   const avgProgress = projects.length > 0 ? projects.reduce((sum, p) => sum + p.progress, 0) / projects.length : 0;
 
+  const filteredProjects = projects.filter(project => {
+    const matchesSearch = 
+      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.consultant?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'name':
+        return a.name.localeCompare(b.name);
+      case 'progress':
+        return b.progress - a.progress;
+      case 'due_date':
+        if (!a.end_date && !b.end_date) return 0;
+        if (!a.end_date) return 1;
+        if (!b.end_date) return -1;
+        return new Date(a.end_date).getTime() - new Date(b.end_date).getTime();
+      default:
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -151,23 +196,44 @@ const ClientProjects = () => {
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Back Button */}
+          <div className="mb-4">
+            <Link 
+              to="/client-dashboard"
+              className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Link>
+          </div>
+          
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">My Projects</h1>
               <p className="text-gray-600 mt-1">Track your business projects and their progress</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={fetchProjects}
+                className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
+              >
+                <RefreshCw className="h-5 w-5" />
+                <span>Refresh</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Projects</p>
                 <p className="text-3xl font-bold text-blue-600">{activeProjects}</p>
+                <p className="text-xs text-gray-500 mt-1">Currently in progress</p>
               </div>
               <Target className="h-8 w-8 text-blue-600" />
             </div>
@@ -178,6 +244,7 @@ const ClientProjects = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Completed</p>
                 <p className="text-3xl font-bold text-green-600">{completedProjects}</p>
+                <p className="text-xs text-gray-500 mt-1">Successfully finished</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
@@ -188,6 +255,7 @@ const ClientProjects = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Investment</p>
                 <p className="text-3xl font-bold text-green-600">${totalBudget.toLocaleString()}</p>
+                <p className="text-xs text-gray-500 mt-1">Project budgets</p>
               </div>
               <DollarSign className="h-8 w-8 text-green-600" />
             </div>
@@ -198,22 +266,91 @@ const ClientProjects = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Avg Progress</p>
                 <p className="text-3xl font-bold text-purple-600">{avgProgress.toFixed(0)}%</p>
+                <p className="text-xs text-gray-500 mt-1">Overall completion</p>
               </div>
               <TrendingUp className="h-8 w-8 text-purple-600" />
             </div>
           </div>
         </div>
 
+        {/* Filters and Search */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Search Projects</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Project name, description, consultant..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="all">All Status</option>
+                <option value="planning">Planning</option>
+                <option value="active">Active</option>
+                <option value="on_hold">On Hold</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="created_at">Date Created</option>
+                <option value="name">Project Name</option>
+                <option value="progress">Progress</option>
+                <option value="due_date">Due Date</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-4 text-sm text-gray-600">
+            Showing {filteredProjects.length} of {projects.length} projects
+          </div>
+        </div>
+
         {/* Projects List */}
-        {projects.length === 0 ? (
+        {filteredProjects.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Projects Yet</h3>
-            <p className="text-gray-600 mb-6">Your consultant will create projects as your business journey progresses.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {projects.length === 0 ? 'No Projects Yet' : 'No Projects Found'}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {projects.length === 0 
+                ? 'Your consultant will create projects as your business journey progresses.'
+                : 'No projects match your current filters.'
+              }
+            </p>
+            {projects.length === 0 && (
+              <Link
+                to="/services"
+                className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+              >
+                Browse Services
+              </Link>
+            )}
           </div>
         ) : (
           <div className="space-y-6">
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <div key={project.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -239,7 +376,7 @@ const ClientProjects = () => {
                         <span>{project.completed_tasks_count || 0} / {project.total_tasks_count || 0} tasks</span>
                       </div>
                       <div className="flex items-center space-x-1">
-                        <Clock className="h-4 w-4" />
+                        <ClockIcon className="h-4 w-4" />
                         <span>{(project.time_logged || 0).toFixed(1)}h logged</span>
                       </div>
                       {project.budget && (
@@ -280,10 +417,23 @@ const ClientProjects = () => {
                           </span>
                         </div>
                       )}
+                      <div className="flex items-center space-x-1">
+                        <ClockIcon className="h-4 w-4" />
+                        <span>Updated: {new Date(project.updated_at).toLocaleDateString()}</span>
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-2">
+                    {project.consultant && (
+                      <button
+                        className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        <span>Message</span>
+                      </button>
+                    )}
+                    
                     <button
                       onClick={() => {
                         setSelectedProject(project);
@@ -296,6 +446,29 @@ const ClientProjects = () => {
                     </button>
                   </div>
                 </div>
+                
+                {/* Project Status Banner */}
+                {project.status === 'on_hold' && (
+                  <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <div className="flex items-center space-x-2">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      <span className="text-sm text-yellow-800 font-medium">
+                        Project is currently on hold. Contact your consultant for more information.
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                {project.end_date && new Date(project.end_date) < new Date() && project.status !== 'completed' && (
+                  <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div className="flex items-center space-x-2">
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                      <span className="text-sm text-red-800 font-medium">
+                        Project is overdue. Please contact your consultant.
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -345,6 +518,10 @@ const ClientProjects = () => {
                       <span className="text-sm text-gray-600">Email:</span>
                       <p className="font-medium">{selectedProject.consultant?.email}</p>
                     </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Created:</span>
+                      <p className="font-medium">{new Date(selectedProject.created_at).toLocaleDateString()}</p>
+                    </div>
                   </div>
                 </div>
 
@@ -356,6 +533,12 @@ const ClientProjects = () => {
                       <div className="mt-1">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium">{selectedProject.progress}%</span>
+                          <span className="text-xs text-gray-500">
+                            {selectedProject.progress === 100 ? 'Complete' :
+                             selectedProject.progress >= 75 ? 'Nearly done' :
+                             selectedProject.progress >= 50 ? 'Half way' :
+                             selectedProject.progress >= 25 ? 'Getting started' : 'Just started'}
+                          </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
@@ -379,9 +562,51 @@ const ClientProjects = () => {
                         <p className="font-medium">${selectedProject.budget.toLocaleString()}</p>
                       </div>
                     )}
+                    {selectedProject.estimated_hours && (
+                      <div>
+                        <span className="text-sm text-gray-600">Estimated Duration:</span>
+                        <p className="font-medium">{selectedProject.estimated_hours} hours</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
+
+              {/* Consultant Information */}
+              {selectedProject.consultant && (
+                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-6 border border-purple-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Consultant</h3>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                      {selectedProject.consultant.full_name[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900">{selectedProject.consultant.full_name}</h4>
+                      <p className="text-gray-600">{selectedProject.consultant.email}</p>
+                      <div className="flex items-center space-x-4 mt-2">
+                        <div className="flex items-center space-x-1">
+                          <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                          <span className="text-sm text-gray-600">4.9 Rating</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Award className="h-4 w-4 text-purple-600" />
+                          <span className="text-sm text-gray-600">Expert Level</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                      <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
+                        <MessageSquare className="h-4 w-4" />
+                        <span>Message</span>
+                      </button>
+                      <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2">
+                        <Phone className="h-4 w-4" />
+                        <span>Schedule Call</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Project Description */}
               {selectedProject.description && (
@@ -415,6 +640,7 @@ const ClientProjects = () => {
                                 <span>Due: {new Date(task.due_date).toLocaleDateString()}</span>
                               )}
                               <span>Hours: {task.actual_hours} / {task.estimated_hours || 0}</span>
+                              <span>Created: {new Date(task.created_at).toLocaleDateString()}</span>
                             </div>
                           </div>
                         </div>
@@ -446,15 +672,46 @@ const ClientProjects = () => {
                     </div>
                   )}
                   
+                  {selectedProject.status === 'completed' && (
+                    <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                      <CheckCircle className="h-5 w-5 text-purple-600" />
+                      <div>
+                        <p className="font-medium text-purple-900">Project Completed</p>
+                        <p className="text-sm text-purple-700">{new Date(selectedProject.updated_at).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  )}
+                  
                   {selectedProject.end_date && (
                     <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
                       <Calendar className="h-5 w-5 text-purple-600" />
                       <div>
-                        <p className="font-medium text-purple-900">Expected Completion</p>
+                        <p className="font-medium text-purple-900">
+                          {selectedProject.status === 'completed' ? 'Completed On' : 'Expected Completion'}
+                        </p>
                         <p className="text-sm text-purple-700">{new Date(selectedProject.end_date).toLocaleString()}</p>
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Project Actions */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-3">Available Actions</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2">
+                    <MessageSquare className="h-4 w-4" />
+                    <span>Contact Consultant</span>
+                  </button>
+                  <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2">
+                    <FileText className="h-4 w-4" />
+                    <span>View Documents</span>
+                  </button>
+                  <button className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2">
+                    <Download className="h-4 w-4" />
+                    <span>Download Report</span>
+                  </button>
                 </div>
               </div>
             </div>

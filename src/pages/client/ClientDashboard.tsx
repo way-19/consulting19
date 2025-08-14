@@ -334,7 +334,7 @@ const ClientDashboard = () => {
                 </Link>
                 
                 <Link
-                  to="/client/accounting"
+                  to="/client-accounting"
                   className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
                 >
                   <FileText className="h-5 w-5" />
@@ -379,6 +379,14 @@ const ClientDashboard = () => {
                     <p className="text-xs text-gray-500">3 days ago</p>
                   </div>
                 </div>
+                
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">New project created</p>
+                    <p className="text-xs text-gray-500">1 week ago</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -403,6 +411,14 @@ const ClientDashboard = () => {
                   <FileText className="h-4 w-4" />
                   <span>Help Center</span>
                 </button>
+                
+                <Link
+                  to="/client/projects"
+                  className="w-full bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white/30 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Building className="h-4 w-4" />
+                  <span>View All Projects</span>
+                </Link>
               </div>
             </div>
           </div>
