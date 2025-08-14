@@ -3,12 +3,22 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Globe, Users, TrendingUp, MessageCircle, Clock, DollarSign, Star } from 'lucide-react';
 import { useCountry } from '../hooks/useCountries';
 import { useServices } from '../hooks/useServices';
+import { useBlogPosts } from '../hooks/useBlogPosts';
+import { useFAQs } from '../hooks/useFAQs';
 import { getPublicImageUrl } from '../lib/supabase';
 
 const CountryDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { country, loading, error } = useCountry(slug || '');
   const { services: countryServices, loading: servicesLoading } = useServices(true);
+  const { blogPosts: countryBlogPosts, loading: blogLoading } = useBlogPosts({ 
+    isPublished: true, 
+    countryId: country?.id 
+  });
+  const { faqs: countryFaqs, loading: faqLoading } = useFAQs({ 
+    isActive: true, 
+    countryId: country?.id 
+  });
 
   if (loading) {
     return (
@@ -370,16 +380,34 @@ const CountryDetailPage = () => {
                 Get answers to common questions about doing business in {country.name}
               </p>
 
-              <div className="space-y-4">
-                {faqs.map((faq, index) => (
-                  <div key={index} className="bg-white rounded-lg border border-gray-200 p-4">
-                    <button className="w-full text-left flex items-center justify-between">
-                      <span className="font-medium text-gray-900">{faq.question}</span>
-                      <ArrowRight className="h-4 w-4 text-gray-400" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+              {faqLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+              ) : countryFaqs.length === 0 ? (
+                <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+                  <CheckCircle className="h-8 w-8 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No FAQs available for {country.name} yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {countryFaqs.slice(0, 5).map((faq) => (
+                    <div key={faq.id} className="bg-white rounded-lg border border-gray-200 p-4">
+                      <button className="w-full text-left flex items-center justify-between">
+                        <span className="font-medium text-gray-900">{faq.question}</span>
+                        <ArrowRight className="h-4 w-4 text-gray-400" />
+                      </button>
+                    </div>
+                  ))}
+                  {countryFaqs.length > 5 && (
+                    <div className="text-center">
+                      <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">
+                        View All FAQs →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Latest Insights */}
@@ -391,24 +419,50 @@ const CountryDetailPage = () => {
                 Expert updates and market intelligence from our {country.name} specialists
               </p>
 
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-6 text-white">
-                <div className="flex items-center space-x-2 mb-3">
-                  <span className="bg-white/20 text-white px-2 py-1 rounded-md text-xs font-medium">
-                    Market Update
-                  </span>
-                  <span className="text-white/80 text-sm">• 5 min read</span>
+              {blogLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">
-                  New Investment Opportunities in {country.name} 2024
-                </h3>
-                <p className="text-white/90 text-sm mb-4">
-                  Latest developments in {country.name}'s business landscape and emerging opportunities for international investors.
-                </p>
-                <button className="text-white hover:text-white/80 font-medium text-sm flex items-center space-x-1">
-                  <span>Read More</span>
-                  <ArrowRight className="h-3 w-3" />
-                </button>
-              </div>
+              ) : countryBlogPosts.length === 0 ? (
+                <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-6 text-white">
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold mb-3">Coming Soon</h3>
+                    <p className="text-white/90 text-sm">
+                      Expert insights and market updates for {country.name} will be available soon.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {countryBlogPosts.slice(0, 3).map((post) => (
+                    <div key={post.id} className="bg-white rounded-xl border border-gray-200 p-6">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-md text-xs font-medium">
+                          {post.category || 'Market Update'}
+                        </span>
+                        <span className="text-gray-400 text-sm">• 5 min read</span>
+                      </div>
+                      <h3 className="text-xl font-semibold mb-3 text-gray-900">
+                        {post.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-4">
+                        {post.excerpt || post.content.substring(0, 150) + '...'}
+                      </p>
+                      <button className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1">
+                        <span>Read More</span>
+                        <ArrowRight className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {countryBlogPosts.length > 3 && (
+                    <div className="text-center">
+                      <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">
+                        View All Insights →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
