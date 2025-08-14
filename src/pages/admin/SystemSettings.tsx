@@ -261,7 +261,7 @@ const SystemSettings = () => {
                         type="number"
                         min="1"
                         max="100"
-                        value={settingsForm.max_file_size_mb}
+                        value={settingsForm.max_file_size_mb || 50}
                         onChange={(e) => setSettingsForm(prev => ({ ...prev, max_file_size_mb: parseInt(e.target.value) || 50 }))}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />

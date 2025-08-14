@@ -677,6 +677,12 @@ const ClientDocuments = () => {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
+                        // Check file size (50MB limit)
+                        if (file.size > 50 * 1024 * 1024) {
+                          alert('File size must be less than 50MB. Please compress your file and try again.');
+                          e.target.value = '';
+                          return;
+                        }
                         setUploadForm(prev => ({ 
                           ...prev, 
                           file,

@@ -350,6 +350,11 @@ export const updateSetting = async (key: string, value: any) => {
 // Image Upload and Storage Helpers
 export const uploadFileToStorage = async (file: File, folder: string, bucketName: string = 'public_images') => {
   try {
+    // Check file size (50MB limit)
+    if (file.size > 50 * 1024 * 1024) {
+      throw new Error('File size must be less than 50MB. Please compress your file and try again.');
+    }
+
     const fileExtension = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
     const filePath = `${folder}/${fileName}`;

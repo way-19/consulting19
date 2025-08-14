@@ -77,6 +77,7 @@ const ServiceManagement = () => {
   const [editingService, setEditingService] = useState<CustomService | null>(null);
   const [selectedService, setSelectedService] = useState<CustomService | null>(null);
   const [showServiceDetail, setShowServiceDetail] = useState(false);
+  const [selectedServiceImageFile, setSelectedServiceImageFile] = useState<File | null>(null);
 
   const [serviceForm, setServiceForm] = useState({
     consultant_id: '',
@@ -860,6 +861,31 @@ const ServiceManagement = () => {
                     <span>Add Feature</span>
                   </button>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Service Image
+                </label>
+                <input
+                  type="file"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      const file = e.target.files[0];
+                      // Check file size (50MB limit)
+                      if (file.size > 50 * 1024 * 1024) {
+                        alert('Image size must be less than 50MB. Please compress your image and try again.');
+                        e.target.value = '';
+                        return;
+                      }
+                      setSelectedServiceImageFile(file);
+                    } else {
+                      setSelectedServiceImageFile(null);
+                    }
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  accept="image/*"
+                />
               </div>
 
               <div>

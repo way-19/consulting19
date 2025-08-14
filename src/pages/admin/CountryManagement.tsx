@@ -698,7 +698,14 @@ const CountryManagement = () => {
                   type="file"
                   onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
-                      setSelectedFile(e.target.files[0]);
+                      const file = e.target.files[0];
+                      // Check file size (50MB limit)
+                      if (file.size > 50 * 1024 * 1024) {
+                        alert('Image size must be less than 50MB. Please compress your image and try again.');
+                        e.target.value = '';
+                        return;
+                      }
+                      setSelectedFile(file);
                     } else {
                       setSelectedFile(null);
                     }
