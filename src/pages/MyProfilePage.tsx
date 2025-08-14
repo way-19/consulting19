@@ -20,7 +20,8 @@ import {
   Shield,
   Key,
   Edit,
-  Upload
+  Upload,
+  Settings
 } from 'lucide-react';
 
 interface ProfileFormData {
