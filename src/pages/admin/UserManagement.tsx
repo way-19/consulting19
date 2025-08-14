@@ -22,7 +22,10 @@ import {
   X,
   Save,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Key,
+  Copy,
+  Send
 } from 'lucide-react';
 
 interface UserWithStats extends Profile {
@@ -43,6 +46,15 @@ const UserManagement = () => {
   const [showUserModal, setShowUserModal] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<UserWithStats | null>(null);
+  const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
+  const [resetPasswordUser, setResetPasswordUser] = useState<UserWithStats | null>(null);
+  const [resetPasswordResult, setResetPasswordResult] = useState<{
+    success: boolean;
+    temporaryPassword?: string;
+    message?: string;
+    error?: string;
+  } | null>(null);
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   const [newUserForm, setNewUserForm] = useState({
     email: '',
@@ -216,6 +228,81 @@ const UserManagement = () => {
     } catch (error) {
       console.error('Error deleting user:', error);
       alert('Failed to delete user');
+    }
+  };
+
+  const handleResetPassword = async (user: UserWithStats) => {
+    setResetPasswordUser(user);
+    setResetPasswordResult(null);
+    setShowPasswordResetModal(true);
+  };
+
+  const confirmPasswordReset = async () => {
+    if (!resetPasswordUser) return;
+
+    try {
+      setResettingPassword(true);
+      setResetPasswordResult(null);
+
+      // Call the Edge Function for password reset
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-reset-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: resetPasswordUser.id
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setResetPasswordResult({
+          success: true,
+          temporaryPassword: result.temporaryPassword,
+          message: `Password reset successfully for ${result.userName || result.userEmail}`
+        });
+        
+        // Refresh user list to update any status changes
+        await fetchUsers();
+      } else {
+        setResetPasswordResult({
+          success: false,
+          error: result.error || 'Failed to reset password'
+        });
+      }
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      setResetPasswordResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'An unexpected error occurred'
+      });
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('Temporary password copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Temporary password copied to clipboard!');
     }
   };
 
@@ -556,6 +643,13 @@ const UserManagement = () => {
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
+                          <button
+                            onClick={() => handleResetPassword(user)}
+                            className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                            title="Reset Password"
+                          >
+                            <Key className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -846,7 +940,177 @@ const UserManagement = () => {
                   <Trash2 className="h-5 w-5" />
                   <span>Delete User</span>
                 </button>
+                <button
+                  onClick={() => handleResetPassword(selectedUser)}
+                  className="bg-orange-50 text-orange-600 px-6 py-3 rounded-lg font-medium hover:bg-orange-100 transition-colors flex items-center space-x-2"
+                >
+                  <Key className="h-5 w-5" />
+                  <span>Reset Password</span>
+                </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Reset Modal */}
+      {showPasswordResetModal && resetPasswordUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Reset Password</h2>
+                <button
+                  onClick={() => {
+                    setShowPasswordResetModal(false);
+                    setResetPasswordUser(null);
+                    setResetPasswordResult(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {!resetPasswordResult ? (
+                <>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Key className="h-8 w-8 text-orange-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Reset Password for {resetPasswordUser.full_name || resetPasswordUser.email}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      This will generate a new temporary password for the user. 
+                      The user will need to change it on their next login.
+                    </p>
+                  </div>
+
+                  <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                      <h4 className="font-medium text-yellow-900">Important</h4>
+                    </div>
+                    <ul className="text-sm text-yellow-800 space-y-1">
+                      <li>• A secure temporary password will be generated</li>
+                      <li>• The user's current password will be invalidated</li>
+                      <li>• You should share the new password securely with the user</li>
+                      <li>• This action will be logged for security audit</li>
+                    </ul>
+                  </div>
+
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={() => {
+                        setShowPasswordResetModal(false);
+                        setResetPasswordUser(null);
+                      }}
+                      className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={confirmPasswordReset}
+                      disabled={resettingPassword}
+                      className="flex-1 bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
+                    >
+                      {resettingPassword ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>Resetting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Key className="h-5 w-5" />
+                          <span>Reset Password</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {resetPasswordResult.success ? (
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle className="h-8 w-8 text-green-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-green-900 mb-2">
+                        Password Reset Successful
+                      </h3>
+                      <p className="text-green-700 text-sm mb-4">
+                        {resetPasswordResult.message}
+                      </p>
+
+                      <div className="bg-green-50 rounded-lg p-4 border border-green-200 mb-4">
+                        <h4 className="font-medium text-green-900 mb-2">Temporary Password</h4>
+                        <div className="flex items-center space-x-2">
+                          <code className="flex-1 bg-white border border-green-300 rounded px-3 py-2 text-sm font-mono text-gray-900">
+                            {resetPasswordResult.temporaryPassword}
+                          </code>
+                          <button
+                            onClick={() => copyToClipboard(resetPasswordResult.temporaryPassword!)}
+                            className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-colors"
+                            title="Copy to clipboard"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <p className="text-xs text-green-700 mt-2">
+                          Please share this password securely with the user. They should change it on their next login.
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setShowPasswordResetModal(false);
+                          setResetPasswordUser(null);
+                          setResetPasswordResult(null);
+                        }}
+                        className="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                      >
+                        Done
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertTriangle className="h-8 w-8 text-red-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-red-900 mb-2">
+                        Password Reset Failed
+                      </h3>
+                      <p className="text-red-700 text-sm mb-4">
+                        {resetPasswordResult.error}
+                      </p>
+
+                      <div className="flex items-center space-x-4">
+                        <button
+                          onClick={() => {
+                            setShowPasswordResetModal(false);
+                            setResetPasswordUser(null);
+                            setResetPasswordResult(null);
+                          }}
+                          className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                        >
+                          Close
+                        </button>
+                        <button
+                          onClick={() => {
+                            setResetPasswordResult(null);
+                          }}
+                          className="flex-1 bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors"
+                        >
+                          Try Again
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
