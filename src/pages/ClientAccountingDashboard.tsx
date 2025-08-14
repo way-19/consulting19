@@ -1232,7 +1232,7 @@ const ClientAccountingDashboard: React.FC = () => {
                   className="flex w-full items-center justify-center space-x-2 rounded-lg bg-purple-600 px-4 py-3 font-medium text-white transition-colors hover:bg-purple-700"
                 >
                   <MessageSquare className="h-5 w-5" />
-                  <span>Message Consultant</span>
+                  <span>Send Message</span>
                 </button>
               </div>
             )}
