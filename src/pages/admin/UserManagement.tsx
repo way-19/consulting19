@@ -855,4 +855,4 @@ const UserManagement = () => {
   );
 };
 
-export default AdminDashboard;
+export default UserManagement;
