@@ -30,25 +30,25 @@ const CountryCard: React.FC<CountryCardProps> = ({ country }) => {
 
   return (
     <Link to={`/countries/${country.slug}`} className="group block">
-      <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 bg-white">
+      <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
         {/* Background Image */}
-        <div className="relative h-72 overflow-hidden">
+        <div className="relative h-80 overflow-hidden">
           <img
             src={imageUrl}
-            alt={`${country.name}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            alt={`${country.name} capital city`}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             onError={(e) => {
               e.currentTarget.src = 'https://images.pexels.com/photos/12461/pexels-photo-12461.jpeg?auto=compress&cs=tinysrgb&w=600';
             }}
           />
           
           {/* Dark overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
           
           {/* Content overlay */}
           <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
             {/* Flag and name */}
-            <div className="flex items-center space-x-3 mb-3">
+            <div className="flex items-center space-x-3 mb-4">
               <span className="text-4xl drop-shadow-lg">{country.flag_emoji || '🌍'}</span>
               <div>
                 <h3 className="text-3xl font-bold drop-shadow-lg">{country.name}</h3>
@@ -77,7 +77,7 @@ const CountryCard: React.FC<CountryCardProps> = ({ country }) => {
             
             {/* Stats */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-1">
                   <Building className="h-4 w-4 text-white/70" />
                   <span className="text-sm text-white/90">2.4k+ companies</span>
