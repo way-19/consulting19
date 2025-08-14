@@ -311,6 +311,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, Menu, X, Globe } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { countries } from '../data/countries';
+import LanguageSelector from './LanguageSelector';
+import { useTranslation } from '../contexts/LanguageContext';
 
 const Navbar = () => {
   const [isCountriesOpen, setIsCountriesOpen] = useState(false);
@@ -318,6 +320,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { t } = useTranslation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -325,11 +328,11 @@ const Navbar = () => {
   };
 
   const navigation = [
-    { name: 'Countries', href: '/countries', hasDropdown: true },
-    { name: 'Services', href: '/services', hasDropdown: false },
-    { name: 'About Us', href: '/about', hasDropdown: false },
-    { name: 'Contact', href: '/contact', hasDropdown: false },
-    { name: 'Blog', href: '/blog', hasDropdown: false },
+    { name: t('nav.countries'), href: '/countries', hasDropdown: true },
+    { name: t('nav.services'), href: '/services', hasDropdown: false },
+    { name: t('nav.about'), href: '/about', hasDropdown: false },
+    { name: t('nav.contact'), href: '/contact', hasDropdown: false },
+    { name: t('nav.blog'), href: '/blog', hasDropdown: false },
   ];
 
   const isActive = (href: string) => {
@@ -396,7 +399,7 @@ const Navbar = () => {
                     {isCountriesOpen && (
                       <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-100 py-4 z-50">
                         <div className="px-4 py-2 border-b border-gray-100">
-                          <h3 className="text-sm font-semibold text-gray-900">Choose Your Jurisdiction</h3>
+                          <h3 className="text-sm font-semibold text-gray-900">{t('nav.chooseJurisdiction') || 'Choose Your Jurisdiction'}</h3>
                         </div>
                         <div className="max-h-96 overflow-y-auto">
                           {countries.map((country) => (
@@ -420,7 +423,7 @@ const Navbar = () => {
                             className="text-sm text-purple-600 hover:text-purple-700 font-medium"
                             onClick={() => setIsCountriesOpen(false)}
                           >
-                            View All Countries →
+                            {t('nav.viewAllCountries') || 'View All Countries'} →
                           </Link>
                         </div>
                       </div>
@@ -446,6 +449,9 @@ const Navbar = () => {
             ))}
             {user && profile ? (
               <div className="flex items-center space-x-4">
+                {/* Language Selector */}
+                <LanguageSelector variant="navbar" showLabel={false} />
+                
                 {profile.role === 'admin' && (
                   <Link
                     to="/admin-dashboard"
@@ -485,7 +491,7 @@ const Navbar = () => {
                     onClick={handleSignOut}
                     className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
                   >
-                    Sign Out
+                    {t('nav.signOut')}
                   </button>
                 </div>
               </div>
@@ -494,7 +500,7 @@ const Navbar = () => {
                 to="/login"
                 className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors shadow-sm"
               >
-                Sign In
+                {t('nav.signIn')}
               </Link>
             )}
           </div>
@@ -584,7 +590,7 @@ const Navbar = () => {
                 className="block w-full text-center bg-purple-600 text-white px-3 py-2 rounded-md text-base font-medium hover:bg-purple-700 transition-colors mt-4"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Get Started
+                {t('nav.getStarted')}
               </Link>
             </div>
           </div>

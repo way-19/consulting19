@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom';
 import { Globe, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
 import { countries } from '../data/countries';
 import { serviceCategories } from '../data/services';
+import LanguageSelector from './LanguageSelector';
+import { useTranslation } from '../contexts/LanguageContext';
 
 const Footer = () => {
   const popularCountries = countries.slice(0, 5);
+  const { t } = useTranslation();
 
   return (
     <footer className="bg-slate-900 text-white">
@@ -151,6 +154,7 @@ const Footer = () => {
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                 <span className="text-slate-400 text-sm">All systems operational</span>
               </div>
+              <LanguageSelector variant="footer" showLabel={false} />
             </div>
           </div>
         </div>
