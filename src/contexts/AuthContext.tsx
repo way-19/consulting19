@@ -61,53 +61,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(null);
       return null;
     }
+      
+      console.log('✅ Profile fetched successfully:', data.email, data.role);
     setProfile(data as Profile);
     return data as Profile;
-  };
-
-  useEffect(() => {
-    if (initRef.current) return;     // ikinci çalışmayı engelle
-    initRef.current = true;
-
-    const init = async () => {
-      console.log('🚀 Initializing auth...');
-      const { data: { session } } = await supabase.auth.getSession();
-      const current = session?.user ?? null;
-      setUser(current);
-      if (current) await fetchProfile(current.id);
-      setLoading(false);
-    };
-
-    init();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_evt, session) => {
-        console.log('🔄 Auth state changed:', _evt, session?.user?.email || 'No user');
-        
-        const next = session?.user ?? null;
-        setUser(next);
-        if (next) {
-          await fetchProfile(next.id);
-        } else {
-          setProfile(null);
-        }
-        
-        if (initialized) {
-          setLoading(false);
-        }
     } catch (error) {
       console.error('💥 Error in fetchProfile:', error);
       setProfile(null);
       return null;
     }
+  };
+
+  const signIn = async (email: string, password: string): Promise<void> => {
+    console.log('🔐 Attempting sign in for:', email);
+    setLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        console.error('❌ Sign in error:', error);
+        setLoading(false);
+        throw error;
       }
-      
-      console.log('✅ Profile fetched successfully:', data.email, data.role);
+      console.log('✅ Sign in successful');
+      // onAuthStateChange tetiklenecek
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
+    // onAuthStateChange tetiklenecek
+  };
+
+  useEffect(() => {
     if (initRef.current || initialized) return;     // ikinci çalışmayı engelle
+    initRef.current = true;
 
-    return () => subscription.unsubscribe();
-  }, [initialized]);
-
+    const init = async () => {
+      console.log('🚀 Initializing auth...');
       
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -130,23 +120,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('💥 Auth initialization error:', error);
       } finally {
         setLoading(false);
-    
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        console.error('❌ Sign in error:', error);
-        setLoading(false);
-        throw error;
+        setInitialized(true);
       }
-      console.log('✅ Sign in successful');
-      // onAuthStateChange tetiklenecek
-    } catch (error) {
-      setLoading(false);
-      throw error;
-    // onAuthStateChange tetiklenecek
+    };
+
+    init();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_evt, session) => {
+        console.log('🔄 Auth state changed:', _evt, session?.user?.email || 'No user');
+        
+        const next = session?.user ?? null;
+        setUser(next);
+        if (next) {
+          await fetchProfile(next.id);
+        } else {
+          setProfile(null);
+        }
+        
+        if (initialized) {
+          setLoading(false);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [initialized]);
 
   const signOut = async (): Promise<void> => {
-    console.log('🔐 Attempting sign in for:', email);
     console.log('🚪 Signing out...');
     setLoading(true);
     const { error } = await supabase.auth.signOut();
