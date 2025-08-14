@@ -53,25 +53,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
+
     const init = async () => {
       console.log('🚀 Initializing auth...');
-      const { data: { session } } = await supabase.auth.getSession();
-      const current = session?.user ?? null;
-      setUser(current);
-      if (current) await fetchProfile(current.id);
-      setLoading(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const current = session?.user ?? null;
+        setUser(current);
+        if (current) {
+          await fetchProfile(current.id);
+        }
+      } catch (e) {
+        console.error('Auth init error:', e);
+        setProfile(null);
+      } finally {
+        setLoading(false);
+        console.log('✅ Auth init done → loading=false');
+      }
     };
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_evt, session) => {
-      const next = session?.user ?? null;
-      setUser(next);
-      if (next) {
-        await fetchProfile(next.id);
-      } else {
-        setProfile(null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔔 Auth state changed:', event);
+      try {
+        const next = session?.user ?? null;
+        setUser(next);
+        if (next) {
+          await fetchProfile(next.id);
+        } else {
+          setProfile(null);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
