@@ -540,24 +540,6 @@ const ConsultantDashboard = () => {
 
                 {/* Right Sidebar */}
                 <div className="space-y-6">
-                  {/* Quick Actions */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {quickActions.slice(0, 6).map((action, index) => (
-                        <Link
-                          key={index}
-                          to={action.href}
-                          className={`${action.color} text-white p-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-lg group text-center`}
-                        >
-                          <action.icon className="h-6 w-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                          <h4 className="font-medium text-sm">{action.name}</h4>
-                          <p className="text-white/80 text-xs mt-1">{action.description}</p>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Today's Appointments */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200">
                     <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
