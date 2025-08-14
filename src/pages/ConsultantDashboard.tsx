@@ -294,14 +294,14 @@ const ConsultantDashboard = () => {
               className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <CheckCircle className="h-4 w-4" />
-              <span>Görev Yönetimi</span>
+              <span>Task Management</span>
             </Link>
             <Link 
               to="/consultant/documents"
               className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
             >
               <FileText className="h-4 w-4" />
-              <span>Belge Yönetimi</span>
+              <span>Document Management</span>
             </Link>
             <Link 
               to="/customers-management"
