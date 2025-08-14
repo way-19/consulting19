@@ -310,9 +310,9 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, Menu, X, Globe } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { countries } from '../data/countries';
 import LanguageSelector from './LanguageSelector';
 import { useTranslation } from '../contexts/LanguageContext';
+import { useCountries } from '../hooks/useCountries';
 
 const Navbar = () => {
   const [isCountriesOpen, setIsCountriesOpen] = useState(false);
@@ -321,6 +321,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { t } = useTranslation();
+  const { countries } = useCountries(true);
 
   const handleSignOut = async () => {
     await signOut();
