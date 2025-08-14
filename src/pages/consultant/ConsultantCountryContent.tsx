@@ -116,6 +116,8 @@ const ConsultantCountryContent = () => {
 
   const fetchAssignedCountries = async () => {
     try {
+      console.log('🔍 Fetching assigned countries for consultant:', profile?.id);
+      
       setLoading(true);
       
       const { data: assignments, error: assignmentError } = await supabase
@@ -138,7 +140,12 @@ const ConsultantCountryContent = () => {
         .eq('consultant_id', profile?.id)
         .eq('status', 'active');
 
-      if (assignmentError) throw assignmentError;
+      if (error) {
+        console.error('❌ Error fetching assignments:', error);
+        throw error;
+      }
+      
+      console.log('📊 Assignment data:', data);
 
       const assignedCountries = (assignments || []).map(assignment => ({
         ...assignment.country,
