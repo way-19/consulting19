@@ -18,7 +18,8 @@ import {
   BarChart3,
   Users,
   Target,
-  Award
+  Award,
+  X
 } from 'lucide-react';
 
 interface PaymentStats {
