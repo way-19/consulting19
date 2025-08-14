@@ -187,12 +187,17 @@ const MyProfilePage = () => {
     if (!file) return;
 
     // Check file size (5MB limit for avatars)
+    console.log('MyProfilePage: Attempting to upload avatar with size:', file.size, 'bytes');
+    console.log('MyProfilePage: 50MB limit in bytes:', 50 * 1024 * 1024);
+    
     if (file.size > 50 * 1024 * 1024) {
-      setMessage({ type: 'error', text: 'Avatar image must be less than 5MB.' });
+      console.log('MyProfilePage: File size exceeds 50MB limit. Rejecting upload.');
+      setMessage({ type: 'error', text: 'Avatar image must be less than 50MB.' });
       return;
     }
 
     try {
+      console.log('MyProfilePage: File passed size check, proceeding with upload...');
       setSaving(true);
       
       // In a real implementation, you would upload to Supabase Storage
@@ -202,6 +207,7 @@ const MyProfilePage = () => {
       setProfileForm(prev => ({ ...prev, avatar_url: mockAvatarUrl }));
       setMessage({ type: 'success', text: 'Avatar uploaded successfully!' });
     } catch (error) {
+      console.error('MyProfilePage: Error during avatar upload:', error);
       console.error('Error uploading avatar:', error);
       setMessage({ type: 'error', text: 'Failed to upload avatar.' });
     } finally {
