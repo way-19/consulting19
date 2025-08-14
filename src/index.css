@@ -33,7 +33,13 @@
   overflow: hidden;
 }
 
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Enhanced Shadow */
 .shadow-3xl {
   box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
-}
