@@ -1,11 +1,18 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 export type Role = 'admin' | 'consultant' | 'client';
 
 export interface Profile {
-  id: string;            // = auth.users.id
+  id: string;           // auth.users.id ile aynı
   email: string;
   role: Role;
   full_name?: string;
@@ -30,13 +37,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (uid: string) => {
+  // StrictMode'da effect'in iki kez tetiklenmesini güvenle engelle
+  const initRef = useRef(false);
+
+  const fetchProfile = async (uid: string): Promise<Profile | null> => {
     console.log('🔍 Fetching profile for user:', uid);
     const { data, error } = await supabase
       .from('profiles')
       .select('id, email, role, full_name, country, created_at, updated_at')
-      .eq('id', uid)                // ← DOĞRU KOLON
-      .maybeSingle();               // 0 kayıt varsa null döner
+      .eq('id', uid)              // profiles.id = auth.users.id
+      .maybeSingle();
 
     if (error) {
       console.error('❌ Profile fetch error:', error);
@@ -53,31 +63,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    if (didInit.current) return;
-    didInit.current = true;
+    if (initRef.current) return;     // ikinci çalışmayı engelle
+    initRef.current = true;
 
     const init = async () => {
       console.log('🚀 Initializing auth...');
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const current = session?.user ?? null;
-        setUser(current);
-        if (current) {
-          await fetchProfile(current.id);
-        }
-      } catch (e) {
-        console.error('Auth init error:', e);
-        setProfile(null);
-      } finally {
-        setLoading(false);
-        console.log('✅ Auth init done → loading=false');
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      const current = session?.user ?? null;
+      setUser(current);
+      if (current) await fetchProfile(current.id);
+      setLoading(false);
     };
+
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔔 Auth state changed:', event);
-      try {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_evt, session) => {
         const next = session?.user ?? null;
         setUser(next);
         if (next) {
@@ -85,15 +86,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setProfile(null);
         }
-      } finally {
         setLoading(false);
       }
-    });
+    );
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<void> => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // onAuthStateChange tetiklenecek
   };
 
-  const signOut = async () => {
+  const signOut = async (): Promise<void> => {
     setLoading(true);
     const { error } = await supabase.auth.signOut();
     if (error) console.error('Error signing out:', error);
@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   };
 
-  const refreshProfile = async () => {
+  const refreshProfile = async (): Promise<void> => {
     if (user) await fetchProfile(user.id);
   };
 
