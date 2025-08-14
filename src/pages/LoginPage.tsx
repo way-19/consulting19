@@ -239,15 +239,23 @@ const LoginPage = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!authLoading && user && profile) {
+    if (!authLoading && user && profile && !loading) {
+      console.log('🔄 Redirecting user with role:', profile.role);
       const map = {
         admin: '/admin-dashboard',
         consultant: '/consultant-dashboard',
         client: '/client-accounting'
       } as const
-      navigate(map[profile.role], { replace: true })
+      
+      const targetPath = map[profile.role];
+      console.log('🎯 Redirecting to:', targetPath);
+      
+      // Use setTimeout to ensure the redirect happens after current render cycle
+      setTimeout(() => {
+        navigate(targetPath, { replace: true });
+      }, 100);
     }
-  }, [authLoading, user, profile, navigate])
+  }, [authLoading, user, profile, navigate, loading])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -258,14 +266,15 @@ const LoginPage = () => {
     setLoading(true)
 
     try {
+      console.log('🔐 Attempting login for:', email);
       await signIn(email, password)
+      console.log('✅ Login successful, waiting for redirect...');
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error('❌ Login error:', message);
       setError(message || 'Login failed');
-    } finally {
+      setLoading(false);
 
-      setLoading(false)
     }
   }
 
@@ -288,6 +297,17 @@ const LoginPage = () => {
     )
   }
 
+  // Show loading state while redirecting
+  if (user && profile && !authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting to {profile.role} dashboard...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">

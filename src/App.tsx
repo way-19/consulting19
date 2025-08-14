@@ -86,7 +86,7 @@ export default function App() {
           <Route
             path="/admin-dashboard"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute allowedRoles={["admin", "consultant"]}>
                 <AdminDashboard />
               </ProtectedRoute>
             }
@@ -94,7 +94,7 @@ export default function App() {
           <Route
             path="/admin/users"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute allowedRoles={["admin", "consultant"]}>
                 <UserManagement />
               </ProtectedRoute>
             }
@@ -102,7 +102,7 @@ export default function App() {
           <Route
             path="/admin/countries"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute allowedRoles={["admin", "consultant"]}>
                 <CountryManagement />
               </ProtectedRoute>
             }
@@ -110,7 +110,7 @@ export default function App() {
           <Route
             path="/admin/services"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute allowedRoles={["admin", "consultant"]}>
                 <ServiceManagement />
               </ProtectedRoute>
             }
@@ -118,7 +118,7 @@ export default function App() {
           <Route
             path="/admin/content"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute allowedRoles={["admin", "consultant"]}>
                 <ContentManagement />
               </ProtectedRoute>
             }
@@ -126,7 +126,7 @@ export default function App() {
           <Route
             path="/admin/settings"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute allowedRoles={["admin", "consultant"]}>
                 <SystemSettings />
               </ProtectedRoute>
             }
@@ -134,7 +134,7 @@ export default function App() {
           <Route
             path="/admin/reports"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute allowedRoles={["admin", "consultant"]}>
                 <FinancialReports />
               </ProtectedRoute>
             }
@@ -142,7 +142,7 @@ export default function App() {
           <Route
             path="/admin/security"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute allowedRoles={["admin", "consultant"]}>
                 <SecurityAudit />
               </ProtectedRoute>
             }
