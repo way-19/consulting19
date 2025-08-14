@@ -173,6 +173,13 @@ const ClientDashboard = () => {
                 <p className="text-sm text-gray-600">Client ID</p>
                 <p className="font-mono text-xs text-gray-500">{profile?.id.slice(0, 8)}...</p>
               </div>
+              <Link
+                to="/client/documents"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <FileText className="h-4 w-4" />
+                <span>My Documents</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -339,6 +346,14 @@ const ClientDashboard = () => {
                 >
                   <FileText className="h-5 w-5" />
                   <span>Accounting</span>
+                </Link>
+                
+                <Link
+                  to="/client/documents"
+                  className="w-full bg-orange-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Upload className="h-5 w-5" />
+                  <span>Upload Documents</span>
                 </Link>
                 
                 <Link

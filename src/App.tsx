@@ -42,6 +42,7 @@ import ClientDashboard from './pages/client/ClientDashboard';
 import ClientAccountingDashboard from './pages/ClientAccountingDashboard';
 import ClientServices from './pages/ClientServices';
 import ClientProjects from './pages/client/ClientProjects';
+import ClientDocuments from './pages/client/ClientDocuments';
 
 export default function App() {
   const { loading } = useAuth();
@@ -238,6 +239,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["client"]}>
                 <ClientProjects />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/client/documents"
+            element={
+              <ProtectedRoute allowedRoles={["client"]}>
+                <ClientDocuments />
               </ProtectedRoute>
             }
           />
