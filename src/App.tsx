@@ -46,6 +46,7 @@ import ClientAccountingDashboard from './pages/ClientAccountingDashboard';
 import ClientServices from './pages/ClientServices';
 import ClientProjects from './pages/client/ClientProjects';
 import ClientDocuments from './pages/client/ClientDocuments';
+import MyProfilePage from './pages/MyProfilePage';
 
 export default function App() {
   const { loading } = useAuth();
@@ -276,6 +277,16 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["client"]}>
                 <ClientDocuments />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Profile Management - Available to all authenticated users */}
+          <Route
+            path="/my-profile"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "consultant", "client"]}>
+                <MyProfilePage />
               </ProtectedRoute>
             }
           />

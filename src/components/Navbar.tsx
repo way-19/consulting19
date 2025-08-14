@@ -488,6 +488,12 @@ const Navbar = () => {
                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                     {profile.role}
                   </span>
+                  <Link
+                    to="/my-profile"
+                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    Profile
+                  </Link>
                   <button
                     onClick={handleSignOut}
                     className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
