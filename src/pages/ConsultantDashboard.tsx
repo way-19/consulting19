@@ -601,23 +601,6 @@ const ConsultantDashboard = () => {
                       <p className="text-xs text-gray-500 mt-1">Investment Fund - Tax Residency</p>
                       <div className="flex items-center justify-between mt-2">
                         <p className="text-xs text-purple-600 font-medium">4:00 PM - 4:30 PM</p>
-                        <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
-                          Phone Call
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>Schedule New Appointment</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
             {/* Debug Info */}
             <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
               <h3 className="text-lg font-semibold text-blue-900 mb-4">Debug Info</h3>
@@ -647,40 +630,6 @@ const ConsultantDashboard = () => {
               </button>
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <button 
-                  onClick={() => {
-                    setChatType('consultant-client');
-                    setIsChatOpen(true);
-                  }}
-                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <MessageSquare className="h-5 w-5" />
-                  <span>Client Chat</span>
-                </button>
-                
-                <button 
-                  onClick={() => {
-                    setChatType('admin-consultant');
-                    setIsChatOpen(true);
-                  }}
-                  className="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <MessageSquare className="h-5 w-5" />
-                  <span>Admin Chat</span>
-                </button>
-                
-                <button 
-                  className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <Calendar className="h-5 w-5" />
-                  <span>AI Agent Appointments</span>
-                </button>
-              </div>
-            </div>
                   {/* Performance Summary */}
                   <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-sm text-white p-6">
                     <div className="flex items-center justify-between mb-4">
