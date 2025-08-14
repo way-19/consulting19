@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
-import CountryCard from '../components/CountryCard';
+import ModernCountryCard from '../components/ModernCountryCard';
 import { useCountries, Country } from '../hooks/useCountries';
 
 const CountriesPage = () => {
@@ -155,7 +155,7 @@ const CountriesPage = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredCountries.map((country) => (
-                <CountryCard key={country.id} country={country} />
+                <ModernCountryCard key={country.id} country={country} />
               ))}
             </div>
           )}
