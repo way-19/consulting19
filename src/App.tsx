@@ -21,6 +21,7 @@ import SignupPage from './pages/SignupPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import CountryManagement from './pages/admin/CountryManagement';
+import ServiceManagement from './pages/admin/ServiceManagement';
 import ContentManagement from './pages/admin/ContentManagement';
 import SystemSettings from './pages/admin/SystemSettings';
 import FinancialReports from './pages/admin/FinancialReports';
@@ -96,6 +97,14 @@ export default function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <CountryManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/services"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <ServiceManagement />
               </ProtectedRoute>
             }
           />

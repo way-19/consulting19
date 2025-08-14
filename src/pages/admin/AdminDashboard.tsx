@@ -158,10 +158,17 @@ const AdminDashboard = () => {
       href: '/admin/countries'
     },
     {
+      name: 'Service Management',
+      description: 'Manage custom services and pricing',
+      icon: Settings,
+      color: 'bg-purple-500 hover:bg-purple-600',
+      href: '/admin/services'
+    },
+    {
       name: 'Content Management',
       description: 'Manage blog posts, FAQs, and static content',
       icon: FileText,
-      color: 'bg-purple-500 hover:bg-purple-600',
+      color: 'bg-indigo-500 hover:bg-indigo-600',
       href: '/admin/content'
     },
     {
@@ -467,6 +474,13 @@ const AdminDashboard = () => {
                 >
                   <Globe className="h-4 w-4" />
                   <span className="text-sm">Manage Countries</span>
+                </Link>
+                <Link
+                  to="/admin/services"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span className="text-sm">Manage Services</span>
                 </Link>
                 <Link
                   to="/admin/reports"
