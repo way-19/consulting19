@@ -699,12 +699,17 @@ const CountryManagement = () => {
                   onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
                       const file = e.target.files[0];
+                      console.log('CountryManagement: Attempting to upload country image with size:', file.size, 'bytes');
+                      console.log('CountryManagement: 50MB limit in bytes:', 50 * 1024 * 1024);
+                      
                       // Check file size (50MB limit)
                       if (file.size > 50 * 1024 * 1024) {
+                        console.log('CountryManagement: File size exceeds 50MB limit. Rejecting upload.');
                         alert('Image size must be less than 50MB. Please compress your image and try again.');
                         e.target.value = '';
                         return;
                       }
+                      console.log('CountryManagement: File passed size check, setting selected file...');
                       setSelectedFile(file);
                     } else {
                       setSelectedFile(null);
