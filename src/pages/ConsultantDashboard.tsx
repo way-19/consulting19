@@ -358,6 +358,27 @@ const ConsultantDashboard = () => {
                     <Calculator className="h-4 w-4" />
                     <span>Accounting Control</span>
                   </Link>
+                  <Link 
+                    to="/admin/countries"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Globe className="h-4 w-4" />
+                    <span>Country Management</span>
+                  </Link>
+                  <Link 
+                    to="/admin/content"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>Content Management</span>
+                  </Link>
+                  <Link 
+                    to="/admin/users"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>User Management</span>
+                  </Link>
                 </div>
               </div>
               <div className="mb-4">
@@ -369,6 +390,27 @@ const ConsultantDashboard = () => {
                   >
                     <Globe className="h-4 w-4" />
                     <span>Admin Panel</span>
+                  </Link>
+                  <Link
+                    to="/admin/settings"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>System Settings</span>
+                  </Link>
+                  <Link
+                    to="/admin/reports"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    <span>Financial Reports</span>
+                  </Link>
+                  <Link
+                    to="/admin/security"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Shield className="h-4 w-4" />
+                    <span>Security Audit</span>
                   </Link>
                 </div>
               </div>
