@@ -25,6 +25,7 @@ import ServiceManagement from './pages/admin/ServiceManagement';
 import ContentManagement from './pages/admin/ContentManagement';
 import SystemSettings from './pages/admin/SystemSettings';
 import FinancialReports from './pages/admin/FinancialReports';
+import SecurityAudit from './pages/admin/SecurityAudit';
 
 // Protected Pages - Consultant
 import ConsultantDashboard from './pages/ConsultantDashboard';
