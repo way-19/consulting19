@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Bot, Shield, Zap, BarChart3, MessageSquare, Users, Globe2, TrendingUp, Clock } from 'lucide-react';
+import { ArrowRight, Bot, Shield, Zap, BarChart3, MessageSquare, Users, Globe2, TrendingUp, Clock, Building, CheckCircle, Calculator, Scale, Plane, Search, CreditCard, Mail, Globe, Eye, Sparkles } from 'lucide-react';
 import CountryCard from '../components/CountryCard';
 import ServiceCard from '../components/ServiceCard';
 import { useCountries } from '../hooks/useCountries';
@@ -388,43 +388,427 @@ const HomePage = () => {
               Expert Services for <span className="text-purple-600">Global Success</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Expert consultants for every aspect of international business.
+              From company formation to ongoing compliance, our AI-enhanced platform connects you with 
+              expert consultants for every aspect of international business.
             </p>
           </div>
 
-          {servicesLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          {/* Service Categories Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Company Formation */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+              <div className="bg-blue-100 rounded-xl p-4 mb-4 group-hover:bg-blue-200 transition-colors">
+                <Building className="h-8 w-8 text-blue-600 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Company Formation</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Quick entity setup worldwide with expert guidance and AI-powered jurisdiction matching.
+              </p>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">LLC & Corporation setup</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Registered agent service</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">EIN & tax ID</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Compliance support</span>
+                </div>
+              </div>
+              <Link
+                to="/services?category=company_formation"
+                className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {services.slice(0, 8).map((service) => (
-                <ServiceCard key={service.id} service={service} />
-              ))}
+
+            {/* Investment Advisory */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+              <div className="bg-green-100 rounded-xl p-4 mb-4 group-hover:bg-green-200 transition-colors">
+                <TrendingUp className="h-8 w-8 text-green-600 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Investment Advisory</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Strategic market analysis and investment opportunities across global markets.
+              </p>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Market research</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Risk assessment</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Portfolio optimization</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Due diligence</span>
+                </div>
+              </div>
+              <Link
+                to="/services?category=investment"
+                className="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-          )}
+
+            {/* Legal Consulting */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+              <div className="bg-purple-100 rounded-xl p-4 mb-4 group-hover:bg-purple-200 transition-colors">
+                <Scale className="h-8 w-8 text-purple-600 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Legal Consulting</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Regulatory compliance and business law expertise for international operations.
+              </p>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Contract drafting</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Compliance review</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Legal structure</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Dispute resolution</span>
+                </div>
+              </div>
+              <Link
+                to="/services?category=legal"
+                className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Accounting Services */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+              <div className="bg-orange-100 rounded-xl p-4 mb-4 group-hover:bg-orange-200 transition-colors">
+                <Calculator className="h-8 w-8 text-orange-600 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Accounting Services</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                International tax optimization and comprehensive accounting solutions.
+              </p>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Tax planning</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Bookkeeping</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Financial reporting</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Audit support</span>
+                </div>
+              </div>
+              <Link
+                to="/services?category=accounting"
+                className="w-full bg-orange-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Visa & Residence */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+              <div className="bg-teal-100 rounded-xl p-4 mb-4 group-hover:bg-teal-200 transition-colors">
+                <Plane className="h-8 w-8 text-teal-600 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Visa & Residence</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Global mobility solutions including visa applications and citizenship programs.
+              </p>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Visa applications</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Residency programs</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Citizenship planning</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Immigration law</span>
+                </div>
+              </div>
+              <Link
+                to="/services?category=visa"
+                className="w-full bg-teal-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Market Research */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+              <div className="bg-pink-100 rounded-xl p-4 mb-4 group-hover:bg-pink-200 transition-colors">
+                <Search className="h-8 w-8 text-pink-600 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Market Research</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Industry insights and market intelligence for informed business decisions.
+              </p>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Industry analysis</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Competitor research</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Market sizing</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Trend analysis</span>
+                </div>
+              </div>
+              <Link
+                to="/services?category=research"
+                className="w-full bg-pink-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-pink-700 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Banking Solutions */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+              <div className="bg-indigo-100 rounded-xl p-4 mb-4 group-hover:bg-indigo-200 transition-colors">
+                <CreditCard className="h-8 w-8 text-indigo-600 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Banking Solutions</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                International account opening and comprehensive wealth management.
+              </p>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Account opening</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Banking relationships</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Payment processing</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Credit facilities</span>
+                </div>
+              </div>
+              <Link
+                to="/services?category=banking"
+                className="w-full bg-indigo-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Ongoing Compliance */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+              <div className="bg-red-100 rounded-xl p-4 mb-4 group-hover:bg-red-200 transition-colors">
+                <Shield className="h-8 w-8 text-red-600 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Ongoing Compliance</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Continuous monitoring and compliance management services.
+              </p>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Regulatory updates</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Filing management</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Compliance calendar</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-gray-700">Risk monitoring</span>
+                </div>
+              </div>
+              <Link
+                to="/services?category=compliance"
+                className="w-full bg-red-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Real-Time Analytics */}
-      <section className="py-16 bg-slate-900 text-white">
+      {/* Real-Time Platform Analytics */}
+      <section className="py-20 bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Globe className="h-6 w-6 text-blue-400" />
+              <span className="text-blue-400 font-medium">Global Intelligence Network</span>
+            </div>
             <h2 className="text-3xl font-bold mb-4">
               Real-Time Platform <span className="text-blue-400">Analytics</span>
             </h2>
             <p className="text-xl text-slate-300">
-              Transparent insights on platform performance and global impact
+              Live insights from our worldwide network of expert consultants and AI-powered 
+              analytics driving successful business formations.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {analyticsMetrics.map((metric, index) => (
-              <div key={index} className="text-center group">
-                <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors">
-                  <metric.icon className="h-8 w-8 text-blue-400 mx-auto mb-3" />
-                  <div className="text-3xl font-bold text-white mb-1">{metric.value}</div>
-                  <div className="text-slate-400 text-sm">{metric.label}</div>
+          {/* Top Row - Main Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Mail className="h-8 w-8 text-blue-400 mx-auto mb-3" />
+                <div className="text-3xl font-bold text-white mb-1">1,247+</div>
+                <div className="text-slate-400 text-sm">Active Consultations</div>
+                <div className="text-xs text-blue-400 mt-1">Consultations with expert consultants worldwide</div>
+              </div>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Globe className="h-8 w-8 text-green-400 mx-auto mb-3" />
+                <div className="text-3xl font-bold text-white mb-1">127</div>
+                <div className="text-slate-400 text-sm">Strategic Jurisdictions</div>
+                <div className="text-xs text-green-400 mt-1">Countries with expert consultants</div>
+              </div>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Users className="h-8 w-8 text-purple-400 mx-auto mb-3" />
+                <div className="text-3xl font-bold text-white mb-1">98.5%</div>
+                <div className="text-slate-400 text-sm">Success Rate</div>
+                <div className="text-xs text-purple-400 mt-1">Successful business formations</div>
+              </div>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Eye className="h-8 w-8 text-orange-400 mx-auto mb-3" />
+                <div className="text-3xl font-bold text-white mb-1">47min</div>
+                <div className="text-slate-400 text-sm">Avg Response Time</div>
+                <div className="text-xs text-orange-400 mt-1">AI-powered instant support</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Row - AI Features */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Bot className="h-8 w-8 text-yellow-400 mx-auto mb-3" />
+                <div className="text-2xl font-bold text-white mb-1">AI-Powered Matching</div>
+                <div className="text-slate-400 text-sm">Intelligent consultant-client pairing based on expertise and requirements</div>
+              </div>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Shield className="h-8 w-8 text-green-400 mx-auto mb-3" />
+                <div className="text-2xl font-bold text-white mb-1">Legal Compliance</div>
+                <div className="text-slate-400 text-sm">All recommendations reviewed by legal experts for full compliance</div>
+              </div>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Zap className="h-8 w-8 text-purple-400 mx-auto mb-3" />
+                <div className="text-2xl font-bold text-white mb-1">Success Optimization</div>
+                <div className="text-slate-400 text-sm">Continuous optimization based on successful case patterns</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Join CTA */}
+      <section className="py-20 bg-gradient-to-br from-slate-800 to-purple-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">
+              Join Thousands of Successful Businesses
+            </h2>
+            <p className="text-xl text-purple-100 max-w-3xl mx-auto">
+              Experience the power of AI-enhanced consulting with expert guidance across 8 
+              strategic jurisdictions worldwide.
+            </p>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+            <div className="text-center">
+              <div className="inline-flex items-center space-x-2 bg-yellow-400/20 text-yellow-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <Sparkles className="h-4 w-4" />
+                <span>Start Your Journey</span>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                <Link
+                  to="/get-started"
+                  className="bg-white text-purple-700 px-10 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center space-x-3"
+                >
+                  <span>Start Your Journey</span>
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+                
+                <Link
+                  to="/ai-assistant"
+                  className="border-2 border-white/40 text-white px-10 py-4 rounded-xl font-bold hover:bg-white/20 transition-all duration-300 backdrop-blur-sm shadow-xl hover:shadow-2xl flex items-center space-x-3"
+                >
+                  <Bot className="h-5 w-5" />
+                  <span>Try AI Oracle</span>
+                </Link>
+              </div>
+            </div>
+          </div>
                 </div>
               </div>
             ))}
