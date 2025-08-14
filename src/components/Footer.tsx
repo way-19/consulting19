@@ -11,7 +11,7 @@ const Footer = () => {
   const { categories: serviceCategories } = useServiceCategories();
   const { t } = useTranslation();
   
-  const popularCountries = countries.slice(0, 5);
+  const popularCountries = countries.filter(country => country.is_active).slice(0, 5);
 
   return (
     <footer className="bg-slate-900 text-white">
@@ -63,7 +63,7 @@ const Footer = () => {
                   to={`/countries/${country.slug}`}
                   className="flex items-center space-x-2 text-slate-300 hover:text-white transition-colors group"
                 >
-                  <span>{country.flag}</span>
+                  <span>{country.flag_emoji}</span>
                   <span>{country.name}</span>
                   <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
