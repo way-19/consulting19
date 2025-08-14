@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Globe, Users, TrendingUp, MessageCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle, Globe, Users, TrendingUp, MessageCircle, Clock, DollarSign, Star } from 'lucide-react';
 import { useCountry } from '../hooks/useCountries';
 import { useServices } from '../hooks/useServices';
 import { getPublicImageUrl } from '../lib/supabase';
@@ -8,7 +8,7 @@ import { getPublicImageUrl } from '../lib/supabase';
 const CountryDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { country, loading, error } = useCountry(slug || '');
-  const { services: countryServices, loading: servicesLoading } = useServices(true, country?.id);
+  const { services: countryServices, loading: servicesLoading } = useServices(true);
 
   if (loading) {
     return (
@@ -55,6 +55,89 @@ const CountryDetailPage = () => {
     }
   ];
 
+  // Filter services for this country or general services
+  const filteredServices = countryServices.filter(service => 
+    !service.country_id || service.country_id === country?.id
+  );
+
+  // Predefined Georgia services
+  const georgiaServices = [
+    {
+      id: 'company-registration',
+      title: 'Company Registration In Georgia',
+      subtitle: 'Open your business fast, easy and reliable',
+      description: 'Complete company formation service with all required documentation and legal support.',
+      image: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800',
+      price: 2500,
+      currency: 'USD',
+      deliveryTime: '5-7 days',
+      features: ['LLC registration', 'Tax number', 'Bank account assistance', 'Legal address'],
+      slug: 'company-registration'
+    },
+    {
+      id: 'bank-account-opening',
+      title: 'Open A Bank Account In Georgia',
+      subtitle: 'Get your personal bank account remotely or in-person',
+      description: 'Professional bank account opening service for residents and non-residents.',
+      image: 'https://images.pexels.com/photos/259027/pexels-photo-259027.jpeg?auto=compress&cs=tinysrgb&w=800',
+      price: 800,
+      currency: 'USD',
+      deliveryTime: '7-10 days',
+      features: ['Account opening', 'Document preparation', 'Bank selection', 'Online banking'],
+      slug: 'bank-account-opening'
+    },
+    {
+      id: 'visa-residence',
+      title: 'Visa And Residence Permit In Georgia',
+      subtitle: 'Get Your Georgian Visa or Residence Permit',
+      description: 'Complete visa and residence permit service with full documentation support.',
+      image: 'https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg?auto=compress&cs=tinysrgb&w=800',
+      price: 1200,
+      currency: 'USD',
+      deliveryTime: '10-15 days',
+      features: ['Visa application', 'Document preparation', 'Status tracking', 'Legal support'],
+      slug: 'visa-residence'
+    },
+    {
+      id: 'tax-residency',
+      title: 'Tax Residency In Georgia',
+      subtitle: 'One of the lowest tax rates in the world',
+      description: 'Establish Georgian tax residency and benefit from territorial taxation system.',
+      image: 'https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800',
+      price: 1500,
+      currency: 'USD',
+      deliveryTime: '14-21 days',
+      features: ['Tax residency application', 'Compliance setup', 'Tax optimization', 'Ongoing support'],
+      slug: 'tax-residency'
+    },
+    {
+      id: 'accounting-services',
+      title: 'Accounting Services In Georgia',
+      subtitle: 'Your accounting partner for all accounting needs',
+      description: 'Professional accounting and bookkeeping services for Georgian businesses.',
+      image: 'https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800',
+      price: 500,
+      currency: 'USD',
+      deliveryTime: 'Monthly',
+      features: ['Monthly bookkeeping', 'Tax filing', 'Financial reports', 'Compliance monitoring'],
+      slug: 'accounting-services'
+    },
+    {
+      id: 'legal-consulting',
+      title: 'Legal Consulting In Georgia',
+      subtitle: 'Professional legal services for business operations',
+      description: 'Expert legal consulting for all aspects of Georgian business law.',
+      image: 'https://images.pexels.com/photos/5668772/pexels-photo-5668772.jpeg?auto=compress&cs=tinysrgb&w=800',
+      price: 300,
+      currency: 'USD',
+      deliveryTime: '3-5 days',
+      features: ['Legal consultation', 'Contract review', 'Compliance advice', 'Document drafting'],
+      slug: 'legal-consulting'
+    }
+  ];
+
+  // Combine predefined services with custom services
+  const allServices = [...georgiaServices, ...filteredServices];
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -193,20 +276,20 @@ const CountryDetailPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {servicesLoading ? (
+            {servicesLoading && filteredServices.length === 0 ? (
               <div className="col-span-full flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
               </div>
-            ) : countryServices.length === 0 ? (
+            ) : allServices.length === 0 ? (
               <div className="col-span-full text-center py-12">
                 <p className="text-gray-600">No services available for this country yet.</p>
               </div>
             ) : (
-              countryServices.map((service) => (
-                <div key={service.id} className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+              allServices.map((service) => (
+                <div key={service.id} className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
                   <div className="relative h-80 overflow-hidden">
                     <img
-                      src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=400"
+                      src={service.image || 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=400'}
                       alt={service.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
@@ -216,16 +299,28 @@ const CountryDetailPage = () => {
                     
                     {/* Content overlay */}
                     <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
+                      {/* Price and delivery time */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2">
+                          <DollarSign className="h-4 w-4" />
+                          <span className="font-bold">${service.price?.toLocaleString() || '2,500'} {service.currency || 'USD'}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4" />
+                          <span className="text-sm">{service.deliveryTime || service.delivery_time_days + ' days'}</span>
+                        </div>
+                      </div>
+                      
                       <h3 className="text-2xl font-bold mb-3 leading-tight">
                         {service.title}
                       </h3>
                       <p className="text-white/90 text-sm mb-4 leading-relaxed">
-                        {service.description}
+                        {service.description || service.subtitle}
                       </p>
                       
                       {/* Features as small badges */}
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {service.features.slice(0, 2).map((feature, index) => (
+                        {(service.features || []).slice(0, 2).map((feature, index) => (
                           <span 
                             key={index}
                             className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium border border-white/30"
@@ -237,7 +332,7 @@ const CountryDetailPage = () => {
                       
                       {/* CTA Button */}
                       <Link
-                        to={`/services/${service.id}`}
+                        to={`/countries/${country.slug}/services/${service.slug || service.id}`}
                         className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30 w-fit relative z-10"
                       >
                         <span>Learn More</span>
@@ -248,6 +343,16 @@ const CountryDetailPage = () => {
                 </div>
               ))
             )}
+          </div>
+          
+          <div className="text-center mt-12">
+            <Link
+              to="/services"
+              className="inline-flex items-center space-x-2 bg-white border border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              <span>All Services</span>
+              <ArrowRight className="h-5 w-5" />
+            </Link>
           </div>
         </div>
       </section>
