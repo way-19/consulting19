@@ -3,10 +3,10 @@ import { loadStripe } from '@stripe/stripe-js';
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 if (!stripePublishableKey) {
-  throw new Error('Missing Stripe publishable key. Please check your .env file.');
+  console.warn('Stripe publishable key not found. Stripe features will be disabled.');
 }
 
-export const stripePromise = loadStripe(stripePublishableKey);
+export const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 export const createPaymentIntent = async (amount: number, currency: string = 'USD', metadata: any = {}) => {
   try {

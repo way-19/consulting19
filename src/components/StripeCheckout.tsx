@@ -4,7 +4,9 @@ import { Elements, CardElement, useStripe, useElements } from '@stripe/react-str
 import { CreditCard, Lock, CheckCircle, AlertTriangle, X } from 'lucide-react';
 import { createPaymentIntent, confirmPayment } from '../lib/stripe';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!);
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY 
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) 
+  : null;
 
 interface CheckoutFormProps {
   amount: number;
@@ -229,6 +231,29 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   onSuccess,
   onError
 }) => {
+  // Check if Stripe is available
+  if (!stripePromise) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <div className="text-center">
+            <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Payment System Unavailable</h2>
+            <p className="text-gray-600 mb-4">
+              Stripe payment system is not configured. Please contact support.
+            </p>
+            <button
+              onClick={onClose}
+              className="bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isOpen) return null;
 
   return (
