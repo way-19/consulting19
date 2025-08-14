@@ -11,7 +11,7 @@ const Footer = () => {
   const { categories: serviceCategories } = useServiceCategories();
   const { t } = useTranslation();
   
-  const popularCountries = countries.filter(country => country.is_active).slice(0, 5);
+  const popularCountries = countries.filter(country => country.is_active && country.slug !== 'singapore').slice(0, 5);
 
   return (
     <footer className="bg-slate-900 text-white">
