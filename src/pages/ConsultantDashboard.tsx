@@ -597,7 +597,6 @@ const ConsultantDashboard = () => {
           </div>
         </div>
       </div>
-      </div>
 
       {/* Multilingual Chat Modal */}
       <MultilingualChat
