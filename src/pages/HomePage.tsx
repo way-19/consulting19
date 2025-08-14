@@ -354,19 +354,14 @@ const HomePage = () => {
               </div>
             ))}
           </div>
-          </div>
+          <div className="text-center mt-12">
+            <Link
+              to="/countries"
+              className="inline-flex items-center space-x-2 border border-purple-600 text-purple-600 px-6 py-3 rounded-lg font-medium hover:bg-purple-600 hover:text-white transition-colors"
+            >
+              <span>View All Countries</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Add any additional sections here if needed */}
-    </div>
-  );
-};
-
-export default HomePage;
           </div>
         </div>
       </section>
