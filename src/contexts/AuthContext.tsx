@@ -1,144 +1,6 @@
-/* __backup__ 2025-08-12 15:02 */
-// import { createContext, useContext, useEffect, useState } from 'react';
-// import type { User } from '@supabase/supabase-js';
-// import { supabase } from '../lib/supabase';
-// 
-// type Profile = {
-//   id: string;
-//   auth_user_id: string;
-//   email: string;
-//   role: 'admin' | 'consultant' | 'client';
-//   country?: string | null;
-//   full_name?: string | null;
-// };
-// 
-// type AuthContextValue = {
-//   loading: boolean;
-//   user: User | null;
-//   profile: Profile | null;
-//   signIn: (email: string, password: string) => Promise<void>;
-//   signOut: () => Promise<void>;
-// };
-// 
-// const AuthCtx = createContext<AuthContextValue | undefined>(undefined);
-// 
-// export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-//   const [loading, setLoading] = useState(true);
-//   const [user, setUser] = useState<User | null>(null);
-//   const [profile, setProfile] = useState<Profile | null>(null);
-// 
-//   async function fetchProfile(u: User) {
-//     try {
-//       console.log('🔍 Fetching profile for:', u.email);
-//       
-//       const { data, error } = await supabase
-//         .from('profiles')
-//         .select('*')
-//         .eq('auth_user_id', u.id)
-//         .single();
-// 
-//       if (error) {
-//         console.error('❌ Profile fetch error:', error.message);
-//         setProfile(null);
-//         return;
-//       }
-// 
-//       console.log('✅ Profile found:', data.email, data.role);
-//       setProfile(data as Profile);
-//     } catch (e) {
-//       console.error('💥 Profile fetch failed:', e);
-//       setProfile(null);
-//     }
-//   }
-// 
-//   useEffect(() => {
-//     let mounted = true;
-//     
-//     async function initAuth() {
-//       try {
-//         const { data: { session } } = await supabase.auth.getSession();
-//         
-//         if (!mounted) return;
-//         
-//         if (session?.user) {
-//           setUser(session.user);
-//           await fetchProfile(session.user);
-//         } else {
-//           setUser(null);
-//           setProfile(null);
-//         }
-//       } catch (error) {
-//         console.error('❌ Auth init error:', error);
-//         setUser(null);
-//         setProfile(null);
-//       } finally {
-//         if (mounted) {
-//           setLoading(false);
-//         }
-//       }
-//     }
-// 
-//     initAuth();
-// 
-//     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-//       if (!mounted) return;
-//       
-//       console.log('🔔 Auth state changed:', event);
-//       
-//       if (session?.user) {
-//         setUser(session.user);
-//         await fetchProfile(session.user);
-//       } else {
-//         setUser(null);
-//         setProfile(null);
-//       }
-//       
-//       setLoading(false);
-//     });
-//     
-//     return () => {
-//       mounted = false;
-//       subscription.unsubscribe();
-//     };
-//   }, []);
-// 
-//   const signIn = async (email: string, password: string) => {
-//     const { error } = await supabase.auth.signInWithPassword({ email, password });
-//     if (error) throw error;
-//   };
-// 
-//   const signOut = async () => {
-//     await supabase.auth.signOut();
-//     setUser(null);
-//     setProfile(null);
-//   };
-// 
-//   return (
-//     <AuthCtx.Provider value={{ loading, user, profile, signIn, signOut }}>
-//       {children}
-//     </AuthCtx.Provider>
-//   );
-// };
-// 
-// export const useAuth = () => {
-//   const ctx = useContext(AuthCtx);
-//   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
-//   return ctx;
-// };
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
-
-type Role = 'admin' | 'consultant' | 'client';
-
-export type Profile = {
-  id: string;
-  auth_user_id: string;
-  email: string;
-  role: Role;
-  country?: string | null;
-  full_name?: string | null;
-};
+import { supabase, Profile } from '../lib/supabase';
 
 type AuthContextValue = {
   loading: boolean;
@@ -146,58 +8,118 @@ type AuthContextValue = {
   profile: Profile | null;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 };
 
-const AuthCtx = createContext<AuthContextValue | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  async function fetchProfile(u: User) {
+  const fetchProfile = async (authUser: User) => {
     try {
-      console.log('🔍 Fetching profile for:', u.id);
+      console.log('🔍 Fetching profile for user:', authUser.id);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('auth_user_id', u.id)
+        .eq('auth_user_id', authUser.id)
         .single();
 
       if (error) {
         console.error('❌ Profile fetch error:', error.message);
+        
+        // If profile doesn't exist, try to create it
+        if (error.code === 'PGRST116') {
+          console.log('🔧 Profile not found, attempting to create...');
+          await createMissingProfile(authUser);
+          return;
+        }
+        
         setProfile(null);
         return;
       }
 
-      console.log('✅ Profile found:', data.role);
+      console.log('✅ Profile found:', data.email, data.legacy_role);
       setProfile(data as Profile);
-    } catch (e) {
-      console.error('💥 Profile fetch failed:', e);
+    } catch (error) {
+      console.error('💥 Profile fetch failed:', error);
       setProfile(null);
     }
-  }
+  };
+
+  const createMissingProfile = async (authUser: User) => {
+    try {
+      console.log('🔧 Creating missing profile for:', authUser.email);
+      
+      // Get default client role
+      const { data: clientRole } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('name', 'client')
+        .single();
+
+      const { data: newProfile, error } = await supabase
+        .from('profiles')
+        .insert([{
+          auth_user_id: authUser.id,
+          email: authUser.email!,
+          role_id: clientRole?.id,
+          legacy_role: 'client',
+          full_name: authUser.user_metadata?.full_name || authUser.email!.split('@')[0],
+          is_active: true
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error creating profile:', error);
+        return;
+      }
+
+      console.log('✅ Profile created successfully:', newProfile.email);
+      setProfile(newProfile as Profile);
+    } catch (error) {
+      console.error('💥 Profile creation failed:', error);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchProfile(user);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
 
-    async function initAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      if (session?.user) {
-        console.log('✅ Session user:', session.user.id);
-        setUser(session.user);
-        await fetchProfile(session.user);
-      } else {
-        console.log('🔍 No session found');
+        if (session?.user) {
+          console.log('✅ Session found for user:', session.user.id);
+          setUser(session.user);
+          await fetchProfile(session.user);
+        } else {
+          console.log('🔍 No active session');
+          setUser(null);
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('❌ Auth initialization error:', error);
         setUser(null);
         setProfile(null);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-
-      setLoading(false);
-    }
+    };
 
     initAuth();
 
@@ -235,14 +157,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthCtx.Provider value={{ loading, user, profile, signIn, signOut }}>
+    <AuthContext.Provider value={{ 
+      loading, 
+      user, 
+      profile, 
+      signIn, 
+      signOut, 
+      refreshProfile 
+    }}>
       {children}
-    </AuthCtx.Provider>
+    </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  const ctx = useContext(AuthCtx);
-  if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
-  return ctx;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

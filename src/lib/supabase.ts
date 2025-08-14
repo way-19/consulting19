@@ -1,277 +1,244 @@
-/* __backup__ 2025-08-12 15:02 */
-// import { createClient } from '@supabase/supabase-js'
-// 
-// const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-// const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-// 
-// if (!supabaseUrl || !supabaseAnonKey) {
-//   throw new Error('Missing Supabase environment variables')
-// }
-// 
-// export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-// 
-// // Database types
-// export interface Country {
-//   id: string
-//   name: string
-//   slug: string
-//   flag_emoji?: string
-//   description?: string
-//   primary_language: string
-//   supported_languages: string[]
-//   status: boolean
-//   created_at: string
-// }
-// 
-// export interface Profile {
-//   id: string;
-//   user_id: string; // This links to auth.users.id
-//   email: string;
-//   role: 'admin' | 'consultant' | 'client' | 'legal_reviewer';
-//   full_name?: string;
-//   phone?: string;
-//   language?: string;
-//   timezone?: string;
-//   company_name?: string;
-//   business_type?: string;
-//   address?: string;
-//   preferred_currency?: string;
-//   marketing_consent?: boolean;
-//   created_at: string;
-//   updated_at: string;
-// }
-// 
-// export interface Client {
-//   id: string
-//   profile_id: string
-//   assigned_consultant_id?: string
-//   company_name?: string
-//   phone?: string
-//   status: 'new' | 'in_progress' | 'completed' | 'on_hold'
-//   priority: 'low' | 'medium' | 'high' | 'urgent'
-//   service_type: string
-//   progress: number
-//   satisfaction_rating?: number
-//   created_at: string
-//   updated_at: string
-// }
-// 
-// export interface Task {
-//   id: string
-//   client_id: string
-//   consultant_id: string
-//   title: string
-//   description?: string
-//   status: 'pending' | 'in_progress' | 'completed' | 'overdue'
-//   priority: 'low' | 'medium' | 'high' | 'urgent'
-//   due_date?: string
-//   estimated_hours?: number
-//   actual_hours?: number
-//   created_at: string
-//   updated_at: string
-// }
-// 
-// export interface Document {
-//   id: string
-//   client_id: string
-//   name: string
-//   type: string
-//   category: 'identity' | 'business' | 'financial' | 'medical' | 'other'
-//   status: 'pending' | 'approved' | 'rejected' | 'needs_revision'
-//   file_url?: string
-//   file_size?: number
-//   uploaded_at: string
-//   reviewed_at?: string
-//   reviewed_by?: string
-// }
-// 
-// export interface ConsultantCountryAssignment {
-//   id: string
-//   consultant_id: string
-//   country_id: string
-//   is_primary: boolean
-//   status: string
-//   created_at: string
-// }
-// 
-// export interface CustomService {
-//   id: string
-//   consultant_id: string
-//   country_id?: string
-//   title: string
-//   description?: string
-//   features: string[]
-//   price: number
-//   currency: string
-//   delivery_time_days: number
-//   category: string
-//   is_active: boolean
-//   created_at: string
-//   updated_at: string
-// }
-// 
-// export interface ServiceOrder {
-//   id: string
-//   service_id: string
-//   client_id: string
-//   consultant_id: string
-//   status: 'pending' | 'paid' | 'in_progress' | 'completed' | 'cancelled'
-//   total_amount: number
-//   currency: string
-//   stripe_payment_intent_id?: string
-//   invoice_number?: string
-//   notes?: string
-//   created_at: string
-//   updated_at: string
-// }
-// 
-// export interface ServicePayment {
-//   id: string
-//   order_id: string
-//   stripe_payment_intent_id: string
-//   stripe_charge_id?: string
-//   amount: number
-//   currency: string
-//   status: 'pending' | 'succeeded' | 'failed' | 'cancelled'
-//   payment_method?: string
-//   created_at: string
-//   updated_at: string
-// }
-// // Auth helper functions
-// export const getCurrentUser = async () => {
-//   const { data: { user } } = await supabase.auth.getUser()
-//   return user
-// }
-// 
-// export const getCurrentProfile = async () => {
-//   const user = await getCurrentUser()
-//   if (!user) return null
-// 
-//   const { data: profile } = await supabase
-//     .from('profiles') 
-//     .select('*')
-//     .eq('user_id', user.id)
-//     .single()
-// 
-//   console.log('Current user:', user.id, user.email)
-//   console.log('Profile data:', profile)
-//   return profile as Profile | null
-// }
-// 
-// export const signIn = async (email: string, password: string) => {
-//   const { data, error } = await supabase.auth.signInWithPassword({
-//     email,
-//     password,
-//   })
-//   return { data, error }
-// }
-// 
-// export const signUp = async (email: string, password: string, userData: Partial<Profile>) => {
-//   const { data, error } = await supabase.auth.signUp({
-//     email,
-//     password,
-//   })
-// 
-//   if (data.user && !error) {
-//     // Profile will be created automatically by trigger
-//     // Update with additional data if provided
-//     if (Object.keys(userData).length > 0) {
-//       const { error: profileError } = await supabase
-//         .from('profiles')
-//         .update(userData)
-//         .eq('user_id', data.user.id)
-// 
-//       if (profileError) {
-//         console.error('Error updating profile:', profileError)
-//       }
-//     }
-//   }
-// 
-//   return { data, error }
-// }
-// 
-// export const signOut = async () => {
-//   const { error } = await supabase.auth.signOut()
-//   return { error }
-// }
-// 
-// // Helper functions for role-based queries
-// export const isAdmin = async () => {
-//   const profile = await getCurrentProfile()
-//   return profile?.role === 'admin'
-// }
-// 
-// export const isConsultant = async () => {
-//   const profile = await getCurrentProfile()
-//   return profile?.role === 'consultant'
-// }
-// 
-// export const isClient = async () => {
-//   const profile = await getCurrentProfile()
-//   return profile?.role === 'client'
-// }
-// 
-// // Get consultant's assigned countries
-// export const getConsultantCountries = async (consultantId?: string) => {
-//   const profile = await getCurrentProfile()
-//   const targetConsultantId = consultantId || profile?.id
-//   
-//   if (!targetConsultantId) return []
-// 
-//   const { data } = await supabase
-//     .from('consultant_country_assignments')
-//     .select(`
-//       *,
-//       countries:country_id (*)
-//     `)
-//     .eq('consultant_id', targetConsultantId)
-//     .eq('status', 'active')
-// 
-//   return data || []
-// }
-// 
-// // Get client's assigned consultant
-// export const getClientConsultant = async (clientId?: string) => {
-//   const profile = await getCurrentProfile()
-//   
-//   if (!clientId && profile?.role !== 'client') return null
-// 
-//   const { data } = await supabase
-//     .from('clients')
-//     .select(`
-//       *,
-//       profile:profile_id (
-//         *
-//       )
-//     `)
-//     .eq('profile_id', clientId || profile?.user_id)
-//     .single()
-// 
-//   return data
-// }
-// 
-// // Get consultant's clients
-// export const getConsultantClients = async (consultantId?: string) => {
-//   const profile = await getCurrentProfile()
-//   const targetConsultantId = consultantId || profile?.id
-//   
-//   if (!targetConsultantId) return []
-// 
-//   const { data } = await supabase
-//     .from('clients')
-//     .select(`
-//       *,
-//       profile:profile_id (
-//         *
-//       )
-//     `)
-//     .eq('assigned_consultant_id', targetConsultantId)
-// 
-//   return data || []
-// }
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables. Please check your .env file.');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
+
+// Database Types
+export interface Profile {
+  id: string;
+  auth_user_id: string;
+  email: string;
+  role_id?: string;
+  legacy_role: 'admin' | 'consultant' | 'client';
+  full_name?: string;
+  phone?: string;
+  country?: string;
+  language_preference: string;
+  timezone: string;
+  avatar_url?: string;
+  is_active: boolean;
+  last_login_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Country {
+  id: string;
+  name: string;
+  slug: string;
+  flag_emoji?: string;
+  description?: string;
+  image_url?: string;
+  primary_language: string;
+  supported_languages: string[];
+  highlights: string[];
+  tags: string[];
+  insights: any[];
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Client {
+  id: string;
+  profile_id: string;
+  assigned_consultant_id?: string;
+  company_name?: string;
+  phone?: string;
+  status: 'new' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  service_type: string;
+  progress: number;
+  satisfaction_rating?: number;
+  segment: string;
+  tags: string[];
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Project {
+  id: string;
+  client_id: string;
+  consultant_id: string;
+  name: string;
+  description?: string;
+  status: 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  start_date?: string;
+  end_date?: string;
+  estimated_hours?: number;
+  actual_hours: number;
+  budget?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Task {
+  id: string;
+  project_id?: string;
+  client_id: string;
+  consultant_id: string;
+  title: string;
+  description?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'overdue' | 'cancelled';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  due_date?: string;
+  estimated_hours?: number;
+  actual_hours: number;
+  assigned_to?: string;
+  dependencies: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Document {
+  id: string;
+  client_id: string;
+  project_id?: string;
+  name: string;
+  type: string;
+  category: 'identity' | 'business' | 'financial' | 'legal' | 'tax' | 'other';
+  status: 'pending' | 'approved' | 'rejected' | 'needs_revision' | 'expired';
+  file_url?: string;
+  file_size?: number;
+  mime_type?: string;
+  uploaded_by?: string;
+  reviewed_by?: string;
+  uploaded_at: string;
+  reviewed_at?: string;
+  expires_at?: string;
+  notes?: string;
+  metadata: any;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  related_table?: string;
+  related_id?: string;
+  action_url?: string;
+  expires_at?: string;
+  created_at: string;
+}
+
+export interface AuditLog {
+  id: string;
+  user_id?: string;
+  action: string;
+  target_table?: string;
+  target_id?: string;
+  old_values?: any;
+  new_values?: any;
+  ip_address?: string;
+  user_agent?: string;
+  timestamp: string;
+}
+
+// Helper functions
+export const getCurrentUser = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+};
+
+export const getCurrentProfile = async () => {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('auth_user_id', user.id)
+    .single();
+
+  return profile as Profile | null;
+};
+
+export const isAdmin = async () => {
+  const profile = await getCurrentProfile();
+  return profile?.legacy_role === 'admin';
+};
+
+export const isConsultant = async () => {
+  const profile = await getCurrentProfile();
+  return profile?.legacy_role === 'consultant';
+};
+
+export const isClient = async () => {
+  const profile = await getCurrentProfile();
+  return profile?.legacy_role === 'client';
+};
+
+// Notification helpers
+export const createNotification = async (
+  userId: string,
+  type: string,
+  title: string,
+  message: string,
+  priority: 'low' | 'normal' | 'high' | 'urgent' = 'normal',
+  relatedTable?: string,
+  relatedId?: string,
+  actionUrl?: string
+) => {
+  const { error } = await supabase
+    .from('notifications')
+    .insert([{
+      user_id: userId,
+      type,
+      title,
+      message,
+      priority,
+      related_table: relatedTable,
+      related_id: relatedId,
+      action_url: actionUrl
+    }]);
+
+  if (error) {
+    console.error('Error creating notification:', error);
+  }
+};
+
+// Audit logging helper
+export const logAdminAction = async (
+  action: string,
+  targetTable?: string,
+  targetId?: string,
+  oldValues?: any,
+  newValues?: any
+) => {
+  const user = await getCurrentUser();
+  if (!user) return;
+
+  const { error } = await supabase
+    .from('audit_logs')
+    .insert([{
+      user_id: user.id,
+      action,
+      target_table: targetTable,
+      target_id: targetId,
+      old_values: oldValues,
+      new_values: newValues
+    }]);
+
+  if (error) {
+    console.error('Error logging admin action:', error);
+  }
+};
