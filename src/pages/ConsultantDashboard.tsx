@@ -328,6 +328,39 @@ const ConsultantDashboard = () => {
               </div>
 
               <div className="mb-4">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Site Control</h4>
+                <div className="space-y-1">
+                  <Link 
+                    to="/consultant/customers"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Customer Management</span>
+                  </Link>
+                  <Link 
+                    to="/consultant/services"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Service Management</span>
+                  </Link>
+                  <Link 
+                    to="/consultant/documents"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>Document Review</span>
+                  </Link>
+                  <Link 
+                    to="/consultant/accounting"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Calculator className="h-4 w-4" />
+                    <span>Accounting Control</span>
+                  </Link>
+                </div>
+              </div>
+              <div className="mb-4">
                 <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">System</h4>
                 <div className="space-y-1">
                   <Link
