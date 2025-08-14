@@ -37,7 +37,6 @@ import ProjectManagement from './pages/consultant/ProjectManagement';
 import ConsultantServices from './pages/ConsultantServices';
 import ConsultantPayments from './pages/consultant/ConsultantPayments';
 import ConsultantCountryManagement from './pages/consultant/ConsultantCountryManagement';
-import ConsultantCountryContent from './pages/consultant/ConsultantCountryContent';
 import AccountingManagement from './pages/AccountingManagement';
 import LegacyOrders from './pages/LegacyOrders';
 
@@ -162,7 +161,7 @@ export default function App() {
             path="/consultant/country-content"
             element={
               <ProtectedRoute requiredRole="consultant">
-                <ConsultantCountryContent />
+                <ConsultantCountryManagement />
               </ProtectedRoute>
             }
           />
