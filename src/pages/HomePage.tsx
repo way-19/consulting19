@@ -333,15 +333,22 @@ const HomePage = () => {
               const reasons = ['Tax advantages', 'Digital innovation', 'Strategic location', 'Business friendly'];
               
               return (
-              {featuredCountries.map((country, index) => (
-                <CountryCard 
-                  key={country.id} 
-                  country={country} 
-                  featured={index === 0} 
-                />
-              ))}
-            </div>
-          )}
+                <div key={country.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                  <div className="text-4xl mb-3">{country.flag_emoji || '🌍'}</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{country.name}</h3>
+                  <div className="text-2xl font-bold text-purple-600 mb-2">{matchPercentages[index]}</div>
+                  <p className="text-sm text-gray-600 mb-4">{reasons[index]}</p>
+                  <Link
+                    to={`/countries/${country.slug}`}
+                    className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1"
+                  >
+                    <span>Learn More</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
 
           <div className="text-center mt-12">
             <Link
@@ -984,12 +991,12 @@ const HomePage = () => {
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors">
                     {insight.title}
-                  <div className="text-4xl mb-3">{country.flag_emoji || '🌍'}</div>
+                  </h3>
                   <p className="text-gray-600 text-sm mb-4">
-                  <div className="text-2xl font-bold text-purple-600 mb-2">{matchPercentages[index]}</div>
-                  <p className="text-sm text-gray-600">{reasons[index]}</p>
+                    {insight.excerpt}
+                  </p>
                   <Link
-                    to={`/countries/${country.slug}`}
+                    to={`/blog/${insight.id}`}
                     className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1"
                   >
                     <span>Read More</span>
@@ -997,8 +1004,7 @@ const HomePage = () => {
                   </Link>
                 </div>
               </article>
-              );
-            })}
+            ))}
           </div>
 
           <div className="text-center mt-12">
