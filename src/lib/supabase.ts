@@ -350,15 +350,21 @@ export const updateSetting = async (key: string, value: any) => {
 // Image Upload and Storage Helpers
 export const uploadFileToStorage = async (file: File, folder: string, bucketName: string = 'public_images') => {
   try {
+    console.log('uploadFileToStorage: Starting upload for file with size:', file.size, 'bytes');
+    console.log('uploadFileToStorage: 50MB limit check:', 50 * 1024 * 1024);
+    
     // Check file size (50MB limit)
     if (file.size > 50 * 1024 * 1024) {
+      console.log('uploadFileToStorage: File size exceeds 50MB limit. Throwing error.');
       throw new Error('File size must be less than 50MB. Please compress your file and try again.');
     }
 
+    console.log('uploadFileToStorage: File passed size check, proceeding with upload...');
     const fileExtension = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
     const filePath = `${folder}/${fileName}`;
 
+    console.log('uploadFileToStorage: Uploading to path:', filePath);
     const { data, error } = await supabase.storage
       .from(bucketName)
       .upload(filePath, file, {
@@ -367,13 +373,17 @@ export const uploadFileToStorage = async (file: File, folder: string, bucketName
       });
 
     if (error) {
+      console.error('uploadFileToStorage: Supabase Storage API error:', error);
+      console.log('uploadFileToStorage: Error message from Supabase:', error.message);
       console.error('Error uploading file:', error);
       throw error;
     }
 
+    console.log('uploadFileToStorage: Upload successful, returning file path:', filePath);
     // Return the file path (not the full URL)
     return filePath;
   } catch (error) {
+    console.error('uploadFileToStorage: Caught error during upload process:', error);
     console.error('Error in uploadFileToStorage:', error);
     throw error;
   }

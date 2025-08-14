@@ -679,10 +679,12 @@ const ClientDocuments = () => {
                       if (file) {
                         // Check file size (50MB limit)
                         if (file.size > 50 * 1024 * 1024) {
+                          console.log('ClientDocuments: File size exceeds 50MB limit. Rejecting upload.');
                           alert('File size must be less than 50MB. Please compress your file and try again.');
                           e.target.value = '';
                           return;
                         }
+                        console.log('ClientDocuments: File passed size check, setting upload form...');
                         setUploadForm(prev => ({ 
                           ...prev, 
                           file,

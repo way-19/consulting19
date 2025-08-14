@@ -872,12 +872,17 @@ const ServiceManagement = () => {
                   onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
                       const file = e.target.files[0];
+                      console.log('ServiceManagement: Attempting to upload service image with size:', file.size, 'bytes');
+                      console.log('ServiceManagement: 50MB limit in bytes:', 50 * 1024 * 1024);
+                      
                       // Check file size (50MB limit)
                       if (file.size > 50 * 1024 * 1024) {
+                        console.log('ServiceManagement: File size exceeds 50MB limit. Rejecting upload.');
                         alert('Image size must be less than 50MB. Please compress your image and try again.');
                         e.target.value = '';
                         return;
                       }
+                      console.log('ServiceManagement: File passed size check, setting selected file...');
                       setSelectedServiceImageFile(file);
                     } else {
                       setSelectedServiceImageFile(null);
