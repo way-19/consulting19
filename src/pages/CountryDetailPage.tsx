@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Globe, Users, TrendingUp, MessageCircle } from 'lucide-react';
 import { useCountry } from '../hooks/useCountries';
 import { useServices } from '../hooks/useServices';
+import { getPublicImageUrl } from '../lib/supabase';
 
 const CountryDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();

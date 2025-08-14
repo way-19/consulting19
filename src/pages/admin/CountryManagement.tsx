@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase, Country, logAdminAction } from '../../lib/supabase';
+import { supabase, Country, logAdminAction, uploadFileToStorage, getPublicImageUrl } from '../../lib/supabase';
 import { 
   ArrowLeft, 
   Search, 

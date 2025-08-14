@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { supabase, getPublicImageUrl } from '../../lib/supabase';
 import { 
   ArrowLeft,
   Upload,
@@ -1007,3 +1007,5 @@ const ClientDocuments = () => {
 };
 
 export default ClientDocuments;
+
+export default ClientDocuments
