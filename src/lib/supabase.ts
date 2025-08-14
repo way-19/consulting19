@@ -347,3 +347,62 @@ export const updateSetting = async (key: string, value: any) => {
   
   return true;
 };
+// Image Upload and Storage Helpers
+export const uploadFileToStorage = async (file: File, folder: string, bucketName: string = 'public_images') => {
+  try {
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
+    const filePath = `${folder}/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('Error uploading file:', error);
+      throw error;
+    }
+
+    // Return the file path (not the full URL)
+    return filePath;
+  } catch (error) {
+    console.error('Error in uploadFileToStorage:', error);
+    throw error;
+  }
+};
+
+export const getPublicImageUrl = (filePath: string, bucketName: string = 'public_images') => {
+  if (!filePath) return '';
+
+  // If path is already a full URL, return as is (for backward compatibility)
+  if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+    return filePath;
+  }
+
+  const { data } = supabase.storage
+    .from(bucketName)
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+};
+
+export const deleteFileFromStorage = async (filePath: string, bucketName: string = 'public_images') => {
+  try {
+    const { error } = await supabase.storage
+      .from(bucketName)
+      .remove([filePath]);
+
+    if (error) {
+      console.error('Error deleting file:', error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteFileFromStorage:', error);
+    throw error;
+  }
+};

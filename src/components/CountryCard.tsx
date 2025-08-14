@@ -14,7 +14,7 @@ const CountryCard: React.FC<CountryCardProps> = ({ country, featured = false }) 
       {/* Image Container */}
       <div className="relative h-48 overflow-hidden">
         <img
-          src={country.image_url || 'https://images.pexels.com/photos/12461/pexels-photo-12461.jpeg?auto=compress&cs=tinysrgb&w=800'}
+          src={getPublicImageUrl(country.image_url) || 'https://images.pexels.com/photos/12461/pexels-photo-12461.jpeg?auto=compress&cs=tinysrgb&w=800'}
           alt={country.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />

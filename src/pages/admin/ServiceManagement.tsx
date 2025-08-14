@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase, logAdminAction } from '../../lib/supabase';
+import { supabase, logAdminAction, uploadFileToStorage, getPublicImageUrl } from '../../lib/supabase';
 import { 
   ArrowLeft, 
   Search, 
@@ -331,6 +331,7 @@ const ServiceManagement = () => {
       is_active: true
     });
     setEditingService(null);
+    setSelectedServiceImageFile(null);
     setShowServiceModal(false);
   };
 

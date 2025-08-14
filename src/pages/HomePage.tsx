@@ -6,6 +6,7 @@ import CountryCard from '../components/CountryCard';
 import ServiceCard from '../components/ServiceCard';
 import { useCountries } from '../hooks/useCountries';
 import { useServices } from '../hooks/useServices';
+import { getPublicImageUrl } from '../lib/supabase';
 
 const HomePage = () => {
   const { countries, loading: countriesLoading } = useCountries(true);

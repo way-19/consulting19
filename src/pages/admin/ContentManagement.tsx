@@ -853,15 +853,33 @@ const ContentManagement = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Featured Image URL
+                    Featured Image
                   </label>
                   <input
-                    type="url"
-                    value={postForm.featured_image_url}
-                    onChange={(e) => setPostForm(prev => ({ ...prev, featured_image_url: e.target.value }))}
+                    type="file"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setSelectedPostImageFile(e.target.files[0]);
+                      } else {
+                        setSelectedPostImageFile(null);
+                      }
+                    }}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="https://images.pexels.com/..."
+                    accept="image/*"
                   />
+                  {selectedPostImageFile && (
+                    <p className="mt-2 text-sm text-gray-600">Selected file: {selectedPostImageFile.name}</p>
+                  )}
+                  {postForm.featured_image_url && !selectedPostImageFile && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600 mb-1">Current image:</p>
+                      <img 
+                        src={getPublicImageUrl(postForm.featured_image_url)} 
+                        alt="Current Featured" 
+                        className="w-32 h-20 object-cover rounded-lg border border-gray-200" 
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -692,15 +692,33 @@ const CountryManagement = () => {
               {/* Image URL */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Image URL
+                  Country Image
                 </label>
                 <input
-                  type="url"
-                  value={countryForm.image_url}
-                  onChange={(e) => setCountryForm(prev => ({ ...prev, image_url: e.target.value }))}
+                  type="file"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setSelectedFile(e.target.files[0]);
+                    } else {
+                      setSelectedFile(null);
+                    }
+                  }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="https://images.pexels.com/..."
+                  accept="image/*"
                 />
+                {selectedFile && (
+                  <p className="mt-2 text-sm text-gray-600">Selected file: {selectedFile.name}</p>
+                )}
+                {countryForm.image_url && !selectedFile && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600 mb-1">Current image:</p>
+                    <img 
+                      src={getPublicImageUrl(countryForm.image_url)} 
+                      alt="Current Country" 
+                      className="w-32 h-20 object-cover rounded-lg border border-gray-200" 
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Supported Languages */}

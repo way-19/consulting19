@@ -59,7 +59,7 @@ const CountryDetailPage = () => {
       {/* Hero Section */}
       <section className="relative h-96 overflow-hidden">
         <img
-          src={country.image_url || 'https://images.pexels.com/photos/12461/pexels-photo-12461.jpeg?auto=compress&cs=tinysrgb&w=800'}
+          src={getPublicImageUrl(country.image_url) || 'https://images.pexels.com/photos/12461/pexels-photo-12461.jpeg?auto=compress&cs=tinysrgb&w=800'}
           alt={country.name}
           className="w-full h-full object-cover"
         />

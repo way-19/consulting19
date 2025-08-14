@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Star, CheckCircle, Clock, Users, Shield, MessageSquare, Phone } from 'lucide-react';
 import { useCountries } from '../hooks/useCountries';
+import { getPublicImageUrl } from '../lib/supabase';
 
 const CountryServiceDetailPage = () => {
   const { countrySlug, serviceSlug } = useParams<{ countrySlug: string; serviceSlug: string }>();
