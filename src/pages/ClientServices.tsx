@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import StripeCheckout from '../components/StripeCheckout';
 import { ShoppingCart, Star, Clock, DollarSign, User, CheckCircle, CreditCard, FileText, Eye } from 'lucide-react';
 
 interface CustomService {
@@ -46,6 +47,9 @@ const ClientServices = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'services' | 'orders'>('services');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [selectedService, setSelectedService] = useState<CustomService | null>(null);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile?.id) {
@@ -124,15 +128,35 @@ const ClientServices = () => {
 
       if (error) throw error;
 
-      // Here you would integrate with Stripe for payment processing
-      alert(`Order created! Invoice No: ${data.invoice_number}\n\nStripe integration will be added for payment processing.`);
-      
-      await fetchOrders();
-      setActiveTab('orders');
+      // Open Stripe checkout
+      setSelectedService(service);
+      setPendingOrderId(data.id);
+      setShowCheckout(true);
     } catch (error) {
       console.error('Error creating order:', error);
       alert('An error occurred while creating the order.');
     }
+  };
+
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
+    setShowCheckout(false);
+    setSelectedService(null);
+    setPendingOrderId(null);
+    
+    await fetchOrders();
+    setActiveTab('orders');
+    
+    alert('Payment successful! Your order has been confirmed.');
+  };
+
+  const handlePaymentError = (error: string) => {
+    alert(`Payment failed: ${error}`);
+  };
+
+  const handlePaymentCancel = () => {
+    setShowCheckout(false);
+    setSelectedService(null);
+    setPendingOrderId(null);
   };
 
   const categories = [
@@ -387,6 +411,24 @@ const ClientServices = () => {
           </div>
         )}
       </div>
+
+      {/* Stripe Checkout Modal */}
+      {showCheckout && selectedService && pendingOrderId && (
+        <StripeCheckout
+          isOpen={showCheckout}
+          onClose={handlePaymentCancel}
+          amount={selectedService.price}
+          currency={selectedService.currency}
+          orderId={pendingOrderId}
+          orderDetails={{
+            serviceName: selectedService.title,
+            consultantName: selectedService.consultant.full_name,
+            deliveryTime: selectedService.delivery_time_days
+          }}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
+        />
+      )}
     </div>
   );
 };

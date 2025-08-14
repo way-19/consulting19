@@ -1,0 +1,267 @@
+import React, { useState, useEffect } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { CreditCard, Lock, CheckCircle, AlertTriangle, X } from 'lucide-react';
+import { createPaymentIntent, confirmPayment } from '../lib/stripe';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!);
+
+interface CheckoutFormProps {
+  amount: number;
+  currency: string;
+  orderId: string;
+  orderDetails: {
+    serviceName: string;
+    consultantName: string;
+    deliveryTime: number;
+  };
+  onSuccess: (paymentIntentId: string) => void;
+  onError: (error: string) => void;
+  onCancel: () => void;
+}
+
+const CheckoutForm: React.FC<CheckoutFormProps> = ({
+  amount,
+  currency,
+  orderId,
+  orderDetails,
+  onSuccess,
+  onError,
+  onCancel
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Create payment intent when component mounts
+    const initializePayment = async () => {
+      try {
+        const { client_secret } = await createPaymentIntent(amount, currency, {
+          order_id: orderId,
+          service_name: orderDetails.serviceName,
+          consultant_name: orderDetails.consultantName
+        });
+        setClientSecret(client_secret);
+      } catch (err) {
+        setError('Failed to initialize payment');
+        onError('Failed to initialize payment');
+      }
+    };
+
+    initializePayment();
+  }, [amount, currency, orderId]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!stripe || !elements || !clientSecret) {
+      return;
+    }
+
+    setProcessing(true);
+    setError(null);
+
+    const cardElement = elements.getElement(CardElement);
+
+    if (!cardElement) {
+      setError('Card element not found');
+      setProcessing(false);
+      return;
+    }
+
+    try {
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: orderDetails.consultantName,
+          },
+        },
+      });
+
+      if (stripeError) {
+        setError(stripeError.message || 'Payment failed');
+        onError(stripeError.message || 'Payment failed');
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Confirm payment on our backend
+        await confirmPayment(paymentIntent.id, orderId);
+        onSuccess(paymentIntent.id);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
+      setError(errorMessage);
+      onError(errorMessage);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const cardElementOptions = {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#424770',
+        '::placeholder': {
+          color: '#aab7c4',
+        },
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      },
+      invalid: {
+        color: '#9e2146',
+      },
+    },
+    hidePostalCode: false,
+  };
+
+  return (
+    <div className="max-w-md mx-auto">
+      {/* Order Summary */}
+      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Service:</span>
+            <span className="font-medium text-gray-900">{orderDetails.serviceName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Consultant:</span>
+            <span className="font-medium text-gray-900">{orderDetails.consultantName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Delivery Time:</span>
+            <span className="font-medium text-gray-900">{orderDetails.deliveryTime} days</span>
+          </div>
+          <div className="border-t border-gray-200 pt-3">
+            <div className="flex justify-between">
+              <span className="text-lg font-semibold text-gray-900">Total:</span>
+              <span className="text-lg font-bold text-green-600">
+                ${amount.toLocaleString()} {currency}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Card Information
+          </label>
+          <div className="border border-gray-300 rounded-lg p-4 bg-white">
+            <CardElement options={cardElementOptions} />
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0" />
+            <span className="text-sm text-red-700">{error}</span>
+          </div>
+        )}
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <Lock className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-900">Secure Payment</span>
+          </div>
+          <p className="text-xs text-blue-800">
+            Your payment information is encrypted and secure. We use Stripe for payment processing.
+          </p>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!stripe || processing || !clientSecret}
+            className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          >
+            {processing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <CreditCard className="h-4 w-4" />
+                <span>Pay ${amount.toLocaleString()}</span>
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+interface StripeCheckoutProps {
+  isOpen: boolean;
+  onClose: () => void;
+  amount: number;
+  currency: string;
+  orderId: string;
+  orderDetails: {
+    serviceName: string;
+    consultantName: string;
+    deliveryTime: number;
+  };
+  onSuccess: (paymentIntentId: string) => void;
+  onError: (error: string) => void;
+}
+
+const StripeCheckout: React.FC<StripeCheckoutProps> = ({
+  isOpen,
+  onClose,
+  amount,
+  currency,
+  orderId,
+  orderDetails,
+  onSuccess,
+  onError
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-900">Complete Payment</h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="h-5 w-5 text-gray-500" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <Elements stripe={stripePromise}>
+            <CheckoutForm
+              amount={amount}
+              currency={currency}
+              orderId={orderId}
+              orderDetails={orderDetails}
+              onSuccess={onSuccess}
+              onError={onError}
+              onCancel={onClose}
+            />
+          </Elements>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StripeCheckout;

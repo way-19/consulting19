@@ -12,6 +12,7 @@
     "db:migrate": "echo 'Run SQL files in supabase/migrations/ in your Supabase Dashboard'"
   },
   "dependencies": {
+    "@stripe/react-stripe-js": "^3.9.0",
     "@types/node": "^24.2.1",
     "@types/react-router-dom": "^5.3.3",
     "lucide-react": "^0.344.0",

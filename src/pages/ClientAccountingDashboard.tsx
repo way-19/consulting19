@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
+import StripeCheckout from '../components/StripeCheckout';
 import { 
   FileText, 
   Calendar, 
@@ -82,6 +83,8 @@ const ClientAccountingDashboard = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'invoices' | 'messages' | 'mailbox'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showInvoiceCheckout, setShowInvoiceCheckout] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<ClientInvoice | null>(null);
 
   useEffect(() => {
     if (profile?.id) {
@@ -314,6 +317,39 @@ const ClientAccountingDashboard = () => {
     }
 
     setMessages(data || []);
+  };
+
+  const handlePayInvoice = (invoice: ClientInvoice) => {
+    setSelectedInvoice(invoice);
+    setShowInvoiceCheckout(true);
+  };
+
+  const handleInvoicePaymentSuccess = async (paymentIntentId: string) => {
+    setShowInvoiceCheckout(false);
+    setSelectedInvoice(null);
+    
+    // Update invoice status
+    if (selectedInvoice) {
+      await supabase
+        .from('accounting_invoices')
+        .update({ 
+          status: 'paid',
+          stripe_invoice_id: paymentIntentId
+        })
+        .eq('id', selectedInvoice.id);
+    }
+    
+    await fetchInvoices();
+    alert('Invoice payment successful!');
+  };
+
+  const handleInvoicePaymentError = (error: string) => {
+    alert(`Invoice payment failed: ${error}`);
+  };
+
+  const handleInvoicePaymentCancel = () => {
+    setShowInvoiceCheckout(false);
+    setSelectedInvoice(null);
   };
 
   const getStatusColor = (status: string) => {
@@ -686,8 +722,11 @@ const ClientAccountingDashboard = () => {
                               <span>View</span>
                             </button>
                             {(invoice.status === 'sent' || invoice.status === 'overdue') && (
-                              <button className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors">
-                                Pay Now
+                              <button 
+                                onClick={() => handlePayInvoice(invoice)}
+                                className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors"
+                              >
+                                Pay ${invoice.amount}
                               </button>
                             )}
                           </div>
@@ -758,6 +797,24 @@ const ClientAccountingDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Invoice Payment Checkout */}
+      {showInvoiceCheckout && selectedInvoice && (
+        <StripeCheckout
+          isOpen={showInvoiceCheckout}
+          onClose={handleInvoicePaymentCancel}
+          amount={selectedInvoice.amount}
+          currency={selectedInvoice.currency}
+          orderId={selectedInvoice.id}
+          orderDetails={{
+            serviceName: `Invoice ${selectedInvoice.invoice_number}`,
+            consultantName: accountingProfile?.consultant?.full_name || 'Consultant',
+            deliveryTime: 0
+          }}
+          onSuccess={handleInvoicePaymentSuccess}
+          onError={handleInvoicePaymentError}
+        />
+      )}
     </div>
   );
 };
