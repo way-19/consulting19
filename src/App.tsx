@@ -36,6 +36,7 @@ import DocumentManagement from './pages/consultant/DocumentManagement';
 import ProjectManagement from './pages/consultant/ProjectManagement';
 import ConsultantServices from './pages/ConsultantServices';
 import ConsultantPayments from './pages/consultant/ConsultantPayments';
+import ConsultantCountryContent from './pages/consultant/ConsultantCountryContent';
 import AccountingManagement from './pages/AccountingManagement';
 import LegacyOrders from './pages/LegacyOrders';
 
@@ -193,6 +194,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["consultant"]}>
                 <ConsultantPayments />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/consultant/country-content"
+            element={
+              <ProtectedRoute allowedRoles={["consultant"]}>
+                <ConsultantCountryContent />
               </ProtectedRoute>
             }
           />
