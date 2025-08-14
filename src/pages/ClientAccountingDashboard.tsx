@@ -32,8 +32,7 @@ import {
   CreditCard,
   MapPin,
   X,
-  Save,
-  Send
+  Save
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
