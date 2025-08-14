@@ -327,35 +327,33 @@ const HomePage = () => {
               our AI-powered consultants and comprehensive business services.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {countries.filter(country => country.is_active).slice(0, 4).map((country, index) => {
-              const matchPercentages = ['95%', '92%', '88%', '85%'];
-              const reasons = ['Tax advantages', 'Digital innovation', 'Strategic location', 'Business friendly'];
-              
-              return (
-                <div key={country.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow group">
-                  <div className="text-4xl mb-3">{country.flag_emoji || '🌍'}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{country.name}</h3>
-                  <div className="text-2xl font-bold text-purple-600 mb-2">{matchPercentages[index]}</div>
-                  <p className="text-sm text-gray-600 mb-4">{reasons[index]}</p>
-                  <Link
-                    to={`/countries/${country.slug}`}
-                    className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1"
-                  >
-                    <span>Learn More</span>
-                    <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+            {[
+              { code: 'GE', name: 'Georgia', flag: '🇬🇪', score: '95%', feature: 'Tax advantages', slug: 'georgia' },
+              { code: 'EE', name: 'Estonia', flag: '🇪🇪', score: '92%', feature: 'Digital innovation', slug: 'estonia' },
+              { code: 'AE', name: 'UAE', flag: '🇦🇪', score: '88%', feature: 'Strategic location', slug: 'uae' },
+              { code: 'MT', name: 'Malta', flag: '🇲🇹', score: '87%', feature: 'EU membership', slug: 'malta' },
+              { code: 'CH', name: 'Switzerland', flag: '🇨🇭', score: '90%', feature: 'Financial hub', slug: 'switzerland' },
+              { code: 'PT', name: 'Portugal', flag: '🇵🇹', score: '86%', feature: 'EU access', slug: 'portugal' },
+              { code: 'ES', name: 'Spain', flag: '🇪🇸', score: '84%', feature: 'Market access', slug: 'spain' },
+              { code: 'US', name: 'USA', flag: '🇺🇸', score: '89%', feature: 'Global market', slug: 'usa' }
+            ].map((country) => (
+              <div key={country.code} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow text-center">
+                <div className="text-2xl mb-2">{country.flag}</div>
+                <div className="text-xs font-medium text-gray-500 mb-1">{country.code}</div>
+                <h3 className="text-sm font-bold text-gray-900 mb-1">{country.name}</h3>
+                <div className="text-lg font-bold text-purple-600 mb-1">{country.score}</div>
+                <p className="text-xs text-gray-600 mb-3">{country.feature}</p>
+                <Link
+                  to={`/countries/${country.slug}`}
+                  className="text-purple-600 hover:text-purple-700 font-medium text-xs flex items-center justify-center space-x-1"
+                >
+                  <span>Learn More</span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+            ))}
           </div>
-
-          <div className="text-center mt-12">
-            <Link
-              to="/countries"
-              className="inline-flex items-center space-x-2 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-            >
-              <span>View All Countries</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
