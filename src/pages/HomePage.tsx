@@ -2,7 +2,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Bot, Shield, Zap, BarChart3, MessageSquare, Users, Globe2, TrendingUp, Clock, Building, CheckCircle, Calculator, Scale, Plane, Search, CreditCard, Mail, Globe, Eye, Sparkles } from 'lucide-react';
-import CountryCard from '../components/CountryCard';
+import CountryCard from '../components/ModernCountryCard';
 import ServiceCard from '../components/ServiceCard';
 import { useCountries } from '../hooks/useCountries';
 import { useServices } from '../hooks/useServices';
