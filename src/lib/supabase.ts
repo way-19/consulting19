@@ -15,7 +15,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Database Types
+// Enhanced Database Types
 export interface Profile {
   id: string;
   auth_user_id: string;
@@ -30,8 +30,27 @@ export interface Profile {
   avatar_url?: string;
   is_active: boolean;
   last_login_at?: string;
+  metadata: any;
   created_at: string;
   updated_at: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+  is_system_role: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Permission {
+  id: string;
+  name: string;
+  description?: string;
+  resource: string;
+  action: string;
+  created_at: string;
 }
 
 export interface Country {
@@ -83,6 +102,7 @@ export interface Project {
   estimated_hours?: number;
   actual_hours: number;
   budget?: number;
+  progress: number;
   created_at: string;
   updated_at: string;
 }
@@ -123,6 +143,37 @@ export interface Document {
   expires_at?: string;
   notes?: string;
   metadata: any;
+}
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt?: string;
+  author_id?: string;
+  category?: string;
+  tags: string[];
+  language_code: string;
+  is_published: boolean;
+  published_at?: string;
+  featured_image_url?: string;
+  seo_title?: string;
+  seo_description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  category?: string;
+  language_code: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Notification {
@@ -170,6 +221,36 @@ export const getCurrentProfile = async () => {
     .single();
 
   return profile as Profile | null;
+};
+
+export const ensureProfile = async () => {
+  try {
+    const { data, error } = await supabase.rpc('ensure_profile');
+    
+    if (error) {
+      console.error('Error ensuring profile:', error);
+      return null;
+    }
+    
+    return data?.[0]?.profile_data || null;
+  } catch (error) {
+    console.error('Error in ensureProfile:', error);
+    return null;
+  }
+};
+
+export const hasPermission = async (permission: string) => {
+  const profile = await getCurrentProfile();
+  if (!profile) return false;
+
+  const { data } = await supabase
+    .from('role_permissions')
+    .select(`
+      permissions (name)
+    `)
+    .eq('role_id', profile.role_id);
+
+  return data?.some(rp => rp.permissions?.name === permission) || false;
 };
 
 export const isAdmin = async () => {
@@ -241,4 +322,28 @@ export const logAdminAction = async (
   if (error) {
     console.error('Error logging admin action:', error);
   }
+};
+
+// Settings helpers
+export const getSetting = async (key: string) => {
+  const { data } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', key)
+    .single();
+
+  return data?.value;
+};
+
+export const updateSetting = async (key: string, value: any) => {
+  const { error } = await supabase
+    .from('settings')
+    .upsert({ key, value });
+
+  if (error) {
+    console.error('Error updating setting:', error);
+    return false;
+  }
+  
+  return true;
 };

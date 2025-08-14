@@ -22,6 +22,7 @@ export default function ProtectedRoute({ requiredRole, children }: ProtectedRout
   }
 
   if (!user) {
+    console.log('🔒 No user, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
@@ -30,15 +31,15 @@ export default function ProtectedRoute({ requiredRole, children }: ProtectedRout
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-            <h3 className="text-lg font-medium text-red-900 mb-2">Profile Not Found</h3>
+            <h3 className="text-lg font-medium text-red-900 mb-2">Profile Loading Error</h3>
             <p className="text-red-700 mb-4">
-              Your user account exists but no profile was found. This might be a system error.
+              Unable to load your profile. Please try refreshing the page.
             </p>
             <button
               onClick={() => window.location.reload()}
               className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
             >
-              Retry
+              Refresh Page
             </button>
           </div>
         </div>
@@ -47,6 +48,8 @@ export default function ProtectedRoute({ requiredRole, children }: ProtectedRout
   }
 
   if (requiredRole && profile.legacy_role !== requiredRole) {
+    console.log(`🚫 Access denied. Required: ${requiredRole}, User: ${profile.legacy_role}`);
+    
     // Redirect to appropriate dashboard based on user's role
     const roleRedirects = {
       admin: '/admin-dashboard',

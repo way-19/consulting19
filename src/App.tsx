@@ -33,6 +33,7 @@ import ProjectManagement from './pages/consultant/ProjectManagement';
 import ConsultantServices from './pages/ConsultantServices';
 import ConsultantPayments from './pages/consultant/ConsultantPayments';
 import AccountingManagement from './pages/AccountingManagement';
+import LegacyOrders from './pages/LegacyOrders';
 
 // Protected Pages - Client
 import ClientDashboard from './pages/client/ClientDashboard';
@@ -180,6 +181,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/consultant/legacy-orders"
+            element={
+              <ProtectedRoute requiredRole="consultant">
+                <LegacyOrders />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Client Routes */}
           <Route
@@ -220,6 +229,7 @@ export default function App() {
           <Route path="/consultant-services" element={<Navigate to="/consultant/services" replace />} />
           <Route path="/customers-management" element={<Navigate to="/consultant/customers" replace />} />
           <Route path="/accounting-management" element={<Navigate to="/consultant/accounting" replace />} />
+          <Route path="/legacy-orders" element={<Navigate to="/consultant/legacy-orders" replace />} />
 
           {/* Catch All */}
           <Route path="*" element={<Navigate to="/" replace />} />

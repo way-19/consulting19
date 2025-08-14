@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { supabase, Profile } from '../lib/supabase';
+import { supabase, Profile, ensureProfile } from '../lib/supabase';
 
 type AuthContextValue = {
   loading: boolean;
@@ -20,69 +20,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (authUser: User) => {
     try {
-      console.log('🔍 Fetching profile for user:', authUser.id);
+      console.log('🔍 Fetching profile for user:', authUser.id, authUser.email);
       
+      // First try to get existing profile
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('auth_user_id', authUser.id)
         .single();
 
-      if (error) {
-        console.error('❌ Profile fetch error:', error.message);
+      if (error && error.code === 'PGRST116') {
+        // Profile doesn't exist, use ensure_profile function
+        console.log('🔧 Profile not found, ensuring profile creation...');
+        const profileData = await ensureProfile();
         
-        // If profile doesn't exist, try to create it
-        if (error.code === 'PGRST116') {
-          console.log('🔧 Profile not found, attempting to create...');
-          await createMissingProfile(authUser);
+        if (profileData && profileData.error) {
+          console.error('❌ Error ensuring profile:', profileData.error);
+          setProfile(null);
           return;
         }
         
+        if (profileData) {
+          console.log('✅ Profile ensured:', profileData.email, profileData.legacy_role);
+          setProfile(profileData as Profile);
+          return;
+        }
+      }
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ Profile fetch error:', error.message);
         setProfile(null);
         return;
       }
 
-      console.log('✅ Profile found:', data.email, data.legacy_role);
-      setProfile(data as Profile);
+      if (data) {
+        console.log('✅ Profile found:', data.email, data.legacy_role);
+        setProfile(data as Profile);
+      }
     } catch (error) {
       console.error('💥 Profile fetch failed:', error);
       setProfile(null);
-    }
-  };
-
-  const createMissingProfile = async (authUser: User) => {
-    try {
-      console.log('🔧 Creating missing profile for:', authUser.email);
-      
-      // Get default client role
-      const { data: clientRole } = await supabase
-        .from('roles')
-        .select('id')
-        .eq('name', 'client')
-        .single();
-
-      const { data: newProfile, error } = await supabase
-        .from('profiles')
-        .insert([{
-          auth_user_id: authUser.id,
-          email: authUser.email!,
-          role_id: clientRole?.id,
-          legacy_role: 'client',
-          full_name: authUser.user_metadata?.full_name || authUser.email!.split('@')[0],
-          is_active: true
-        }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('❌ Error creating profile:', error);
-        return;
-      }
-
-      console.log('✅ Profile created successfully:', newProfile.email);
-      setProfile(newProfile as Profile);
-    } catch (error) {
-      console.error('💥 Profile creation failed:', error);
     }
   };
 
@@ -97,12 +74,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initAuth = async () => {
       try {
+        console.log('🚀 Initializing auth...');
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!mounted) return;
 
         if (session?.user) {
-          console.log('✅ Session found for user:', session.user.id);
+          console.log('✅ Session found for user:', session.user.id, session.user.email);
           setUser(session.user);
           await fetchProfile(session.user);
         } else {
@@ -146,11 +124,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    console.log('🔐 Attempting sign in for:', email);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Sign in error:', error.message);
+      throw error;
+    }
+    console.log('✅ Sign in successful');
   };
 
   const signOut = async () => {
+    console.log('🚪 Signing out...');
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
