@@ -22,7 +22,10 @@ import {
   Tag,
   Languages,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Settings,
+  DollarSign,
+  Clock
 } from 'lucide-react';
 
 interface Country {
