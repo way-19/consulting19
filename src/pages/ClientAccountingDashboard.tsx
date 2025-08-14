@@ -164,14 +164,6 @@ const ClientAccountingDashboard: React.FC = () => {
   });
   const [messageLoading, setMessageLoading] = useState(false);
 
-  // Message state
-  const [newMessage, setNewMessage] = useState({
-    subject: '',
-    message: '',
-    category: 'general',
-    language: 'en'
-  });
-
   useEffect(() => {
     if (profile?.id) {
       fetchAccountingData();
@@ -1240,7 +1232,7 @@ const ClientAccountingDashboard: React.FC = () => {
                   className="flex w-full items-center justify-center space-x-2 rounded-lg bg-purple-600 px-4 py-3 font-medium text-white transition-colors hover:bg-purple-700"
                 >
                   <MessageSquare className="h-5 w-5" />
-                  <span>Send Message</span>
+                  <span>Message Consultant</span>
                 </button>
               </div>
             )}
