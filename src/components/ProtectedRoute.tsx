@@ -18,8 +18,6 @@ const FullScreenLoader: React.FC<{ message?: string }> = ({ message = "Initializ
   </div>
 );
 
-export default function ProtectedRoute({ allowedRoles, children }: Props) {
-}
 export default function ProtectedRoute({ allowedRoles, requiredRole, children }: Props) {
   const { user, profile, loading } = useAuth();
 
