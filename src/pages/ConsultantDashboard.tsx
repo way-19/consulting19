@@ -430,216 +430,257 @@ const ConsultantDashboard = () => {
             </div>
 
             <div className="p-6">
-              {/* Enhanced Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {stats.map((stat) => (
-                  <div key={stat.name} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`${stat.color} rounded-xl p-3 shadow-lg`}>
-                        <stat.icon className="h-6 w-6 text-white" />
+        {/* Enhanced Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat) => (
+            <div key={stat.name} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`${stat.color} rounded-xl p-3 shadow-lg`}>
+                  <stat.icon className="h-6 w-6 text-white" />
+                </div>
+                <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                  stat.changeType === 'positive' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'
+                }`}>
+                  {stat.change}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">{stat.name}</p>
+                <p className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
+                <p className="text-xs text-gray-500">{stat.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Main Content Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Enhanced Recent Clients */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">Assigned Clients</h2>
+              <button className="text-sm text-purple-600 hover:text-purple-700 font-medium">
+                View All
+              </button>
+            </div>
+            <div className="p-6">
+              {loadingClients ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+              ) : assignedClients.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Assigned Clients</h3>
+                  <p className="text-gray-600">No clients have been assigned to you yet.</p>
+                  <button 
+                    onClick={fetchAssignedClients}
+                    className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                  >
+                    Refresh
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {assignedClients.map((client) => (
+                    <div key={client.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h4 className="font-medium text-gray-900">
+                              {client.company_name || client.profile?.full_name || client.profile?.email}
+                            </h4>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              client.priority === 'high' ? 'bg-red-100 text-red-700' :
+                              client.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {client.priority} Priority
+                            </span>
+                          </div>
+                          
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <p>Email: {client.profile?.email}</p>
+                            <p>Country: {client.profile?.country || 'Georgia'}</p>
+                            <p>Status: {client.status}</p>
+                          </div>
+                          
+                          <div className="mt-3">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-24 bg-gray-200 rounded-full h-2">
+                                <div 
+                                  className={`h-2 rounded-full ${
+                                    client.progress === 100 ? 'bg-green-500' :
+                                    client.progress >= 50 ? 'bg-blue-500' : 'bg-yellow-500'
+                                  }`}
+                                  style={{ width: `${client.progress}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-sm text-gray-600">{client.progress}%</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
+                            client.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            client.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {client.status.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </div>
                       </div>
-                      <span className={`text-sm font-medium px-2 py-1 rounded-full ${
-                        stat.changeType === 'positive' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'
-                      }`}>
-                        {stat.change}
-                      </span>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 mb-1">{stat.name}</p>
-                      <p className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
-                      <p className="text-xs text-gray-500">{stat.description}</p>
-                    </div>
-                  </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Sidebar */}
+                <div className="space-y-6">
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {quickActions.slice(0, 6).map((action, index) => (
+                  <Link
+                    key={index}
+                    to={action.href}
+                    className={`${action.color} text-white p-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-lg group text-center`}
+                  >
+                    <action.icon className="h-6 w-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                    <h4 className="font-medium text-sm">{action.name}</h4>
+                    <p className="text-white/80 text-xs mt-1">{action.description}</p>
+                  </Link>
                 ))}
               </div>
+            </div>
 
-              {/* Main Content Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Enhanced Recent Clients */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                  <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">Assigned Clients</h2>
-                    <button className="text-sm text-purple-600 hover:text-purple-700 font-medium">
-                      View All
-                    </button>
+            {/* Today's Appointments */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Today's Appointments</h3>
+                <Calendar className="h-5 w-5 text-gray-400" />
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
+                    <div className="flex-shrink-0 w-3 h-3 rounded-full mt-2 bg-red-500"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Client Consultation Call</p>
+                      <p className="text-xs text-gray-500 mt-1">Tech Startup LLC - Company Formation</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-purple-600 font-medium">10:00 AM - 11:00 AM</p>
+                        <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                          Video Call
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-6">
-                    {loadingClients ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  
+                  <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
+                    <div className="flex-shrink-0 w-3 h-3 rounded-full mt-2 bg-yellow-500"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Document Review Meeting</p>
+                      <p className="text-xs text-gray-500 mt-1">Global Trading Co. - Banking Setup</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-purple-600 font-medium">2:30 PM - 3:00 PM</p>
+                        <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                          In Person
+                        </span>
                       </div>
-                    ) : assignedClients.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Assigned Clients</h3>
-                        <p className="text-gray-600">No clients have been assigned to you yet.</p>
-                        <button 
-                          onClick={fetchAssignedClients}
-                          className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                        >
-                          Refresh
-                        </button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
+                    <div className="flex-shrink-0 w-3 h-3 rounded-full mt-2 bg-blue-500"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Follow-up Call</p>
+                      <p className="text-xs text-gray-500 mt-1">Investment Fund - Tax Residency</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-purple-600 font-medium">4:00 PM - 4:30 PM</p>
+                        <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                          Phone Call
+                        </span>
                       </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {assignedClients.map((client) => (
-                          <div key={client.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <h4 className="font-medium text-gray-900">
-                                    {client.company_name || client.profile?.full_name || client.profile?.email}
-                                  </h4>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    client.priority === 'high' ? 'bg-red-100 text-red-700' :
-                                    client.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                    'bg-gray-100 text-gray-700'
-                                  }`}>
-                                    {client.priority} Priority
-                                  </span>
-                                </div>
-                                
-                                <div className="text-sm text-gray-600 space-y-1">
-                                  <p>Email: {client.profile?.email}</p>
-                                  <p>Country: {client.profile?.country || 'Georgia'}</p>
-                                  <p>Status: {client.status}</p>
-                                </div>
-                                
-                                <div className="mt-3">
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-24 bg-gray-200 rounded-full h-2">
-                                      <div 
-                                        className={`h-2 rounded-full ${
-                                          client.progress === 100 ? 'bg-green-500' :
-                                          client.progress >= 50 ? 'bg-blue-500' : 'bg-yellow-500'
-                                        }`}
-                                        style={{ width: `${client.progress}%` }}
-                                      ></div>
-                                    </div>
-                                    <span className="text-sm text-gray-600">{client.progress}%</span>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="text-right">
-                                <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                                  client.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                  client.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                                  'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                  {client.status.replace('_', ' ').toUpperCase()}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    </div>
                   </div>
                 </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>Schedule New Appointment</span>
+                  </button>
+                </div>
+              </div>
+            </div>
 
-                {/* Right Sidebar */}
-                <div className="space-y-6">
-                  {/* Quick Actions */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {quickActions.slice(0, 6).map((action, index) => (
-                        <Link
-                          key={index}
-                          to={action.href}
-                          className={`${action.color} text-white p-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-lg group text-center`}
-                        >
-                          <action.icon className="h-6 w-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                          <h4 className="font-medium text-sm">{action.name}</h4>
-                          <p className="text-white/80 text-xs mt-1">{action.description}</p>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
+            {/* Debug Info */}
+            <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
+              <h3 className="text-lg font-semibold text-blue-900 mb-4">Debug Info</h3>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-blue-700 font-medium">Consultant ID:</span>
+                  <p className="text-blue-600 font-mono text-xs">{profile?.id}</p>
+                </div>
+                <div>
+                  <span className="text-blue-700 font-medium">Email:</span>
+                  <p className="text-blue-600">{profile?.email}</p>
+                </div>
+                <div>
+                  <span className="text-blue-700 font-medium">Role:</span>
+                  <p className="text-blue-600">{profile?.role}</p>
+                </div>
+                <div>
+                  <span className="text-blue-700 font-medium">Assigned Clients:</span>
+                  <p className="text-blue-600">{assignedClients.length}</p>
+                </div>
+              </div>
+              <button 
+                onClick={fetchAssignedClients}
+                className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Refresh Clients
+              </button>
+            </div>
 
-                  {/* Today's Appointments */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">Today's Appointments</h3>
-                      <Calendar className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <div className="p-6">
-                      <div className="space-y-4">
-                        <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
-                          <div className="flex-shrink-0 w-3 h-3 rounded-full mt-2 bg-red-500"></div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">Client Consultation Call</p>
-                            <p className="text-xs text-gray-500 mt-1">Tech Startup LLC - Company Formation</p>
-                            <div className="flex items-center justify-between mt-2">
-                              <p className="text-xs text-purple-600 font-medium">10:00 AM - 11:00 AM</p>
-                              <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                                Video Call
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
-                          <div className="flex-shrink-0 w-3 h-3 rounded-full mt-2 bg-yellow-500"></div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">Document Review Meeting</p>
-                            <p className="text-xs text-gray-500 mt-1">Global Trading Co. - Banking Setup</p>
-                            <div className="flex items-center justify-between mt-2">
-                              <p className="text-xs text-purple-600 font-medium">2:30 PM - 3:00 PM</p>
-                              <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
-                                In Person
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
-                          <div className="flex-shrink-0 w-3 h-3 rounded-full mt-2 bg-blue-500"></div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">Follow-up Call</p>
-                            <p className="text-xs text-gray-500 mt-1">Investment Fund - Tax Residency</p>
-                            <div className="flex items-center justify-between mt-2">
-                              <p className="text-xs text-purple-600 font-medium">4:00 PM - 4:30 PM</p>
-                              <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
-                                Phone Call
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Debug Info */}
-                  <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
-                    <h3 className="text-lg font-semibold text-blue-900 mb-4">Debug Info</h3>
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="text-blue-700 font-medium">Consultant ID:</span>
-                        <p className="text-blue-600 font-mono text-xs">{profile?.id}</p>
-                      </div>
-                      <div>
-                        <span className="text-blue-700 font-medium">Email:</span>
-                        <p className="text-blue-600">{profile?.email}</p>
-                      </div>
-                      <div>
-                        <span className="text-blue-700 font-medium">Role:</span>
-                        <p className="text-blue-600">{profile?.role}</p>
-                      </div>
-                      <div>
-                        <span className="text-blue-700 font-medium">Assigned Clients:</span>
-                        <p className="text-blue-600">{assignedClients.length}</p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={fetchAssignedClients}
-                      className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                    >
-                      Refresh Clients
-                    </button>
-                  </div>
-
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="space-y-3">
+                <button 
+                  onClick={() => {
+                    setChatType('consultant-client');
+                    setIsChatOpen(true);
+                  }}
+                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  <span>Client Chat</span>
+                </button>
+                
+                <button 
+                  onClick={() => {
+                    setChatType('admin-consultant');
+                    setIsChatOpen(true);
+                  }}
+                  className="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  <span>Admin Chat</span>
+                </button>
+                
+                <button 
+                  className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Calendar className="h-5 w-5" />
+                  <span>AI Agent Appointments</span>
+                </button>
+              </div>
+            </div>
                   {/* Performance Summary */}
                   <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-sm text-white p-6">
                     <div className="flex items-center justify-between mb-4">
