@@ -333,7 +333,7 @@ const HomePage = () => {
               const reasons = ['Tax advantages', 'Digital innovation', 'Strategic location', 'Business friendly'];
               
               return (
-                <div key={country.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                <div key={country.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow group">
                   <div className="text-4xl mb-3">{country.flag_emoji || '🌍'}</div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{country.name}</h3>
                   <div className="text-2xl font-bold text-purple-600 mb-2">{matchPercentages[index]}</div>
