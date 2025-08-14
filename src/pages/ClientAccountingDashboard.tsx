@@ -22,17 +22,18 @@ import {
   Search,
   Filter,
   Users,
-  Settings,
-  Mail,
-  Truck,
+  TrendingUp,
   Globe2,
   Star,
   Package,
+  Settings,
+  Mail,
+  Truck,
   CreditCard,
   MapPin,
   X,
   Save,
-  TrendingUp
+  Send
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
@@ -142,16 +143,6 @@ const ClientAccountingDashboard: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank'>('card');
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [showAccountSettingsModal, setShowAccountSettingsModal] = useState(false);
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedMailboxItem, setSelectedMailboxItem] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
 
   useEffect(() => {
     if (profile?.id) {
