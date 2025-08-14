@@ -404,7 +404,6 @@ const Navbar = () => {
                         </div>
                         <div className="max-h-96 overflow-y-auto">
                           {countries.filter(country => country.is_active).slice(0, 10).map((country) => (
-                          {countries.filter(country => country.is_active && country.slug !== 'singapore').slice(0, 10).map((country) => (
                             <Link
                               key={country.id}
                               to={`/countries/${country.slug}`}
