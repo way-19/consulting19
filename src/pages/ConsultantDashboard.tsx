@@ -583,41 +583,6 @@ const ConsultantDashboard = () => {
                   <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
                     <div className="flex-shrink-0 w-3 h-3 rounded-full mt-2 bg-yellow-500"></div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Document Review Meeting</p>
-                      <p className="text-xs text-gray-500 mt-1">Global Trading Co. - Banking Setup</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-purple-600 font-medium">2:30 PM - 3:00 PM</p>
-                        <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
-                          In Person
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
-                    <div className="flex-shrink-0 w-3 h-3 rounded-full mt-2 bg-blue-500"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Follow-up Call</p>
-                      <p className="text-xs text-gray-500 mt-1">Investment Fund - Tax Residency</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-purple-600 font-medium">4:00 PM - 4:30 PM</p>
-                        <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
-                          Phone Call
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>Schedule New Appointment</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
             {/* Debug Info */}
             <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
               <h3 className="text-lg font-semibold text-blue-900 mb-4">Debug Info</h3>
