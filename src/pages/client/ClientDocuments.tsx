@@ -1009,3 +1009,5 @@ const ClientDocuments = () => {
 export { ClientDocuments as default };
 
 export default ClientDocuments
+
+export default ClientDocuments
