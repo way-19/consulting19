@@ -4,10 +4,13 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Bot, Shield, Zap, BarChart3, MessageSquare, Users, Globe2, TrendingUp, Clock } from 'lucide-react';
 import CountryCard from '../components/CountryCard';
 import ServiceCard from '../components/ServiceCard';
-import { countries } from '../data/countries';
-import { services } from '../data/services';
+import { useCountries } from '../hooks/useCountries';
+import { useServices } from '../hooks/useServices';
 
 const HomePage = () => {
+  const { countries, loading: countriesLoading } = useCountries(true);
+  const { services, loading: servicesLoading } = useServices(true);
+  
   const featuredCountries = countries.slice(0, 8);
   
   // Hero Slider State
@@ -182,11 +185,17 @@ const HomePage = () => {
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 index === currentSlide 
                   ? 'bg-white shadow-lg scale-125' 
-                  : 'bg-white/40 hover:bg-white/60'
-              }`}
-            />
-          ))}
-        </div>
+        {servicesLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {services.slice(0, 8).map((service) => (
+              <ServiceCard key={service.id} service={service} />
+            ))}
+          </div>
+        )}
 
         {/* Navigation Arrows */}
         <button
@@ -324,15 +333,21 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredCountries.map((country, index) => (
-              <CountryCard 
-                key={country.id} 
-                country={country} 
-                featured={index === 0} 
-              />
-            ))}
-          </div>
+          {countriesLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredCountries.map((country, index) => (
+                <CountryCard 
+                  key={country.id} 
+                  country={country} 
+                  featured={index === 0} 
+                />
+              ))}
+            </div>
+          )}
 
           <div className="text-center mt-12">
             <Link
@@ -541,51 +556,68 @@ const HomePage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Dynamic insights from countries */}
-            {countries
-              .filter(country => country.insights.length > 0)
-              .flatMap(country => 
-                country.insights.map(insight => ({
-                  ...insight,
-                  country: country
-                }))
-              )
-              .slice(0, 3)
-              .map((insight, index) => (
-                <article key={insight.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow group">
-                  <div className={`h-48 bg-gradient-to-br ${
-                    index === 0 ? 'from-blue-500 to-purple-600' :
-                    index === 1 ? 'from-green-500 to-teal-600' :
-                    'from-orange-500 to-red-600'
-                  }`} />
-                  <div className="p-6">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <span className="text-lg">{insight.country.flag}</span>
-                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${
-                        index === 0 ? 'bg-blue-100 text-blue-700' :
-                        index === 1 ? 'bg-green-100 text-green-700' :
-                        'bg-orange-100 text-orange-700'
-                      }`}>
-                        {insight.category}
-                      </span>
-                      <span className="text-gray-400 text-sm">•</span>
-                      <span className="text-gray-500 text-sm">{insight.readTime}</span>
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors">
-                      {insight.title}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-4">
-                      {insight.excerpt}
-                    </p>
-                    <Link
-                      to={`/countries/${insight.country.slug}/insights/${insight.id}`}
-                      className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1"
-                    >
-                      <span>Read More</span>
-                      <ArrowRight className="h-3 w-3" />
-                    </Link>
+            {/* Sample insights - these would come from blog_posts table */}
+            {[
+              {
+                id: 1,
+                title: 'New Investment Opportunities in Georgia 2024',
+                excerpt: 'Latest developments in Georgia\'s business landscape and emerging opportunities for international investors.',
+                country: { name: 'Georgia', flag_emoji: '🇬🇪', slug: 'georgia' },
+                category: 'Market Update',
+                readTime: '5 min read'
+              },
+              {
+                id: 2,
+                title: 'UAE Free Zone Benefits for Tech Companies',
+                excerpt: 'Comprehensive guide to UAE free zones and their advantages for technology startups.',
+                country: { name: 'UAE', flag_emoji: '🇦🇪', slug: 'uae' },
+                category: 'Business Guide',
+                readTime: '7 min read'
+              },
+              {
+                id: 3,
+                title: 'Estonia e-Residency: Digital Nomad Paradise',
+                excerpt: 'How Estonia\'s e-Residency program is revolutionizing remote business operations.',
+                country: { name: 'Estonia', flag_emoji: '🇪🇪', slug: 'estonia' },
+                category: 'Digital Innovation',
+                readTime: '6 min read'
+              }
+            ].map((insight, index) => (
+              <article key={insight.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow group">
+                <div className={`h-48 bg-gradient-to-br ${
+                  index === 0 ? 'from-blue-500 to-purple-600' :
+                  index === 1 ? 'from-green-500 to-teal-600' :
+                  'from-orange-500 to-red-600'
+                }`} />
+                <div className="p-6">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <span className="text-lg">{insight.country.flag_emoji}</span>
+                    <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                      index === 0 ? 'bg-blue-100 text-blue-700' :
+                      index === 1 ? 'bg-green-100 text-green-700' :
+                      'bg-orange-100 text-orange-700'
+                    }`}>
+                      {insight.category}
+                    </span>
+                    <span className="text-gray-400 text-sm">•</span>
+                    <span className="text-gray-500 text-sm">{insight.readTime}</span>
                   </div>
-                </article>
-              ))}
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors">
+                    {insight.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    {insight.excerpt}
+                  </p>
+                  <Link
+                    to={`/countries/${insight.country.slug}/insights/${insight.id}`}
+                    className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1"
+                  >
+                    <span>Read More</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </article>
+            ))}
           </div>
 
           <div className="text-center mt-12">

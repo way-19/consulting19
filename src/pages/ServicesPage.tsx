@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, ArrowRight } from 'lucide-react';
 import ServiceCard from '../components/ServiceCard';
-import { services, serviceCategories } from '../data/services';
+import { useServices, useServiceCategories } from '../hooks/useServices';
 
 const ServicesPage = () => {
+  const { services, loading, error } = useServices(true);
+  const { categories: serviceCategories } = useServiceCategories();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState('all');
@@ -17,17 +19,47 @@ const ServicesPage = () => {
   };
 
   const filteredServices = services.filter(service => {
-    const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          service.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory;
     
     let matchesPrice = true;
-    if (priceRange === 'under-1000') matchesPrice = service.pricing.startingAt < 1000;
-    else if (priceRange === '1000-2000') matchesPrice = service.pricing.startingAt >= 1000 && service.pricing.startingAt <= 2000;
-    else if (priceRange === 'over-2000') matchesPrice = service.pricing.startingAt > 2000;
+    if (priceRange === 'under-1000') matchesPrice = service.price < 1000;
+    else if (priceRange === '1000-2000') matchesPrice = service.price >= 1000 && service.price <= 2000;
+    else if (priceRange === 'over-2000') matchesPrice = service.price > 2000;
     
     return matchesSearch && matchesCategory && matchesPrice;
   });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <section className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h1 className="text-4xl sm:text-5xl font-bold mb-4">
+                Expert <span className="text-yellow-300">Business Services</span>
+              </h1>
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Services</h3>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

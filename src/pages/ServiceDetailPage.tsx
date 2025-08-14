@@ -1,50 +1,58 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Clock, Users, Award, MessageSquare } from 'lucide-react';
-import * as Icons from 'lucide-react';
-import { services } from '../data/services';
-import { countries } from '../data/countries';
+import { useService } from '../hooks/useServices';
+import { useCountries } from '../hooks/useCountries';
 
 const ServiceDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const service = services.find(s => s.slug === slug);
+  const { service, loading, error } = useService(slug || '');
+  const { countries } = useCountries(true);
 
-  if (!service) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
+  if (error || !service) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Service Not Found</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
           <Link to="/services" className="text-purple-600 hover:text-purple-700">
-          <span>Get Started</span>
+            ← Back to Services
           </Link>
         </div>
       </div>
     );
   }
 
-  const IconComponent = Icons[service.icon as keyof typeof Icons] as any;
-  const popularCountries = countries.slice(0, 6); // Show first 6 countries
+  const popularCountries = countries.slice(0, 6);
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className={`py-20 ${service.color} text-white relative overflow-hidden`}>
+      <section className="py-20 bg-gradient-to-br from-purple-600 to-indigo-700 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="flex items-center space-x-3 mb-6">
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
-                  <IconComponent className="h-8 w-8 text-white" />
+                  <MessageSquare className="h-8 w-8 text-white" />
                 </div>
                 <span className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium">
-                  {service.category}
+                  {service.category.replace('_', ' ').toUpperCase()}
                 </span>
               </div>
               
-              <h1 className="text-4xl sm:text-5xl font-bold mb-6">{service.name}</h1>
+              <h1 className="text-4xl sm:text-5xl font-bold mb-6">{service.title}</h1>
               <p className="text-xl text-white/90 mb-8 leading-relaxed">
-                {service.description}. Our expert consultants provide comprehensive 
+                {service.description} Our expert consultants provide comprehensive 
                 guidance and support throughout the entire process.
               </p>
 
@@ -75,7 +83,7 @@ const ServiceDetailPage: React.FC = () => {
                     <Clock className="h-4 w-4 text-white/80" />
                     <span className="text-white/80">Typical Timeline</span>
                   </div>
-                  <span className="text-white font-medium">2-4 weeks</span>
+                  <span className="text-white font-medium">{service.delivery_time_days} days</span>
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -106,10 +114,10 @@ const ServiceDetailPage: React.FC = () => {
               <div className="mt-8 pt-6 border-t border-white/20">
                 <div className="text-center">
                   <div className="text-lg font-semibold text-white mb-2">
-                    Custom Pricing Available
+                    ${service.price.toLocaleString()} {service.currency}
                   </div>
                   <div className="text-white/80 text-sm">
-                    Contact our consultants for personalized quotes
+                    Professional service with expert guidance
                   </div>
                 </div>
               </div>
@@ -153,7 +161,7 @@ const ServiceDetailPage: React.FC = () => {
                   { step: 4, title: 'Ongoing Support', desc: 'Continued support and compliance monitoring' }
                 ].map((item) => (
                   <div key={item.step} className="flex items-start space-x-4">
-                    <div className={`flex-shrink-0 w-8 h-8 ${service.color} rounded-full flex items-center justify-center text-white font-bold text-sm`}>
+                    <div className="flex-shrink-0 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                       {item.step}
                     </div>
                     <div>
@@ -187,7 +195,7 @@ const ServiceDetailPage: React.FC = () => {
                 to={`/countries/${country.slug}`}
                 className="bg-white rounded-lg p-4 text-center hover:shadow-lg transition-shadow group border border-gray-100"
               >
-                <div className="text-3xl mb-2">{country.flag}</div>
+                <div className="text-3xl mb-2">{country.flag_emoji || '🌍'}</div>
                 <h4 className="font-medium text-gray-900 group-hover:text-purple-600 transition-colors">
                   {country.name}
                 </h4>
@@ -202,18 +210,18 @@ const ServiceDetailPage: React.FC = () => {
       <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Ready to Get Started with {service.name}?
+            Ready to Get Started with {service.title}?
           </h2>
           <p className="text-lg text-gray-600 mb-8">
-            Connect with our expert consultants who specialize in {service.name.toLowerCase()} 
+            Connect with our expert consultants who specialize in {service.title.toLowerCase()} 
             and get personalized guidance for your business.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <Link
               to="/get-started"
-              className={`${service.color} text-white px-8 py-4 rounded-lg font-semibold hover:opacity-90 transition-opacity flex items-center space-x-2`}
+              className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:opacity-90 transition-opacity flex items-center space-x-2"
             >
-              <span>Start {service.name}</span>
+              <span>Order {service.title}</span>
               <ArrowRight className="h-5 w-5" />
             </Link>
             <Link

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle } from 'lucide-react';
-import { Country } from '../data/countries';
+import { Country } from '../hooks/useCountries';
 
 interface CountryCardProps {
   country: Country;
@@ -14,7 +14,7 @@ const CountryCard: React.FC<CountryCardProps> = ({ country, featured = false }) 
       {/* Image Container */}
       <div className="relative h-48 overflow-hidden">
         <img
-          src={country.imageUrl}
+          src={country.image_url || 'https://images.pexels.com/photos/12461/pexels-photo-12461.jpeg?auto=compress&cs=tinysrgb&w=800'}
           alt={country.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
@@ -22,7 +22,7 @@ const CountryCard: React.FC<CountryCardProps> = ({ country, featured = false }) 
         
         {/* Flag */}
         <div className="absolute top-4 right-4 text-3xl drop-shadow-lg">
-          {country.flag}
+          {country.flag_emoji || '🌍'}
         </div>
 
         {/* Tags */}
