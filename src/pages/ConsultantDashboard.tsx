@@ -378,32 +378,6 @@ const ConsultantDashboard = () => {
 
             </nav>
 
-            {/* Quick Actions in Sidebar */}
-            <div className="p-4 border-t border-gray-200">
-              <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Quick Actions</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <button 
-                  onClick={() => {
-                    setChatType('admin-consultant');
-                    setIsChatOpen(true);
-                  }}
-                  className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg transition-colors group"
-                >
-                  <MessageSquare className="h-4 w-4 mx-auto mb-1 group-hover:scale-110 transition-transform" />
-                  <div className="text-xs font-medium">Admin Chat</div>
-                </button>
-                <button 
-                  onClick={() => {
-                    setChatType('consultant-client');
-                    setIsChatOpen(true);
-                  }}
-                  className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors group"
-                >
-                  <Users className="h-4 w-4 mx-auto mb-1 group-hover:scale-110 transition-transform" />
-                  <div className="text-xs font-medium">Client Chat</div>
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Main Content */}
