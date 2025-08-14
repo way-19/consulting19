@@ -37,6 +37,7 @@ import ProjectManagement from './pages/consultant/ProjectManagement';
 import ConsultantServices from './pages/ConsultantServices';
 import ConsultantPayments from './pages/consultant/ConsultantPayments';
 import ConsultantCountryManagement from './pages/consultant/ConsultantCountryManagement';
+import ConsultantCountryContent from './pages/consultant/ConsultantCountryContent';
 import AccountingManagement from './pages/AccountingManagement';
 import LegacyOrders from './pages/LegacyOrders';
 
