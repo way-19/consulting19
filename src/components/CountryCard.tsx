@@ -8,7 +8,7 @@ interface CountryCardProps {
 }
 
 const CountryCard: React.FC<CountryCardProps> = ({ country }) => {
-  // Capital city images mapping with high-quality Pexels images
+  // Başkent resimleri - Yüksek kaliteli Pexels fotoğrafları
   const getCapitalImage = (countrySlug: string) => {
     const capitalImages: Record<string, string> = {
       'georgia': 'https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=800',
@@ -30,44 +30,44 @@ const CountryCard: React.FC<CountryCardProps> = ({ country }) => {
 
   return (
     <Link to={`/countries/${country.slug}`} className="group block">
-      <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 bg-white">
-        {/* Background Image */}
-        <div className="relative h-80 overflow-hidden">
+      <div className="relative overflow-hidden rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-white">
+        {/* Ana Resim */}
+        <div className="relative h-96 overflow-hidden">
           <img
             src={imageUrl}
-            alt={`${country.name} capital city`}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            alt={`${country.name} başkenti`}
+            className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000"
             onError={(e) => {
               e.currentTarget.src = 'https://images.pexels.com/photos/12461/pexels-photo-12461.jpeg?auto=compress&cs=tinysrgb&w=800';
             }}
           />
           
-          {/* Dark gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          {/* Koyu gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
           
-          {/* Content overlay */}
-          <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
-            {/* Flag and name */}
-            <div className="flex items-center space-x-3 mb-4">
-              <span className="text-4xl drop-shadow-lg">{country.flag_emoji || '🌍'}</span>
+          {/* İçerik overlay */}
+          <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
+            {/* Bayrak ve isim */}
+            <div className="flex items-center space-x-4 mb-6">
+              <span className="text-5xl drop-shadow-2xl">{country.flag_emoji || '🌍'}</span>
               <div>
-                <h3 className="text-3xl font-bold drop-shadow-lg">{country.name}</h3>
-                <p className="text-white/80 text-sm">{country.primary_language?.toUpperCase() || 'EN'} • Business Hub</p>
+                <h3 className="text-4xl font-bold drop-shadow-2xl">{country.name}</h3>
+                <p className="text-white/90 text-lg font-medium">{country.primary_language?.toUpperCase() || 'EN'} • İş Merkezi</p>
               </div>
             </div>
             
-            {/* Description */}
-            <p className="text-white/90 text-sm mb-4 line-clamp-2">
-              {country.description || 'Strategic business location with excellent opportunities'}
+            {/* Açıklama */}
+            <p className="text-white/95 text-lg mb-6 line-clamp-2 leading-relaxed">
+              {country.description || 'Mükemmel iş fırsatları sunan stratejik konum'}
             </p>
             
-            {/* Highlights */}
+            {/* Öne çıkan özellikler */}
             {country.highlights && country.highlights.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {country.highlights.slice(0, 2).map((highlight, index) => (
+              <div className="flex flex-wrap gap-3 mb-6">
+                {country.highlights.slice(0, 3).map((highlight, index) => (
                   <span 
                     key={index}
-                    className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium"
+                    className="bg-white/25 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-semibold border border-white/30"
                   >
                     {highlight}
                   </span>
@@ -75,21 +75,21 @@ const CountryCard: React.FC<CountryCardProps> = ({ country }) => {
               </div>
             )}
             
-            {/* Stats */}
+            {/* İstatistikler ve buton */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-1">
-                  <Building className="h-4 w-4 text-white/70" />
-                  <span className="text-sm text-white/90">2.4k+ companies</span>
+              <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-2">
+                  <Building className="h-5 w-5 text-white/80" />
+                  <span className="text-lg text-white/95 font-medium">2.4k+ şirket</span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                  <span className="text-sm text-white/90">4.9</span>
+                <div className="flex items-center space-x-2">
+                  <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                  <span className="text-lg text-white/95 font-medium">4.9</span>
                 </div>
               </div>
-              <div className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 flex items-center space-x-2">
-                <span>Explore</span>
-                <ArrowRight className="h-4 w-4" />
+              <div className="bg-white/25 backdrop-blur-md text-white px-6 py-3 rounded-xl font-bold hover:bg-white hover:text-gray-900 transition-all duration-300 flex items-center space-x-3 border border-white/30">
+                <span className="text-lg">Keşfet</span>
+                <ArrowRight className="h-5 w-5" />
               </div>
             </div>
           </div>
