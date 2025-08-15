@@ -64,7 +64,13 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; c
 
       if (error) {
         console.error('❌ useFAQs: Database error:', error);
-        throw error;
+        // Gracefully handle database errors
+        const errorMessage = error.message?.includes('Failed to fetch') 
+          ? 'Ağ hatası: Sunucuya ulaşılamıyor (CORS / URL / internet).'
+          : error.message || 'Veritabanı hatası';
+        setError(errorMessage);
+        setFaqs([]);
+        return;
       }
       
       console.log('✅ useFAQs: Successfully fetched', data?.length || 0, 'FAQs');
@@ -73,10 +79,16 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; c
       setFaqs(data || []);
     } catch (err) {
       console.error('Error fetching FAQs:', err);
-      // Gracefully handle connection errors
+      // Handle any remaining errors gracefully
+      const errorMessage = err instanceof Error 
+        ? (err.message?.includes('Failed to fetch') 
+            ? 'Ağ hatası: Sunucuya ulaşılamıyor (CORS / URL / internet).'
+            : err.message)
+        : 'Bilinmeyen hata';
+      
       console.warn('FAQs unavailable, using fallback');
+      setError(errorMessage);
       setFaqs([]);
-      setError(err instanceof Error ? err.message : 'Failed to load FAQs');
     } finally {
       setLoading(false);
     }

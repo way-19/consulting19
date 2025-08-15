@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Globe, Users, TrendingUp, MessageCircle, Clock, DollarSign, Star } from 'lucide-react';
+import { ArrowRight, CheckCircle, Globe, Users, TrendingUp, MessageCircle, Clock, DollarSign, Star, AlertTriangle } from 'lucide-react';
 import { useCountry } from '../hooks/useCountries';
 import { useServices } from '../hooks/useServices';
 import { useBlogPosts } from '../hooks/useBlogPosts';
@@ -394,15 +394,14 @@ const CountryDetailPage = () => {
                   <span className="ml-2 text-gray-600">Loading FAQs...</span>
                 </div>
               ) : faqError ? (
-                <div className="bg-red-50 rounded-lg border border-red-200 p-8 text-center">
+                <div className="mb-6 flex items-start gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-yellow-800">
                   <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-4" />
-                  <p className="text-red-600">Error loading FAQs: {faqError}</p>
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-                  >
-                    Retry
-                  </button>
+                  <div>
+                    <div className="font-semibold">FAQs yüklenemedi</div>
+                    <div className="text-sm opacity-90">
+                      {faqError} — Lütfen sayfayı yenileyin. Sorun devam ederse daha sonra tekrar deneyin.
+                    </div>
+                  </div>
                 </div>
               ) : countryFaqs.length === 0 ? (
                 <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
