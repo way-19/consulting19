@@ -80,6 +80,7 @@ export default function App() {
           <Route path="/countries/:countrySlug/services/:serviceSlug" element={<CountryServiceDetailPage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/services/:slug" element={<ServiceDetailPage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/blog" element={<BlogPage />} /> {/* Change route to BlogPage */}
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/contact" element={<ContactPage />} />
