@@ -75,6 +75,15 @@ const DocumentManagement = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewNotes, setReviewNotes] = useState('');
   const [reviewDecision, setReviewDecision] = useState<'approved' | 'rejected' | 'needs_revision'>('approved');
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestForm, setRequestForm] = useState({
+    client_id: '',
+    name: '',
+    type: '',
+    category: 'other' as 'identity' | 'business' | 'financial' | 'medical' | 'other',
+    description: '',
+    due_date: ''
+  });
 
   const [stats, setStats] = useState<DocumentStats>({
     totalDocuments: 0,
@@ -225,12 +234,75 @@ const DocumentManagement = () => {
     }
   };
 
+  const handleRequestDocument = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .insert([{
+          client_id: requestForm.client_id,
+          name: requestForm.name,
+          type: requestForm.type,
+          category: requestForm.category,
+          status: 'requested',
+          is_request: true,
+          requested_by_consultant_id: profile?.id,
+          due_date: requestForm.due_date ? new Date(requestForm.due_date).toISOString() : null,
+          notes: requestForm.description
+        }]);
+
+      if (error) throw error;
+
+      // Send notification to client
+      const { data: clientProfile } = await supabase
+        .from('clients')
+        .select('profile_id')
+        .eq('id', requestForm.client_id)
+        .single();
+
+      if (clientProfile) {
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: clientProfile.profile_id,
+            type: 'document_requested',
+            title: 'Document Requested',
+            message: `Your consultant has requested: ${requestForm.name}`,
+            priority: 'normal',
+            related_table: 'documents',
+            action_url: '/client/documents'
+          }]);
+      }
+
+      await fetchDocuments();
+      resetRequestForm();
+      alert('Document request sent to client successfully!');
+    } catch (error) {
+      console.error('Error requesting document:', error);
+      alert('Failed to send document request');
+    }
+  };
+
+  const resetRequestForm = () => {
+    setRequestForm({
+      client_id: '',
+      name: '',
+      type: '',
+      category: 'other',
+      description: '',
+      due_date: ''
+    });
+    setShowRequestModal(false);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved': return 'bg-green-100 text-green-800';
       case 'rejected': return 'bg-red-100 text-red-800';
       case 'needs_revision': return 'bg-yellow-100 text-yellow-800';
       case 'pending': return 'bg-blue-100 text-blue-800';
+      case 'requested': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -241,6 +313,7 @@ const DocumentManagement = () => {
       case 'rejected': return <XCircle className="h-4 w-4" />;
       case 'needs_revision': return <AlertTriangle className="h-4 w-4" />;
       case 'pending': return <Clock className="h-4 w-4" />;
+      case 'requested': return <Bell className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
     }
   };
@@ -305,6 +378,13 @@ const DocumentManagement = () => {
               >
                 <RefreshCw className="h-5 w-5" />
                 <span>Yenile</span>
+              </button>
+              <button
+                onClick={() => setShowRequestModal(true)}
+                className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+              >
+                <Plus className="h-5 w-5" />
+                <span>Request Document</span>
               </button>
             </div>
           </div>
@@ -418,6 +498,7 @@ const DocumentManagement = () => {
                 <option value="approved">Onaylanan</option>
                 <option value="rejected">Reddedilen</option>
                 <option value="needs_revision">Revizyon Gerekli</option>
+                <option value="requested">Talep Edilen</option>
               </select>
             </div>
 
@@ -540,6 +621,13 @@ const DocumentManagement = () => {
                         </>
                       )}
 
+                      {document.status === 'requested' && (
+                        <div className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium flex items-center space-x-2">
+                          <Bell className="h-4 w-4" />
+                          <span>Müşteriden Bekleniyor</span>
+                        </div>
+                      )}
+
                       <button
                         onClick={() => {
                           setSelectedDocument(document);
@@ -568,6 +656,157 @@ const DocumentManagement = () => {
           </div>
         )}
       </div>
+
+      {/* Document Request Modal */}
+      {showRequestModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Müşteriden Belge Talep Et</h2>
+                <button
+                  onClick={resetRequestForm}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleRequestDocument} className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Müşteri Seç *
+                </label>
+                <select
+                  required
+                  value={requestForm.client_id}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, client_id: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">Müşteri seçin...</option>
+                  {clients.map(client => (
+                    <option key={client.id} value={client.id}>
+                      {client.company_name || client.profile?.full_name || client.profile?.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Belge Adı *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={requestForm.name}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Örn: Pasaport Kopyası"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Belge Türü *
+                  </label>
+                  <select
+                    required
+                    value={requestForm.type}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, type: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="">Belge türünü seçin...</option>
+                    <option value="Passport">Pasaport</option>
+                    <option value="National ID">Kimlik Kartı</option>
+                    <option value="Driver License">Ehliyet</option>
+                    <option value="Birth Certificate">Doğum Belgesi</option>
+                    <option value="Bank Statement">Banka Ekstresi</option>
+                    <option value="Tax Return">Vergi Beyannamesi</option>
+                    <option value="Proof of Address">İkametgah Belgesi</option>
+                    <option value="Business License">İş Lisansı</option>
+                    <option value="Other">Diğer</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Kategori *
+                  </label>
+                  <select
+                    required
+                    value={requestForm.category}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, category: e.target.value as any }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="identity">Kimlik Belgeleri</option>
+                    <option value="business">İş Belgeleri</option>
+                    <option value="financial">Mali Belgeler</option>
+                    <option value="medical">Sağlık Belgeleri</option>
+                    <option value="other">Diğer</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Son Tarih
+                </label>
+                <input
+                  type="date"
+                  value={requestForm.due_date}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, due_date: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Açıklama ve Gereksinimler *
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={requestForm.description}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Bu belge neden gerekli? Özel gereksinimler var mı? Elektronik imza gerekli mi?"
+                />
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  <h4 className="font-medium text-blue-900">Elektronik İmza Rehberi</h4>
+                </div>
+                <p className="text-sm text-blue-800">
+                  Elektronik imza gerektiren belgeler için müşterinize dijital olarak imzalanmış PDF dosyaları yüklemesini söyleyin. 
+                  E-imzanın bulunduğu ülkede yasal olarak geçerli olduğundan emin olun.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={resetRequestForm}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Send className="h-5 w-5" />
+                  <span>Belge Talep Et</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Document Detail Modal */}
       {showDocumentDetail && selectedDocument && (
@@ -612,6 +851,7 @@ const DocumentManagement = () => {
                          selectedDocument.status === 'approved' ? 'APPROVED' :
                          selectedDocument.status === 'rejected' ? 'REJECTED' :
                          selectedDocument.status === 'needs_revision' ? 'NEEDS REVISION' :
+                         selectedDocument.status === 'requested' ? 'REQUESTED' :
                          selectedDocument.status.toUpperCase()}
                       </span>
                     </div>
