@@ -51,7 +51,7 @@ const ContactPage = () => {
     {
       id: 'countries-served',
       question: 'Which countries do you serve?',
-      answer: 'We provide business formation services in 127+ countries worldwide, including popular jurisdictions like Georgia, Estonia, UAE, Malta, USA, Switzerland, and many more. Each country has dedicated local consultants who understand the specific requirements and regulations.'
+      answer: 'We provide business formation services in 19+ countries worldwide, including popular jurisdictions like Georgia, Estonia, UAE, Malta, USA, Switzerland, and many more. Each country has dedicated local consultants who understand the specific requirements and regulations.'
     },
     {
       id: 'ai-consultant',
