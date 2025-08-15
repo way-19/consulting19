@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -56,6 +56,12 @@ import MyProfilePage from './pages/MyProfilePage';
 
 export default function App() {
   const { loading } = useAuth();
+  const location = useLocation();
+
+  // Scroll to top on route change
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   if (loading) {
     return (
