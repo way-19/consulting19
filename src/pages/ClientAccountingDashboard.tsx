@@ -213,8 +213,7 @@ const ClientAccountingDashboard = () => {
         )
       `)
       .eq('client_id', clientData.id)
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
 
     console.log('💼 Step 3: Accounting profile lookup result:', data)
 
@@ -223,7 +222,7 @@ const ClientAccountingDashboard = () => {
       return;
     }
 
-    if (!data) {
+    if (!data || data.length === 0) {
       console.log('⚠️ No accounting profile found for client:', clientData.id)
       console.log('🔧 Creating accounting profile automatically...')
       
@@ -261,7 +260,7 @@ const ClientAccountingDashboard = () => {
       return;
     }
 
-    setAccountingProfile(data);
+    setAccountingProfile(data[0]);
   };
 
   const fetchDocuments = async () => {
