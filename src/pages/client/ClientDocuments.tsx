@@ -187,96 +187,48 @@ const ClientDocuments = () => {
 
   useEffect(() => {
     console.log('🎯 ClientDocuments: Loading demo data...');
-    setLoading(true);
-    
-    // Use demo data immediately
+    // Immediately set demo data
+    console.log('📊 Setting demo data immediately...');
     setDocuments(demoUploadedDocuments);
     setRequestedDocuments(demoRequestedDocuments);
-    calculateStats(demoUploadedDocuments);
     
-    console.log('📊 Demo data loaded:', {
+    // Calculate stats
+    const demoStats: DocumentStats = {
+      totalDocuments: demoUploadedDocuments.length,
+      pendingReview: demoUploadedDocuments.filter(d => d.status === 'pending').length,
+      approved: demoUploadedDocuments.filter(d => d.status === 'approved').length,
+      rejected: demoUploadedDocuments.filter(d => d.status === 'rejected').length,
+      needsRevision: demoUploadedDocuments.filter(d => d.status === 'needs_revision').length,
+      requestedDocuments: demoRequestedDocuments.length
+    };
+    setStats(demoStats);
+    
+    console.log('✅ Demo data set:', {
       uploadedDocs: demoUploadedDocuments.length,
-      requestedDocs: demoRequestedDocuments.length
+      requestedDocs: demoRequestedDocuments.length,
+      stats: demoStats
     });
     
     setLoading(false);
-  }, []); // Empty dependency array to run only once
+  }, []);
 
   const fetchData = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        fetchDocuments(),
-        fetchRequestedDocuments()
-      ]);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
+    console.log('🔄 fetchData called - using demo data');
+    // Just use demo data for now
+    setDocuments(demoUploadedDocuments);
+    setRequestedDocuments(demoRequestedDocuments);
+    calculateStats(demoUploadedDocuments);
   };
 
   const fetchDocuments = async () => {
-    // Always use demo data for now - remove after migration
     console.log('📁 fetchDocuments: Using demo data');
     setDocuments(demoUploadedDocuments);
     calculateStats(demoUploadedDocuments);
-    return;
-    
-    // Get client record first
-    const { data: clientData } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('profile_id', profile?.id)
-      .single();
-
-    if (!clientData) return;
-
-    const { data, error } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('client_id', clientData.id)
-      .eq('is_request', false)
-      .order('uploaded_at', { ascending: false });
-
-    if (error) throw error;
-    
-    const documentsData = data || [];
-    setDocuments(documentsData);
-    calculateStats(documentsData);
   };
 
   const fetchRequestedDocuments = async () => {
-    // Always use demo data for now - remove after migration
     console.log('📋 fetchRequestedDocuments: Using demo data');
     setRequestedDocuments(demoRequestedDocuments);
-    return;
-    
-    // Get client record first
-    const { data: clientData } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('profile_id', profile?.id)
-      .single();
-
-    if (!clientData) return;
-
-    const { data, error } = await supabase
-      .from('documents')
-      .select(`
-        *,
-        consultant:requested_by_consultant_id (
-          full_name,
-          email
-        )
-      `)
-      .eq('client_id', clientData.id)
-      .eq('is_request', true)
-      .eq('status', 'requested')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    setRequestedDocuments(data || []);
   };
 
   const calculateStats = (documentsData: DocumentWithDetails[]) => {
