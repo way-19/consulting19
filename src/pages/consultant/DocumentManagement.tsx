@@ -84,24 +84,6 @@ const DocumentManagement = () => {
     description: '',
     due_date: ''
   });
-  const [showRequestModal, setShowRequestModal] = useState(false);
-  const [requestForm, setRequestForm] = useState({
-    client_id: '',
-    name: '',
-    type: '',
-    category: 'other' as 'identity' | 'business' | 'financial' | 'medical' | 'other',
-    description: '',
-    due_date: ''
-  });
-
-  const [stats, setStats] = useState<DocumentStats>({
-    totalDocuments: 0,
-    pendingReview: 0,
-    approved: 0,
-    rejected: 0,
-    needsRevision: 0,
-    totalSize: 0
-  });
 
   const [stats, setStats] = useState<DocumentStats>({
     totalDocuments: 0,
@@ -123,6 +105,7 @@ const DocumentManagement = () => {
   useEffect(() => {
     if (profile?.id) {
       fetchData();
+      createDemoDocumentRequests();
     }
   }, [profile]);
 
@@ -137,6 +120,98 @@ const DocumentManagement = () => {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createDemoDocumentRequests = async () => {
+    try {
+      // Get client record first
+      const { data: clientData } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('assigned_consultant_id', profile?.id)
+        .limit(1);
+
+      if (!clientData || clientData.length === 0) return;
+
+      const clientId = clientData[0].id;
+
+      // Check if demo requests already exist
+      const { data: existingRequests } = await supabase
+        .from('documents')
+        .select('id')
+        .eq('client_id', clientId)
+        .eq('is_request', true)
+        .eq('status', 'requested');
+
+      if (existingRequests && existingRequests.length > 0) return;
+
+      // Create demo document requests
+      const demoRequests = [
+        {
+          client_id: clientId,
+          name: 'Ağustos 2025 Banka Dökümü',
+          type: 'Bank Statement',
+          category: 'financial',
+          status: 'requested',
+          is_request: true,
+          requested_by_consultant_id: profile?.id,
+          due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+          notes: 'Lütfen Ağustos 2025 dönemi için tüm banka hesaplarınızın dökümünü PDF formatında yükleyin. Elektronik imzalı olması tercih edilir.',
+          uploaded_at: new Date().toISOString()
+        },
+        {
+          client_id: clientId,
+          name: 'Şirket Gider Faturaları - Ağustos',
+          type: 'Invoice',
+          category: 'business',
+          status: 'requested',
+          is_request: true,
+          requested_by_consultant_id: profile?.id,
+          due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
+          notes: 'Ağustos ayında şirket adına yapılan tüm harcamaların faturalarını yükleyin. Ofis kirası, elektrik, internet, malzeme alımları vb.',
+          uploaded_at: new Date().toISOString()
+        },
+        {
+          client_id: clientId,
+          name: 'Çalışan Bordro Bilgileri',
+          type: 'Payroll Document',
+          category: 'business',
+          status: 'requested',
+          is_request: true,
+          requested_by_consultant_id: profile?.id,
+          due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
+          notes: 'Ağustos ayı çalışan maaş bordroları ve SGK bildirgeleri. Tüm çalışanlar için eksiksiz olmalı.',
+          uploaded_at: new Date().toISOString()
+        }
+      ];
+
+      const { error } = await supabase
+        .from('documents')
+        .insert(demoRequests);
+
+      if (error) {
+        console.error('Error creating demo requests:', error);
+      } else {
+        console.log('✅ Demo document requests created successfully');
+        
+        // Create notifications for client
+        for (const request of demoRequests) {
+          await supabase
+            .from('notifications')
+            .insert([{
+              user_id: clientData[0].profile_id, // This should be the client's profile_id
+              type: 'document_requested',
+              title: 'Yeni Belge Talebi',
+              message: `Danışmanınız "${request.name}" belgesini talep etti`,
+              priority: 'normal',
+              related_table: 'documents',
+              action_url: '/client/documents'
+            }]);
+        }
+      }
+    } catch (error) {
+      console.error('Error in createDemoDocumentRequests:', error);
     }
   };
 
@@ -674,157 +749,6 @@ const DocumentManagement = () => {
           </div>
         )}
       </div>
-
-      {/* Document Request Modal */}
-      {showRequestModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Müşteriden Belge Talep Et</h2>
-                <button
-                  onClick={resetRequestForm}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
-              </div>
-            </div>
-
-            <form onSubmit={handleRequestDocument} className="p-6 space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Müşteri Seç *
-                </label>
-                <select
-                  required
-                  value={requestForm.client_id}
-                  onChange={(e) => setRequestForm(prev => ({ ...prev, client_id: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="">Müşteri seçin...</option>
-                  {clients.map(client => (
-                    <option key={client.id} value={client.id}>
-                      {client.company_name || client.profile?.full_name || client.profile?.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Belge Adı *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={requestForm.name}
-                  onChange={(e) => setRequestForm(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Örn: Pasaport Kopyası"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Belge Türü *
-                  </label>
-                  <select
-                    required
-                    value={requestForm.type}
-                    onChange={(e) => setRequestForm(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="">Belge türünü seçin...</option>
-                    <option value="Passport">Pasaport</option>
-                    <option value="National ID">Kimlik Kartı</option>
-                    <option value="Driver License">Ehliyet</option>
-                    <option value="Birth Certificate">Doğum Belgesi</option>
-                    <option value="Bank Statement">Banka Ekstresi</option>
-                    <option value="Tax Return">Vergi Beyannamesi</option>
-                    <option value="Proof of Address">İkametgah Belgesi</option>
-                    <option value="Business License">İş Lisansı</option>
-                    <option value="Other">Diğer</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kategori *
-                  </label>
-                  <select
-                    required
-                    value={requestForm.category}
-                    onChange={(e) => setRequestForm(prev => ({ ...prev, category: e.target.value as any }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="identity">Kimlik Belgeleri</option>
-                    <option value="business">İş Belgeleri</option>
-                    <option value="financial">Mali Belgeler</option>
-                    <option value="medical">Sağlık Belgeleri</option>
-                    <option value="other">Diğer</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Son Tarih
-                </label>
-                <input
-                  type="date"
-                  value={requestForm.due_date}
-                  onChange={(e) => setRequestForm(prev => ({ ...prev, due_date: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Açıklama ve Gereksinimler *
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  value={requestForm.description}
-                  onChange={(e) => setRequestForm(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Bu belge neden gerekli? Özel gereksinimler var mı? Elektronik imza gerekli mi?"
-                />
-              </div>
-
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Shield className="h-5 w-5 text-blue-600" />
-                  <h4 className="font-medium text-blue-900">Elektronik İmza Rehberi</h4>
-                </div>
-                <p className="text-sm text-blue-800">
-                  Elektronik imza gerektiren belgeler için müşterinize dijital olarak imzalanmış PDF dosyaları yüklemesini söyleyin. 
-                  E-imzanın bulunduğu ülkede yasal olarak geçerli olduğundan emin olun.
-                </p>
-              </div>
-
-              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={resetRequestForm}
-                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                >
-                  İptal
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <Send className="h-5 w-5" />
-                  <span>Belge Talep Et</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Document Request Modal */}
       {showRequestModal && (

@@ -500,10 +500,10 @@ const ClientDocuments = () => {
 
                       <button
                         onClick={() => handleUploadForRequest(request)}
-                        className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2 shadow-lg"
+                        className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-lg animate-pulse"
                       >
                         <Upload className="h-5 w-5" />
-                        <span>Upload Now</span>
+                        <span>🚨 Upload Now</span>
                       </button>
                     </div>
                   </div>

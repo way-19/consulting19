@@ -94,6 +94,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      case 'document_requested':
+        return <FileText className="h-4 w-4 text-red-500" />;
+      case 'document_uploaded':
+        return <Upload className="h-4 w-4 text-green-500" />;
       case 'message':
       case 'new_message':
         return <MessageSquare className="h-4 w-4 text-blue-500" />;
