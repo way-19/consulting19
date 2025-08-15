@@ -33,21 +33,7 @@ export function useBlogPosts(countryId?: string) {
       query = query.eq('country_id', countryId);
     }
 
-      .then(({ data, error }) => {
-        if (error) throw error;
-        setData((data as BlogPost[]) ?? []);
-      })
-      .catch((e: any) => {
-        console.error('Error fetching blog posts:', {
-          message: e?.message || String(e),
-          details: e?.cause || e
-        });
-        setError(e?.message || 'Failed to fetch');
-      })
-      .finally(() => setLoading(false));
-  }, [countryId]);
-
-  return { data, loading, error };
+  return { posts, loading, error };
 }
 
 // Keep the old interface for backward compatibility
