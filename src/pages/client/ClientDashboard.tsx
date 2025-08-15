@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import ClientRecommendations from '../../components/client/ClientRecommendations';
+import UpcomingPayments from '../../components/client/UpcomingPayments';
 import { 
   User, 
   FileText, 
@@ -55,6 +57,7 @@ const ClientDashboard = () => {
     averageRating: 0
   });
   const [projects, setProjects] = useState<ClientProject[]>([]);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -77,6 +80,8 @@ const ClientDashboard = () => {
         setLoading(false);
         return;
       }
+
+      setClientId(clientData.id);
 
       // Fetch projects
       const { data: projectsData } = await supabase
@@ -253,6 +258,20 @@ const ClientDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Active Projects */}
           <div className="lg:col-span-2">
+            {/* Recommendations Section */}
+            {clientId && (
+              <div className="mb-8">
+                <ClientRecommendations clientId={clientId} />
+              </div>
+            )}
+
+            {/* Upcoming Payments Section */}
+            {clientId && (
+              <div className="mb-8">
+                <UpcomingPayments clientId={clientId} />
+              </div>
+            )}
+
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900">Your Projects</h2>

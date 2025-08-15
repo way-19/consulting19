@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import StripeCheckout from '../components/StripeCheckout';
-import { ShoppingCart, Star, Clock, DollarSign, User, CheckCircle, CreditCard, FileText, Eye } from 'lucide-react';
+import { ShoppingCart, Star, Clock, DollarSign, User, CheckCircle, CreditCard, FileText, Eye, Plus, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import ServiceCard from '../components/ServiceCard';
+import { useServices, useServiceCategories } from '../hooks/useServices';
+import RequestCustomServiceModal from '../components/client/RequestCustomServiceModal';
 
 interface CustomService {
   id: string;
@@ -42,23 +46,69 @@ interface ServiceOrder {
 
 const ClientServices = () => {
   const { profile } = useAuth();
-  const [services, setServices] = useState<CustomService[]>([]);
+  const { services, loading, error } = useServices(true);
+  const { categories: serviceCategories } = useServiceCategories();
+  const [customServices, setCustomServices] = useState<CustomService[]>([]);
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingCustom, setLoadingCustom] = useState(true);
   const [activeTab, setActiveTab] = useState<'services' | 'orders'>('services');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showCheckout, setShowCheckout] = useState(false);
   const [selectedService, setSelectedService] = useState<CustomService | null>(null);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [consultantServices, setConsultantServices] = useState([]);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [consultantInfo, setConsultantInfo] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [priceRange, setPriceRange] = useState('all');
 
   useEffect(() => {
     if (profile?.id) {
-      fetchServices();
+      fetchCustomServices();
       fetchOrders();
+      fetchConsultantServices();
     }
   }, [profile]);
 
-  const fetchServices = async () => {
+  const fetchConsultantServices = async () => {
+    try {
+      // Get client record to find assigned consultant
+      const { data: clientData } = await supabase
+        .from('clients')
+        .select(`
+          assigned_consultant_id,
+          consultant:assigned_consultant_id (
+            full_name,
+            email
+          )
+        `)
+        .eq('profile_id', profile?.id)
+        .single();
+
+      if (clientData?.assigned_consultant_id) {
+        setConsultantInfo(clientData.consultant);
+        
+        // Get consultant's custom services
+        const { data: consultantServicesData } = await supabase
+          .from('custom_services')
+          .select(`
+            *,
+            consultant:consultant_id (
+              full_name,
+              email
+            )
+          `)
+          .eq('consultant_id', clientData.assigned_consultant_id)
+          .eq('is_active', true);
+
+        setConsultantServices(consultantServicesData || []);
+      }
+    } catch (error) {
+      console.error('Error fetching consultant services:', error);
+    }
+  };
+
+  const fetchCustomServices = async () => {
     try {
       const { data, error } = await supabase
         .from('custom_services')
@@ -77,7 +127,7 @@ const ClientServices = () => {
         .eq('is_active', true);
 
       if (error) throw error;
-      setServices(data || []);
+      setCustomServices(data || []);
     } catch (error) {
       console.error('Error fetching services:', error);
     }
@@ -105,7 +155,7 @@ const ClientServices = () => {
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
-      setLoading(false);
+      setLoadingCustom(false);
     }
   };
 
@@ -168,7 +218,15 @@ const ClientServices = () => {
     { value: 'legal', label: 'Legal Services' }
   ];
 
-  const filteredServices = services.filter(service => 
+  const priceRanges = {
+    all: 'All Prices',
+    '0-100': '$0 - $100',
+    '100-500': '$100 - $500',
+    '500-1000': '$500 - $1,000',
+    '1000+': '$1,000+'
+  };
+
+  const filteredServices = customServices.filter(service => 
     selectedCategory === 'all' || service.category === selectedCategory
   );
 
@@ -194,7 +252,7 @@ const ClientServices = () => {
     }
   };
 
-  if (loading) {
+  if (loading || loadingCustom) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
@@ -263,6 +321,36 @@ const ClientServices = () => {
                 ))}
               </div>
             </div>
+
+            {/* Consultant's Custom Services */}
+            {consultantServices.length > 0 && (
+              <section className="py-12 bg-white mb-8 rounded-xl">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="text-center mb-8">
+                    <div className="flex items-center justify-center space-x-2 mb-4">
+                      <Star className="h-6 w-6 text-yellow-500" />
+                      <h2 className="text-3xl font-bold text-gray-900">
+                        Danışmanınızdan <span className="text-purple-600">Özel Hizmetler</span>
+                      </h2>
+                    </div>
+                    <p className="text-lg text-gray-600">
+                      {consultantInfo?.full_name} tarafından size özel olarak sunulan hizmetler
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {consultantServices.map((service) => (
+                      <div key={service.id} className="relative">
+                        <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold z-10 shadow-lg">
+                          Danışmanınızdan
+                        </div>
+                        <ServiceCard service={service} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* Services Grid */}
             {filteredServices.length === 0 ? (
@@ -412,6 +500,32 @@ const ClientServices = () => {
         )}
       </div>
 
+      {/* CTA Section */}
+      <section className="py-16 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold mb-4">İhtiyacınız Olan Hizmeti Bulamadınız mı?</h2>
+          <p className="text-xl text-purple-100 mb-8">
+            Danışmanlarımız özel ihtiyaçlarınıza yönelik hizmet paketleri oluşturabilir.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <button
+              onClick={() => setShowRequestModal(true)}
+              className="inline-flex items-center space-x-2 bg-white text-purple-700 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors shadow-lg"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Özel Hizmet Talep Et</span>
+            </button>
+            <Link
+              to="/ai-assistant"
+              className="inline-flex items-center space-x-2 border-2 border-white/30 text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-colors backdrop-blur-sm"
+            >
+              <Zap className="h-5 w-5" />
+              <span>AI Danışman</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Stripe Checkout Modal */}
       {showCheckout && selectedService && pendingOrderId && (
         <StripeCheckout
@@ -429,6 +543,16 @@ const ClientServices = () => {
           onError={handlePaymentError}
         />
       )}
+
+      {/* Request Custom Service Modal */}
+      <RequestCustomServiceModal
+        isOpen={showRequestModal}
+        onClose={() => setShowRequestModal(false)}
+        onSuccess={() => {
+          // Refresh page or show success message
+          window.location.reload();
+        }}
+      />
     </div>
   );
 };
