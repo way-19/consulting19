@@ -1,3 +1,4 @@
+// src/pages/ClientAccountingDashboard.tsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -35,6 +36,8 @@ import {
 
 interface ClientAccountingProfile {
   id: string;
+  client_id?: string;
+  consultant_id?: string; // eklendi
   company_name: string;
   tax_number?: string;
   business_type: string;
@@ -105,26 +108,17 @@ const ClientAccountingDashboard = () => {
 
   useEffect(() => {
     if (profile?.id) {
-      console.log('🔍 ClientAccountingDashboard: Starting data fetch for profile:', profile.id, profile.email)
       fetchData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
   const fetchData = async () => {
     try {
-      console.log('📊 Starting comprehensive data fetch...')
-      // First fetch accounting profile
       await fetchAccountingProfile();
-      
-      // Then fetch other data after profile is loaded
       setTimeout(async () => {
-        console.log('📋 Fetching additional data...')
-        await Promise.all([
-          fetchDocuments(),
-          fetchInvoices(),
-          fetchMessages()
-        ]);
-      }, 500);
+        await Promise.all([fetchDocuments(), fetchInvoices(), fetchMessages()]);
+      }, 300);
     } catch (error) {
       console.error('💥 Error in fetchData:', error);
     } finally {
@@ -133,9 +127,7 @@ const ClientAccountingDashboard = () => {
   };
 
   const fetchAccountingProfile = async () => {
-    console.log('🔍 Step 1: Fetching accounting profile for user:', profile?.id, profile?.email)
-    
-    // First get the client record
+    // 1) client bul
     const { data: clientData, error: clientError } = await supabase
       .from('clients')
       .select('id')
@@ -148,18 +140,14 @@ const ClientAccountingDashboard = () => {
     }
 
     const client = clientData && clientData.length > 0 ? clientData[0] : null;
-    console.log('📋 Step 2: Client record lookup result:', client)
 
     if (!client) {
-      console.log('⚠️ No client record found for profile:', profile?.id)
-      console.log('🔧 Creating client record automatically...')
-      
-      // Auto-create client record if missing
-      const { data: newClient, error: clientError } = await supabase
+      // yoksa oluştur
+      const { data: newClient, error: newClientErr } = await supabase
         .from('clients')
         .insert([{
           profile_id: profile?.id,
-          assigned_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83', // Georgia consultant
+          assigned_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
           status: 'new',
           priority: 'medium',
           service_type: 'company_formation',
@@ -167,18 +155,16 @@ const ClientAccountingDashboard = () => {
         }])
         .select()
         .limit(1);
-      
-      if (clientError || !newClient || newClient.length === 0) {
-        console.error('❌ Error creating client record:', clientError);
+
+      if (newClientErr || !newClient?.[0]) {
+        console.error('❌ Error creating client record:', newClientErr);
         return;
       }
-      
+
       const createdClient = newClient[0];
-      console.log('✅ Client record created:', createdClient);
       setClientId(createdClient.id);
-      
-      // Now create accounting profile
-      const { data: newAccountingProfile, error: accountingError } = await supabase
+
+      const { data: newAcc, error: accErr } = await supabase
         .from('accounting_clients')
         .insert([{
           client_id: createdClient.id,
@@ -194,86 +180,67 @@ const ClientAccountingDashboard = () => {
         }])
         .select(`
           *,
-          consultant:consultant_id (
-            full_name,
-            email
-          )
+          consultant:consultant_id ( full_name, email )
         `)
         .limit(1);
-      
-      if (accountingError || !newAccountingProfile || newAccountingProfile.length === 0) {
-        console.error('❌ Error creating accounting profile:', accountingError);
+
+      if (accErr || !newAcc?.[0]) {
+        console.error('❌ Error creating accounting profile:', accErr);
         return;
       }
-      
-      console.log('✅ Accounting profile created:', newAccountingProfile[0]);
-      setAccountingProfile(newAccountingProfile[0]);
+
+      setAccountingProfile(newAcc[0]);
       return;
     }
 
     setClientId(client.id);
 
+    // 2) accounting profile bul
     const { data: accountingData, error } = await supabase
       .from('accounting_clients')
       .select(`
         *,
-        consultant:consultant_id (
-          full_name,
-          email
-        )
+        consultant:consultant_id ( full_name, email )
       `)
       .eq('client_id', client.id)
       .limit(1);
 
-    console.log('💼 Step 3: Accounting profile lookup result:', accountingData)
-
     if (error) {
-      console.error('❌ Error fetching accounting profile:', error.message, error.code);
-      
-      if (error.code === 'PGRST116') {
-        // No accounting profile found, create one
-        console.log('⚠️ No accounting profile found for client:', client.id)
-        console.log('🔧 Creating accounting profile automatically...')
-        
-        // Auto-create accounting profile if missing
-        const { data: newAccountingProfile, error: accountingError } = await supabase
-          .from('accounting_clients')
-          .insert([{
-            client_id: client.id,
-            consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
-            company_name: 'Georgia Tech Solutions LLC',
-            business_type: 'limited_company',
-            accounting_period: 'monthly',
-            service_package: 'basic',
-            monthly_fee: 500,
-            status: 'active',
-            reminder_frequency: 7,
-            preferred_language: 'en'
-          }])
-          .select(`
-            *,
-            consultant:consultant_id (
-              full_name,
-              email
-            )
-          `)
-          .limit(1);
-        
-        if (accountingError || !newAccountingProfile || newAccountingProfile.length === 0) {
-          console.error('❌ Error creating accounting profile:', accountingError);
-          return;
-        }
-        
-        console.log('✅ Accounting profile auto-created:', newAccountingProfile[0]);
-        setAccountingProfile(newAccountingProfile[0]);
-        return;
-      }
+      console.error('❌ Error fetching accounting profile:', error);
       return;
     }
 
-    if (accountingData && accountingData.length > 0) {
+    if (accountingData?.[0]) {
       setAccountingProfile(accountingData[0]);
+      return;
     }
+
+    // yoksa oluştur
+    const { data: created, error: createErr } = await supabase
+      .from('accounting_clients')
+      .insert([{
+        client_id: client.id,
+        consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
+        company_name: 'Georgia Tech Solutions LLC',
+        business_type: 'limited_company',
+        accounting_period: 'monthly',
+        service_package: 'basic',
+        monthly_fee: 500,
+        status: 'active',
+        reminder_frequency: 7,
+        preferred_language: 'en'
+      }])
+      .select(`
+        *,
+        consultant:consultant_id ( full_name, email )
+      `)
+      .limit(1);
+
+    if (createErr || !created?.[0]) {
+      console.error('❌ Error creating accounting profile:', createErr);
+      return;
+    }
+    setAccountingProfile(created[0]);
   };
 
   const fetchDocuments = async () => {
@@ -311,21 +278,19 @@ const ClientAccountingDashboard = () => {
   };
 
   const fetchMessages = async () => {
-    // First get the client record to get the client_id for accounting_clients
     const { data: clientData, error: clientError } = await supabase
       .from('clients')
       .select('id')
       .eq('profile_id', profile?.id)
       .limit(1);
 
-    if (clientError || !clientData || clientData.length === 0) {
+    if (clientError || !clientData?.[0]) {
       console.error('Error fetching client for messages:', clientError);
       return;
     }
 
     const client = clientData[0];
 
-    // Then get the accounting_client record
     const { data: accountingClientData, error: accountingError } = await supabase
       .from('accounting_clients')
       .select('id')
@@ -341,16 +306,13 @@ const ClientAccountingDashboard = () => {
       .from('accounting_messages')
       .select(`
         *,
-        sender:sender_id (
-          full_name,
-          email
-        )
+        sender:sender_id ( full_name, email )
       `)
       .eq('recipient_id', profile?.id)
       .order('created_at', { ascending: false });
 
     if (messageError) {
-      console.error('Error fetching messages:', error);
+      console.error('Error fetching messages:', messageError); // düzeltildi
       return;
     }
 
@@ -364,19 +326,13 @@ const ClientAccountingDashboard = () => {
 
   const handleInvoicePaymentSuccess = async (paymentIntentId: string) => {
     setShowInvoiceCheckout(false);
-    setSelectedInvoice(null);
-    
-    // Update invoice status
     if (selectedInvoice) {
       await supabase
         .from('accounting_invoices')
-        .update({ 
-          status: 'paid',
-          stripe_invoice_id: paymentIntentId
-        })
+        .update({ status: 'paid', stripe_invoice_id: paymentIntentId })
         .eq('id', selectedInvoice.id);
     }
-    
+    setSelectedInvoice(null);
     await fetchInvoices();
     alert('Invoice payment successful!');
   };
@@ -466,6 +422,7 @@ const ClientAccountingDashboard = () => {
         </div>
       </div>
 
+      {/* Body */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Upcoming Payments Warning System */}
         <div className="mb-8">
@@ -559,7 +516,7 @@ const ClientAccountingDashboard = () => {
           </div>
         </div>
 
-        {/* Custom Service Request System */}
+        {/* Custom Service Request */}
         <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-8 border border-purple-200 mb-8">
           <div className="text-center">
             <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
@@ -579,7 +536,7 @@ const ClientAccountingDashboard = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
@@ -622,7 +579,7 @@ const ClientAccountingDashboard = () => {
           </div>
         </div>
 
-        {/* Company Info Card */}
+        {/* Company Info */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -801,7 +758,7 @@ const ClientAccountingDashboard = () => {
                                   <span className="font-medium">Category:</span> {document.category}
                                 </div>
                                 <div>
-                                  <span className="font-medium">Due Date:</span> 
+                                  <span className="font-medium">Due Date:</span>{' '}
                                   <span className={document.due_date && new Date(document.due_date) < new Date() ? 'text-red-600 font-medium' : ''}>
                                     {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}
                                   </span>
@@ -811,10 +768,16 @@ const ClientAccountingDashboard = () => {
 
                             <div className="flex items-center space-x-2">
                               {document.file_url ? (
-                                <button className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center space-x-2">
+                                <a
+                                  href={document.file_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  download
+                                  className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center space-x-2"
+                                >
                                   <Download className="h-4 w-4" />
                                   <span>Download</span>
-                                </button>
+                                </a>
                               ) : (
                                 <button className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2">
                                   <Upload className="h-4 w-4" />
@@ -856,15 +819,14 @@ const ClientAccountingDashboard = () => {
                                 <span className="font-medium">Amount:</span> ${invoice.amount} {invoice.currency}
                               </div>
                               <div>
-                                <span className="font-medium">Period:</span> 
-                                Monthly Service
+                                <span className="font-medium">Period:</span> Monthly Service
                               </div>
                               <div>
-                                <span className="font-medium">Due Date:</span> 
+                                <span className="font-medium">Due Date:</span>{' '}
                                 {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}
                               </div>
                               <div>
-                                <span className="font-medium">Paid:</span> 
+                                <span className="font-medium">Paid:</span>{' '}
                                 {invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString() : 'Not paid'}
                               </div>
                             </div>
@@ -947,79 +909,12 @@ const ClientAccountingDashboard = () => {
               <div>
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">My Virtual Mailbox</h3>
-                  <p className="text-gray-600">Receive official documents digitally and request physical shipping when needed</p>
+                  <p className="text-gray-600">
+                    Receive official documents digitally and request physical shipping when needed
+                  </p>
                 </div>
-                
-                {/* Virtual Mailbox Content */}
-                <div className="space-y-4">
-                  {/* Sample documents with actions */}
-                  <div className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-4 mb-3">
-                          <div className="bg-purple-100 rounded-lg p-2">
-                            <FileText className="h-5 w-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Tax Registration Document</h3>
-                            <p className="text-sm text-gray-600">Official tax registration certificate</p>
-                          </div>
-                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            PENDING
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
-                          <div>
-                            <span className="font-medium">Tracking:</span> VM20250813-AA512107
-                          </div>
-                          <div>
-                            <span className="font-medium">Shipping Fee:</span> $0
-                          </div>
-                          <div>
-                            <span className="font-medium">Payment:</span>
-                            <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              UNPAID
-                            </span>
-                          </div>
-                          <div>
-                            <span className="font-medium">Size:</span> 1.1 MB
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <button className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
-                          <Eye className="h-4 w-4" />
-                          <span>Ön İzleme</span>
-                        </button>
-                        <button className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
-                          <Download className="h-4 w-4" />
-                          <span>İndir</span>
-                        </button>
-                        <button className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
-                          <Mail className="h-4 w-4" />
-                          <span>Fiziksel Gönderim</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-4 mb-3">
-                          <div className="bg-purple-100 rounded-lg p-2">
-                            <FileText className="h-5 w-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Bank Account Information</h3>
-                            <p className="text-sm text-gray-600">Bank account opening documents</p>
-                          </div>
-                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            SENT
-                          </span>
-                        </div>
+                {/* Tüm işlem akışları (Ön izleme • indir • fiziksel gönderim) VirtualMailboxManager içinde */}
+                <VirtualMailboxManager />
               </div>
             )}
           </div>
@@ -1052,7 +947,7 @@ const ClientAccountingDashboard = () => {
           chatType="consultant-client"
           currentUserId={profile?.id || 'client-1'}
           currentUserRole="client"
-          targetUserId={accountingProfile.consultant_id}
+          targetUserId={accountingProfile.consultant_id || '3732cae6-3238-44b6-9c6b-2f29f0216a83'}
         />
       )}
 
