@@ -43,7 +43,8 @@ export const useCountries = (activeOnly: boolean = true) => {
       let query = supabase
         .from('countries')
         .select('*')
-        .order('sort_order', { ascending: true });
+        .order('sort_order', { ascending: true })
+        .limit(50); // Ensure we get all countries
 
       if (activeOnly) {
         query = query.eq('is_active', true);
