@@ -11,10 +11,7 @@ const CountryDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { country, loading, error } = useCountry(slug || '');
   const { services: countryServices, loading: servicesLoading } = useServices(true);
-  const { blogPosts: countryBlogPosts, loading: blogLoading } = useBlogPosts({ 
-    isPublished: true, 
-    countryId: country?.id 
-  });
+  const { data: countryBlogPosts, loading: blogLoading } = useBlogPosts(country?.id);
   const { faqs: countryFaqs, loading: faqLoading } = useFAQs({ 
     isActive: true, 
     countryId: country?.id 
@@ -434,7 +431,7 @@ const CountryDetailPage = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {countryBlogPosts.slice(0, 3).map((post) => (
+                  {(countryBlogPosts || []).slice(0, 3).map((post) => (
                     <div key={post.id} className="bg-white rounded-xl border border-gray-200 p-6">
                       <div className="flex items-center space-x-2 mb-3">
                         <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-md text-xs font-medium">
@@ -454,7 +451,7 @@ const CountryDetailPage = () => {
                       </button>
                     </div>
                   ))}
-                  {countryBlogPosts.length > 3 && (
+                  {(countryBlogPosts || []).length > 3 && (
                     <div className="text-center">
                       <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">
                         View All Insights →
