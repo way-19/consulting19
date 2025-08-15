@@ -1,8 +1,3 @@
-// IMMEDIATE DEBUG - This should show in console right away
-console.log('🚀 ClientDocuments.tsx file is being loaded!');
-console.log('📍 Current URL:', window.location.href);
-console.log('🔗 Current pathname:', window.location.pathname);
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
