@@ -28,7 +28,8 @@ import {
   Shield,
   Archive,
   Camera,
-  Folder
+  Folder,
+  Bell
 } from 'lucide-react';
 
 interface ClientDocument {
@@ -37,14 +38,21 @@ interface ClientDocument {
   name: string;
   type: string;
   category: 'identity' | 'business' | 'financial' | 'medical' | 'other';
-  status: 'pending' | 'approved' | 'rejected' | 'needs_revision';
+  status: 'pending' | 'approved' | 'rejected' | 'needs_revision' | 'requested';
   file_url?: string;
   file_size?: number;
   uploaded_at: string;
   reviewed_at?: string;
   reviewed_by?: string;
   notes?: string;
+  due_date?: string;
+  requested_by_consultant_id?: string;
+  is_request?: boolean;
   reviewer?: {
+    full_name: string;
+    email: string;
+  };
+  requested_by?: {
     full_name: string;
     email: string;
   };
@@ -71,6 +79,8 @@ const ClientDocuments = () => {
   const [showDocumentDetail, setShowDocumentDetail] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [clientId, setClientId] = useState<string | null>(null);
+  const [requestedDocuments, setRequestedDocuments] = useState<ClientDocument[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<ClientDocument | null>(null);
 
   const [uploadForm, setUploadForm] = useState({
     name: '',
@@ -123,6 +133,7 @@ const ClientDocuments = () => {
   useEffect(() => {
     if (clientId) {
       fetchDocuments();
+      fetchRequestedDocuments();
     }
   }, [clientId]);
 
@@ -170,6 +181,31 @@ const ClientDocuments = () => {
     }
   };
 
+  const fetchRequestedDocuments = async () => {
+    if (!clientId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select(`
+          *,
+          requested_by:requested_by_consultant_id (
+            full_name,
+            email
+          )
+        `)
+        .eq('client_id', clientId)
+        .eq('status', 'requested')
+        .eq('is_request', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setRequestedDocuments(data || []);
+    } catch (error) {
+      console.error('Error fetching requested documents:', error);
+    }
+  };
+
   const calculateStats = (documentsData: ClientDocument[]) => {
     const stats: DocumentStats = {
       totalDocuments: documentsData.length,
@@ -197,26 +233,64 @@ const ClientDocuments = () => {
       // For demo purposes, we'll simulate the upload
       const mockFileUrl = `https://example.com/documents/${uploadForm.file.name}`;
 
-      const documentData = {
-        client_id: clientId,
-        name: uploadForm.name || uploadForm.file.name,
-        type: uploadForm.type,
-        category: uploadForm.category,
-        status: 'pending' as const,
-        file_url: mockFileUrl,
-        file_size: uploadForm.file.size,
-        uploaded_at: new Date().toISOString()
-      };
+      if (selectedRequest) {
+        // Update existing request with uploaded file
+        const { error } = await supabase
+          .from('documents')
+          .update({
+            file_url: mockFileUrl,
+            file_size: uploadForm.file.size,
+            status: 'pending',
+            is_request: false,
+            uploaded_at: new Date().toISOString()
+          })
+          .eq('id', selectedRequest.id);
 
-      const { error } = await supabase
-        .from('documents')
-        .insert([documentData]);
+        if (error) throw error;
 
-      if (error) throw error;
+        // Notify consultant
+        if (selectedRequest.requested_by_consultant_id) {
+          await supabase
+            .from('notifications')
+            .insert([{
+              user_id: selectedRequest.requested_by_consultant_id,
+              type: 'document_uploaded',
+              title: 'Requested Document Uploaded',
+              message: `Client uploaded: ${selectedRequest.name}`,
+              priority: 'normal',
+              related_table: 'documents',
+              related_id: selectedRequest.id,
+              action_url: '/consultant/documents'
+            }]);
+        }
+      } else {
+        // Create new document
+        const documentData = {
+          client_id: clientId,
+          name: uploadForm.name || uploadForm.file.name,
+          type: uploadForm.type,
+          category: uploadForm.category,
+          status: 'pending' as const,
+          file_url: mockFileUrl,
+          file_size: uploadForm.file.size,
+          uploaded_at: new Date().toISOString(),
+          is_request: false
+        };
+
+        const { error } = await supabase
+          .from('documents')
+          .insert([documentData]);
+
+        if (error) throw error;
+      }
 
       await fetchDocuments();
+      await fetchRequestedDocuments();
       resetUploadForm();
-      alert('Document uploaded successfully! Your consultant will review it shortly.');
+      alert(selectedRequest 
+        ? 'Talep edilen belge başarıyla yüklendi! Danışmanınız kısa sürede inceleyecektir.'
+        : 'Belge başarıyla yüklendi! Danışmanınız kısa sürede inceleyecektir.'
+      );
     } catch (error) {
       console.error('Error uploading document:', error);
       alert('Failed to upload document');
@@ -250,6 +324,7 @@ const ClientDocuments = () => {
       category: 'other',
       file: null
     });
+    setSelectedRequest(null);
     setShowUploadModal(false);
   };
 
@@ -259,6 +334,7 @@ const ClientDocuments = () => {
       case 'rejected': return 'bg-red-100 text-red-800';
       case 'needs_revision': return 'bg-yellow-100 text-yellow-800';
       case 'pending': return 'bg-blue-100 text-blue-800';
+      case 'requested': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -269,6 +345,7 @@ const ClientDocuments = () => {
       case 'rejected': return <XCircle className="h-4 w-4" />;
       case 'needs_revision': return <AlertTriangle className="h-4 w-4" />;
       case 'pending': return <Clock className="h-4 w-4" />;
+      case 'requested': return <Bell className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
     }
   };
@@ -359,6 +436,59 @@ const ClientDocuments = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Requested Documents Section */}
+        {requestedDocuments.length > 0 && (
+          <div className="bg-orange-50 rounded-xl border border-orange-200 p-6 mb-8">
+            <div className="flex items-center space-x-3 mb-4">
+              <Bell className="h-6 w-6 text-orange-600" />
+              <h2 className="text-xl font-bold text-orange-900">Danışmanınızdan Belge Talepleri</h2>
+              <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
+                {requestedDocuments.length} talep
+              </span>
+            </div>
+            <p className="text-orange-800 mb-4">
+              Danışmanınız aşağıdaki belgeleri talep etmiştir. Lütfen en kısa sürede yükleyiniz.
+            </p>
+            
+            <div className="space-y-3">
+              {requestedDocuments.map((request) => (
+                <div key={request.id} className="bg-white rounded-lg p-4 border border-orange-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900">{request.name}</h4>
+                      <p className="text-sm text-gray-600">{request.type} - {getCategoryInfo(request.category).label}</p>
+                      {request.notes && (
+                        <p className="text-sm text-orange-700 mt-1">{request.notes}</p>
+                      )}
+                      {request.due_date && (
+                        <p className="text-xs text-orange-600 mt-1">
+                          Son Tarih: {new Date(request.due_date).toLocaleDateString('tr-TR')}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedRequest(request);
+                        setUploadForm({
+                          name: request.name,
+                          type: request.type,
+                          category: request.category,
+                          file: null
+                        });
+                        setShowUploadModal(true);
+                      }}
+                      className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span>Yükle</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -497,6 +627,7 @@ const ClientDocuments = () => {
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
                 <option value="needs_revision">Needs Revision</option>
+                <option value="requested">Talep Edilen</option>
               </select>
             </div>
 
@@ -552,6 +683,7 @@ const ClientDocuments = () => {
                              document.status === 'approved' ? 'APPROVED' :
                              document.status === 'rejected' ? 'REJECTED' :
                              document.status === 'needs_revision' ? 'NEEDS REVISION' :
+                             document.status === 'requested' ? 'REQUESTED' :
                              document.status.toUpperCase()}
                           </span>
                         </div>
@@ -667,6 +799,23 @@ const ClientDocuments = () => {
             <form onSubmit={handleFileUpload} className="p-6 space-y-6">
               {/* File Upload Area */}
               <div>
+                {selectedRequest && (
+                  <div className="bg-orange-50 rounded-lg p-4 border border-orange-200 mb-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Bell className="h-5 w-5 text-orange-600" />
+                      <h4 className="font-medium text-orange-900">Danışman Talebi</h4>
+                    </div>
+                    <p className="text-sm text-orange-800">
+                      Bu belge danışmanınız tarafından talep edilmiştir: <strong>{selectedRequest.name}</strong>
+                    </p>
+                    {selectedRequest.notes && (
+                      <p className="text-sm text-orange-700 mt-1">
+                        <strong>Gereksinimler:</strong> {selectedRequest.notes}
+                      </p>
+                    )}
+                  </div>
+                )}
+                
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Dosya Seç *
                 </label>
@@ -717,6 +866,18 @@ const ClientDocuments = () => {
                     </div>
                   </div>
                 )}
+                
+                {/* Electronic Signature Guidance */}
+                <div className="mt-3 bg-blue-50 rounded-lg p-3 border border-blue-200">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <Shield className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">Elektronik İmza Rehberi</span>
+                  </div>
+                  <p className="text-xs text-blue-800">
+                    Elektronik imza gerektiren belgeler için dijital olarak imzalanmış PDF dosyaları yükleyin. 
+                    E-imzanızın bulunduğunuz ülkede yasal olarak geçerli olduğundan emin olun.
+                  </p>
+                </div>
               </div>
 
               {/* Document Information */}
@@ -732,6 +893,7 @@ const ClientDocuments = () => {
                     onChange={(e) => setUploadForm(prev => ({ ...prev, name: e.target.value }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     placeholder="Örn: Pasaport Kopyası"
+                    disabled={!!selectedRequest}
                   />
                 </div>
 
@@ -744,6 +906,7 @@ const ClientDocuments = () => {
                     value={uploadForm.type}
                     onChange={(e) => setUploadForm(prev => ({ ...prev, type: e.target.value }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    disabled={!!selectedRequest}
                   >
                     <option value="">Belge türünü seçin...</option>
                     {documentTypes.map(type => (
@@ -768,7 +931,8 @@ const ClientDocuments = () => {
                         uploadForm.category === category.value
                           ? 'border-purple-500 bg-purple-50 shadow-md transform scale-105'
                           : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50 hover:transform hover:scale-102'
-                      }`}
+                      } ${selectedRequest ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={!!selectedRequest}
                     >
                       <div className="flex items-center space-x-3 mb-2">
                         <category.icon className="h-5 w-5 text-gray-600" />
@@ -814,7 +978,7 @@ const ClientDocuments = () => {
                   ) : (
                     <>
                       <Upload className="h-5 w-5" />
-                      <span>Belgeyi Yükle</span>
+                      <span>{selectedRequest ? 'Talep Edilen Belgeyi Yükle' : 'Belgeyi Yükle'}</span>
                     </>
                   )}
                 </button>
