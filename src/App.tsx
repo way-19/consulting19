@@ -252,14 +252,6 @@ export default function App() {
 
           {/* Client Routes */}
           <Route
-            path="/client-dashboard"
-            element={
-              <ProtectedRoute allowedRoles={["client"]}>
-                <ClientDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/client-accounting"
             element={
               <ProtectedRoute allowedRoles={["client"]}>
@@ -304,7 +296,8 @@ export default function App() {
 
           {/* Legacy Routes for Backward Compatibility */}
           <Route path="/client/accounting" element={<Navigate to="/client-accounting" replace />} />
-          <Route path="/client/dashboard" element={<Navigate to="/client-dashboard" replace />} />
+          <Route path="/client/dashboard" element={<Navigate to="/client-accounting" replace />} />
+          <Route path="/client-dashboard" element={<Navigate to="/client-accounting" replace />} />
           <Route path="/consultant-services" element={<ConsultantServices />} />
           <Route path="/customers-management" element={<CustomersManagement />} />
           <Route path="/accounting-management" element={<AccountingManagement />} />
