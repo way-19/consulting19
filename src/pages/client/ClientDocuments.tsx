@@ -79,7 +79,7 @@ const ClientDocuments = () => {
   console.log('👤 Profile in component:', profile);
   console.log('🆔 Profile ID in component:', profile?.id);
   console.log('📧 Profile Email in component:', profile?.email);
-  console.log('🔑 Profile Role in component:', profile?.role);
+  console.log('🔑 Profile Role in component:', profile?.legacy_role);
   console.log('📍 Component URL check:', window.location.pathname);
 
   const [documents, setDocuments] = useState<DocumentWithDetails[]>([]);
@@ -119,6 +119,7 @@ const ClientDocuments = () => {
     console.log('👤 Profile:', profile);
     console.log('🆔 Profile ID:', profile?.id);
     console.log('📧 Profile Email:', profile?.email);
+    console.log('🔑 Profile Legacy Role:', profile?.legacy_role);
     
     if (profile?.id) {
       console.log('✅ Profile exists, calling fetchData...');
@@ -162,6 +163,7 @@ const ClientDocuments = () => {
 
       if (!clientData) {
         console.log('❌ fetchDocuments: No client record found for profile:', profile?.id);
+        setDocuments([]);
         return;
       }
 
@@ -177,10 +179,12 @@ const ClientDocuments = () => {
       if (error) throw error;
       
       console.log('📁 fetchDocuments: Found', data?.length || 0, 'documents');
+      console.log('📋 fetchDocuments: Setting documents state with:', data);
       setDocuments(data || []);
       calculateStats(data || []);
     } catch (error) {
       console.error('❌ fetchDocuments: Error:', error);
+      setDocuments([]);
     }
   };
 
@@ -198,6 +202,7 @@ const ClientDocuments = () => {
 
       if (!clientData) {
         console.log('❌ fetchDocumentRequests: No client record found for profile:', profile?.id);
+        setDocumentRequests([]);
         return;
       }
 
@@ -220,6 +225,7 @@ const ClientDocuments = () => {
       if (error) throw error;
       
       console.log('📋 fetchDocumentRequests: Found', data?.length || 0, 'requests');
+      console.log('📋 fetchDocumentRequests: Setting requests state with:', data);
       setDocumentRequests(data || []);
       
       // Update stats with request count
@@ -229,6 +235,7 @@ const ClientDocuments = () => {
       }));
     } catch (error) {
       console.error('❌ fetchDocumentRequests: Error:', error);
+      setDocumentRequests([]);
     }
   };
 
