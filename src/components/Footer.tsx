@@ -38,14 +38,13 @@ const Footer = () => {
               business formation and growth strategies.
             </p>
             <div className="space-y-3">
-              <div className="flex items-center space-x-2">
+              <Link
+                to="/contact"
+                className="flex items-center space-x-2 text-slate-300 hover:text-white transition-colors"
+              >
                 <Mail className="h-4 w-4 text-purple-400" />
-                <span className="text-slate-300">hello@consulting19.com</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-purple-400" />
-                <span className="text-slate-300">+1 (555) 123-4567</span>
-              </div>
+                <span>Contact Us</span>
+              </Link>
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4 text-purple-400" />
                 <span className="text-slate-300">Global Operations</span>
