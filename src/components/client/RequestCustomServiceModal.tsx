@@ -28,12 +28,12 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
   });
 
   const serviceTypes = [
-    { value: 'custom', label: 'Özel Hizmet', description: 'Özel ihtiyaçlarınıza yönelik hizmet' },
-    { value: 'certificate', label: 'Sertifika Hizmeti', description: 'Belge onayı, apostil, çeviri' },
-    { value: 'other_country', label: 'Başka Ülke Hizmeti', description: 'Farklı ülkede iş kurma veya hizmet' },
-    { value: 'legal_consultation', label: 'Hukuki Danışmanlık', description: 'Özel hukuki konularda danışmanlık' },
-    { value: 'tax_advisory', label: 'Vergi Danışmanlığı', description: 'Vergi optimizasyonu ve planlama' },
-    { value: 'compliance', label: 'Uyum Hizmetleri', description: 'Yasal uyum ve raporlama' }
+    { value: 'custom', label: 'Custom Service', description: 'Tailored service for your specific needs' },
+    { value: 'certificate', label: 'Certificate Service', description: 'Document certification, apostille, translation' },
+    { value: 'other_country', label: 'Other Country Service', description: 'Business formation or services in different countries' },
+    { value: 'legal_consultation', label: 'Legal Consultation', description: 'Specialized legal advice and consultation' },
+    { value: 'tax_advisory', label: 'Tax Advisory', description: 'Tax optimization and planning services' },
+    { value: 'compliance', label: 'Compliance Services', description: 'Legal compliance and reporting services' }
   ];
 
   const budgetRanges = [
@@ -186,7 +186,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Budget Range
+                Bütçe Aralığı
               </label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -195,7 +195,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
                   onChange={(e) => setFormData(prev => ({ ...prev, budget_range: e.target.value }))}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  <option value="">Select budget...</option>
+                  <option value="">Bütçe seçin...</option>
                   {budgetRanges.map(range => (
                     <option key={range.value} value={range.value}>{range.label}</option>
                   ))}
@@ -282,13 +282,13 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
             <div className="flex items-center space-x-2 mb-2">
               <AlertTriangle className="h-5 w-5 text-yellow-600" />
-              <h4 className="font-medium text-yellow-900">Önemli Bilgilendirme</h4>
+              <h4 className="font-medium text-yellow-900">Important Information</h4>
             </div>
             <div className="text-sm text-yellow-800 space-y-1">
-              <p>• Talebiniz danışmanınız tarafından incelenecektir</p>
-              <p>• 24-48 saat içinde size dönüş yapılacaktır</p>
-              <p>• Özel hizmetler için ayrı fiyatlandırma uygulanabilir</p>
-              <p>• Teklif onayınızdan sonra hizmet başlatılacaktır</p>
+              <p>• Your request will be reviewed by your consultant</p>
+              <p>• You will receive a response within 24-48 hours</p>
+              <p>• Custom services may have separate pricing</p>
+              <p>• Service will begin after proposal approval</p>
             </div>
           </div>
 
