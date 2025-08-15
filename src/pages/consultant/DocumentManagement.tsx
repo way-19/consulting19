@@ -94,6 +94,15 @@ const DocumentManagement = () => {
     totalSize: 0
   });
 
+  const [stats, setStats] = useState<DocumentStats>({
+    totalDocuments: 0,
+    pendingReview: 0,
+    approved: 0,
+    rejected: 0,
+    needsRevision: 0,
+    totalSize: 0
+  });
+
   const documentCategories = [
     { value: 'identity', label: 'Identity Documents', icon: User, color: 'bg-blue-100 text-blue-800' },
     { value: 'business', label: 'Business Documents', icon: FileText, color: 'bg-green-100 text-green-800' },
