@@ -71,7 +71,7 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
 
       const { data, error } = await supabase
         .from('accounting_invoices')
-        .select('id, invoice_number, amount, currency, due_date, status, period_start, period_end, created_at')
+        .select('id, invoice_number, amount, currency, due_date, status, created_at')
         .eq('client_id', accountingClientId)
         .in('status', ['sent', 'overdue'])
         .lte('due_date', thirtyDaysFromNow.toISOString())

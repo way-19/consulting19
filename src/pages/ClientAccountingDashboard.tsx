@@ -857,10 +857,7 @@ const ClientAccountingDashboard = () => {
                               </div>
                               <div>
                                 <span className="font-medium">Period:</span> 
-                                {invoice.period_start && invoice.period_end 
-                                  ? `${new Date(invoice.period_start).toLocaleDateString()} - ${new Date(invoice.period_end).toLocaleDateString()}`
-                                  : 'One-time'
-                                }
+                                Monthly Service
                               </div>
                               <div>
                                 <span className="font-medium">Due Date:</span> 
