@@ -23,7 +23,9 @@ const ModernCountryCard: React.FC<ModernCountryCardProps> = ({ country }) => {
       'panama': 'https://images.pexels.com/photos/3225530/pexels-photo-3225530.jpeg?auto=compress&cs=tinysrgb&w=1200',
       'montenegro': 'https://images.pexels.com/photos/3225531/pexels-photo-3225531.jpeg?auto=compress&cs=tinysrgb&w=1200',
       'turkey': 'https://images.pexels.com/photos/1486222/pexels-photo-1486222.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      'germany': 'https://images.pexels.com/photos/161901/berlin-brandenburg-gate-landmark-symbol-161901.jpeg?auto=compress&cs=tinysrgb&w=1200'
+      'germany': 'https://images.pexels.com/photos/161901/pexels-photo-161901.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      'cyprus': 'https://images.pexels.com/photos/2901215/pexels-photo-2901215.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      'ireland': 'https://images.pexels.com/photos/2416653/pexels-photo-2416653.jpeg?auto=compress&cs=tinysrgb&w=1200'
     };
     
     return capitalImages[countrySlug] || 'https://images.pexels.com/photos/12461/pexels-photo-12461.jpeg?auto=compress&cs=tinysrgb&w=1200';
@@ -35,10 +37,10 @@ const ModernCountryCard: React.FC<ModernCountryCardProps> = ({ country }) => {
     : getCapitalImage(country.slug);
 
   return (
-    <Link to={`/countries/${country.slug}`} className="group block">
-      <div className="relative overflow-hidden rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-2 bg-white h-full">
-        {/* MODERN IMAGE SECTION */}
-        <div className="relative h-80 overflow-hidden">
+    <Link to={`/countries/${country.slug}`} className="group block h-full">
+      <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 bg-white h-full flex flex-col">
+        {/* IMAGE SECTION */}
+        <div className="relative h-64 overflow-hidden flex-shrink-0">
           <img
             src={imageUrl}
             alt={`${country.name} business hub`}
@@ -49,54 +51,56 @@ const ModernCountryCard: React.FC<ModernCountryCardProps> = ({ country }) => {
           />
           
           {/* GRADIENT OVERLAY */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
           
-          {/* CONTENT OVERLAY */}
-          <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
-            {/* FLAG AND COUNTRY NAME */}
-            <div className="flex items-center space-x-3 mb-4">
-              <span className="text-4xl drop-shadow-2xl">{country.flag_emoji || '🌍'}</span>
+          {/* FLAG AND COUNTRY NAME */}
+          <div className="absolute bottom-4 left-4 right-4">
+            <div className="flex items-center space-x-3 mb-3">
+              <span className="text-3xl drop-shadow-2xl">{country.flag_emoji || '🌍'}</span>
               <div>
-                <h3 className="text-3xl font-bold drop-shadow-2xl">{country.name}</h3>
-                <p className="text-white/90 text-base font-medium">{country.primary_language?.toUpperCase() || 'EN'} • Business Hub</p>
+                <h3 className="text-2xl font-bold text-white drop-shadow-2xl">{country.name}</h3>
+                <p className="text-white/90 text-sm font-medium">{country.primary_language?.toUpperCase() || 'EN'} • Business Hub</p>
               </div>
             </div>
-            
-            {/* DESCRIPTION */}
-            <p className="text-white/95 text-base mb-4 line-clamp-2 leading-relaxed">
-              {country.description || 'Strategic location with exceptional business opportunities'}
-            </p>
-            
-            {/* HIGHLIGHTS */}
-            {country.highlights && country.highlights.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {country.highlights.slice(0, 2).map((highlight, index) => (
-                  <span 
-                    key={index}
-                    className="bg-white/25 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-semibold border border-white/30"
-                  >
-                    {highlight}
-                  </span>
-                ))}
+          </div>
+        </div>
+        
+        {/* CONTENT SECTION */}
+        <div className="p-6 flex-1 flex flex-col">
+          {/* DESCRIPTION */}
+          <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed flex-1">
+            {country.description || 'Strategic location with exceptional business opportunities'}
+          </p>
+          
+          {/* HIGHLIGHTS */}
+          {country.highlights && country.highlights.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {country.highlights.slice(0, 2).map((highlight, index) => (
+                <span 
+                  key={index}
+                  className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-semibold"
+                >
+                  {highlight}
+                </span>
+              ))}
+            </div>
+          )}
+          
+          {/* STATS AND CTA */}
+          <div className="flex items-center justify-between mt-auto">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-1">
+                <Building className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-600 font-medium">2.4k+</span>
               </div>
-            )}
-            
-            {/* STATS AND CTA */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2">
-                  <Building className="h-5 w-5 text-white/80" />
-                  <span className="text-base text-white/95 font-medium">2.4k+</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                  <span className="text-base text-white/95 font-medium">4.9</span>
-                </div>
+              <div className="flex items-center space-x-1">
+                <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                <span className="text-sm text-gray-600 font-medium">4.9</span>
               </div>
-              <div className="bg-white/25 backdrop-blur-md text-white px-4 py-2 rounded-xl font-bold hover:bg-white hover:text-gray-900 transition-all duration-300 flex items-center space-x-2 border border-white/30">
-                <span className="text-base">Explore</span>
-                <ArrowRight className="h-5 w-5" />
-              </div>
+            </div>
+            <div className="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm">
+              <span>Explore</span>
+              <ArrowRight className="h-4 w-4" />
             </div>
           </div>
         </div>
