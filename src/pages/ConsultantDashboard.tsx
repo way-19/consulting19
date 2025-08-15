@@ -606,14 +606,14 @@ const ConsultantDashboard = () => {
                       </div>
                       <div>
                         <span className="text-blue-700 font-medium">Assigned Clients:</span>
-                      <span>Müşteri Sohbeti</span>
+                        <p className="text-blue-600">{assignedClients.length}</p>
                       </div>
                     </div>
                     <button 
                       onClick={fetchAssignedClients}
                       className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                     >
-                      <span>Yönetici Sohbeti</span>
+                      Refresh Data
                     </button>
                   </div>
 
@@ -638,7 +638,7 @@ const ConsultantDashboard = () => {
                           <Star className="h-4 w-4 text-yellow-300 fill-current" />
                           <span className="font-bold">4.9</span>
                         </div>
-                      <span>AI Asistan Randevuları</span>
+                      </div>
                     </div>
                   </div>
                 </div>
