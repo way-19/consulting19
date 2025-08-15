@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import ModernCountryCard from '../components/ModernCountryCard';
 import {
   ArrowRight, Bot, Shield, Zap, Users, Globe2, TrendingUp, Clock,
   Building, CheckCircle, Calculator, Scale, Globe, CreditCard, FileText,
@@ -150,7 +151,7 @@ const HomePage = () => {
                     <div className="text-white/80 text-sm capitalize">
                       {k.replace(/([A-Z])/g, ' $1').trim()}
                     </div>
-                  </div>
+                  <ModernCountryCard key={country.id} country={country} />
                 ))}
               </div>
             </div>
