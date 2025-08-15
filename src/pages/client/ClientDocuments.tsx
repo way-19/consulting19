@@ -186,15 +186,12 @@ const ClientDocuments = () => {
   ];
 
   useEffect(() => {
-    if (profile?.id) {
-      fetchData();
-    } else {
-      // Use demo data when no profile
-      setDocuments(demoUploadedDocuments);
-      setRequestedDocuments(demoRequestedDocuments);
-      calculateStats(demoUploadedDocuments);
-      setLoading(false);
-    }
+    // Always use demo data for now - remove this after migration is working
+    console.log('🎯 ClientDocuments: Using demo data');
+    setDocuments(demoUploadedDocuments);
+    setRequestedDocuments(demoRequestedDocuments);
+    calculateStats(demoUploadedDocuments);
+    setLoading(false);
   }, [profile]);
 
   const fetchData = async () => {
@@ -212,7 +209,8 @@ const ClientDocuments = () => {
   };
 
   const fetchDocuments = async () => {
-    // Always use demo data for now  
+    // Always use demo data for now - remove after migration
+    console.log('📁 fetchDocuments: Using demo data');
     setDocuments(demoUploadedDocuments);
     calculateStats(demoUploadedDocuments);
     return;
