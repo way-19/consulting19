@@ -80,6 +80,7 @@ interface ClientMessage {
 const ClientAccountingDashboard = () => {
   const { profile } = useAuth();
   const [accountingProfile, setAccountingProfile] = useState<ClientAccountingProfile | null>(null);
+  const [clientId, setClientId] = useState<string | undefined>(undefined);
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [messages, setMessages] = useState<ClientMessage[]>([]);
@@ -90,6 +91,7 @@ const ClientAccountingDashboard = () => {
   const [showInvoiceCheckout, setShowInvoiceCheckout] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<ClientInvoice | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
 
   useEffect(() => {
     if (profile?.id) {
@@ -156,6 +158,7 @@ const ClientAccountingDashboard = () => {
       }
       
       console.log('✅ Client record created:', newClient);
+      setClientId(newClient.id);
       
       // Now create accounting profile
       const { data: newAccountingProfile, error: accountingError } = await supabase
@@ -190,6 +193,8 @@ const ClientAccountingDashboard = () => {
       setAccountingProfile(newAccountingProfile);
       return;
     }
+
+    setClientId(clientData.id);
 
     const { data, error } = await supabase
       .from('accounting_clients')
