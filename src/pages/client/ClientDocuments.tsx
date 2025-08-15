@@ -210,7 +210,7 @@ const ClientDocuments = () => {
     });
     
     setLoading(false);
-  }, []);
+  }, []); // Empty dependency array - run once on mount
 
   const fetchData = async () => {
     console.log('🔄 fetchData called - using demo data');
