@@ -27,7 +27,7 @@ export default function ProtectedRoute({ allowedRoles, requiredRole, children }:
   const rolesToCheck = allowedRoles || (requiredRole ? [requiredRole] : undefined);
   
   if (rolesToCheck && profile) {
-    const hasAccess = rolesToCheck.includes(profile.role);
+    const hasAccess = rolesToCheck.includes(profile.role as Role);
     
     if (!hasAccess) {
       return <Navigate to="/" replace />;

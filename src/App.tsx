@@ -255,7 +255,7 @@ export default function App() {
           <Route
             path="/client-accounting"
             element={
-              <ProtectedRoute allowedRoles={["client"]}>
+              <ProtectedRoute requiredRole="client">
                 <ClientAccountingDashboard />
               </ProtectedRoute>
             }
@@ -263,7 +263,7 @@ export default function App() {
           <Route
             path="/client/documents"
             element={
-              <ProtectedRoute allowedRoles={["client"]}>
+              <ProtectedRoute requiredRole="client">
                 <ClientDocuments />
               </ProtectedRoute>
             }
