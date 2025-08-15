@@ -247,8 +247,8 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
           <div className="mt-6 pt-4 border-t border-gray-200">
             <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
               <div className="flex items-center space-x-2 mb-2">
-                  <h4 className="font-medium text-yellow-900">Payment Reminder</h4>
-                <h4 className="font-medium text-yellow-900">Ödeme Hatırlatması</h4>
+                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                <h4 className="font-medium text-yellow-900">Payment Reminder</h4>
               </div>
               <p className="text-sm text-yellow-800">
                 Make payments on time to avoid service interruptions. 
