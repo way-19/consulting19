@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, MessageSquare, MapPin, Send, CheckCircle, AlertCircle, Globe, Users, Shield } from 'lucide-react';
+import { Mail, MessageSquare, MapPin, Send, CheckCircle, AlertCircle, Globe, Users, Shield, ChevronDown } from 'lucide-react';
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +11,7 @@ const ContactPage = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [openFAQ, setOpenFAQ] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -36,6 +37,43 @@ const ContactPage = () => {
       });
     }, 2000);
   };
+
+  const toggleFAQ = (faqId: string) => {
+    setOpenFAQ(openFAQ === faqId ? null : faqId);
+  };
+
+  const faqs = [
+    {
+      id: 'registration-process',
+      question: 'How does the process work after registration?',
+      answer: 'After registration, you will be assigned a dedicated consultant who specializes in your chosen jurisdiction. All communication is conducted through our secure online platform. Your consultant will guide you through each step of the business formation process, from document preparation to final registration.'
+    },
+    {
+      id: 'countries-served',
+      question: 'Which countries do you serve?',
+      answer: 'We provide business formation services in 127+ countries worldwide, including popular jurisdictions like Georgia, Estonia, UAE, Malta, USA, Switzerland, and many more. Each country has dedicated local consultants who understand the specific requirements and regulations.'
+    },
+    {
+      id: 'ai-consultant',
+      question: 'How does the AI consultant work?',
+      answer: 'Our AI Oracle analyzes your business requirements, goals, and preferences to recommend the most suitable jurisdictions and services. It considers factors like tax implications, business structure, market access, and regulatory requirements. All AI recommendations are verified by our legal experts before being presented to you.'
+    },
+    {
+      id: 'communication',
+      question: 'How do we communicate during the process?',
+      answer: 'All communication is conducted exclusively through our secure online platform. You will have direct access to your assigned consultant via our messaging system, which includes real-time translation capabilities for international clients. No phone calls are made as part of our standardized process.'
+    },
+    {
+      id: 'timeline',
+      question: 'How long does company formation take?',
+      answer: 'Timeline varies by jurisdiction. Most company formations are completed within 5-15 business days. Simple jurisdictions like Georgia can be completed in 3-5 days, while more complex jurisdictions may take 2-3 weeks. Your consultant will provide specific timelines based on your chosen jurisdiction and requirements.'
+    },
+    {
+      id: 'pricing',
+      question: 'What are your service fees?',
+      answer: 'Our fees vary by jurisdiction and service complexity. Basic company formation starts from $800-$3000 depending on the country. All fees are transparent and disclosed upfront with no hidden charges. Additional services like banking, accounting, or legal consultation are priced separately.'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -64,18 +102,18 @@ const ContactPage = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  🌍 Önemli Bilgilendirme - Important Notice
+                  🌍 Important Notice
                 </h3>
                 <div className="space-y-3 text-gray-700">
-                  <p className="leading-relaxed">
-                    <strong>Türkçe:</strong> Her ülke danışmanlığımız yerel olarak hizmet vermektedir. 
-                    Kayıt işleminiz tamamlandıktan sonra, tüm iletişim sadece online platformumuz 
-                    üzerinden gerçekleştirilmektedir. Telefon görüşmesi yapılmamaktadır.
-                  </p>
                   <p className="leading-relaxed">
                     <strong>English:</strong> Each of our country consultants provides services locally. 
                     After your registration is completed, all communication is conducted exclusively 
                     through our online platform. No phone calls are made.
+                  </p>
+                  <p className="leading-relaxed">
+                    <strong>Türkçe:</strong> Her ülke danışmanlığımız yerel olarak hizmet vermektedir. 
+                    Kayıt işleminiz tamamlandıktan sonra, tüm iletişim sadece online platformumuz 
+                    üzerinden gerçekleştirilmektedir. Telefon görüşmesi yapılmamaktadır.
                   </p>
                 </div>
               </div>
@@ -90,10 +128,9 @@ const ContactPage = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Ana Sistem Formu - Main System Form
+                Main System Form
               </h2>
               <p className="text-gray-600">
-                Öneri ve şikayetleriniz için ana sistem formumuzu kullanabilirsiniz. 
                 Use our main system form for suggestions and complaints.
               </p>
             </div>
@@ -101,14 +138,14 @@ const ContactPage = () => {
             {submitStatus === 'success' && (
               <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-2">
                 <CheckCircle className="h-5 w-5 text-green-500" />
-                <span className="text-green-700">Mesajınız başarıyla gönderildi! / Your message has been sent successfully!</span>
+                <span className="text-green-700">Your message has been sent successfully!</span>
               </div>
             )}
 
             {submitStatus === 'error' && (
               <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
                 <AlertCircle className="h-5 w-5 text-red-500" />
-                <span className="text-red-700">Bir hata oluştu. Lütfen tekrar deneyin. / An error occurred. Please try again.</span>
+                <span className="text-red-700">An error occurred. Please try again.</span>
               </div>
             )}
 
@@ -116,7 +153,7 @@ const ContactPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Ad Soyad / Full Name *
+                    Full Name *
                   </label>
                   <input
                     type="text"
@@ -126,13 +163,13 @@ const ContactPage = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Adınızı ve soyadınızı girin"
+                    placeholder="Enter your full name"
                   />
                 </div>
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    E-posta / Email *
+                    Email Address *
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -144,7 +181,7 @@ const ContactPage = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="ornek@email.com"
+                      placeholder="example@email.com"
                     />
                   </div>
                 </div>
@@ -152,7 +189,7 @@ const ContactPage = () => {
 
               <div>
                 <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-                  Mesaj Türü / Message Type *
+                  Message Type *
                 </label>
                 <select
                   id="type"
@@ -162,16 +199,16 @@ const ContactPage = () => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  <option value="suggestion">Öneri / Suggestion</option>
-                  <option value="complaint">Şikayet / Complaint</option>
-                  <option value="support">Destek / Support</option>
-                  <option value="general">Genel / General</option>
+                  <option value="suggestion">Suggestion</option>
+                  <option value="complaint">Complaint</option>
+                  <option value="support">Support</option>
+                  <option value="general">General Inquiry</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                  Konu / Subject *
+                  Subject *
                 </label>
                 <input
                   type="text"
@@ -181,13 +218,13 @@ const ContactPage = () => {
                   value={formData.subject}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Mesajınızın konusunu girin"
+                  placeholder="Enter your message subject"
                 />
               </div>
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                  Mesaj / Message *
+                  Message *
                 </label>
                 <div className="relative">
                   <MessageSquare className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -199,7 +236,7 @@ const ContactPage = () => {
                     value={formData.message}
                     onChange={handleInputChange}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                    placeholder="Mesajınızı detaylı olarak yazın..."
+                    placeholder="Write your message in detail..."
                   />
                 </div>
               </div>
@@ -212,12 +249,12 @@ const ContactPage = () => {
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Gönderiliyor... / Sending...</span>
+                    <span>Sending...</span>
                   </>
                 ) : (
                   <>
                     <Send className="h-5 w-5" />
-                    <span>Mesaj Gönder / Send Message</span>
+                    <span>Send Message</span>
                   </>
                 )}
               </button>
@@ -229,7 +266,7 @@ const ContactPage = () => {
             {/* Company Information */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
               <h3 className="text-xl font-bold text-gray-900 mb-6">
-                İletişim Bilgileri / Contact Information
+                Contact Information
               </h3>
               
               <div className="space-y-6">
@@ -238,10 +275,10 @@ const ContactPage = () => {
                     <Mail className="h-6 w-6 text-purple-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">E-posta / Email</h4>
+                    <h4 className="font-semibold text-gray-900 mb-1">Email</h4>
                     <p className="text-gray-600">hello@consulting19.com</p>
                     <p className="text-sm text-gray-500 mt-1">
-                      24 saat içinde yanıt / Response within 24 hours
+                      Response within 24 hours
                     </p>
                   </div>
                 </div>
@@ -251,10 +288,10 @@ const ContactPage = () => {
                     <MessageSquare className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Online Destek / Online Support</h4>
-                    <p className="text-gray-600">Platform üzerinden canlı destek</p>
+                    <h4 className="font-semibold text-gray-900 mb-1">Online Support</h4>
+                    <p className="text-gray-600">Live support through platform</p>
                     <p className="text-sm text-gray-500 mt-1">
-                      Live support through platform
+                      Available 24/7 for registered users
                     </p>
                   </div>
                 </div>
@@ -264,7 +301,7 @@ const ContactPage = () => {
                     <MapPin className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Ana Şirket Adresi / Head Office</h4>
+                    <h4 className="font-semibold text-gray-900 mb-1">Head Office</h4>
                     <p className="text-gray-600">Way19 LLC</p>
                     <p className="text-gray-600">Wyoming, USA</p>
                     <p className="text-sm text-gray-500 mt-1">
@@ -278,52 +315,98 @@ const ContactPage = () => {
             {/* Service Features */}
             <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-8 border border-purple-100">
               <h3 className="text-xl font-bold text-gray-900 mb-6">
-                Hizmet Özellikleri / Service Features
+                Service Features
               </h3>
               
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <Users className="h-5 w-5 text-purple-600" />
-                  <span className="text-gray-700">127+ ülkede uzman danışman</span>
+                  <span className="text-gray-700">127+ countries with expert consultants</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Shield className="h-5 w-5 text-purple-600" />
-                  <span className="text-gray-700">%98.5 başarı oranı</span>
+                  <span className="text-gray-700">98.5% success rate</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Globe className="h-5 w-5 text-purple-600" />
-                  <span className="text-gray-700">AI destekli danışmanlık</span>
+                  <span className="text-gray-700">AI-enhanced consulting</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <MessageSquare className="h-5 w-5 text-purple-600" />
-                  <span className="text-gray-700">Çok dilli destek</span>
-                </div>
-              </div>
-            </div>
-
-            {/* FAQ Quick Links */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">
-                Sık Sorulan Sorular / FAQ
-              </h3>
-              
-              <div className="space-y-3">
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-900">Kayıt sonrası süreç nasıl işler?</p>
-                  <p className="text-xs text-gray-600 mt-1">How does the process work after registration?</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-900">Hangi ülkelerde hizmet veriyorsunuz?</p>
-                  <p className="text-xs text-gray-600 mt-1">Which countries do you serve?</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-900">AI danışman nasıl çalışır?</p>
-                  <p className="text-xs text-gray-600 mt-1">How does the AI consultant work?</p>
+                  <span className="text-gray-700">Multilingual support</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* FAQ Section */}
+        <section className="mt-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg text-gray-600">
+              Get answers to common questions about our services and process
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+            <div className="space-y-4">
+              {faqs.map((faq) => (
+                <div key={faq.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => toggleFAQ(faq.id)}
+                    className="w-full px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
+                      <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${
+                        openFAQ === faq.id ? 'rotate-180' : ''
+                      }`} />
+                    </div>
+                  </button>
+                  
+                  {openFAQ === faq.id && (
+                    <div className="px-6 pb-6 border-t border-gray-100">
+                      <div className="pt-4">
+                        <p className="text-gray-700 leading-relaxed">
+                          {faq.answer}
+                        </p>
+                        
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2 text-sm text-gray-500">
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                              <span>Was this answer helpful?</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <button className="text-sm text-green-600 hover:text-green-700 font-medium">
+                                Yes
+                              </button>
+                              <button className="text-sm text-red-600 hover:text-red-700 font-medium">
+                                No
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 text-center">
+              <p className="text-gray-600 mb-4">
+                Still have questions? Our support team is here to help.
+              </p>
+              <button className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                Contact Support Team
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
