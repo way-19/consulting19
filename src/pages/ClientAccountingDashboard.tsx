@@ -495,83 +495,6 @@ const ClientAccountingDashboard = () => {
           </div>
         </div>
 
-        {/* AI Recommendations (static UI) */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center space-x-2">
-                <Lightbulb className="h-5 w-5 text-yellow-500" />
-                <h2 className="text-lg font-semibold text-gray-900">AI-Powered Recommendations</h2>
-                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">3 new</span>
-              </div>
-              <p className="text-sm text-gray-600 mt-1">Personalized recommendations based on your business profile and goals</p>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div className="border-l-4 border-l-blue-500 bg-blue-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-white rounded-lg p-2 shadow-sm">
-                      <Star className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-semibold text-gray-900">Estonia E-Residency Program</h4>
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                      </div>
-                      <p className="text-sm text-gray-700 mb-2">
-                        Based on your tech business profile, Estonia's e-Residency could provide significant tax advantages and EU market access.
-                      </p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span>AI Recommendation</span>
-                        <span>•</span>
-                        <span>95% confidence</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-l-4 border-l-green-500 bg-green-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-white rounded-lg p-2 shadow-sm">
-                      <TrendingUp className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">Tax Optimization Service</h4>
-                      <p className="text-sm text-gray-700 mb-2">Our analysis shows you could save 15-20% on taxes with proper structure optimization.</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span>Service Recommendation</span>
-                        <span>•</span>
-                        <span>Potential savings: $3,000/year</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-l-4 border-l-purple-500 bg-purple-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-white rounded-lg p-2 shadow-sm">
-                      <Globe className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">UAE Free Zone Expansion</h4>
-                      <p className="text-sm text-gray-700 mb-2">Consider expanding to UAE for Middle East market access with 0% corporate tax benefits.</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span>Market Opportunity</span>
-                        <span>•</span>
-                        <span>High growth potential</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 text-center">
-                <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">View All Recommendations (5) →</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -646,6 +569,83 @@ const ClientAccountingDashboard = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* AI Recommendations (static UI) - Moved to bottom */}
+        <div className="mt-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center space-x-2">
+                <Lightbulb className="h-5 w-5 text-yellow-500" />
+                <h2 className="text-lg font-semibold text-gray-900">AI-Powered Recommendations</h2>
+                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">3 new</span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">Personalized recommendations based on your business profile and goals</p>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="border-l-4 border-l-blue-500 bg-blue-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
+                  <div className="flex items-start space-x-3">
+                    <div className="bg-white rounded-lg p-2 shadow-sm">
+                      <Star className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h4 className="font-semibold text-gray-900">Estonia E-Residency Program</h4>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                      </div>
+                      <p className="text-sm text-gray-700 mb-2">
+                        Based on your tech business profile, Estonia's e-Residency could provide significant tax advantages and EU market access.
+                      </p>
+                      <div className="flex items-center space-x-4 text-xs text-gray-500">
+                        <span>AI Recommendation</span>
+                        <span>•</span>
+                        <span>95% confidence</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-l-4 border-l-green-500 bg-green-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
+                  <div className="flex items-start space-x-3">
+                    <div className="bg-white rounded-lg p-2 shadow-sm">
+                      <TrendingUp className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900">Tax Optimization Service</h4>
+                      <p className="text-sm text-gray-700 mb-2">Our analysis shows you could save 15-20% on taxes with proper structure optimization.</p>
+                      <div className="flex items-center space-x-4 text-xs text-gray-500">
+                        <span>Service Recommendation</span>
+                        <span>•</span>
+                        <span>Potential savings: $3,000/year</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-l-4 border-l-purple-500 bg-purple-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
+                  <div className="flex items-start space-x-3">
+                    <div className="bg-white rounded-lg p-2 shadow-sm">
+                      <Globe className="h-5 w-5 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900">UAE Free Zone Expansion</h4>
+                      <p className="text-sm text-gray-700 mb-2">Consider expanding to UAE for Middle East market access with 0% corporate tax benefits.</p>
+                      <div className="flex items-center space-x-4 text-xs text-gray-500">
+                        <span>Market Opportunity</span>
+                        <span>•</span>
+                        <span>High growth potential</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 text-center">
+                <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">View All Recommendations (5) →</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}
