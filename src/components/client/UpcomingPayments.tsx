@@ -109,9 +109,9 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
   };
 
   const getUrgencyIcon = (daysUntilDue: number) => {
-    if (daysUntilDue < 0) return <AlertTriangle className="h-4 w-4 text-red-600" />;
-    if (daysUntilDue <= 3) return <Bell className="h-4 w-4 text-orange-600" />;
-    return <Clock className="h-4 w-4 text-blue-600" />;
+    if (daysUntilDue < 0) return <AlertTriangle className="h-5 w-5 text-red-600" />;
+    if (daysUntilDue <= 3) return <Bell className="h-5 w-5 text-orange-600" />;
+    return <Clock className="h-5 w-5 text-blue-600" />;
   };
 
   if (loading) {

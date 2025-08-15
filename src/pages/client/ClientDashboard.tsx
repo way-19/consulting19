@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import ClientRecommendations from '../../components/client/ClientRecommendations';
+import UpcomingPayments from '../../components/client/UpcomingPayments';
 import { 
   User, 
   FileText, 
@@ -313,6 +315,16 @@ const ClientDashboard = () => {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Upcoming Payments Warning */}
+          <div className="lg:col-span-3 mb-8">
+            <UpcomingPayments />
+          </div>
+
+          {/* Client Recommendations */}
+          <div className="lg:col-span-3 mb-8">
+            {clientId && <ClientRecommendations clientId={clientId} />}
+          </div>
+
           {/* Active Projects */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -389,65 +401,6 @@ const ClientDashboard = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Upcoming Payments Warning */}
-            {upcomingInvoices.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="h-5 w-5 text-red-600" />
-                    <h2 className="text-lg font-semibold text-gray-900">Yaklaşan Ödemelerim</h2>
-                    <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
-                      {upcomingInvoices.length} ödeme
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <div className="space-y-3">
-                    {upcomingInvoices.map((invoice) => {
-                      const daysUntilDue = getDaysUntilDue(invoice.due_date);
-                      
-                      return (
-                        <div
-                          key={invoice.id}
-                          className={`border-l-4 rounded-lg p-4 transition-all duration-200 hover:shadow-md ${
-                            getUrgencyColor(daysUntilDue)
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold text-gray-900">{invoice.invoice_number}</h4>
-                            <span className="font-bold text-gray-900">${invoice.amount.toLocaleString()}</span>
-                          </div>
-                          <div className="text-sm text-gray-600 mb-2">
-                            Son Ödeme: {new Date(invoice.due_date).toLocaleDateString('tr-TR')}
-                          </div>
-                          <div className={`text-sm font-medium ${
-                            daysUntilDue < 0 ? 'text-red-600' : 
-                            daysUntilDue <= 3 ? 'text-orange-600' : 'text-blue-600'
-                          }`}>
-                            {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} gün gecikti` :
-                             daysUntilDue === 0 ? 'Bugün vadesi doluyor' :
-                             daysUntilDue === 1 ? 'Yarın vadesi doluyor' :
-                             `${daysUntilDue} gün kaldı`}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  
-                  <div className="mt-4">
-                    <Link
-                      to="/client-accounting"
-                      className="w-full bg-red-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
-                    >
-                      <DollarSign className="h-5 w-5" />
-                      <span>Ödemelerimi Görüntüle</span>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Quick Actions */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>

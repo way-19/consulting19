@@ -78,6 +78,17 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     phone: ''
   });
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
+  const [shippingOption, setShippingOption] = useState<'normal' | 'express'>('normal');
+  const [shippingAddress, setShippingAddress] = useState({
+    full_name: '',
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
+    postal_code: '',
+    country: '',
+    phone: ''
+  });
+  const [showStripeCheckout, setShowStripeCheckout] = useState(false);
 
   const [formData, setFormData] = useState({
     client_id: clientId || '',
@@ -260,6 +271,51 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     setShowShippingModal(true);
   };
 
+  const handleShippingSubmit = () => {
+    if (!selectedItemForShipping) return;
+    
+    const shippingCost = shippingOption === 'express' ? 25 : 15;
+    setShowShippingModal(false);
+    setShowStripeCheckout(true);
+  };
+
+  const handleShippingPaymentSuccess = async (paymentIntentId: string) => {
+    if (!selectedItemForShipping) return;
+
+    try {
+      // Update item with shipping info and payment
+      const { error } = await supabase
+        .from('virtual_mailbox_items')
+        .update({
+          shipping_option: shippingOption,
+          shipping_address: shippingAddress,
+          payment_status: 'paid',
+          status: 'sent',
+          sent_date: new Date().toISOString()
+        })
+        .eq('id', selectedItemForShipping.id);
+
+      if (error) throw error;
+      
+      setShowStripeCheckout(false);
+      setSelectedItemForShipping(null);
+      setShippingAddress({
+        full_name: '',
+        address_line_1: '',
+        address_line_2: '',
+        city: '',
+        postal_code: '',
+        country: '',
+        phone: ''
+      });
+      
+      await fetchItems();
+      alert('Kargo ödemesi başarılı! Belgeniz kargo ile gönderilecektir.');
+    } catch (error) {
+      console.error('Error updating shipping info:', error);
+      alert('Kargo bilgileri güncellenemedi');
+    }
+  };
   const handleShippingSubmit = () => {
     if (!selectedItemForShipping) return;
     
@@ -1071,6 +1127,23 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         </div>
       )}
 
+      {/* Stripe Checkout for Shipping */}
+      {showStripeCheckout && selectedItemForShipping && (
+        <StripeCheckout
+          isOpen={showStripeCheckout}
+          onClose={() => setShowStripeCheckout(false)}
+          amount={shippingOption === 'express' ? 25 : 15}
+          currency="USD"
+          orderId={selectedItemForShipping.id}
+          orderDetails={{
+            serviceName: `${shippingOption === 'express' ? 'Hızlı' : 'Normal'} Kargo - ${selectedItemForShipping.document_name}`,
+            consultantName: 'Virtual Mailbox',
+            deliveryTime: shippingOption === 'express' ? 3 : 7
+          }}
+          onSuccess={handleShippingPaymentSuccess}
+          onError={(error) => alert(`Ödeme hatası: ${error}`)}
+        />
+      )}
       {/* Stripe Checkout for Shipping */}
       {showStripeCheckout && selectedItemForShipping && (
         <StripeCheckout
