@@ -513,6 +513,28 @@ const ClientDocuments = () => {
           </div>
         )}
 
+        {/* Debug Panel - Remove after testing */}
+        {debugInfo && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
+            <h3 className="font-medium text-yellow-900 mb-2">🔧 Debug Info (Remove after testing)</h3>
+            <div className="text-sm text-yellow-800 space-y-1">
+              <p><strong>Profile ID:</strong> {debugInfo.profileId}</p>
+              <p><strong>Client ID:</strong> {debugInfo.clientId}</p>
+              <p><strong>Requested Documents:</strong> {debugInfo.requestedCount}</p>
+              <p><strong>Total Documents:</strong> {documents.length}</p>
+              <button 
+                onClick={() => {
+                  console.log('🔄 Manual refresh triggered');
+                  fetchData();
+                }}
+                className="mt-2 bg-yellow-600 text-white px-3 py-1 rounded text-xs hover:bg-yellow-700"
+              >
+                Manual Refresh
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* My Documents */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
