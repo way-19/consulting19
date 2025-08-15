@@ -46,10 +46,10 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
   ];
 
   const timelines = [
-    { value: 'urgent', label: '1-3 days (Urgent)' },
-    { value: 'fast', label: '1 week' },
-    { value: 'normal', label: '2-4 weeks' },
-    { value: 'flexible', label: 'Flexible timeline' }
+    { value: 'urgent', label: '1-3 gün (Acil)' },
+    { value: 'fast', label: '1 hafta' },
+    { value: 'normal', label: '2-4 hafta' },
+    { value: 'flexible', label: 'Esnek zaman' }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,7 +114,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Özel Hizmet Talep Et</h2>
+            <h2 className="text-xl font-bold text-gray-900">Request Custom Service</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -123,7 +123,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
             </button>
           </div>
           <p className="text-gray-600 mt-2">
-            İhtiyacınız olan özel hizmeti detaylı olarak açıklayın. Danışmanınız size özel bir teklif hazırlayacaktır.
+            Describe the custom service you need in detail. Your consultant will prepare a personalized proposal for you.
           </p>
         </div>
 
