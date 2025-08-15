@@ -32,6 +32,11 @@ export const useCountries = (activeOnly: boolean = true) => {
       setLoading(true);
       setError(null);
 
+      // Check if Supabase is properly configured
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        throw new Error('Supabase configuration missing. Please check your .env file.');
+      }
+
       let query = supabase
         .from('countries')
         .select('*')
@@ -51,7 +56,11 @@ export const useCountries = (activeOnly: boolean = true) => {
       setCountries(data || []);
     } catch (err) {
       console.error('Error fetching countries:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch countries');
+      if (err instanceof Error && err.message.includes('Failed to fetch')) {
+        setError('Unable to connect to database. Please check your internet connection and Supabase configuration.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to fetch countries');
+      }
     } finally {
       setLoading(false);
     }

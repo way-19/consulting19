@@ -28,6 +28,11 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; c
       setLoading(true);
       setError(null);
 
+      // Check if Supabase is properly configured
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        throw new Error('Supabase configuration missing. Please check your .env file.');
+      }
+
       let query = supabase
         .from('faqs')
         .select('*')
@@ -52,7 +57,11 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; c
       setFaqs(data || []);
     } catch (err) {
       console.error('Error fetching FAQs:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch FAQs');
+      if (err instanceof Error && err.message.includes('Failed to fetch')) {
+        setError('Unable to connect to database. Please check your internet connection and Supabase configuration.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to fetch FAQs');
+      }
     } finally {
       setLoading(false);
     }

@@ -39,6 +39,11 @@ export const useBlogPosts = (filters?: { isPublished?: boolean; languageCode?: s
       setLoading(true);
       setError(null);
 
+      // Check if Supabase is properly configured
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        throw new Error('Supabase configuration missing. Please check your .env file.');
+      }
+
       let query = supabase
         .from('blog_posts')
         .select(`
@@ -66,7 +71,11 @@ export const useBlogPosts = (filters?: { isPublished?: boolean; languageCode?: s
       setBlogPosts(data || []);
     } catch (err) {
       console.error('Error fetching blog posts:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch blog posts');
+      if (err instanceof Error && err.message.includes('Failed to fetch')) {
+        setError('Unable to connect to database. Please check your internet connection and Supabase configuration.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to fetch blog posts');
+      }
     } finally {
       setLoading(false);
     }
