@@ -364,7 +364,7 @@ const Navbar = () => {
     }
   };
   return (
-    <nav className="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-[9999] shadow-sm">
+    <nav className="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -403,7 +403,7 @@ const Navbar = () => {
 
                     {/* Countries Dropdown */}
                     {isCountriesOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-100 py-4 z-[10000]">
+                      <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-100 py-4 z-50">
                         <div className="px-4 py-2 border-b border-gray-100">
                           <h3 className="text-sm font-semibold text-gray-900">{t('nav.chooseJurisdiction') || 'Choose Your Jurisdiction'}</h3>
                         </div>
@@ -639,7 +639,7 @@ const Navbar = () => {
       {/* Overlay for dropdown */}
       {isCountriesOpen && (
         <div
-          className="fixed inset-0 z-[9998]"
+          className="fixed inset-0 z-40"
           onClick={() => setIsCountriesOpen(false)}
         />
       )}
@@ -647,7 +647,7 @@ const Navbar = () => {
       {/* Overlay for notifications */}
       {isNotificationsOpen && (
         <div
-          className="fixed inset-0 z-[9998]"
+          className="fixed inset-0 z-40"
           onClick={() => setIsNotificationsOpen(false)}
         />
       )}

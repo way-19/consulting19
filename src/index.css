@@ -44,29 +44,3 @@
 .shadow-3xl {
   box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
 }
-
-/* Fix z-index stacking context */
-.navbar-fixed {
-  position: sticky;
-  top: 0;
-  z-index: 9999;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
-}
-
-/* Ensure dropdowns appear above everything */
-.dropdown-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-}
-
-.dropdown-content {
-  position: absolute;
-  z-index: 10000;
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(229, 231, 235, 0.8);
-}
