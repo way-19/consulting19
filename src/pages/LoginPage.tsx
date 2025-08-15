@@ -244,7 +244,7 @@ const LoginPage = () => {
       const map = {
         admin: '/admin-dashboard',
         consultant: '/consultant-dashboard',
-        client: '/client-accounting'
+        client: '/client-dashboard'
       } as const
       
       const targetPath = map[profile.role];
