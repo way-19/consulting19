@@ -261,6 +261,14 @@ export default function App() {
             }
           />
           <Route
+            path="/client/documents"
+            element={
+              <ProtectedRoute allowedRoles={["client"]}>
+                <ClientDocuments />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/client/services"
             element={
               <ProtectedRoute allowedRoles={["client"]}>
@@ -273,14 +281,6 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["client"]}>
                 <ClientProjects />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/client/documents"
-            element={
-              <ProtectedRoute allowedRoles={["client"]}>
-                <ClientDocuments />
               </ProtectedRoute>
             }
           />
