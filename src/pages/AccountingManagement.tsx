@@ -118,7 +118,7 @@ interface AccountingReminder {
 
 const AccountingManagement = () => {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<'clients' | 'documents' | 'tasks' | 'reminders' | 'messages'>('clients');
+  const [clientId, setClientId] = useState<string | null>(null);
   const [clients, setClients] = useState<AccountingClient[]>([]);
   const [documents, setDocuments] = useState<AccountingDocument[]>([]);
   const [tasks, setTasks] = useState<AccountingTask[]>([]);
@@ -150,7 +150,7 @@ const AccountingManagement = () => {
     virtual_address_next_payment_date: ''
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!profile?.id) return;
 
     supabase
