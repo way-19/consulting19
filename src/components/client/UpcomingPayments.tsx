@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from '../../contexts/LanguageContext';
 import { 
   DollarSign, 
   Calendar, 
@@ -31,6 +32,7 @@ interface UpcomingPaymentsProps {
 
 const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
   const { profile } = useAuth();
+  const { t } = useTranslation();
   const [upcomingInvoices, setUpcomingInvoices] = useState<UpcomingInvoice[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -102,10 +104,10 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
   };
 
   const getUrgencyText = (daysUntilDue: number) => {
-    if (daysUntilDue < 0) return `${Math.abs(daysUntilDue)} days overdue`;
-    if (daysUntilDue === 0) return 'Due today';
-    if (daysUntilDue === 1) return 'Due tomorrow';
-    return `${daysUntilDue} days remaining`;
+    if (daysUntilDue < 0) return `${Math.abs(daysUntilDue)} ${t('payments.daysOverdue')}`;
+    if (daysUntilDue === 0) return t('payments.dueToday');
+    if (daysUntilDue === 1) return t('payments.dueTomorrow');
+    return `${daysUntilDue} ${t('payments.daysRemaining')}`;
   };
 
   const getUrgencyIcon = (daysUntilDue: number) => {
@@ -130,16 +132,16 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
             <CheckCircle className="h-5 w-5 text-green-500" />
-            <h2 className="text-lg font-semibold text-gray-900">Upcoming Payments</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('payments.upcomingPayments')}</h2>
           </div>
           <p className="text-sm text-gray-600 mt-1">
-            Monitor your payment schedule and avoid late fees
+            {t('payments.monitorSchedule')}
           </p>
         </div>
         <div className="p-6 text-center">
           <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">All Payments Up to Date</h3>
-          <p className="text-gray-600">You have no upcoming payment deadlines at this time.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('payments.allUpToDate')}</h3>
+          <p className="text-gray-600">{t('payments.noUpcomingDeadlines')}</p>
         </div>
       </div>
     );
@@ -151,20 +153,20 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <AlertTriangle className="h-5 w-5 text-orange-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Urgent: Upcoming Payments</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('payments.urgentUpcoming')}</h2>
             <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
-              {upcomingInvoices.length} payment{upcomingInvoices.length > 1 ? 's' : ''} due
+              {upcomingInvoices.length} {upcomingInvoices.length > 1 ? t('payments.paymentsDuePlural') : t('payments.paymentsDue')} {t('payments.due')}
             </span>
           </div>
           <Link
             to="/client-accounting"
             className="text-purple-600 hover:text-purple-700 font-medium text-sm"
           >
-            View All Payments →
+            {t('payments.viewAllPayments')} →
           </Link>
         </div>
         <p className="text-sm text-gray-600 mt-1">
-          Important payment deadlines requiring your immediate attention
+          {t('payments.importantDeadlines')}
         </p>
       </div>
 
@@ -194,13 +196,13 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
                       <div>
-                        <span className="font-medium">Amount:</span> ${invoice.amount.toLocaleString()} {invoice.currency}
+                        <span className="font-medium">{t('payments.amount')}:</span> ${invoice.amount.toLocaleString()} {invoice.currency}
                       </div>
                       <div>
-                        <span className="font-medium">Due Date:</span> {new Date(invoice.due_date).toLocaleDateString()}
+                        <span className="font-medium">{t('payments.dueDate')}:</span> {new Date(invoice.due_date).toLocaleDateString()}
                       </div>
                       <div>
-                        <span className="font-medium">Status:</span> 
+                        <span className="font-medium">{t('payments.status')}:</span> 
                         <span className={`ml-1 font-medium ${
                           daysUntilDue < 0 ? 'text-red-600' : 
                           daysUntilDue <= 3 ? 'text-orange-600' : 'text-blue-600'
@@ -212,7 +214,7 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
 
                     {invoice.period_start && invoice.period_end && (
                       <div className="text-xs text-gray-500 mb-3">
-                        Period: {new Date(invoice.period_start).toLocaleDateString()} - {new Date(invoice.period_end).toLocaleDateString()}
+                        {t('payments.period')}: {new Date(invoice.period_start).toLocaleDateString()} - {new Date(invoice.period_end).toLocaleDateString()}
                       </div>
                     )}
                   </div>
@@ -223,7 +225,7 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
                       className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
                     >
                       <Eye className="h-4 w-4" />
-                      <span>View</span>
+                      <span>{t('payments.view')}</span>
                     </Link>
                     <Link
                       to="/client-accounting"
@@ -234,7 +236,7 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
                       }`}
                     >
                       <CreditCard className="h-4 w-4" />
-                      <span>Pay Now</span>
+                      <span>{t('payments.payNow')}</span>
                     </Link>
                   </div>
                 </div>
@@ -248,11 +250,10 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
             <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
               <div className="flex items-center space-x-2 mb-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                <h4 className="font-medium text-yellow-900">Payment Reminder</h4>
+                <h4 className="font-medium text-yellow-900">{t('payments.paymentReminder')}</h4>
               </div>
               <p className="text-sm text-yellow-800">
-                Make payments on time to avoid service interruptions. 
-                Contact your consultant if you have any questions.
+                {t('payments.payOnTime')} {t('payments.contactConsultant')}
               </p>
             </div>
           </div>

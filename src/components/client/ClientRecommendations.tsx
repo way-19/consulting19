@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from '../../contexts/LanguageContext';
 import { 
   Lightbulb, 
   ArrowRight, 
@@ -21,6 +22,7 @@ interface ClientRecommendationsProps {
 
 const ClientRecommendations: React.FC<ClientRecommendationsProps> = ({ clientId }) => {
   const { recommendations, loading, markAsRead, dismissRecommendation } = useClientRecommendations(clientId);
+  const { t } = useTranslation();
 
   const getRecommendationIcon = (type: string) => {
     switch (type) {
@@ -73,9 +75,9 @@ const ClientRecommendations: React.FC<ClientRecommendationsProps> = ({ clientId 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="text-center py-8">
           <Lightbulb className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz Öneri Yok</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('recommendations.noRecommendations')}</h3>
           <p className="text-gray-600">
-            İş süreciniz ilerledikçe size özel öneriler burada görünecektir.
+            {t('recommendations.noRecommendationsDesc')}
           </p>
         </div>
       </div>
@@ -87,14 +89,14 @@ const ClientRecommendations: React.FC<ClientRecommendationsProps> = ({ clientId 
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center space-x-2">
           <Lightbulb className="h-5 w-5 text-yellow-500" />
-          <h2 className="text-lg font-semibold text-gray-900">Recommendations for You</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('recommendations.forYou')}</h2>
           <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
-            {recommendations.filter(r => !r.is_read).length} new
+            {recommendations.filter(r => !r.is_read).length} {t('recommendations.newCount')}
           </span>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Recommendations Yet</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">{t('recommendations.noRecommendations')}</h3>
         <p className="text-sm text-gray-600 mt-1">
-          Recommendations tailored to your industry and needs
+          {t('recommendations.tailored')}
         </p>
       </div>
 
@@ -130,7 +132,7 @@ const ClientRecommendations: React.FC<ClientRecommendationsProps> = ({ clientId 
                       {recommendation.expires_at && (
                         <div className="flex items-center space-x-1 text-orange-600">
                           <AlertTriangle className="h-3 w-3" />
-                          <span>Expires: {new Date(recommendation.expires_at).toLocaleDateString()}</span>
+                          <span>{t('recommendations.expires')}: {new Date(recommendation.expires_at).toLocaleDateString()}</span>
                         </div>
                       )}
                     </div>
@@ -161,7 +163,7 @@ const ClientRecommendations: React.FC<ClientRecommendationsProps> = ({ clientId 
         {recommendations.length > 5 && (
           <div className="mt-4 text-center">
             <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">
-              View All Recommendations ({recommendations.length})
+              {t('recommendations.viewAll')} ({recommendations.length})
             </button>
           </div>
         )}
