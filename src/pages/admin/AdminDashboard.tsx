@@ -71,9 +71,9 @@ const AdminDashboard = () => {
   useEffect(() => {
     console.log('🚀 AdminDashboard useEffect triggered');
     console.log('👤 Profile:', profile);
-    console.log('🔑 Profile role:', profile?.legacy_role);
+    console.log('🔑 Profile role:', profile?.role);
     
-    if (profile?.legacy_role === 'admin') {
+    if (profile?.role === 'admin') {
       console.log('✅ Admin role confirmed, calling fetchDashboardData...');
       fetchDashboardData();
     } else {
