@@ -1088,23 +1088,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           onError={(error) => alert('Ödeme hatası: ' + error)}
         />
       )}
-      {/* Stripe Checkout for Shipping */}
-      {showStripeCheckout && selectedItemForShipping && (
-        <StripeCheckout
-          isOpen={showStripeCheckout}
-          onClose={() => setShowStripeCheckout(false)}
-          amount={shippingOption === 'express' ? 25 : 15}
-          currency="USD"
-          orderId={selectedItemForShipping.id}
-          orderDetails={{
-            serviceName: \`${shippingOption === 'express' ? 'Hızlı' : 'Normal'} Kargo - ${selectedItemForShipping.document_name}`,
-            consultantName: 'Virtual Mailbox',
-            deliveryTime: shippingOption === 'express' ? 3 : 7
-          }}
-          onSuccess={handleShippingPaymentSuccess}
-          onError={(error) => alert('Ödeme hatası: ' + error)}
-        />
-      )}
     </div>
   );
 };
