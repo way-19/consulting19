@@ -477,6 +477,24 @@ const ClientAccountingDashboard = () => {
           <UpcomingPayments clientId={clientId} />
         </div>
 
+        {/* Request Custom Service */}
+        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-8 border border-purple-200 mb-8">
+          <div className="text-center">
+            <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <Plus className="h-8 w-8 text-purple-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Request Custom Service</h2>
+            <p className="text-lg text-gray-600 mb-6">Need a specialized service? Request a custom solution from your consultant.</p>
+            <button
+              onClick={() => setShowRequestModal(true)}
+              className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 mx-auto shadow-lg"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Request Custom Service</span>
+            </button>
+          </div>
+        </div>
+
         {/* AI Recommendations (static UI) */}
         <div className="mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -551,24 +569,6 @@ const ClientAccountingDashboard = () => {
                 <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">View All Recommendations (5) →</button>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Request Custom Service */}
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-8 border border-purple-200 mb-8">
-          <div className="text-center">
-            <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Plus className="h-8 w-8 text-purple-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Request Custom Service</h2>
-            <p className="text-lg text-gray-600 mb-6">Need a specialized service? Request a custom solution from your consultant.</p>
-            <button
-              onClick={() => setShowRequestModal(true)}
-              className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 mx-auto shadow-lg"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Request Custom Service</span>
-            </button>
           </div>
         </div>
 
