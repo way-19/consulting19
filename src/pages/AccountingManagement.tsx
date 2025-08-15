@@ -119,6 +119,7 @@ interface AccountingReminder {
 const AccountingManagement = () => {
   const { profile } = useAuth();
   const [clientId, setClientId] = useState<string | null>(null);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [clients, setClients] = useState<AccountingClient[]>([]);
   const [documents, setDocuments] = useState<AccountingDocument[]>([]);
   const [tasks, setTasks] = useState<AccountingTask[]>([]);
@@ -131,6 +132,24 @@ const AccountingManagement = () => {
   const [showClientModal, setShowClientModal] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  useEffect(() => {
+    if (!profile?.id) return;
+    
+    (async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('profile_id', profile.id)
+        .single();
+      
+      if (error) {
+        console.error('fetch clientId error:', error);
+        return;
+      }
+      setClientId(data?.id ?? null);
+    })();
+  }, [profile?.id]);
+
 
   // Client editing form state
   const [editingClient, setEditingClient] = useState<AccountingClient | null>(null);
