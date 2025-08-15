@@ -282,13 +282,13 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
             <div className="flex items-center space-x-2 mb-2">
               <AlertTriangle className="h-5 w-5 text-yellow-600" />
-              <h4 className="font-medium text-yellow-900">Important Information</h4>
+              <h4 className="font-medium text-yellow-900">Önemli Bilgilendirme</h4>
             </div>
             <div className="text-sm text-yellow-800 space-y-1">
-              <p>• Your request will be reviewed by your consultant</p>
-              <p>• You will receive a response within 24-48 hours</p>
-              <p>• Custom services may have separate pricing</p>
-              <p>• Service will begin after proposal approval</p>
+              <p>• Talebiniz danışmanınız tarafından incelenecektir</p>
+              <p>• 24-48 saat içinde size dönüş yapılacaktır</p>
+              <p>• Özel hizmetler için ayrı fiyatlandırma uygulanabilir</p>
+              <p>• Teklif onayınızdan sonra hizmet başlatılacaktır</p>
             </div>
           </div>
 
@@ -299,7 +299,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
               onClick={onClose}
               className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
             >
-              İptal
+              Cancel
             </button>
             <button
               type="submit"
@@ -309,12 +309,12 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
               {submitting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Gönderiliyor...</span>
+                  <span>Submitting...</span>
                 </>
               ) : (
                 <>
                   <Send className="h-5 w-5" />
-                  <span>Talebi Gönder</span>
+                  <span>Submit Request</span>
                 </>
               )}
             </button>
