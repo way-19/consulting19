@@ -123,7 +123,7 @@ const CountryManagement = () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, country')
-      .eq('legacy_role', 'consultant')
+      .eq('role', 'consultant')
       .eq('is_active', true);
 
     if (error) throw error;
