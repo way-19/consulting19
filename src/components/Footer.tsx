@@ -105,9 +105,6 @@ const Footer = () => {
               <Link to="/about" className="block text-slate-300 hover:text-white transition-colors">
                 About Us
               </Link>
-              <Link to="/about" className="block text-slate-300 hover:text-white transition-colors">
-                About Us
-              </Link>
               <Link to="/blog" className="block text-slate-300 hover:text-white transition-colors">
                 Global Insights
               </Link>
