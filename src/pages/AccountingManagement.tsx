@@ -568,21 +568,21 @@ const AccountingManagement = () => {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="all">Tüm Durumlar</option>
+                    <option value="all">All Situations</option>
                     {activeTab === 'clients' && (
                       <>
-                        <option value="active">Aktif</option>
-                        <option value="inactive">Pasif</option>
-                        <option value="suspended">Askıya Alınmış</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Passive</option>
+                        <option value="suspended">Suspended</option>
                       </>
                     )}
                     {activeTab === 'documents' && (
                       <>
-                        <option value="pending">Bekleyen</option>
-                        <option value="received">Alınan</option>
+                        <option value="pending">Waiting</option>
+                        <option value="received">Received</option>
                         <option value="processed">İşlenen</option>
-                        <option value="completed">Tamamlanan</option>
-                        <option value="overdue">Geciken</option>
+                        <option value="completed">Completed</option>
+                        <option value="overdue">Delayed</option>
                       </>
                     )}
                   </select>
@@ -594,11 +594,11 @@ const AccountingManagement = () => {
                     onChange={(e) => setPriorityFilter(e.target.value)}
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="all">Tüm Öncelikler</option>
-                    <option value="urgent">Acil</option>
-                    <option value="high">Yüksek</option>
-                    <option value="medium">Orta</option>
-                    <option value="low">Düşük</option>
+                    <option value="all">Priorities</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="high">High</option>
+                    <option value="medium">Middle</option>
+                    <option value="low">Low</option>
                   </select>
                 )}
               </div>
@@ -612,8 +612,8 @@ const AccountingManagement = () => {
                 {filteredClients.length === 0 ? (
                   <div className="text-center py-12">
                     <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Müşteri Bulunamadı</h3>
-                    <p className="text-gray-600">Mevcut filtrelerinizle eşleşen muhasebe müşterisi bulunamadı.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Customer Not Found</h3>
+                    <p className="text-gray-600">No accounting clients were found that match your current filters.</p>
                   </div>
                 ) : (
                   filteredClients.map((client) => (
@@ -629,16 +629,16 @@ const AccountingManagement = () => {
                           
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
                             <div>
-                              <span className="font-medium">İletişim:</span> {client.client?.profile?.full_name}
+                              <span className="font-medium">Communication:</span> {client.client?.profile?.full_name}
                             </div>
                             <div>
                               <span className="font-medium">Email:</span> {client.client?.profile?.email}
                             </div>
                             <div>
-                              <span className="font-medium">Paket:</span> {client.service_package}
+                              <span className="font-medium">Package:</span> {client.service_package}
                             </div>
                             <div>
-                              <span className="font-medium">Aylık Ücret:</span> ${client.monthly_fee}
+                              <span className="font-medium">Monthly Fee:</span> ${client.monthly_fee}
                             </div>
                           </div>
 
@@ -646,7 +646,7 @@ const AccountingManagement = () => {
                             <div className="mt-2 flex items-center space-x-2">
                               <Calendar className="h-4 w-4 text-orange-500" />
                               <span className="text-sm text-orange-600 font-medium">
-                                Sonraki Son Tarih: {new Date(client.next_deadline).toLocaleDateString('tr-TR')}
+                                Next Deadline: {new Date(client.next_deadline).toLocaleDateString('tr-TR')}
                               </span>
                             </div>
                           )}
@@ -661,7 +661,7 @@ const AccountingManagement = () => {
                             className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                           >
                             <MessageSquare className="h-4 w-4" />
-                            <span>Mesaj</span>
+                            <span>Message</span>
                           </button>
                           <button
                             onClick={() => {
@@ -670,7 +670,7 @@ const AccountingManagement = () => {
                             className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                           >
                             <Eye className="h-4 w-4" />
-                            <span>Düzenle</span>
+                            <span>Edit</span>
                           </button>
                         </div>
                       </div>
@@ -685,8 +685,8 @@ const AccountingManagement = () => {
                 {filteredDocuments.length === 0 ? (
                   <div className="text-center py-12">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Belge Bulunamadı</h3>
-                    <p className="text-gray-600">Mevcut filtrelerinizle eşleşen belge bulunamadı.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Document Not Found</h3>
+                    <p className="text-gray-600">No documents were found matching your current filters..</p>
                   </div>
                 ) : (
                   filteredDocuments.map((document) => (
@@ -703,16 +703,16 @@ const AccountingManagement = () => {
                           
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
                             <div>
-                              <span className="font-medium">Müşteri:</span> {document.client?.company_name}
+                              <span className="font-medium">Customer:</span> {document.client?.company_name}
                             </div>
                             <div>
-                              <span className="font-medium">Tür:</span> {document.document_type}
+                              <span className="font-medium">Type:</span> {document.document_type}
                             </div>
                             <div>
-                              <span className="font-medium">Kategori:</span> {document.category}
+                              <span className="font-medium">Category:</span> {document.category}
                             </div>
                             <div>
-                              <span className="font-medium">Son Tarih:</span> 
+                              <span className="font-medium">Deadline:</span> 
                               <span className={document.due_date && new Date(document.due_date) < new Date() ? 'text-red-600 font-medium' : ''}>
                                 {document.due_date ? new Date(document.due_date).toLocaleDateString('tr-TR') : 'Yok'}
                               </span>
@@ -722,7 +722,7 @@ const AccountingManagement = () => {
                           {document.reminder_sent && (
                             <div className="flex items-center space-x-2 text-sm text-blue-600">
                               <Bell className="h-4 w-4" />
-                              <span>Hatırlatıcı gönderildi ({document.reminder_count} kez)</span>
+                              <span>Reminder sent ({document.reminder_count} kez)</span>
                             </div>
                           )}
                         </div>
@@ -734,7 +734,7 @@ const AccountingManagement = () => {
                               className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                             >
                               <Bell className="h-4 w-4" />
-                              <span>Hatırlatıcı Gönder</span>
+                              <span>Send Reminder</span>
                             </button>
                           )}
                           
@@ -743,11 +743,11 @@ const AccountingManagement = () => {
                             onChange={(e) => updateDocumentStatus(document.id, e.target.value)}
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           >
-                            <option value="pending">Bekleyen</option>
-                            <option value="received">Alınan</option>
-                            <option value="processed">İşlenen</option>
-                            <option value="completed">Tamamlanan</option>
-                            <option value="overdue">Geciken</option>
+                            <option value="pending">Pending</option>
+                            <option value="received">Received</option>
+                            <option value="processed">Processed</option>
+                            <option value="completed">Completed</option>
+                            <option value="overdue">Late</option>
                           </select>
                         </div>
                       </div>
@@ -762,8 +762,8 @@ const AccountingManagement = () => {
                 {tasks.length === 0 ? (
                   <div className="text-center py-12">
                     <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Görev Bulunamadı</h3>
-                    <p className="text-gray-600">Mevcut görev bulunmuyor.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Task Not Found</h3>
+                    <p className="text-gray-600">There are no available tasks.</p>
                   </div>
                 ) : (
                   tasks.map((task) => (
@@ -782,17 +782,17 @@ const AccountingManagement = () => {
                           
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
                             <div>
-                              <span className="font-medium">Müşteri:</span> {task.client?.company_name}
+                              <span className="font-medium">Customer:</span> {task.client?.company_name}
                             </div>
                             <div>
-                              <span className="font-medium">Tür:</span> {task.task_type.replace('_', ' ')}
+                              <span className="font-medium">Type:</span> {task.task_type.replace('_', ' ')}
                             </div>
                             <div>
-                              <span className="font-medium">Son Tarih:</span> 
+                              <span className="font-medium">Deadline:</span> 
                               {task.due_date ? new Date(task.due_date).toLocaleDateString('tr-TR') : 'Yok'}
                             </div>
                             <div>
-                              <span className="font-medium">Saat:</span> 
+                              <span className="font-medium">Hour:</span> 
                               {task.estimated_hours ? `${task.estimated_hours}s tahmini` : 'Yok'}
                             </div>
                           </div>
@@ -809,8 +809,8 @@ const AccountingManagement = () => {
                 {reminders.length === 0 ? (
                   <div className="text-center py-12">
                     <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Hatırlatıcı Bulunamadı</h3>
-                    <p className="text-gray-600">Mevcut hatırlatıcı bulunmuyor.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Reminder Not Found</h3>
+                    <p className="text-gray-600">There are no reminders available.</p>
                   </div>
                 ) : (
                   reminders.map((reminder) => (
@@ -829,17 +829,17 @@ const AccountingManagement = () => {
                           
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
                             <div>
-                              <span className="font-medium">Müşteri:</span> {reminder.client?.company_name}
+                              <span className="font-medium">Customer:</span> {reminder.client?.company_name}
                             </div>
                             <div>
-                              <span className="font-medium">Tür:</span> {reminder.reminder_type.replace('_', ' ')}
+                              <span className="font-medium">Type:</span> {reminder.reminder_type.replace('_', ' ')}
                             </div>
                             <div>
-                              <span className="font-medium">Son Tarih:</span> 
+                              <span className="font-medium">Deadline:</span> 
                               {reminder.due_date ? new Date(reminder.due_date).toLocaleDateString('tr-TR') : 'Yok'}
                             </div>
                             <div>
-                              <span className="font-medium">Seviye:</span> {reminder.reminder_level}
+                              <span className="font-medium">Level:</span> {reminder.reminder_level}
                               {reminder.client?.preferred_language && (
                                 <span className="ml-2 text-blue-600">({reminder.client.preferred_language.toUpperCase()})</span>
                               )}
@@ -856,14 +856,14 @@ const AccountingManagement = () => {
             {activeTab === 'messages' && (
               <div className="text-center py-12">
                 <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Çok Dilli Mesajlaşma</h3>
-                <p className="text-gray-600 mb-6">Müşterilerinize tercih ettikleri dilde mesaj gönderin</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Multilingual Messaging</h3>
+                <p className="text-gray-600 mb-6">Send messages to your customers in their preferred language</p>
                 <button
                   onClick={() => setShowMessageModal(true)}
                   className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2 mx-auto"
                 >
                   <Send className="h-5 w-5" />
-                  <span>Yeni Mesaj Gönder</span>
+                  <span>Send New Message</span>
                 </button>
               </div>
             )}
@@ -892,7 +892,7 @@ const AccountingManagement = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Müşteri Bilgilerini Düzenle</h2>
+                <h2 className="text-xl font-bold text-gray-900">Edit Customer Information</h2>
                 <button
                   onClick={resetClientForm}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -905,11 +905,11 @@ const AccountingManagement = () => {
             <form onSubmit={handleSaveClient} className="p-6 space-y-6">
               {/* Company Information */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Şirket Bilgileri</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Şirket Adı *
+                      Company Name *
                     </label>
                     <input
                       type="text"
@@ -923,7 +923,7 @@ const AccountingManagement = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Vergi Numarası
+                      Tax Number
                     </label>
                     <input
                       type="text"
@@ -936,7 +936,7 @@ const AccountingManagement = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      İş Türü
+                      Job Type
                     </label>
                     <select
                       value={clientForm.business_type}
@@ -953,16 +953,16 @@ const AccountingManagement = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Muhasebe Dönemi
+                      Accounting Period
                     </label>
                     <select
                       value={clientForm.accounting_period}
                       onChange={(e) => setClientForm(prev => ({ ...prev, accounting_period: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
-                      <option value="monthly">Aylık</option>
-                      <option value="quarterly">Üç Aylık</option>
-                      <option value="yearly">Yıllık</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="quarterly">Quarterly</option>
+                      <option value="yearly">Annual</option>
                     </select>
                   </div>
                 </div>
@@ -970,27 +970,27 @@ const AccountingManagement = () => {
 
               {/* Service Information */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Hizmet Bilgileri</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Hizmet Paketi
+                      Service Package
                     </label>
                     <select
                       value={clientForm.service_package}
                       onChange={(e) => setClientForm(prev => ({ ...prev, service_package: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
-                      <option value="basic">Temel Paket</option>
-                      <option value="standard">Standart Paket</option>
-                      <option value="premium">Premium Paket</option>
-                      <option value="enterprise">Kurumsal Paket</option>
+                      <option value="basic">Basic Package</option>
+                      <option value="standard">Standard Package</option>
+                      <option value="premium">Premium Package</option>
+                      <option value="enterprise">Corporate Package</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Aylık Ücret (USD) *
+                      Monthly Fee (USD) *
                     </label>
                     <input
                       type="number"
@@ -1006,22 +1006,22 @@ const AccountingManagement = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Durum
+                      Situation
                     </label>
                     <select
                       value={clientForm.status}
                       onChange={(e) => setClientForm(prev => ({ ...prev, status: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
-                      <option value="active">Aktif</option>
-                      <option value="inactive">Pasif</option>
-                      <option value="suspended">Askıya Alınmış</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Passive</option>
+                      <option value="suspended">Suspended</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Sonraki Son Tarih
+                      Next Deadline
                     </label>
                     <input
                       type="date"
@@ -1033,7 +1033,7 @@ const AccountingManagement = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Hatırlatıcı Sıklığı (Gün)
+                      Reminder Frequency (Days)
                     </label>
                     <input
                       type="number"
@@ -1047,7 +1047,7 @@ const AccountingManagement = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tercih Edilen Dil
+                      Preferred Language
                     </label>
                     <select
                       value={clientForm.preferred_language}
@@ -1068,16 +1068,16 @@ const AccountingManagement = () => {
 
               {/* Current Package Details */}
               <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <h4 className="font-medium text-blue-900 mb-2">Paket Detayları</h4>
+                <h4 className="font-medium text-blue-900 mb-2">Package Details</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-blue-800">
                   <div>
-                    <span className="font-medium">Mevcut Paket:</span> {clientForm.service_package}
+                    <span className="font-medium">Current Package:</span> {clientForm.service_package}
                   </div>
                   <div>
-                    <span className="font-medium">Aylık Ücret:</span> ${clientForm.monthly_fee}
+                    <span className="font-medium">Monthly Fee:</span> ${clientForm.monthly_fee}
                   </div>
                   <div>
-                    <span className="font-medium">Dönem:</span> {clientForm.accounting_period}
+                    <span className="font-medium">Period:</span> {clientForm.accounting_period}
                   </div>
                 </div>
               </div>
@@ -1089,14 +1089,14 @@ const AccountingManagement = () => {
                   onClick={resetClientForm}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
-                  İptal
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
                 >
                   <Save className="h-5 w-5" />
-                  <span>Değişiklikleri Kaydet</span>
+                  <span>Save Changes</span>
                 </button>
               </div>
             </form>
