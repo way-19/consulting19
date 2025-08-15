@@ -6,7 +6,7 @@ console.log('🔗 Current pathname:', window.location.pathname);
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { supabase, uploadFileToStorage, getPublicImageUrl } from '../../lib/supabase';
 import { 
   ArrowLeft, 
   Upload, 
@@ -274,9 +274,22 @@ const ClientDocuments = () => {
     try {
       setUploadingFile(true);
 
-      // Simulate file upload (in real implementation, upload to Supabase Storage)
-      const mockFileUrl = `https://example.com/documents/${uploadForm.file.name}`;
+      // Upload file to Supabase Storage
+      console.log('📤 Starting file upload:', uploadForm.file.name, 'Size:', uploadForm.file.size);
+      
+      const filePath = await uploadFileToStorage(
+        uploadForm.file, 
+        'client_documents', 
+        'documents'
+      );
+      
+      console.log('✅ File uploaded successfully to path:', filePath);
+      
+      // Get public URL for the uploaded file
+      const fileUrl = getPublicImageUrl(filePath, 'documents');
       const fileSize = uploadForm.file.size;
+      
+      console.log('🔗 File public URL:', fileUrl);
 
       if (selectedRequest) {
         // Update existing request
@@ -297,6 +310,7 @@ const ClientDocuments = () => {
           .single();
 
         if (clientData) {
+          console.log('📄 Creating document record for request:', selectedRequest.id);
           await supabase
             .from('documents')
             .insert([{
@@ -305,7 +319,7 @@ const ClientDocuments = () => {
               type: uploadForm.type,
               category: uploadForm.category,
               status: 'pending',
-              file_url: mockFileUrl,
+              file_url: fileUrl,
               file_size: fileSize,
               uploaded_at: new Date().toISOString()
             }]);
@@ -313,6 +327,7 @@ const ClientDocuments = () => {
 
         // Notify consultant
         if (selectedRequest.consultant_id) {
+          console.log('🔔 Sending notification to consultant:', selectedRequest.consultant_id);
           await supabase
             .from('notifications')
             .insert([{
@@ -335,6 +350,7 @@ const ClientDocuments = () => {
 
         if (!clientData) throw new Error('Client record not found');
 
+        console.log('📄 Creating new document record');
         const { error } = await supabase
           .from('documents')
           .insert([{
@@ -343,7 +359,7 @@ const ClientDocuments = () => {
             type: uploadForm.type,
             category: uploadForm.category,
             status: 'pending',
-            file_url: mockFileUrl,
+            file_url: fileUrl,
             file_size: fileSize,
             uploaded_at: new Date().toISOString()
           }]);
@@ -352,6 +368,7 @@ const ClientDocuments = () => {
 
         // Notify assigned consultant
         if (clientData.assigned_consultant_id) {
+          console.log('🔔 Sending notification to assigned consultant:', clientData.assigned_consultant_id);
           await supabase
             .from('notifications')
             .insert([{
@@ -371,7 +388,20 @@ const ClientDocuments = () => {
       alert('Document uploaded successfully!');
     } catch (error) {
       console.error('Error uploading document:', error);
-      alert('Failed to upload document');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to upload document';
+      if (error instanceof Error) {
+        if (error.message.includes('File size must be less than')) {
+          errorMessage = error.message;
+        } else if (error.message.includes('storage')) {
+          errorMessage = 'Storage error: Please check if the documents bucket exists in Supabase Storage';
+        } else {
+          errorMessage = `Upload failed: ${error.message}`;
+        }
+      }
+      
+      alert(errorMessage);
     } finally {
       setUploadingFile(false);
     }
