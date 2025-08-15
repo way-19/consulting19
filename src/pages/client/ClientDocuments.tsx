@@ -187,13 +187,13 @@ const ClientDocuments = () => {
 
   useEffect(() => {
     console.log('🎯 ClientDocuments: Loading demo data...');
-    // Immediately set demo data
-    console.log('📊 Setting demo data immediately...');
+    
+    // Set demo data immediately
     setDocuments(demoUploadedDocuments);
     setRequestedDocuments(demoRequestedDocuments);
     
-    // Calculate stats
-    const demoStats: DocumentStats = {
+    // Calculate stats from demo data
+    const calculatedStats: DocumentStats = {
       totalDocuments: demoUploadedDocuments.length,
       pendingReview: demoUploadedDocuments.filter(d => d.status === 'pending').length,
       approved: demoUploadedDocuments.filter(d => d.status === 'approved').length,
@@ -201,12 +201,12 @@ const ClientDocuments = () => {
       needsRevision: demoUploadedDocuments.filter(d => d.status === 'needs_revision').length,
       requestedDocuments: demoRequestedDocuments.length
     };
-    setStats(demoStats);
+    setStats(calculatedStats);
     
-    console.log('✅ Demo data set:', {
+    console.log('✅ Demo data loaded successfully:', {
       uploadedDocs: demoUploadedDocuments.length,
       requestedDocs: demoRequestedDocuments.length,
-      stats: demoStats
+      stats: calculatedStats
     });
     
     setLoading(false);
