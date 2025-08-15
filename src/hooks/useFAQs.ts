@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { SupportedLanguage } from '../contexts/LanguageContext';
 
 export interface FAQ {
   id: string;
   question: string;
   answer: string;
-  category?: string;
-  language_code: string;
+  category?: string | null;
+  language_code: SupportedLanguage;
   sort_order: number;
   is_active: boolean;
   created_at: string;
@@ -14,7 +15,7 @@ export interface FAQ {
   country_id?: string;
 }
 
-export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; countryId?: string; category?: string }) => {
+export const useFAQs = (filters?: { isActive?: boolean; languageCode?: SupportedLanguage; countryId?: string; category?: string }) => {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +29,7 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; c
       setLoading(true);
       setError(null);
 
-      // Check if Supabase is properly configured
+      // Check if Supabase is properly configured (this check is for development/setup)
       if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
         console.warn('Supabase configuration missing. Using fallback data.');
         setFaqs([]);
@@ -64,10 +65,10 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; c
 
       if (error) {
         console.error('❌ useFAQs: Database error:', error);
-        // Gracefully handle database errors
+        // Gracefully handle database errors for the user
         const errorMessage = error.message?.includes('Failed to fetch') 
-          ? 'Ağ hatası: Sunucuya ulaşılamıyor (CORS / URL / internet).'
-          : error.message || 'Veritabanı hatası';
+          ? 'Ağ/CORS hatası: Supabase projesine ulaşılamıyor.'
+          : error.message || 'Veritabanı hatası.';
         setError(errorMessage);
         setFaqs([]);
         return;
@@ -80,9 +81,9 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; c
     } catch (err) {
       console.error('Error fetching FAQs:', err);
       // Handle any remaining errors gracefully
-      const errorMessage = err instanceof Error 
-        ? (err.message?.includes('Failed to fetch') 
-            ? 'Ağ hatası: Sunucuya ulaşılamıyor (CORS / URL / internet).'
+      const errorMessage = err instanceof Error
+        ? (err.message?.includes('Failed to fetch')
+            ? 'Ağ/CORS hatası: Supabase projesine ulaşılamıyor.'
             : err.message)
         : 'Bilinmeyen hata';
       

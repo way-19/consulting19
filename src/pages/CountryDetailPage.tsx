@@ -392,7 +392,7 @@ const CountryDetailPage = () => {
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                   <span className="ml-2 text-gray-600">Loading FAQs...</span>
-                </div>
+                </div> [1]
               ) : faqError ? (
                 <div className="mb-6 flex items-start gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-yellow-800">
                   <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-4" />
