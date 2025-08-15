@@ -104,12 +104,9 @@ const ContentManagement = () => {
   const supportedLanguages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'tr', name: 'Turkish', flag: '🇹🇷' },
-    { code: 'ka', name: 'Georgian', flag: '🇬🇪' },
-    { code: 'ru', name: 'Russian', flag: '🇷🇺' },
     { code: 'es', name: 'Spanish', flag: '🇪🇸' },
     { code: 'fr', name: 'French', flag: '🇫🇷' },
     { code: 'de', name: 'German', flag: '🇩🇪' },
-    { code: 'ar', name: 'Arabic', flag: '🇸🇦' }
   ];
 
   const blogCategories = [
