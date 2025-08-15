@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import ClientRecommendations from '../components/client/ClientRecommendations';
+import RequestCustomServiceModal from '../components/client/RequestCustomServiceModal';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import StripeCheckout from '../components/StripeCheckout';
 import MultilingualChat from '../components/MultilingualChat';
@@ -434,7 +436,7 @@ const ClientAccountingDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Upcoming Payments Warning - Add this section */}
         <div className="mb-8">
-          <UpcomingPayments />
+          {clientId && <UpcomingPayments clientId={clientId} />}
         </div>
 
         {/* Custom Service Request System */}
@@ -449,12 +451,17 @@ const ClientAccountingDashboard = () => {
             </p>
             <button
               onClick={() => setShowRequestModal(true)}
-              className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center space-x-2 mx-auto"
+              className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 mx-auto shadow-lg"
             >
               <Plus className="h-5 w-5" />
               <span>Request Custom Service</span>
             </button>
           </div>
+        </div>
+
+        {/* Client Recommendations System */}
+        <div className="mb-8">
+          {clientId && <ClientRecommendations clientId={clientId} />}
         </div>
 
         {/* Stats Cards */}
@@ -864,7 +871,16 @@ const ClientAccountingDashboard = () => {
       )}
 
       {/* Custom Service Request Modal */}
-      <RequestCustomServiceModal
+      {showRequestModal && (
+        <RequestCustomServiceModal
+          isOpen={showRequestModal}
+          onClose={() => setShowRequestModal(false)}
+          onSuccess={() => {
+            setShowRequestModal(false);
+            alert('Custom service request submitted successfully!');
+          }}
+        />
+      )}
         isOpen={showRequestModal}
         onClose={() => setShowRequestModal(false)}
         onSuccess={() => {
