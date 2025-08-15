@@ -89,7 +89,7 @@ const BlogPage = () => {
                       </div>
                     </div>
                     <Link
-                      to={`/blog/${post.slug}`} // Assuming a detail page for blog posts
+                      to={"/blog/" + post.slug}
                       className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium"
                     >
                       Read More <ArrowRight className="h-4 w-4 ml-1" />
