@@ -746,7 +746,36 @@ const HomePage = () => {
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
                   <Globe className="h-8 w-8 text-white" />
                 </div>
-         
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Digital Nomad Services</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Specialized services for location-independent professionals and remote workers
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Remote work setup</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Tax residency planning</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Visa strategies</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=digital_nomad"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Start Journey</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
             <div 
               className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
               style={{
