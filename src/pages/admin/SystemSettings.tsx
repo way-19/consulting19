@@ -248,8 +248,6 @@ const SystemSettings = () => {
                       >
                         <option value="en">English</option>
                         <option value="tr">Turkish</option>
-                        <option value="ka">Georgian</option>
-                        <option value="ru">Russian</option>
                       </select>
                     </div>
 

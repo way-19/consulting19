@@ -76,12 +76,9 @@ const MyProfilePage = () => {
   const languages = [
     { code: 'en', name: 'English' },
     { code: 'tr', name: 'Türkçe' },
-    { code: 'ka', name: 'ქართული (Georgian)' },
-    { code: 'ru', name: 'Русский (Russian)' },
     { code: 'es', name: 'Español (Spanish)' },
     { code: 'fr', name: 'Français (French)' },
     { code: 'de', name: 'Deutsch (German)' },
-    { code: 'ar', name: 'العربية (Arabic)' }
   ];
 
   const timezones = [
