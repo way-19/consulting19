@@ -387,6 +387,7 @@ const AIAssistantPage = () => {
           <p className="text-xl text-purple-100 mb-8">
             Get personalized guidance from our AI assistant and connect with expert consultants
             for their international expansion across 19+ countries.
+          </p>
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <Link
               to="/get-started"
