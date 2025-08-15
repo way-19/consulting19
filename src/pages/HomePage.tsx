@@ -151,7 +151,7 @@ const HomePage = () => {
                     <div className="text-white/80 text-sm capitalize">
                       {k.replace(/([A-Z])/g, ' $1').trim()}
                     </div>
-                  <ModernCountryCard key={country.id} country={country} />
+                  </div>
                 ))}
               </div>
             </div>
@@ -320,7 +320,7 @@ const HomePage = () => {
               </div>
             ) : (
               featuredCountries.map((country) => (
-                <CountryCard key={country.id} country={country} />
+                <ModernCountryCard key={country.id} country={country} />
               ))
             )}
           </div>
