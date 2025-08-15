@@ -56,8 +56,8 @@ interface DocumentStats {
 
 const ClientDocuments = () => {
   const { profile } = useAuth();
-  const [documents, setDocuments] = useState<DocumentWithDetails[]>([]);
-  const [requestedDocuments, setRequestedDocuments] = useState<DocumentWithDetails[]>([]);
+  const [documents, setDocuments] = useState<DocumentWithDetails[]>(demoUploadedDocuments);
+  const [requestedDocuments, setRequestedDocuments] = useState<DocumentWithDetails[]>(demoRequestedDocuments);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<DocumentWithDetails | null>(null);
@@ -187,28 +187,7 @@ const ClientDocuments = () => {
 
   useEffect(() => {
     console.log('🎯 ClientDocuments: Loading demo data...');
-    
-    // Set demo data immediately
-    setDocuments(demoUploadedDocuments);
-    setRequestedDocuments(demoRequestedDocuments);
-    
-    // Calculate stats from demo data
-    const calculatedStats: DocumentStats = {
-      totalDocuments: demoUploadedDocuments.length,
-      pendingReview: demoUploadedDocuments.filter(d => d.status === 'pending').length,
-      approved: demoUploadedDocuments.filter(d => d.status === 'approved').length,
-      rejected: demoUploadedDocuments.filter(d => d.status === 'rejected').length,
-      needsRevision: demoUploadedDocuments.filter(d => d.status === 'needs_revision').length,
-      requestedDocuments: demoRequestedDocuments.length
-    };
-    setStats(calculatedStats);
-    
-    console.log('✅ Demo data loaded successfully:', {
-      uploadedDocs: demoUploadedDocuments.length,
-      requestedDocs: demoRequestedDocuments.length,
-      stats: calculatedStats
-    });
-    
+    console.log('✅ Demo data already initialized in state');
     setLoading(false);
   }, []); // Empty dependency array - run once on mount
 
