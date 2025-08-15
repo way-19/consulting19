@@ -239,7 +239,8 @@ const ClientDocuments = () => {
   };
 
   const fetchRequestedDocuments = async () => {
-    // Always use demo data for now
+    // Always use demo data for now - remove after migration
+    console.log('📋 fetchRequestedDocuments: Using demo data');
     setRequestedDocuments(demoRequestedDocuments);
     return;
     
