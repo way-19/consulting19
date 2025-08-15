@@ -101,29 +101,42 @@ const ClientDocuments = () => {
   ];
 
   useEffect(() => {
+    console.log('🚀 ClientDocuments component mounted');
+    console.log('👤 Profile:', profile);
+    console.log('🆔 Profile ID:', profile?.id);
+    console.log('📧 Profile Email:', profile?.email);
+    
     if (profile?.id) {
+      console.log('✅ Profile exists, calling fetchData...');
       fetchData();
+    } else {
+      console.log('❌ No profile, skipping fetchData');
+      setLoading(false);
     }
-  }, []);
+  }, [profile]);
 
   const fetchData = async () => {
     try {
+      console.log('🔄 fetchData: Starting...');
       setLoading(true);
-      console.log('🔄 Fetching real document data...');
+      console.log('🔍 fetchData: Fetching client data for profile:', profile?.id);
       
       await Promise.all([
         fetchDocuments(),
         fetchDocumentRequests()
       ]);
+      console.log('✅ fetchData: All data fetched successfully');
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('❌ fetchData: Error:', error);
     } finally {
+      console.log('🏁 fetchData: Setting loading to false');
       setLoading(false);
     }
   };
 
   const fetchDocuments = async () => {
     try {
+      console.log('📄 fetchDocuments: Starting...');
       // Get client ID first
       const { data: clientData } = await supabase
         .from('clients')
@@ -131,8 +144,10 @@ const ClientDocuments = () => {
         .eq('profile_id', profile?.id)
         .single();
 
+      console.log('🔍 fetchDocuments: Client data:', clientData);
+
       if (!clientData) {
-        console.log('No client record found');
+        console.log('❌ fetchDocuments: No client record found for profile:', profile?.id);
         return;
       }
 
@@ -143,18 +158,21 @@ const ClientDocuments = () => {
         .eq('client_id', clientData.id)
         .order('uploaded_at', { ascending: false });
 
+      console.log('📄 fetchDocuments: Documents query result:', { data, error });
+
       if (error) throw error;
       
-      console.log('📁 Fetched documents:', data?.length || 0);
+      console.log('📁 fetchDocuments: Found', data?.length || 0, 'documents');
       setDocuments(data || []);
       calculateStats(data || []);
     } catch (error) {
-      console.error('Error fetching documents:', error);
+      console.error('❌ fetchDocuments: Error:', error);
     }
   };
 
   const fetchDocumentRequests = async () => {
     try {
+      console.log('📋 fetchDocumentRequests: Starting...');
       // Get client ID first
       const { data: clientData } = await supabase
         .from('clients')
@@ -162,8 +180,10 @@ const ClientDocuments = () => {
         .eq('profile_id', profile?.id)
         .single();
 
+      console.log('🔍 fetchDocumentRequests: Client data:', clientData);
+
       if (!clientData) {
-        console.log('No client record found for requests');
+        console.log('❌ fetchDocumentRequests: No client record found for profile:', profile?.id);
         return;
       }
 
@@ -181,9 +201,11 @@ const ClientDocuments = () => {
         .eq('status', 'requested')
         .order('created_at', { ascending: false });
 
+      console.log('📋 fetchDocumentRequests: Requests query result:', { data, error });
+
       if (error) throw error;
       
-      console.log('📋 Fetched document requests:', data?.length || 0);
+      console.log('📋 fetchDocumentRequests: Found', data?.length || 0, 'requests');
       setDocumentRequests(data || []);
       
       // Update stats with request count
@@ -192,7 +214,7 @@ const ClientDocuments = () => {
         documentRequests: data?.length || 0
       }));
     } catch (error) {
-      console.error('Error fetching document requests:', error);
+      console.error('❌ fetchDocumentRequests: Error:', error);
     }
   };
 
