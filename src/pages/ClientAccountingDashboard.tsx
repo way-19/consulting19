@@ -458,7 +458,7 @@ const ClientAccountingDashboard = () => {
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
                 >
                   <MessageSquare className="h-4 w-4" />
-                  <span>Danışmanla İletişim</span>
+                  <span>Contact Advisor</span>
                 </button>
               </div>
             </div>
