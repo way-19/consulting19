@@ -949,7 +949,77 @@ const ClientAccountingDashboard = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">My Virtual Mailbox</h3>
                   <p className="text-gray-600">Receive official documents digitally and request physical shipping when needed</p>
                 </div>
-                <VirtualMailboxManager viewMode="client" clientId={clientId} />
+                
+                {/* Virtual Mailbox Content */}
+                <div className="space-y-4">
+                  {/* Sample documents with actions */}
+                  <div className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-4 mb-3">
+                          <div className="bg-purple-100 rounded-lg p-2">
+                            <FileText className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">Tax Registration Document</h3>
+                            <p className="text-sm text-gray-600">Official tax registration certificate</p>
+                          </div>
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            PENDING
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
+                          <div>
+                            <span className="font-medium">Tracking:</span> VM20250813-AA512107
+                          </div>
+                          <div>
+                            <span className="font-medium">Shipping Fee:</span> $0
+                          </div>
+                          <div>
+                            <span className="font-medium">Payment:</span>
+                            <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              UNPAID
+                            </span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Size:</span> 1.1 MB
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <button className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
+                          <Eye className="h-4 w-4" />
+                          <span>Ön İzleme</span>
+                        </button>
+                        <button className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
+                          <Download className="h-4 w-4" />
+                          <span>İndir</span>
+                        </button>
+                        <button className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
+                          <Mail className="h-4 w-4" />
+                          <span>Fiziksel Gönderim</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-4 mb-3">
+                          <div className="bg-purple-100 rounded-lg p-2">
+                            <FileText className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">Bank Account Information</h3>
+                            <p className="text-sm text-gray-600">Bank account opening documents</p>
+                          </div>
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            SENT
+                          </span>
+                        </div>
               </div>
             )}
           </div>
