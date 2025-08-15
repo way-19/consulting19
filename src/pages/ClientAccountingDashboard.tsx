@@ -881,12 +881,6 @@ const ClientAccountingDashboard = () => {
           }}
         />
       )}
-        isOpen={showRequestModal}
-        onClose={() => setShowRequestModal(false)}
-        onSuccess={() => {
-          alert('Custom service request submitted successfully!');
-        }}
-      />
     </div>
   );
 };
