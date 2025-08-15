@@ -27,8 +27,7 @@ export function useBlogPosts(countryId?: string) {
         'id,title,slug,content,excerpt,cover_image,published_at,author:author_id(full_name,email,role)' // Added 'content' and 'role'
       )
       .eq('is_published', true)
-      .order('published_at', { ascending: false })
-      .limit(10);
+      .order('published_at', { ascending: false });
 
     if (countryId) {
       query = query.eq('country_id', countryId);
