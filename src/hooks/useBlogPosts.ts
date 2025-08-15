@@ -1,41 +1,87 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-export interface BlogPost {
-  id: string;
+export type BlogPost = {
+  id: number;
   title: string;
   slug: string;
-  content: string; // Added content
-  excerpt?: string; 
-  cover_image?: string;
-  published_at: string;
-  author?: { full_name?: string; email?: string; role?: string } | null; // Added role here
-}
+  content?: string | null;
+  excerpt?: string | null;
+  cover_image?: string | null;
+  published_at?: string | null;
+  author?: { full_name?: string | null; email?: string | null; role?: string | null } | null;
+};
 
-export function useBlogPosts(countryId?: string) {
-  const [data, setData] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(false);
+export function useBlogPosts(limit = 10) {
+  const [items, setItems] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
+    let ignore = false;
 
-    let query = supabase
-      .from('blog_posts')
-      .select(
-        'id,title,slug,content,excerpt,cover_image,published_at,author:author_id(full_name,email,role)' // Added 'content' and 'role'
-      )
-      .eq('is_published', true)
-      .order('published_at', { ascending: false });
+    const selectWithCover =
+      'id,title,slug,content,excerpt,cover_image,published_at,author:author_id(full_name,email,role)';
+    const selectNoCover =
+      'id,title,slug,content,excerpt,published_at,author:author_id(full_name,email,role)';
 
-    if (countryId) {
-      query = query.eq('country_id', countryId);
-    }
-  }
-  )
+    const fetchOnce = async (select: string) => {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select(select)
+        .eq('is_published', true)
+        .order('published_at', { ascending: false })
+        .limit(limit);
 
-  return { posts, loading, error };
+      if (error) throw error;
+      return (data as BlogPost[]) ?? [];
+    };
+
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // 1) cover_image ile dene
+        const data = await fetchOnce(selectWithCover);
+        if (!ignore) setItems(data);
+      } catch (e: any) {
+        // 42703 -> column yok; cover_image'siz tekrar dene
+        if (e?.code === '42703') {
+          try {
+            const dataNoCover = await fetchOnce(selectNoCover);
+            if (!ignore) setItems(dataNoCover);
+          } catch (inner: any) {
+            if (!ignore) {
+              setError(inner?.message || 'Blog yazıları alınamadı.');
+              setItems([]);
+              console.error('Error fetching blog posts (fallback):', inner);
+            }
+          }
+        } else {
+          if (!ignore) {
+            const msg =
+              e?.name === 'AbortError'
+                ? 'İstek iptal edildi.'
+                : e?.message?.includes('Failed to fetch')
+                  ? 'Ağ/CORS hatası: Supabase API ulaşılamıyor.'
+                  : e?.message || 'Bilinmeyen hata.';
+            setError(msg);
+            setItems([]);
+            console.error('Error fetching blog posts:', e);
+          }
+        }
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [limit]);
+
+  // Dışarıya "posts" olarak döndür.
+  return { posts: items, loading, error };
 }
 
 // Keep the old interface for backward compatibility

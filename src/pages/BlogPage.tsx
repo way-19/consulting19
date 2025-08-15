@@ -4,7 +4,7 @@ import { FileText, User, Calendar, ArrowRight, AlertTriangle } from 'lucide-reac
 import { useBlogPosts, BlogPost as BlogItem } from '../hooks/useBlogPosts'; // Renamed BlogPost to BlogItem to avoid conflict with local interface
 
 const BlogPage = () => {
-  const { data: blogPosts, loading, error } = useBlogPosts(); // Fetch all published posts
+  const { posts: blogPosts, loading, error } = useBlogPosts(); // Fetch all published posts
 
   // Filter posts to only show those by consultants
   const consultantPosts = React.useMemo(() => {
