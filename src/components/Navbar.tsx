@@ -462,11 +462,11 @@ const Navbar = () => {
                 <div className="relative">
                   <button
                     onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                    className="relative p-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="relative p-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-all duration-200 transform hover:scale-110"
                   >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-pulse shadow-lg">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
                     )}
@@ -481,7 +481,7 @@ const Navbar = () => {
                 {profile.role === 'admin' && (
                   <Link
                     to="/admin-dashboard"
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors shadow-sm text-sm"
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-lg text-sm"
                   >
                     Admin Panel
                   </Link>
@@ -490,7 +490,7 @@ const Navbar = () => {
                 {profile.role === 'consultant' && (
                   <Link
                     to="/consultant-dashboard"
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm text-sm"
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-lg text-sm"
                   >
                     Consultant Panel
                   </Link>
@@ -499,29 +499,36 @@ const Navbar = () => {
                 {profile.role === 'client' && (
                   <Link
                     to="/client-accounting"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm text-sm"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-lg text-sm"
                   >
                     My Dashboard
                   </Link>
                 )}
 
                 {/* User Profile & Logout */}
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-700">
-                    {profile.full_name ? profile.full_name : profile.email}
-                  </span>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    {profile.role}
-                  </span>
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      {(profile.full_name || profile.email)[0].toUpperCase()}
+                    </div>
+                    <div className="hidden sm:block">
+                      <p className="text-sm font-medium text-gray-700">
+                        {profile.full_name || profile.email.split('@')[0]}
+                      </p>
+                      <p className="text-xs text-gray-500">{profile.role}</p>
+                    </div>
+                  </div>
+                  
                   <Link
                     to="/my-profile"
-                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    className="text-sm text-gray-500 hover:text-purple-600 transition-colors font-medium"
                   >
                     Profile
                   </Link>
+                  
                   <button
                     onClick={handleSignOut}
-                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    className="text-sm text-gray-500 hover:text-red-600 transition-colors font-medium"
                   >
                     {t('nav.signOut')}
                   </button>
