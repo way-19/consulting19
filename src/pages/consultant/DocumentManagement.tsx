@@ -84,6 +84,15 @@ const DocumentManagement = () => {
     description: '',
     due_date: ''
   });
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestForm, setRequestForm] = useState({
+    client_id: '',
+    name: '',
+    type: '',
+    category: 'other' as 'identity' | 'business' | 'financial' | 'medical' | 'other',
+    description: '',
+    due_date: ''
+  });
 
   const [stats, setStats] = useState<DocumentStats>({
     totalDocuments: 0,
