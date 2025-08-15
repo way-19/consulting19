@@ -164,13 +164,25 @@ const ClientAccountingDashboard = () => {
   };
 
   const fetchDocuments = async () => {
+    console.log('📄 fetchDocuments: Starting...');
+    console.log('🔍 fetchDocuments: accountingProfile exists?', !!accountingProfile);
+    console.log('🆔 fetchDocuments: accountingProfile.id:', accountingProfile?.id);
+    
     if (!accountingProfile) return;
+    
+    console.log('📊 fetchDocuments: Querying accounting_documents for client_id:', accountingProfile.id);
     const { data, error } = await supabase
       .from('accounting_documents')
       .select('*').eq('client_id', accountingProfile.id)
       .order('due_date', { ascending: true });
+    
+    console.log('📄 fetchDocuments: Query result - data:', data);
+    console.log('❌ fetchDocuments: Query result - error:', error);
+    console.log('📋 fetchDocuments: Found documents count:', data?.length || 0);
+    
     if (error) return console.error('Error fetching documents:', error);
     setDocuments(data || []);
+    console.log('✅ fetchDocuments: Documents state updated with:', data?.length || 0, 'documents');
   };
 
   const fetchInvoices = async () => {
