@@ -23,6 +23,26 @@ import {
   Send
 } from 'lucide-react';
 
+interface DocumentRequest {
+  id: string;
+  consultant_id: string;
+  client_id: string;
+  document_name: string;
+  document_type: string;
+  category: 'identity' | 'business' | 'financial' | 'medical' | 'other';
+  description?: string;
+  due_date?: string;
+  status: 'requested' | 'uploaded' | 'approved' | 'rejected' | 'needs_revision';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  consultant?: {
+    full_name: string;
+    email: string;
+  };
+}
+
 interface DocumentWithDetails {
   id: string;
   client_id: string;
@@ -35,14 +55,6 @@ interface DocumentWithDetails {
   uploaded_at: string;
   reviewed_at?: string;
   reviewed_by?: string;
-  is_request?: boolean;
-  requested_by_consultant_id?: string;
-  due_date?: string;
-  notes?: string;
-  consultant?: {
-    full_name: string;
-    email: string;
-  };
 }
 
 interface DocumentStats {
@@ -51,26 +63,17 @@ interface DocumentStats {
   approved: number;
   rejected: number;
   needsRevision: number;
-  requestedDocuments: number;
+  documentRequests: number;
 }
 
 const ClientDocuments = () => {
   const { profile } = useAuth();
   const [documents, setDocuments] = useState<DocumentWithDetails[]>([]);
-  const [documentRequests, setDocumentRequests] = useState<any[]>([]);
+  const [documentRequests, setDocumentRequests] = useState<DocumentRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<DocumentWithDetails | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<DocumentRequest | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
-
-  const [stats, setStats] = useState<DocumentStats>({
-    totalDocuments: 0,
-    pendingReview: 0,
-    approved: 0,
-    rejected: 0,
-    needsRevision: 0,
-    requestedDocuments: 0
-  });
 
   const [uploadForm, setUploadForm] = useState({
     name: '',
@@ -78,6 +81,15 @@ const ClientDocuments = () => {
     category: 'other' as 'identity' | 'business' | 'financial' | 'medical' | 'other',
     description: '',
     file: null as File | null
+  });
+
+  const [stats, setStats] = useState<DocumentStats>({
+    totalDocuments: 0,
+    pendingReview: 0,
+    approved: 0,
+    rejected: 0,
+    needsRevision: 0,
+    documentRequests: 0
   });
 
   const documentCategories = [
@@ -92,30 +104,71 @@ const ClientDocuments = () => {
     if (profile?.id) {
       fetchData();
     }
-  }, [profile]);
+  }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching real document data for client...');
+      console.log('🔄 Fetching real document data...');
       
+      await Promise.all([
+        fetchDocuments(),
+        fetchDocumentRequests()
+      ]);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDocuments = async () => {
+    try {
       // Get client ID first
-      const { data: clientData, error: clientError } = await supabase
+      const { data: clientData } = await supabase
         .from('clients')
         .select('id')
         .eq('profile_id', profile?.id)
         .single();
 
-      if (clientError || !clientData) {
-        console.error('❌ Client not found:', clientError);
-        setLoading(false);
+      if (!clientData) {
+        console.log('No client record found');
         return;
       }
 
-      console.log('✅ Client found:', clientData.id);
+      // Get documents
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('client_id', clientData.id)
+        .order('uploaded_at', { ascending: false });
 
-      // Fetch document requests from consultant
-      const { data: requestsData, error: requestsError } = await supabase
+      if (error) throw error;
+      
+      console.log('📁 Fetched documents:', data?.length || 0);
+      setDocuments(data || []);
+      calculateStats(data || []);
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+    }
+  };
+
+  const fetchDocumentRequests = async () => {
+    try {
+      // Get client ID first
+      const { data: clientData } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('profile_id', profile?.id)
+        .single();
+
+      if (!clientData) {
+        console.log('No client record found for requests');
+        return;
+      }
+
+      // Get document requests
+      const { data, error } = await supabase
         .from('document_requests')
         .select(`
           *,
@@ -125,46 +178,22 @@ const ClientDocuments = () => {
           )
         `)
         .eq('client_id', clientData.id)
-        .eq('status', 'pending')
+        .eq('status', 'requested')
         .order('created_at', { ascending: false });
 
-      if (requestsError) {
-        console.error('❌ Error fetching document requests:', requestsError);
-      } else {
-        console.log('✅ Document requests found:', requestsData?.length || 0);
-        setDocumentRequests(requestsData || []);
-      }
-
-      // Fetch uploaded documents
-      const { data: documentsData, error: documentsError } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('client_id', clientData.id)
-        .order('uploaded_at', { ascending: false });
-
-      if (documentsError) {
-        console.error('❌ Error fetching documents:', documentsError);
-      } else {
-        console.log('✅ Documents found:', documentsData?.length || 0);
-        setDocuments(documentsData || []);
-        calculateStats(documentsData || []);
-      }
-
+      if (error) throw error;
+      
+      console.log('📋 Fetched document requests:', data?.length || 0);
+      setDocumentRequests(data || []);
+      
+      // Update stats with request count
+      setStats(prev => ({
+        ...prev,
+        documentRequests: data?.length || 0
+      }));
     } catch (error) {
-      console.error('💥 Error in fetchData:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching document requests:', error);
     }
-  };
-
-  const fetchDocuments = async () => {
-    // This function is now part of fetchData
-    await fetchData();
-  };
-
-  const fetchRequestedDocuments = async () => {
-    // This function is now part of fetchData
-    await fetchData();
   };
 
   const calculateStats = (documentsData: DocumentWithDetails[]) => {
@@ -174,18 +203,18 @@ const ClientDocuments = () => {
       approved: documentsData.filter(d => d.status === 'approved').length,
       rejected: documentsData.filter(d => d.status === 'rejected').length,
       needsRevision: documentsData.filter(d => d.status === 'needs_revision').length,
-      requestedDocuments: documentRequests.length
+      documentRequests: 0 // Will be updated separately
     };
     setStats(stats);
   };
 
-  const handleUploadForRequest = (request: any) => {
+  const handleUploadForRequest = (request: DocumentRequest) => {
     setSelectedRequest(request);
     setUploadForm({
-      name: request.document_name || request.name,
-      type: request.document_type || request.type,
+      name: request.document_name,
+      type: request.document_type,
       category: request.category,
-      description: request.description || request.notes || '',
+      description: request.description || '',
       file: null
     });
     setShowUploadModal(true);
@@ -210,35 +239,34 @@ const ClientDocuments = () => {
         // Update existing request
         const { error } = await supabase
           .from('document_requests')
-          .update({ status: 'uploaded' })
+          .update({
+            status: 'uploaded'
+          })
           .eq('id', selectedRequest.id);
 
         if (error) throw error;
 
-        // Create new document record
+        // Create actual document record
         const { data: clientData } = await supabase
           .from('clients')
-          .select('id')
+          .select('id, assigned_consultant_id')
           .eq('profile_id', profile?.id)
           .single();
 
-        if (!clientData) throw new Error('Client record not found');
-
-        const { error: docError } = await supabase
-          .from('documents')
-          .insert([{
-            client_id: clientData.id,
-            request_id: selectedRequest.id,
-            name: uploadForm.name,
-            type: uploadForm.type,
-            category: uploadForm.category,
-            status: 'pending',
-            file_url: mockFileUrl,
-            file_size: fileSize,
-            uploaded_at: new Date().toISOString()
-          }]);
-
-        if (docError) throw docError;
+        if (clientData) {
+          await supabase
+            .from('documents')
+            .insert([{
+              client_id: clientData.id,
+              name: uploadForm.name,
+              type: uploadForm.type,
+              category: uploadForm.category,
+              status: 'pending',
+              file_url: mockFileUrl,
+              file_size: fileSize,
+              uploaded_at: new Date().toISOString()
+            }]);
+        }
 
         // Notify consultant
         if (selectedRequest.consultant_id) {
@@ -274,7 +302,6 @@ const ClientDocuments = () => {
             status: 'pending',
             file_url: mockFileUrl,
             file_size: fileSize,
-            is_request: false,
             uploaded_at: new Date().toISOString()
           }]);
 
@@ -458,7 +485,7 @@ const ClientDocuments = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Requested</p>
-                <p className="text-3xl font-bold text-purple-600">{stats.requestedDocuments}</p>
+                <p className="text-3xl font-bold text-purple-600">{stats.documentRequests}</p>
               </div>
               <Bell className="h-8 w-8 text-purple-600" />
             </div>
@@ -493,7 +520,7 @@ const ClientDocuments = () => {
                             <p className="text-sm text-gray-600">{request.document_type}</p>
                           </div>
                           <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
-                            {request.status.toUpperCase()}
+                            REQUESTED
                           </span>
                         </div>
 
@@ -537,6 +564,19 @@ const ClientDocuments = () => {
             </div>
           </div>
         )}
+
+        {/* Debug Panel */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+          <h3 className="font-medium text-blue-900 mb-2">🔄 Real Database Integration</h3>
+          <div className="text-sm text-blue-800 space-y-1">
+            <p><strong>Document Requests:</strong> {documentRequests.length} from consultant</p>
+            <p><strong>Uploaded Documents:</strong> {documents.length} in database</p>
+            <p><strong>Status:</strong> Using real database data</p>
+            <p className="text-xs text-blue-700 mt-2">
+              💡 Run the migration to see sample document requests from Nino
+            </p>
+          </div>
+        </div>
 
         {/* My Documents */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
