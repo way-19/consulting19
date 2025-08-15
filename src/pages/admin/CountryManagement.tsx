@@ -43,7 +43,12 @@ interface ConsultantAssignment {
 }
 
 const CountryManagement = () => {
+  console.log('🎯 CountryManagement: Component is rendering');
+  
   const { profile } = useAuth();
+  console.log('👤 CountryManagement: Profile from useAuth:', profile);
+  console.log('🔑 CountryManagement: Profile role:', profile?.role);
+  
   const [countries, setCountries] = useState<CountryWithStats[]>([]);
   const [consultants, setConsultants] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<ConsultantAssignment[]>([]);
@@ -71,49 +76,73 @@ const CountryManagement = () => {
   });
 
   useEffect(() => {
+    console.log('🔄 CountryManagement: useEffect triggered');
+    console.log('👤 CountryManagement: Profile in useEffect:', profile);
+    console.log('🔑 CountryManagement: Profile role in useEffect:', profile?.role);
+    
     if (profile?.legacy_role === 'admin') {
+      console.log('✅ CountryManagement: Admin role confirmed, calling fetchData...');
       fetchData();
+    } else {
+      console.log('❌ CountryManagement: Not admin role or no profile, skipping data fetch');
+      console.log('🔍 CountryManagement: Profile details:', {
+        exists: !!profile,
+        id: profile?.id,
+        email: profile?.email,
+        role: profile?.role
+      });
     }
   }, [profile]);
 
   const fetchData = async () => {
+    console.log('🚀 CountryManagement: fetchData function called');
     try {
-      console.log('🔄 CountryManagement: Starting fetchData...');
       setLoading(true);
+      console.log('⏳ CountryManagement: Loading set to true');
       
-      console.log('📊 CountryManagement: Fetching countries...');
+      console.log('📊 CountryManagement: About to call fetchCountries...');
       await fetchCountries();
-      console.log('✅ CountryManagement: Countries fetched successfully');
+      console.log('✅ CountryManagement: fetchCountries completed');
       
-      console.log('👥 CountryManagement: Fetching consultants...');
+      console.log('👥 CountryManagement: About to call fetchConsultants...');
       await fetchConsultants();
-      console.log('✅ CountryManagement: Consultants fetched successfully');
+      console.log('✅ CountryManagement: fetchConsultants completed');
       
-      console.log('🔗 CountryManagement: Fetching assignments...');
+      console.log('🔗 CountryManagement: About to call fetchAssignments...');
       await fetchAssignments();
-      console.log('✅ CountryManagement: Assignments fetched successfully');
+      console.log('✅ CountryManagement: fetchAssignments completed');
       
-      console.log('🎉 CountryManagement: All data fetched successfully');
+      console.log('🎉 CountryManagement: All data fetching completed successfully');
     } catch (error) {
-      console.error('❌ CountryManagement: Error fetching data:', error);
-      console.error('❌ CountryManagement: Error details:', error.message);
+      console.error('❌ CountryManagement: Error in fetchData:', error);
+      console.error('❌ CountryManagement: Error message:', error?.message);
+      console.error('❌ CountryManagement: Error stack:', error?.stack);
     } finally {
-      console.log('🏁 CountryManagement: Setting loading to false');
+      console.log('🏁 CountryManagement: fetchData finally block - setting loading to false');
       setLoading(false);
+      console.log('✅ CountryManagement: Loading set to false');
     }
   };
 
   const fetchCountries = async () => {
+    console.log('🌍 fetchCountries: Starting...');
+    
     const { data, error } = await supabase
       .from('countries')
       .select('*')
       .order('sort_order', { ascending: true });
 
+    console.log('🌍 fetchCountries: Supabase query result:', { data: data?.length, error });
+    
     if (error) throw error;
 
+    console.log('🌍 fetchCountries: About to enrich countries with stats...');
+    
     // Enrich with stats
     const enrichedCountries = await Promise.all(
       (data || []).map(async (country) => {
+        console.log(`🔍 fetchCountries: Processing country ${country.name}...`);
+        
         // Get consultant count
         const { count: consultantCount } = await supabase
           .from('consultant_country_assignments')
@@ -121,6 +150,8 @@ const CountryManagement = () => {
           .eq('country_id', country.id)
           .eq('status', 'active');
 
+        console.log(`📊 fetchCountries: ${country.name} has ${consultantCount} consultants`);
+        
         return {
           ...country,
           consultant_count: consultantCount || 0
@@ -128,21 +159,32 @@ const CountryManagement = () => {
       })
     );
 
+    console.log('🌍 fetchCountries: Setting countries state with', enrichedCountries.length, 'countries');
     setCountries(enrichedCountries);
+    console.log('✅ fetchCountries: Completed successfully');
   };
 
   const fetchConsultants = async () => {
+    console.log('👥 fetchConsultants: Starting...');
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, country')
       .eq('role', 'consultant')
       .eq('is_active', true);
 
+    console.log('👥 fetchConsultants: Supabase query result:', { data: data?.length, error });
+    
     if (error) throw error;
+    
+    console.log('👥 fetchConsultants: Setting consultants state with', data?.length || 0, 'consultants');
     setConsultants(data || []);
+    console.log('✅ fetchConsultants: Completed successfully');
   };
 
   const fetchAssignments = async () => {
+    console.log('🔗 fetchAssignments: Starting...');
+    
     const { data, error } = await supabase
       .from('consultant_country_assignments')
       .select(`
@@ -153,8 +195,13 @@ const CountryManagement = () => {
         )
       `);
 
+    console.log('🔗 fetchAssignments: Supabase query result:', { data: data?.length, error });
+    
     if (error) throw error;
+    
+    console.log('🔗 fetchAssignments: Setting assignments state with', data?.length || 0, 'assignments');
     setAssignments(data || []);
+    console.log('✅ fetchAssignments: Completed successfully');
   };
 
   const fetchAvailableConsultants = async (countryId: string) => {
