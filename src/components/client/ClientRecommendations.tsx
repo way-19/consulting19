@@ -91,7 +91,7 @@ const ClientRecommendations: React.FC<ClientRecommendationsProps> = ({ clientId 
           <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
             {recommendations.filter(r => !r.is_read).length} new
           </span>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Recommendations Yet</h3>
+        </div>
         <p className="text-sm text-gray-600 mt-1">
           Recommendations tailored to your industry and needs
         </p>
