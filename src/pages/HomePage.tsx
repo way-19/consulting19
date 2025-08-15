@@ -6,10 +6,12 @@ import CountryCard from '../components/ModernCountryCard';
 import ServiceCard from '../components/ServiceCard';
 import { useCountries } from '../hooks/useCountries';
 import { useServices } from '../hooks/useServices';
+import { useServices } from '../hooks/useServices';
 import { getPublicImageUrl } from '../lib/supabase';
 
 const HomePage = () => {
   const { countries, loading: countriesLoading } = useCountries(true);
+  const { services, loading: servicesLoading } = useServices(true);
   const { services, loading: servicesLoading } = useServices(true);
   
   const featuredCountries = countries.slice(0, 8);
@@ -389,300 +391,423 @@ const HomePage = () => {
 
           {/* Service Categories Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Company Formation */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-              <div className="bg-blue-100 rounded-xl p-4 mb-4 group-hover:bg-blue-200 transition-colors">
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Building className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Company Formation</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Complete business registration and incorporation services across 127+ jurisdictions
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">LLC & Corporation setup</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Legal documentation</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Compliance support</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=company_formation"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Get Started</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
                 <Building className="h-8 w-8 text-blue-600 mx-auto" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Company Formation</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Quick entity setup worldwide with expert guidance and AI-powered jurisdiction matching.
-              </p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">LLC & Corporation setup</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Registered agent service</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">EIN & tax ID</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Compliance support</span>
-                </div>
-              </div>
-              <Link
-                to="/services?category=company_formation"
-                className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <span>Get Started</span>
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/7357/startup-photos.jpg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <TrendingUp className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Investment Advisory</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Strategic investment guidance and portfolio optimization for international markets
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Market analysis</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Risk assessment</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Portfolio strategy</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=investment"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Learn More</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
             {/* Investment Advisory */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
               <div className="bg-green-100 rounded-xl p-4 mb-4 group-hover:bg-green-200 transition-colors">
                 <TrendingUp className="h-8 w-8 text-green-600 mx-auto" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Investment Advisory</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Strategic market analysis and investment opportunities across global markets.
-              </p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Market research</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Risk assessment</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Portfolio optimization</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Due diligence</span>
-                </div>
-              </div>
-              <Link
-                to="/services?category=investment"
-                className="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <span>Get Started</span>
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/5668772/pexels-photo-5668772.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Scale className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Legal Consulting</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Expert legal advice and documentation for international business operations
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Contract drafting</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Compliance review</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Legal representation</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=legal"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Explore</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
             {/* Legal Consulting */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
               <div className="bg-purple-100 rounded-xl p-4 mb-4 group-hover:bg-purple-200 transition-colors">
                 <Scale className="h-8 w-8 text-purple-600 mx-auto" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Legal Consulting</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Regulatory compliance and business law expertise for international operations.
-              </p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Contract drafting</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Compliance review</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Legal structure</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Dispute resolution</span>
-                </div>
-              </div>
-              <Link
-                to="/services?category=legal"
-                className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <span>Get Started</span>
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Calculator className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Accounting Services</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Professional bookkeeping, tax preparation, and financial reporting services
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Monthly bookkeeping</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Tax preparation</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Financial reports</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=accounting"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>View Services</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
             {/* Accounting Services */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
               <div className="bg-orange-100 rounded-xl p-4 mb-4 group-hover:bg-orange-200 transition-colors">
                 <Calculator className="h-8 w-8 text-orange-600 mx-auto" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Accounting Services</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                International tax optimization and comprehensive accounting solutions.
-              </p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Tax planning</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Bookkeeping</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Financial reporting</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Audit support</span>
-                </div>
-              </div>
-              <Link
-                to="/services?category=accounting"
-                className="w-full bg-orange-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <span>Get Started</span>
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Globe className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Visa & Residence</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Comprehensive visa and residence permit services for global mobility
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Visa applications</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Residence permits</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Citizenship pathways</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=visa"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Apply Now</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
             {/* Visa & Residence */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
               <div className="bg-teal-100 rounded-xl p-4 mb-4 group-hover:bg-teal-200 transition-colors">
                 <Plane className="h-8 w-8 text-teal-600 mx-auto" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Visa & Residence</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Global mobility solutions including visa applications and citizenship programs.
-              </p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Visa applications</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Residency programs</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Citizenship planning</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Immigration law</span>
-                </div>
-              </div>
-              <Link
-                to="/services?category=visa"
-                className="w-full bg-teal-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <span>Get Started</span>
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3184306/pexels-photo-3184306.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Users className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Market Research</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    In-depth market analysis and business intelligence for informed decision making
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Market analysis</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Competitor research</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Industry insights</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=research"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Research</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
             {/* Market Research */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
               <div className="bg-pink-100 rounded-xl p-4 mb-4 group-hover:bg-pink-200 transition-colors">
                 <Search className="h-8 w-8 text-pink-600 mx-auto" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Market Research</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Industry insights and market intelligence for informed business decisions.
-              </p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Industry analysis</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Competitor research</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Market sizing</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Trend analysis</span>
-                </div>
-              </div>
-              <Link
-                to="/services?category=research"
-                className="w-full bg-pink-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-pink-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <span>Get Started</span>
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/259027/pexels-photo-259027.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <CreditCard className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Banking Solutions</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    International banking services and account opening assistance worldwide
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Account opening</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Multi-currency accounts</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Online banking setup</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=banking"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Open Account</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
             {/* Banking Solutions */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
               <div className="bg-indigo-100 rounded-xl p-4 mb-4 group-hover:bg-indigo-200 transition-colors">
                 <CreditCard className="h-8 w-8 text-indigo-600 mx-auto" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Banking Solutions</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                International account opening and comprehensive wealth management.
-              </p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Account opening</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Banking relationships</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Payment processing</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Credit facilities</span>
-                </div>
-              </div>
-              <Link
-                to="/services?category=banking"
-                className="w-full bg-indigo-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <span>Get Started</span>
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <FileText className="h-8 w-8 text-white" />
+                </div>
+                  </Link>
+                </div>
             {/* Ongoing Compliance */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-              <div className="bg-red-100 rounded-xl p-4 mb-4 group-hover:bg-red-200 transition-colors">
-                <Shield className="h-8 w-8 text-red-600 mx-auto" />
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Globe className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Digital Nomad Services</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Specialized services for location-independent professionals and remote workers
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Remote work setup</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Tax residency planning</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Visa strategies</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=digital_nomad"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Start Journey</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Ongoing Compliance</h3>
-              <p className="text-gray-600 text-sm mb-4">
                 Continuous monitoring and compliance management services.
               </p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Regulatory updates</span>
+                    Comprehensive wealth preservation and growth strategies for high-net-worth individuals
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Asset protection</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Investment planning</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Estate planning</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=wealth"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Manage Wealth</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Filing management</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Compliance calendar</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-gray-700">Risk monitoring</span>
-                </div>
-              </div>
-              <Link
-                to="/services?category=compliance"
-                className="w-full bg-red-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
-              >
-                <span>Get Started</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Real-Time Platform Analytics */}
       <section className="py-20 bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <Globe className="h-6 w-6 text-blue-400" />
@@ -784,41 +909,50 @@ const HomePage = () => {
                 <Sparkles className="h-4 w-4" />
                 <span>Start Your Journey</span>
               </div>
-              <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-                <Link
-                  to="/get-started"
-                  className="bg-white text-purple-700 px-10 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center space-x-3"
-                >
-                  <span>Start Your Journey</span>
-                  <ArrowRight className="h-5 w-5" />
-                </Link>
-                
-                <Link
-                  to="/ai-assistant"
-                  className="border-2 border-white/40 text-white px-10 py-4 rounded-xl font-bold hover:bg-white/20 transition-all duration-300 backdrop-blur-sm shadow-xl hover:shadow-2xl flex items-center space-x-3"
-                >
-                  <Bot className="h-5 w-5" />
-                  <span>Try AI Oracle</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Experience the Future */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                Experience the Future of{' '}
-                <span className="text-purple-600">Business Consulting</span>
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3184287/pexels-photo-3184287.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <MessageSquare className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Ongoing Compliance</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Continuous compliance monitoring and regulatory updates for your business
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Regulatory monitoring</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Annual filings</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Updates & alerts</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=compliance"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Stay Compliant</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
               </h2>
-              <p className="text-xl text-gray-600 mb-8">
-                Our AI assistant provides instant, intelligent guidance while expert consultants 
-                ensure personalized service for complex requirements.
-              </p>
 
               <div className="space-y-4 mb-8">
                 <div className="flex items-center space-x-3">
