@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight, Bot, Shield, Zap, Users, Globe2, TrendingUp, Clock,
   Building, CheckCircle, Calculator, Scale, Globe, CreditCard, FileText,
-  Mail, Eye, Sparkles, MessageSquare
+  Mail, Eye, Sparkles, MessageSquare, Send
 } from 'lucide-react';
 
 import CountryCard from '../components/ModernCountryCard';
@@ -1151,6 +1151,7 @@ const HomePage = () => {
               <span>View All Insights</span>
               <ArrowRight className="h-5 w-5" />
             </Link>
+          </div>
         </div>
       </section>
 
