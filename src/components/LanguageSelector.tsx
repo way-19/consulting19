@@ -73,12 +73,12 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <>
           {/* Overlay */}
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[9999]"
             onClick={() => setIsOpen(false)}
           />
           
           {/* Dropdown */}
-          <div className={styles.dropdown}>
+          <div className={`${styles.dropdown} z-[10002]`}>
             <div className="px-4 py-2 border-b border-gray-200">
               <h3 className="text-sm font-semibold text-gray-900">Choose Language</h3>
             </div>
