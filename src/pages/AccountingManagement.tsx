@@ -34,8 +34,6 @@ import {
   Save
 } from 'lucide-react';
 
-const [clientId, setClientId] = React.useState<string | null>(null);
-
 interface AccountingClient {
   id: string;
   client_id: string;
@@ -119,7 +117,6 @@ interface AccountingReminder {
 const AccountingManagement = () => {
   const { profile } = useAuth();
   const [clientId, setClientId] = useState<string | null>(null);
-  const [clientId, setClientId] = useState<string | null>(null);
   const [clients, setClients] = useState<AccountingClient[]>([]);
   const [documents, setDocuments] = useState<AccountingDocument[]>([]);
   const [tasks, setTasks] = useState<AccountingTask[]>([]);
@@ -132,24 +129,7 @@ const AccountingManagement = () => {
   const [showClientModal, setShowClientModal] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  useEffect(() => {
-    if (!profile?.id) return;
-    
-    (async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('profile_id', profile.id)
-        .single();
-      
-      if (error) {
-        console.error('fetch clientId error:', error);
-        return;
-      }
-      setClientId(data?.id ?? null);
-    })();
-  }, [profile?.id]);
-
+  const [activeTab, setActiveTab] = useState<'clients' | 'documents' | 'tasks' | 'reminders' | 'messages'>('clients');
 
   // Client editing form state
   const [editingClient, setEditingClient] = useState<AccountingClient | null>(null);
@@ -172,19 +152,26 @@ const AccountingManagement = () => {
   useEffect(() => {
     if (!profile?.id) return;
 
-    supabase
-      .from('clients')
-      .select('id')
-      .eq('profile_id', profile.id)
-      .single()
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('fetch clientId error:', error);
-          return;
-        }
-        setClientId(data?.id ?? null);
-      });
+    (async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('profile_id', profile.id)
+        .single();
+
+      if (error) {
+        console.error('fetch clientId error:', error);
+        return;
+      }
+      setClientId(data?.id ?? null);
+    })();
   }, [profile?.id]);
+
+  useEffect(() => {
+    if (profile?.id) {
+      fetchData();
+    }
+  }, [profile]);
 
   // Stats
   const totalClients = clients.length;
@@ -192,12 +179,6 @@ const AccountingManagement = () => {
   const overdueDocuments = documents.filter(d => d.status === 'overdue').length;
   const pendingTasks = tasks.filter(t => t.status === 'pending').length;
   const monthlyRevenue = clients.reduce((sum, c) => sum + c.monthly_fee, 0);
-
-  useEffect(() => {
-    if (profile?.id) {
-      fetchData();
-    }
-  }, [profile]);
 
   const fetchData = async () => {
     try {
