@@ -30,7 +30,10 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; c
 
       // Check if Supabase is properly configured
       if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-        throw new Error('Supabase configuration missing. Please check your .env file.');
+        console.warn('Supabase configuration missing. Using fallback data.');
+        setFaqs([]);
+        setLoading(false);
+        return;
       }
 
       let query = supabase
@@ -57,11 +60,10 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; c
       setFaqs(data || []);
     } catch (err) {
       console.error('Error fetching FAQs:', err);
-      if (err instanceof Error && err.message.includes('Failed to fetch')) {
-        setError('Unable to connect to database. Please check your internet connection and Supabase configuration.');
-      } else {
-        setError(err instanceof Error ? err.message : 'Failed to fetch FAQs');
-      }
+      // Gracefully handle connection errors
+      console.warn('FAQs unavailable, using fallback');
+      setFaqs([]);
+      setError(null); // Don't show error to user, just use empty state
     } finally {
       setLoading(false);
     }
