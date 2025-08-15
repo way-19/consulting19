@@ -20,6 +20,7 @@ import BlogPage from './pages/BlogPage'; // Import BlogPage
 import AIAssistantPage from './pages/AIAssistantPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
+import FAQPage from './pages/FAQPage';
 
 // Protected Pages - Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -78,6 +79,7 @@ export default function App() {
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/services/:slug" element={<ServiceDetailPage />} />
           <Route path="/blog" element={<BlogPage />} /> {/* Change route to BlogPage */}
+          <Route path="/faq" element={<FAQPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/ai-assistant" element={<AIAssistantPage />} />
           <Route path="/get-started" element={<AIAssistantPage />} />

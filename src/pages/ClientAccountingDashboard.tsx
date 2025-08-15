@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import StripeCheckout from '../components/StripeCheckout';
+import MultilingualChat from '../components/MultilingualChat';
 import { 
   FileText, 
   Calendar, 
@@ -86,6 +87,7 @@ const ClientAccountingDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showInvoiceCheckout, setShowInvoiceCheckout] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<ClientInvoice | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     if (profile?.id) {
@@ -416,6 +418,13 @@ const ClientAccountingDashboard = () => {
               <div className="text-right">
                 <p className="text-sm text-gray-600">Consultant</p>
                 <p className="font-medium text-gray-900">{accountingProfile.consultant?.full_name}</p>
+                <button
+                  onClick={() => setIsChatOpen(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Danışmanla İletişim</span>
+                </button>
               </div>
             </div>
           </div>
@@ -814,6 +823,18 @@ const ClientAccountingDashboard = () => {
           }}
           onSuccess={handleInvoicePaymentSuccess}
           onError={handleInvoicePaymentError}
+        />
+      )}
+
+      {/* Multilingual Chat Modal */}
+      {accountingProfile && (
+        <MultilingualChat
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          chatType="consultant-client"
+          currentUserId={profile?.id || 'client-1'}
+          currentUserRole="client"
+          targetUserId={accountingProfile.consultant_id}
         />
       )}
     </div>

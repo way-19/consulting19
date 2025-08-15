@@ -309,19 +309,24 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, Menu, X, Globe } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import LanguageSelector from './LanguageSelector';
 import { useTranslation } from '../contexts/LanguageContext';
 import { useCountries } from '../hooks/useCountries';
+import NotificationDropdown from './NotificationDropdown';
+import useNotifications from '../hooks/useNotifications';
 
 const Navbar = () => {
   const [isCountriesOpen, setIsCountriesOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { t } = useTranslation();
   const { countries } = useCountries(true);
+  const { unreadCount } = useNotifications();
 
   const handleSignOut = async () => {
     await signOut();
@@ -452,6 +457,26 @@ const Navbar = () => {
               <div className="flex items-center space-x-4">
                 {/* Language Selector */}
                 <LanguageSelector variant="navbar" showLabel={false} />
+                
+                {/* Notifications */}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                    className="relative p-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  
+                  <NotificationDropdown
+                    isOpen={isNotificationsOpen}
+                    onClose={() => setIsNotificationsOpen(false)}
+                  />
+                </div>
                 
                 {profile.role === 'admin' && (
                   <Link
@@ -609,6 +634,14 @@ const Navbar = () => {
         <div
           className="fixed inset-0 z-40"
           onClick={() => setIsCountriesOpen(false)}
+        />
+      )}
+      
+      {/* Overlay for notifications */}
+      {isNotificationsOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setIsNotificationsOpen(false)}
         />
       )}
     </nav>

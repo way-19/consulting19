@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Globe, X, Settings, User, Shield } from 'lucide-react';
+import { Send, Globe, X, Settings, User, Shield, Clock, CheckCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 interface Message {
   id: string;
   senderId: string;
   senderRole: 'admin' | 'consultant' | 'client';
+  senderName?: string;
   originalText: string;
   originalLanguage: string;
   translatedText?: string;
   targetLanguage?: string;
   timestamp: Date;
   isTranslated: boolean;
+  status?: 'sending' | 'sent' | 'delivered' | 'read';
 }
 
 interface MultilingualChatProps {
@@ -51,15 +55,48 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
   currentUserRole,
   targetUserId
 }) => {
+  const { profile } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return 'Şimdi';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} dakika önce`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} saat önce`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} gün önce`;
+    
+    return date.toLocaleDateString('tr-TR', { 
+      day: 'numeric', 
+      month: 'short', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  const getSenderDisplayName = (senderId: string, senderRole: string) => {
+    if (senderId === currentUserId) {
+      return profile?.full_name || profile?.email || 'Siz';
+    }
+    
+    switch (senderRole) {
+      case 'admin': return 'Sistem Yöneticisi';
+      case 'consultant': return 'Danışman';
+      case 'client': return 'Müşteri';
+      default: return 'Kullanıcı';
+    }
   };
 
   useEffect(() => {
@@ -77,21 +114,25 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
             id: '1',
             senderId: 'admin-1',
             senderRole: 'admin',
+            senderName: 'Sistem Yöneticisi',
             originalText: 'Hello! How are your clients doing this week?',
             originalLanguage: 'en',
             translatedText: 'Merhaba! Bu hafta müşterileriniz nasıl gidiyor?',
             targetLanguage: 'tr',
             timestamp: new Date(Date.now() - 3600000),
-            isTranslated: true
+            isTranslated: true,
+            status: 'read'
           },
           {
             id: '2',
             senderId: currentUserId,
             senderRole: currentUserRole,
+            senderName: profile?.full_name || profile?.email,
             originalText: 'Everything is going well. I have 3 new clients from Georgia this week.',
             originalLanguage: selectedLanguage,
             timestamp: new Date(Date.now() - 1800000),
-            isTranslated: false
+            isTranslated: false,
+            status: 'sent'
           }
         ];
       } else if (chatType === 'consultant-client') {
@@ -100,34 +141,40 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
             id: '1',
             senderId: 'client-1',
             senderRole: 'client',
+            senderName: 'Müşteri',
             originalText: 'Hello, I need help with my company registration documents.',
             originalLanguage: 'en',
             translatedText: 'Merhaba, şirket kayıt belgelerim konusunda yardıma ihtiyacım var.',
             targetLanguage: 'tr',
             timestamp: new Date(Date.now() - 7200000),
-            isTranslated: true
+            isTranslated: true,
+            status: 'read'
           },
           {
             id: '2',
             senderId: currentUserId,
             senderRole: currentUserRole,
+            senderName: profile?.full_name || profile?.email,
             originalText: 'Merhaba! Tabii ki yardımcı olabilirim. Hangi belgeler eksik?',
             originalLanguage: 'tr',
             translatedText: 'Hello! Of course I can help. Which documents are missing?',
             targetLanguage: 'en',
             timestamp: new Date(Date.now() - 6900000),
-            isTranslated: true
+            isTranslated: true,
+            status: 'delivered'
           },
           {
             id: '3',
             senderId: 'client-1',
             senderRole: 'client',
+            senderName: 'Müşteri',
             originalText: 'I need the bank account opening documents and tax registration forms.',
             originalLanguage: 'en',
             translatedText: 'Banka hesabı açma belgeleri ve vergi kayıt formlarına ihtiyacım var.',
             targetLanguage: 'tr',
             timestamp: new Date(Date.now() - 3600000),
-            isTranslated: true
+            isTranslated: true,
+            status: 'read'
           }
         ];
       }
@@ -139,19 +186,32 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
 
+    setIsSending(true);
     const messageId = Date.now().toString();
     const originalMessage: Message = {
       id: messageId,
       senderId: currentUserId,
       senderRole: currentUserRole,
+      senderName: profile?.full_name || profile?.email,
       originalText: newMessage,
       originalLanguage: selectedLanguage,
       timestamp: new Date(),
-      isTranslated: false
+      isTranslated: false,
+      status: 'sending'
     };
 
     setMessages(prev => [...prev, originalMessage]);
     setNewMessage('');
+
+    // Simulate message sending delay
+    setTimeout(() => {
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, status: 'sent' }
+          : msg
+      ));
+      setIsSending(false);
+    }, 500);
 
     // Auto-translate for the recipient
     if (selectedLanguage !== 'en') {
@@ -160,7 +220,7 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
         const translatedText = await translateText(newMessage, 'en');
         setMessages(prev => prev.map(msg => 
           msg.id === messageId 
-            ? { ...msg, translatedText, targetLanguage: 'en', isTranslated: true }
+            ? { ...msg, translatedText, targetLanguage: 'en', isTranslated: true, status: 'delivered' }
             : msg
         ));
       } catch (error) {
@@ -280,7 +340,9 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
                     {message.senderRole === 'admin' && <Shield className="h-3 w-3" />}
                     {message.senderRole === 'consultant' && <User className="h-3 w-3" />}
                     {message.senderRole === 'client' && <User className="h-3 w-3" />}
-                    <span className="text-xs font-medium capitalize">{message.senderRole}</span>
+                    <span className="text-xs font-medium">
+                      {getSenderDisplayName(message.senderId, message.senderRole)}
+                    </span>
                   </div>
                   
                   {/* Original message */}
@@ -305,15 +367,43 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
                     </div>
                   )}
                   
-                  <p className={`text-xs mt-1 ${
+                  <div className={`flex items-center justify-between mt-2 ${
                     isOwnMessage ? 'text-blue-200' : 'text-gray-400'
                   }`}>
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                    <span className="text-xs">
+                      {formatTimeAgo(message.timestamp)}
+                    </span>
+                    {isOwnMessage && message.status && (
+                      <div className="flex items-center space-x-1">
+                        {message.status === 'sending' && (
+                          <div className="animate-spin rounded-full h-3 w-3 border-b border-white"></div>
+                        )}
+                        {message.status === 'sent' && <Clock className="h-3 w-3" />}
+                        {message.status === 'delivered' && <CheckCircle className="h-3 w-3" />}
+                        {message.status === 'read' && <CheckCircle className="h-3 w-3 text-green-300" />}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
           })}
+          
+          {/* Typing indicator */}
+          {typingUsers.length > 0 && (
+            <div className="flex justify-start">
+              <div className="bg-gray-100 rounded-lg px-4 py-2 flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+                <span className="text-sm text-gray-600">
+                  {typingUsers.join(', ')} yazıyor...
+                </span>
+              </div>
+            </div>
+          )}
           
           {isTranslating && (
             <div className="flex justify-center">
@@ -342,16 +432,22 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
             </div>
             <button
               onClick={handleSendMessage}
-              disabled={!newMessage.trim() || isTranslating}
-              className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!newMessage.trim() || isTranslating || isSending}
+              className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              <Send className="h-5 w-5" />
+              {isSending ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              ) : (
+                <Send className="h-5 w-5" />
+              )}
             </button>
           </div>
           
           <div className="mt-2 text-xs text-gray-500 flex items-center space-x-2">
             <Globe className="h-3 w-3" />
-            <span>Messages will be auto-translated for the recipient</span>
+            <span>Mesajlar alıcı için otomatik çevrilecek</span>
+            <span>•</span>
+            <span>Güvenli uçtan uca şifreleme</span>
           </div>
         </div>
       </div>

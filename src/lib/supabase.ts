@@ -303,6 +303,95 @@ export const createNotification = async (
   }
 };
 
+// Enhanced notification helpers
+export const notifyDocumentStatusChange = async (
+  clientId: string,
+  documentName: string,
+  newStatus: string,
+  consultantName: string
+) => {
+  const statusMessages = {
+    approved: `Belgeniz "${documentName}" onaylandı`,
+    rejected: `Belgeniz "${documentName}" reddedildi`,
+    needs_revision: `Belgeniz "${documentName}" revizyon gerektiriyor`
+  };
+
+  await createNotification(
+    clientId,
+    'document_status',
+    'Belge Durumu Güncellendi',
+    `${statusMessages[newStatus as keyof typeof statusMessages]} - ${consultantName}`,
+    newStatus === 'rejected' ? 'high' : 'normal',
+    'documents',
+    undefined,
+    '/client/documents'
+  );
+};
+
+export const notifyNewMessage = async (
+  recipientId: string,
+  senderName: string,
+  messagePreview: string,
+  chatType: string
+) => {
+  await createNotification(
+    recipientId,
+    'new_message',
+    'Yeni Mesaj',
+    `${senderName}: ${messagePreview.substring(0, 50)}${messagePreview.length > 50 ? '...' : ''}`,
+    'normal',
+    'messages',
+    undefined,
+    chatType === 'consultant-client' ? '/client-accounting' : '/consultant-dashboard'
+  );
+};
+
+export const notifyTaskAssigned = async (
+  consultantId: string,
+  clientId: string,
+  taskTitle: string,
+  dueDate?: string
+) => {
+  await createNotification(
+    consultantId,
+    'task_assigned',
+    'Yeni Görev Atandı',
+    `"${taskTitle}" görevi atandı${dueDate ? ` - Son tarih: ${new Date(dueDate).toLocaleDateString('tr-TR')}` : ''}`,
+    'normal',
+    'tasks',
+    undefined,
+    '/consultant/tasks'
+  );
+
+  await createNotification(
+    clientId,
+    'task_assigned',
+    'Size Yeni Görev Atandı',
+    `Danışmanınız size "${taskTitle}" görevini atadı`,
+    'normal',
+    'tasks',
+    undefined,
+    '/client/projects'
+  );
+};
+
+export const notifyPaymentReceived = async (
+  consultantId: string,
+  amount: number,
+  currency: string,
+  clientName: string
+) => {
+  await createNotification(
+    consultantId,
+    'payment_received',
+    'Ödeme Alındı',
+    `${clientName} müşterisinden ${amount} ${currency} ödeme alındı`,
+    'normal',
+    'payments',
+    undefined,
+    '/consultant/payments'
+  );
+
 // Audit logging helper
 export const logAdminAction = async (
   action: string,
