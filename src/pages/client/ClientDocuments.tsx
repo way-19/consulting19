@@ -169,12 +169,12 @@ const ClientDocuments = () => {
   });
 
   const [stats, setStats] = useState<DocumentStats>({
-    totalDocuments: 0,
+    totalDocuments: 3,
     pendingReview: 0,
-    approved: 0,
+    approved: 2,
     rejected: 0,
-    needsRevision: 0,
-    requestedDocuments: demoRequestedDocuments.length
+    needsRevision: 1,
+    requestedDocuments: 3
   });
 
   const documentCategories = [
@@ -188,6 +188,19 @@ const ClientDocuments = () => {
   useEffect(() => {
     console.log('🎯 ClientDocuments: Loading demo data...');
     console.log('✅ Demo data already initialized in state');
+    
+    // Calculate and set stats immediately
+    const uploadedStats = {
+      totalDocuments: demoUploadedDocuments.length,
+      pendingReview: demoUploadedDocuments.filter(d => d.status === 'pending').length,
+      approved: demoUploadedDocuments.filter(d => d.status === 'approved').length,
+      rejected: demoUploadedDocuments.filter(d => d.status === 'rejected').length,
+      needsRevision: demoUploadedDocuments.filter(d => d.status === 'needs_revision').length,
+      requestedDocuments: demoRequestedDocuments.length
+    };
+    
+    setStats(uploadedStats);
+    console.log('📊 Stats calculated:', uploadedStats);
     setLoading(false);
   }, []); // Empty dependency array - run once on mount
 
