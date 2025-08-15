@@ -41,6 +41,8 @@ const translations: Record<SupportedLanguage, Record<string, string>> = {
     'nav.getStarted': 'Get Started',
     'nav.signIn': 'Sign In',
     'nav.signOut': 'Sign Out',
+    'nav.chooseJurisdiction': 'Choose Your Jurisdiction',
+    'nav.viewAllCountries': 'View All Countries',
     
     // Dashboard
     'dashboard.welcome': 'Welcome back',
@@ -199,6 +201,8 @@ const translations: Record<SupportedLanguage, Record<string, string>> = {
     'nav.getStarted': 'Başlayın',
     'nav.signIn': 'Giriş Yap',
     'nav.signOut': 'Çıkış Yap',
+    'nav.chooseJurisdiction': 'Yargı Alanınızı Seçin',
+    'nav.viewAllCountries': 'Tüm Ülkeleri Görüntüle',
     
     // Dashboard
     'dashboard.welcome': 'Tekrar hoş geldiniz',
