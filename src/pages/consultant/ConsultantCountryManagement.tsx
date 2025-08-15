@@ -60,6 +60,7 @@ const ConsultantCountryManagement = () => {
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [editingService, setEditingService] = useState<CustomService | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
   const [serviceForm, setServiceForm] = useState({
     title: '',
@@ -69,7 +70,8 @@ const ConsultantCountryManagement = () => {
     currency: 'USD',
     delivery_time_days: 7,
     category: 'custom',
-    country_id: ''
+    country_id: '',
+    image_url: ''
   });
 
   // Predefined Georgia services
@@ -271,7 +273,8 @@ const ConsultantCountryManagement = () => {
       currency: service.currency,
       delivery_time_days: service.delivery_time_days,
       category: service.category,
-      country_id: service.country_id
+      country_id: service.country_id,
+      image_url: service.image_url || ''
     });
     setShowServiceModal(true);
   };
@@ -285,9 +288,11 @@ const ConsultantCountryManagement = () => {
       currency: 'USD',
       delivery_time_days: 7,
       category: 'custom',
-      country_id: ''
+      country_id: '',
+      image_url: ''
     });
     setEditingService(null);
+    setSelectedImageFile(null);
     setShowServiceModal(false);
   };
 
@@ -353,7 +358,7 @@ const ConsultantCountryManagement = () => {
   });
 
   // Combine predefined and custom services for display
-  const allServicesForDisplay = [...georgiaServices, ...filteredCustomServices];
+  const allServicesForDisplay = [...georgiaServices, ...(filteredCustomServices || [])];
 
   if (loading) {
     return (
@@ -715,6 +720,54 @@ const ConsultantCountryManagement = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Service Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Service Image
+                </label>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Check file size (50MB limit)
+                        if (file.size > 50 * 1024 * 1024) {
+                          alert('Image size must be less than 50MB. Please compress your image and try again.');
+                          e.target.value = '';
+                          return;
+                        }
+                        setSelectedImageFile(file);
+                      } else {
+                        setSelectedImageFile(null);
+                      }
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                  {selectedImageFile && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-sm text-green-800">
+                        Selected: {selectedImageFile.name} ({(selectedImageFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    </div>
+                  )}
+                  {serviceForm.image_url && !selectedImageFile && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-800 mb-2">Current image:</p>
+                      <img 
+                        src={serviceForm.image_url} 
+                        alt="Current service" 
+                        className="w-32 h-20 object-cover rounded-lg border border-gray-200" 
+                      />
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Upload an image for your service (recommended: 800x600px, max 50MB)
+                  </p>
+                </div>
               </div>
 
               {/* Features */}
