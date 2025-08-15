@@ -139,13 +139,9 @@ const AdminDashboard = () => {
 
       // Set empty recent activity since audit_logs table doesn't exist
       setRecentActivity([]);
-
-      console.log('✅ fetchDashboardData: All data processed successfully');
     } catch (error) {
-      console.error('❌ fetchDashboardData: Error occurred:', error);
-      console.error('Error fetching dashboard data:', error);
+      console.error('❌ fetchDashboardData: Error:', error);
     } finally {
-      console.log('🏁 fetchDashboardData: Setting loading to false');
       setLoading(false);
     }
   };
