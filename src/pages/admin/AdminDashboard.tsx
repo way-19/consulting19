@@ -88,18 +88,6 @@ const AdminDashboard = () => {
       setLoading(true);
 
       // Fetch all stats in parallel
-      console.log('📊 fetchDashboardData: Starting parallel queries...');
-      const [
-        usersResult,
-        clientsResult,
-        countriesResult,
-        projectsResult,
-        tasksResult,
-      ] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'client'),
-        supabase.from('countries').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('projects').select('id, status', { count: 'exact' }),
         supabase.from('tasks').select('id, status', { count: 'exact' })
       ]);
 
@@ -140,17 +128,6 @@ const AdminDashboard = () => {
 
       // Set empty recent activity since audit_logs table doesn't exist
       setRecentActivity([]);
-
-      console.log('✅ fetchDashboardData: All data processed successfully');
-    } catch (error) {
-      console.error('❌ fetchDashboardData: Error occurred:', error);
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      console.log('🏁 fetchDashboardData: Setting loading to false');
-      setLoading(false);
-    }
-  };
-
   const quickActions = [
     {
       name: 'User Management',
