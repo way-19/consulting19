@@ -24,7 +24,7 @@ export function useBlogPosts(countryId?: string) {
     setError(null);
 
     supabase
-      .from('public.blog_posts')
+      .from('blog_posts')
       .select(
         'id,title,slug,excerpt,cover_image,published_at,author:author_id(full_name,email)'
       )
