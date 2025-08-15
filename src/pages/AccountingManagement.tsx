@@ -356,8 +356,8 @@ const AccountingManagement = () => {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Muhasebe Yönetimi</h1>
-              <p className="text-gray-600 mt-1">Müşteri belgelerini yönetin, son tarihleri takip edin ve hatırlatıcıları otomatikleştirin</p>
+              <h1 className="text-2xl font-bold text-gray-900">Accounting Management</h1>
+              <p className="text-gray-600 mt-1">Manage client documents, track deadlines and automate reminders</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -365,14 +365,14 @@ const AccountingManagement = () => {
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
               >
                 <MessageSquare className="h-5 w-5" />
-                <span>Mesaj Gönder</span>
+                <span>Send Message</span>
               </button>
               <button
                 onClick={fetchData}
                 className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
               >
                 <RefreshCw className="h-5 w-5" />
-                <span>Yenile</span>
+                <span>Refresh</span>
               </button>
             </div>
           </div>
@@ -385,7 +385,7 @@ const AccountingManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Müşteri</p>
+                <p className="text-sm font-medium text-gray-600">Total Clients</p>
                 <p className="text-3xl font-bold text-gray-900">{totalClients}</p>
               </div>
               <Users className="h-8 w-8 text-blue-600" />
@@ -395,7 +395,7 @@ const AccountingManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Aktif Müşteri</p>
+                <p className="text-sm font-medium text-gray-600">Active Clients</p>
                 <p className="text-3xl font-bold text-green-600">{activeClients}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -405,7 +405,7 @@ const AccountingManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Geciken Belgeler</p>
+                <p className="text-sm font-medium text-gray-600">Overdue Documents</p>
                 <p className="text-3xl font-bold text-red-600">{overdueDocuments}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-600" />
@@ -415,7 +415,7 @@ const AccountingManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Bekleyen Görevler</p>
+                <p className="text-sm font-medium text-gray-600">Pending Tasks</p>
                 <p className="text-3xl font-bold text-orange-600">{pendingTasks}</p>
               </div>
               <Clock className="h-8 w-8 text-orange-600" />
@@ -425,7 +425,7 @@ const AccountingManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Aylık Gelir</p>
+                <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
                 <p className="text-3xl font-bold text-purple-600">${monthlyRevenue.toLocaleString()}</p>
               </div>
               <DollarSign className="h-8 w-8 text-purple-600" />
@@ -438,11 +438,11 @@ const AccountingManagement = () => {
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6">
               {[
-                { key: 'clients', label: 'Müşteriler', icon: Users, count: totalClients },
-                { key: 'documents', label: 'Belgeler', icon: FileText, count: documents.length },
-                { key: 'tasks', label: 'Görevler', icon: CheckCircle, count: tasks.length },
-                { key: 'reminders', label: 'Hatırlatıcılar', icon: Bell, count: reminders.length },
-                { key: 'messages', label: 'Mesajlar', icon: MessageSquare, count: 0 }
+                { key: 'clients', label: 'Clients', icon: Users, count: totalClients },
+                { key: 'documents', label: 'Documents', icon: FileText, count: documents.length },
+                { key: 'tasks', label: 'Tasks', icon: CheckCircle, count: tasks.length },
+                { key: 'reminders', label: 'Reminders', icon: Bell, count: reminders.length },
+                { key: 'messages', label: 'Messages', icon: MessageSquare, count: 0 }
               ].map((tab) => (
                 <button
                   key={tab.key}

@@ -317,7 +317,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Belge</p>
+                <p className="text-sm font-medium text-gray-600">Total Documents</p>
                 <p className="text-3xl font-bold text-gray-900">{stats.totalDocuments}</p>
               </div>
               <FileText className="h-8 w-8 text-gray-600" />
@@ -327,7 +327,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">İnceleme Bekleyen</p>
+                <p className="text-sm font-medium text-gray-600">Pending Review</p>
                 <p className="text-3xl font-bold text-blue-600">{stats.pendingReview}</p>
               </div>
               <Clock className="h-8 w-8 text-blue-600" />
@@ -337,7 +337,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Onaylanan</p>
+                <p className="text-sm font-medium text-gray-600">Approved</p>
                 <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -347,7 +347,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Reddedilen</p>
+                <p className="text-sm font-medium text-gray-600">Rejected</p>
                 <p className="text-3xl font-bold text-red-600">{stats.rejected}</p>
               </div>
               <XCircle className="h-8 w-8 text-red-600" />
@@ -357,7 +357,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Revizyon Gerekli</p>
+                <p className="text-sm font-medium text-gray-600">Needs Revision</p>
                 <p className="text-3xl font-bold text-yellow-600">{stats.needsRevision}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
@@ -367,7 +367,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Boyut</p>
+                <p className="text-sm font-medium text-gray-600">Total Size</p>
                 <p className="text-2xl font-bold text-purple-600">{formatFileSize(stats.totalSize)}</p>
               </div>
               <Archive className="h-8 w-8 text-purple-600" />

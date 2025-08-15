@@ -273,8 +273,8 @@ const ConsultantPayments = () => {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Ödemeler ve Kazançlar</h1>
-              <p className="text-gray-600 mt-1">Kazançlarınızı, komisyonlarınızı ve ödeme taleplerinizi takip edin</p>
+              <h1 className="text-2xl font-bold text-gray-900">Payments and Earnings</h1>
+              <p className="text-gray-600 mt-1">Track your earnings, commissions and payment requests</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -282,14 +282,14 @@ const ConsultantPayments = () => {
                 className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
               >
                 <Plus className="h-5 w-5" />
-                <span>Ödeme Talep Et</span>
+                <span>Request Payment</span>
               </button>
               <button
                 onClick={fetchPaymentData}
                 className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
               >
                 <RefreshCw className="h-5 w-5" />
-                <span>Yenile</span>
+                <span>Refresh</span>
               </button>
             </div>
           </div>
@@ -302,9 +302,9 @@ const ConsultantPayments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Kazanç</p>
+                <p className="text-sm font-medium text-gray-600">Total Earnings</p>
                 <p className="text-3xl font-bold text-green-600">${stats.totalEarnings.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">Tüm zamanlar</p>
+                <p className="text-xs text-gray-500">All time</p>
               </div>
               <DollarSign className="h-8 w-8 text-green-600" />
             </div>
@@ -313,9 +313,9 @@ const ConsultantPayments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Bu Ay</p>
+                <p className="text-sm font-medium text-gray-600">This Month</p>
                 <p className="text-3xl font-bold text-blue-600">${stats.monthlyEarnings.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">Mevcut ay</p>
+                <p className="text-xs text-gray-500">Current month</p>
               </div>
               <Calendar className="h-8 w-8 text-blue-600" />
             </div>
@@ -324,9 +324,9 @@ const ConsultantPayments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Bekleyen</p>
+                <p className="text-sm font-medium text-gray-600">Pending</p>
                 <p className="text-3xl font-bold text-yellow-600">${stats.pendingCommissions.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">Ödeme bekleyen</p>
+                <p className="text-xs text-gray-500">Awaiting payment</p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
             </div>
@@ -335,9 +335,9 @@ const ConsultantPayments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Ödenen</p>
+                <p className="text-sm font-medium text-gray-600">Paid</p>
                 <p className="text-3xl font-bold text-purple-600">${stats.paidCommissions.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">Alınan</p>
+                <p className="text-xs text-gray-500">Received</p>
               </div>
               <CheckCircle className="h-8 w-8 text-purple-600" />
             </div>
@@ -349,7 +349,7 @@ const ConsultantPayments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Sipariş</p>
+                <p className="text-sm font-medium text-gray-600">Total Orders</p>
                 <p className="text-3xl font-bold text-gray-900">{stats.totalOrders}</p>
               </div>
               <Target className="h-8 w-8 text-gray-600" />
@@ -359,7 +359,7 @@ const ConsultantPayments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Müşteriler</p>
+                <p className="text-sm font-medium text-gray-600">Clients</p>
                 <p className="text-3xl font-bold text-blue-600">{stats.clientCount}</p>
               </div>
               <Users className="h-8 w-8 text-blue-600" />
@@ -369,7 +369,7 @@ const ConsultantPayments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Dönüşüm Oranı</p>
+                <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
                 <p className="text-3xl font-bold text-green-600">{stats.conversionRate}%</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-600" />
@@ -379,7 +379,7 @@ const ConsultantPayments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Ort. Sipariş Değeri</p>
+                <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
                 <p className="text-3xl font-bold text-purple-600">${stats.avgOrderValue.toLocaleString()}</p>
               </div>
               <Award className="h-8 w-8 text-purple-600" />
@@ -392,10 +392,10 @@ const ConsultantPayments = () => {
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6">
               {[
-                { key: 'overview', label: 'Genel Bakış', icon: BarChart3 },
-                { key: 'breakdown', label: 'Komisyon Dökümü', icon: DollarSign },
-                { key: 'requests', label: 'Ödeme Talepleri', icon: CreditCard },
-                { key: 'analytics', label: 'Analitik', icon: TrendingUp }
+                { key: 'overview', label: 'Overview', icon: BarChart3 },
+                { key: 'breakdown', label: 'Commission Breakdown', icon: DollarSign },
+                { key: 'requests', label: 'Payment Requests', icon: CreditCard },
+                { key: 'analytics', label: 'Analytics', icon: TrendingUp }
               ].map((tab) => (
                 <button
                   key={tab.key}

@@ -329,14 +329,14 @@ const ClientDocuments = () => {
               className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Panele Geri Dön
+              Back to Dashboard
             </Link>
           </div>
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Belgelerim</h1>
-              <p className="text-gray-600 mt-1">İş belgelerinizi yükleyin ve yönetin</p>
+              <h1 className="text-2xl font-bold text-gray-900">My Documents</h1>
+              <p className="text-gray-600 mt-1">Upload and manage your business documents</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -344,14 +344,14 @@ const ClientDocuments = () => {
                 className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
               >
                 <Plus className="h-5 w-5" />
-                <span>Belge Yükle</span>
+                <span>Upload Document</span>
               </button>
               <button
                 onClick={fetchDocuments}
                 className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
               >
                 <RefreshCw className="h-5 w-5" />
-                <span>Yenile</span>
+                <span>Refresh</span>
               </button>
             </div>
           </div>
@@ -364,7 +364,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Belge</p>
+                <p className="text-sm font-medium text-gray-600">Total Documents</p>
                 <p className="text-3xl font-bold text-gray-900">{stats.totalDocuments}</p>
               </div>
               <FileText className="h-8 w-8 text-gray-600" />
@@ -374,7 +374,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">İnceleme Bekleyen</p>
+                <p className="text-sm font-medium text-gray-600">Pending Review</p>
                 <p className="text-3xl font-bold text-blue-600">{stats.pendingReview}</p>
               </div>
               <Clock className="h-8 w-8 text-blue-600" />
@@ -384,7 +384,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Onaylanan</p>
+                <p className="text-sm font-medium text-gray-600">Approved</p>
                 <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -394,7 +394,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Reddedilen</p>
+                <p className="text-sm font-medium text-gray-600">Rejected</p>
                 <p className="text-3xl font-bold text-red-600">{stats.rejected}</p>
               </div>
               <XCircle className="h-8 w-8 text-red-600" />
@@ -404,7 +404,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Revizyon Gerekli</p>
+                <p className="text-sm font-medium text-gray-600">Needs Revision</p>
                 <p className="text-3xl font-bold text-yellow-600">{stats.needsRevision}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
@@ -414,7 +414,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Boyut</p>
+                <p className="text-sm font-medium text-gray-600">Total Size</p>
                 <p className="text-2xl font-bold text-purple-600">{formatFileSize(stats.totalSize)}</p>
               </div>
               <Archive className="h-8 w-8 text-purple-600" />
@@ -429,24 +429,24 @@ const ClientDocuments = () => {
               <Upload className="h-6 w-6 text-blue-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">Belge Yükleme Rehberi</h3>
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">Document Upload Guidelines</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
                 <div>
-                  <h4 className="font-medium mb-2">Kabul Edilen Formatlar:</h4>
+                  <h4 className="font-medium mb-2">Accepted Formats:</h4>
                   <ul className="space-y-1">
-                    <li>• PDF belgeleri (.pdf)</li>
-                    <li>• Resim dosyaları (.jpg, .jpeg, .png)</li>
-                    <li>• Word belgeleri (.doc, .docx)</li>
-                    <li>• Excel dosyaları (.xls, .xlsx)</li>
+                    <li>• PDF documents (.pdf)</li>
+                    <li>• Image files (.jpg, .jpeg, .png)</li>
+                    <li>• Word documents (.doc, .docx)</li>
+                    <li>• Excel files (.xls, .xlsx)</li>
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-medium mb-2">Gereksinimler:</h4>
+                  <h4 className="font-medium mb-2">Requirements:</h4>
                   <ul className="space-y-1">
-                    <li>• Maksimum dosya boyutu: 50MB</li>
-                    <li>• Net, okunabilir belgeler</li>
-                    <li>• Orijinal veya onaylı kopyalar</li>
-                    <li>• Gerekirse İngilizce çeviri</li>
+                    <li>• Maximum file size: 50MB</li>
+                    <li>• Clear, readable documents</li>
+                    <li>• Original or certified copies</li>
+                    <li>• English translation if required</li>
                   </ul>
                 </div>
               </div>
@@ -458,12 +458,12 @@ const ClientDocuments = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Belge Ara</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Search Documents</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Belge adı veya türü..."
+                  placeholder="Document name or type..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -472,13 +472,13 @@ const ClientDocuments = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">Tüm Kategoriler</option>
+                <option value="all">All Categories</option>
                 {documentCategories.map(cat => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
                 ))}
@@ -486,22 +486,22 @@ const ClientDocuments = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">Tüm Durumlar</option>
-                <option value="pending">İnceleme Bekleyen</option>
-                <option value="approved">Onaylanan</option>
-                <option value="rejected">Reddedilen</option>
-                <option value="needs_revision">Revizyon Gerekli</option>
+                <option value="all">All Status</option>
+                <option value="pending">Pending Review</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="needs_revision">Needs Revision</option>
               </select>
             </div>
 
             <div className="text-sm text-gray-600">
-              {documents.length} belgeden {filteredDocuments.length} tanesi gösteriliyor
+              Showing {filteredDocuments.length} of {documents.length} documents
             </div>
           </div>
         </div>
