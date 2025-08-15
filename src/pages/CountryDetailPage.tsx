@@ -145,6 +145,7 @@ const CountryDetailPage = () => {
 
   // Combine predefined services with custom services
   const allServices = [...georgiaServices, ...filteredServices];
+  
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
