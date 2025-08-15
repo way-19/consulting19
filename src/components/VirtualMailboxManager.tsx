@@ -1085,7 +1085,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
             deliveryTime: shippingOption === 'express' ? 3 : 7
           }}
           onSuccess={handleShippingPaymentSuccess}
-          onError={(error) => alert(`Ödeme hatası: ${error}`)}
+          onError={(error) => alert(\`Ödeme hatası: ${error}`)}
         />
       )}
       {/* Stripe Checkout for Shipping */}
@@ -1097,7 +1097,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           currency="USD"
           orderId={selectedItemForShipping.id}
           orderDetails={{
-            serviceName: `${shippingOption === 'express' ? 'Hızlı' : 'Normal'} Kargo - ${selectedItemForShipping.document_name}`,
+            serviceName: \`${shippingOption === 'express' ? 'Hızlı' : 'Normal'} Kargo - ${selectedItemForShipping.document_name}`,
             consultantName: 'Virtual Mailbox',
             deliveryTime: shippingOption === 'express' ? 3 : 7
           }}
