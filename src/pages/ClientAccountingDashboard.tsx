@@ -105,29 +105,43 @@ const ClientAccountingDashboard = () => {
 
   useEffect(() => {
     if (profile?.id) {
-      fetchData();
+      fetchInitialData();
     }
   }, [profile]);
 
-  const fetchData = async () => {
+  // New useEffect to fetch secondary data when accountingProfile is available
+  useEffect(() => {
+    if (accountingProfile?.id) {
+      console.log('🔄 accountingProfile changed, fetching secondary data...');
+      console.log('🆔 accountingProfile.id:', accountingProfile.id);
+      fetchSecondaryData(accountingProfile.id);
+    }
+  }, [accountingProfile]);
+
+  const fetchInitialData = async () => {
     try {
-      console.log('🚀 fetchData: Starting...');
+      console.log('🚀 fetchInitialData: Starting...');
       await fetchAccountingProfile();
-      console.log('✅ fetchData: fetchAccountingProfile completed');
-      
-      // Wait a bit for state to update, then fetch other data
-      setTimeout(async () => {
-        console.log('🔄 fetchData: Starting secondary data fetch...');
-        await Promise.all([fetchDocuments(), fetchInvoices(), fetchMessages()]);
-        console.log('✅ fetchData: All secondary data fetched');
-      }, 100);
+      console.log('✅ fetchInitialData: fetchAccountingProfile completed');
     } catch (error) {
-      console.error('💥 Error in fetchData:', error);
+      console.error('💥 Error in fetchInitialData:', error);
     } finally {
-      setTimeout(() => {
-        console.log('🏁 fetchData: Setting loading to false');
-        setLoading(false);
-      }, 200);
+      console.log('🏁 fetchInitialData: Setting loading to false');
+      setLoading(false);
+    }
+  };
+
+  const fetchSecondaryData = async (accountingProfileId: string) => {
+    try {
+      console.log('🔄 fetchSecondaryData: Starting with accountingProfileId:', accountingProfileId);
+      await Promise.all([
+        fetchDocuments(accountingProfileId), 
+        fetchInvoices(accountingProfileId), 
+        fetchMessages()
+      ]);
+      console.log('✅ fetchSecondaryData: All secondary data fetched');
+    } catch (error) {
+      console.error('💥 Error in fetchSecondaryData:', error);
     }
   };
 
@@ -213,17 +227,14 @@ const ClientAccountingDashboard = () => {
     }
   };
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = async (accountingProfileId: string) => {
     console.log('📄 fetchDocuments: Starting...');
-    console.log('🔍 fetchDocuments: accountingProfile exists?', !!accountingProfile);
-    console.log('🆔 fetchDocuments: accountingProfile.id:', accountingProfile?.id);
+    console.log('🆔 fetchDocuments: Using accountingProfileId:', accountingProfileId);
     
-    if (!accountingProfile) return;
-    
-    console.log('📊 fetchDocuments: Querying accounting_documents for client_id:', accountingProfile.id);
+    console.log('📊 fetchDocuments: Querying accounting_documents for client_id:', accountingProfile?.id);
     const { data, error } = await supabase
       .from('accounting_documents')
-      .select('*').eq('client_id', accountingProfile.id)
+      .select('*').eq('client_id', accountingProfileId)
       .order('due_date', { ascending: true });
     
     console.log('📄 fetchDocuments: Query result - data:', data);
@@ -235,13 +246,23 @@ const ClientAccountingDashboard = () => {
     console.log('✅ fetchDocuments: Documents state updated with:', data?.length || 0, 'documents');
   };
 
-  const fetchInvoices = async () => {
-    if (!accountingProfile) return;
+  const fetchInvoices = async (accountingProfileId: string) => {
+    console.log('💰 fetchInvoices: Starting with accountingProfileId:', accountingProfileId);
     const { data, error } = await supabase
       .from('accounting_invoices')
-      .select('*').eq('client_id', accountingProfile.id)
+      .select('*').eq('client_id', accountingProfileId)
       .order('created_at', { ascending: false });
-    if (error) return console.error('Error fetching invoices:', error);
+    
+    console.log('💰 fetchInvoices: Query result - data:', data);
+    console.log('❌ fetchInvoices: Query result - error:', error);
+    
+    if (error) {
+      console.error('❌ fetchInvoices: Error:', error);
+      return;
+    }
+    
+    console.log('📋 fetchInvoices: Found invoices count:', data?.length || 0);
+    console.log('✅ fetchInvoices: Invoices state updated with:', data);
     setInvoices(data || []);
   };
 
@@ -272,7 +293,7 @@ const ClientAccountingDashboard = () => {
         .update({ status: 'paid', stripe_invoice_id: paymentIntentId })
         .eq('id', selectedInvoice.id);
     }
-    await fetchInvoices(); alert('Invoice payment successful!');
+    await fetchInvoices(accountingProfile?.id || ''); alert('Invoice payment successful!');
   };
   const handleInvoicePaymentError = (error: string) => { alert(`Invoice payment failed: ${error}`); };
   const handleInvoicePaymentCancel = () => { setShowInvoiceCheckout(false); setSelectedInvoice(null); };
