@@ -18,7 +18,6 @@ export function useBlogPosts(countryId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const ctrl = new AbortController();
     setLoading(true);
     setError(null);
 
@@ -36,17 +35,11 @@ export function useBlogPosts(countryId?: string) {
     }
 
     query
-      .abortSignal(ctrl.signal)
       .then(({ data, error }) => {
         if (error) throw error;
         setData((data as BlogPost[]) ?? []);
       })
       .catch((e: any) => {
-        // Don't treat AbortError as a critical failure
-        if (e?.name === 'AbortError') {
-          console.log('Blog posts fetch was aborted');
-          return;
-        }
         console.error('Error fetching blog posts:', {
           message: e?.message || String(e),
           details: e?.cause || e
@@ -54,8 +47,6 @@ export function useBlogPosts(countryId?: string) {
         setError(e?.message || 'Failed to fetch');
       })
       .finally(() => setLoading(false));
-
-    return () => ctrl.abort();
   }, [countryId]);
 
   return { data, loading, error };
