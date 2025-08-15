@@ -14,7 +14,7 @@ export type Role = 'admin' | 'consultant' | 'client';
 export interface Profile {
   id: string;           // auth.users.id ile aynı
   email: string;
-  legacy_role: Role;
+  role: Role;
   full_name?: string;
   country?: string;
   created_at?: string;
@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email, legacy_role, full_name, country, created_at, updated_at')
+      .select('id, email, role, full_name, country, created_at, updated_at')
       .eq('id', uid)              // profiles.id = auth.users.id
       .maybeSingle();
 
