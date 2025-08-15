@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import ClientRecommendations from '../../components/client/ClientRecommendations';
 import UpcomingPayments from '../../components/client/UpcomingPayments';
+import ClientRecommendations from '../../components/client/ClientRecommendations';
+import UpcomingPayments from '../../components/client/UpcomingPayments';
 import { 
   User, 
   FileText, 
@@ -258,6 +260,20 @@ const ClientDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Active Projects */}
           <div className="lg:col-span-2">
+            {/* Recommendations Section */}
+            {clientId && (
+              <div className="mb-8">
+                <ClientRecommendations clientId={clientId} />
+              </div>
+            )}
+
+            {/* Upcoming Payments Section */}
+            {clientId && (
+              <div className="mb-8">
+                <UpcomingPayments clientId={clientId} />
+              </div>
+            )}
+
             {/* Recommendations Section */}
             {clientId && (
               <div className="mb-8">
