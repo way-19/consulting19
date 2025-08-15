@@ -131,12 +131,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
     const date = new Date(dateString);
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'Now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    if (diffInSeconds < 60) return 'Şimdi';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} dakika önce`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} saat önce`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} gün önce`;
     
-    return date.toLocaleDateString('en-US');
+    return date.toLocaleDateString('tr-TR');
   };
 
   if (!isOpen) return null;
@@ -151,14 +151,14 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Bildirimler</h3>
             <div className="flex items-center space-x-2">
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
                   className="text-sm text-purple-600 hover:text-purple-700 font-medium"
                 >
-                  Mark All as Read
+                  Tümünü Okundu İşaretle
                 </button>
               )}
               <button
@@ -171,7 +171,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
           </div>
           {unreadCount > 0 && (
             <p className="text-sm text-gray-600 mt-1">
-              {unreadCount} unread notifications
+              {unreadCount} okunmamış bildirim
             </p>
           )}
         </div>
@@ -185,7 +185,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
           ) : notifications.length === 0 ? (
             <div className="text-center py-8">
               <Bell className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-600 text-sm">No notifications yet</p>
+              <p className="text-gray-600 text-sm">Henüz bildirim yok</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
@@ -232,7 +232,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
         {notifications.length > 0 && (
           <div className="p-3 border-t border-gray-200 bg-gray-50">
             <button className="w-full text-center text-sm text-purple-600 hover:text-purple-700 font-medium">
-              View All Notifications
+              Tüm Bildirimleri Görüntüle
             </button>
           </div>
         )}

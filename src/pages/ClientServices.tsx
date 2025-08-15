@@ -152,17 +152,17 @@ const ClientServices = () => {
             <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
               <Zap className="h-8 w-8 text-purple-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Request Custom Service</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Özel Hizmet Talep Edin</h2>
             <p className="text-lg text-gray-600 mb-6">
-              Request the custom service you need from your consultant. 
-              A personalized proposal will be prepared for you.
+              İhtiyacınız olan özel hizmeti danışmanınızdan talep edin. 
+              Size özel bir teklif hazırlanacaktır.
             </p>
             <button
               onClick={() => setShowRequestModal(true)}
               className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center space-x-2 mx-auto"
             >
               <Plus className="h-5 w-5" />
-              <span>Request Service</span>
+              <span>Hizmet Talep Et</span>
             </button>
           </div>
         </div>
@@ -170,7 +170,7 @@ const ClientServices = () => {
         {/* Consultant's Custom Services */}
         {consultantServices.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Custom Services from Your Consultant</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Danışmanınızdan Özel Hizmetler</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {consultantServices.map((service) => (
                 <div key={service.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
@@ -207,13 +207,13 @@ const ClientServices = () => {
                           <span className="text-sm font-normal text-gray-500 ml-1">{service.currency}</span>
                         </div>
                         <div className="text-sm text-gray-500">
-                          {service.delivery_time_days} days
+                          {service.delivery_time_days} gün
                         </div>
                       </div>
                     </div>
 
                     <button className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-200 flex items-center justify-center space-x-2">
-                      <span>Order Service</span>
+                      <span>Hizmeti Sipariş Et</span>
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
@@ -225,18 +225,18 @@ const ClientServices = () => {
 
         {/* General Services */}
         <div>
-         <h2 className="text-2xl font-bold text-gray-900 mb-6">General Services</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Genel Hizmetler</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Placeholder for general services */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
               <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-             <h3 className="text-lg font-medium text-gray-900 mb-2">General Services</h3>
-             <p className="text-gray-600 mb-4">View platform-wide services</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Genel Hizmetler</h3>
+              <p className="text-gray-600 mb-4">Platform genelindeki hizmetleri görüntüleyin</p>
               <Link
                 to="/services"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
-               View All Services
+                Tüm Hizmetleri Görüntüle
               </Link>
             </div>
           </div>
@@ -248,7 +248,7 @@ const ClientServices = () => {
         isOpen={showRequestModal}
         onClose={() => setShowRequestModal(false)}
         onSuccess={() => {
-          alert('Your service request has been sent successfully!');
+          alert('Hizmet talebiniz başarıyla gönderildi!');
         }}
       />
     </div>
