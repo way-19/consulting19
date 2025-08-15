@@ -158,7 +158,6 @@ const ClientAccountingDashboard = () => {
       }
       
       console.log('✅ Client record created:', newClient);
-      setClientId(newClient.id);
       
       // Now create accounting profile
       const { data: newAccountingProfile, error: accountingError } = await supabase
@@ -193,8 +192,6 @@ const ClientAccountingDashboard = () => {
       setAccountingProfile(newAccountingProfile);
       return;
     }
-
-    setClientId(clientData.id);
 
     const { data, error } = await supabase
       .from('accounting_clients')
@@ -441,7 +438,7 @@ const ClientAccountingDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Upcoming Payments Warning - Add this section */}
         <div className="mb-8">
-          {clientId && <UpcomingPayments clientId={clientId} />}
+          {clientId !== undefined && <UpcomingPayments clientId={clientId} />}
         </div>
 
         {/* Custom Service Request System */}
@@ -466,7 +463,7 @@ const ClientAccountingDashboard = () => {
 
         {/* Client Recommendations System */}
         <div className="mb-8">
-          {clientId && <ClientRecommendations clientId={clientId} />}
+          {clientId !== undefined && <ClientRecommendations clientId={clientId} />}
         </div>
 
         {/* Stats Cards */}
