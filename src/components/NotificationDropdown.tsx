@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, CheckCircle, AlertTriangle, MessageSquare, FileText, Calendar, Eye } from 'lucide-react';
+import { Bell, X, CheckCircle, AlertTriangle, MessageSquare, FileText, Calendar, Eye, Upload } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
