@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type SupportedLanguage = 'en' | 'tr' | 'ka' | 'ru' | 'es' | 'fr' | 'de' | 'ar';
+export type SupportedLanguage = 'en' | 'tr' | 'es' | 'fr' | 'de';
 
 interface Language {
   code: SupportedLanguage;
@@ -23,12 +23,9 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const SUPPORTED_LANGUAGES: Language[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸' },
   { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷' },
-  { code: 'ka', name: 'Georgian', nativeName: 'ქართული', flag: '🇬🇪' },
-  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺' },
   { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
   { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
   { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
-  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', rtl: true }
 ];
 
 // Translation keys and values
@@ -261,121 +258,6 @@ const translations: Record<SupportedLanguage, Record<string, string>> = {
     'business.visa': 'Vize ve İkamet',
   },
   
-  ka: {
-    // Navigation
-    'nav.countries': 'ქვეყნები',
-    'nav.services': 'სერვისები',
-    'nav.about': 'ჩვენს შესახებ',
-    'nav.contact': 'კონტაქტი',
-    'nav.blog': 'ბლოგი',
-    'nav.getStarted': 'დაიწყეთ',
-    'nav.signIn': 'შესვლა',
-    'nav.signOut': 'გასვლა',
-    
-    // Dashboard
-    'dashboard.welcome': 'კეთილი იყოს თქვენი დაბრუნება',
-    'dashboard.overview': 'მიმოხილვა',
-    'dashboard.projects': 'პროექტები',
-    'dashboard.documents': 'დოკუმენტები',
-    'dashboard.messages': 'შეტყობინებები',
-    'dashboard.settings': 'პარამეტრები',
-    
-    // Common
-    'common.loading': 'იტვირთება...',
-    'common.save': 'შენახვა',
-    'common.cancel': 'გაუქმება',
-    'common.delete': 'წაშლა',
-    'common.edit': 'რედაქტირება',
-    'common.view': 'ნახვა',
-    'common.search': 'ძიება',
-    'common.filter': 'ფილტრი',
-    'common.refresh': 'განახლება',
-    'common.download': 'ჩამოტვირთვა',
-    'common.upload': 'ატვირთვა',
-    'common.send': 'გაგზავნა',
-    'common.back': 'უკან',
-    'common.next': 'შემდეგი',
-    'common.previous': 'წინა',
-    'common.close': 'დახურვა',
-    'common.confirm': 'დადასტურება',
-    'common.yes': 'კი',
-    'common.no': 'არა',
-    
-    // Status
-    'status.active': 'აქტიური',
-    'status.inactive': 'არააქტიური',
-    'status.pending': 'მოლოდინში',
-    'status.completed': 'დასრულებული',
-    'status.approved': 'დამტკიცებული',
-    'status.rejected': 'უარყოფილი',
-    'status.inProgress': 'მიმდინარე',
-    'status.onHold': 'შეჩერებული',
-    'status.cancelled': 'გაუქმებული',
-    
-    // Priority
-    'priority.low': 'დაბალი',
-    'priority.medium': 'საშუალო',
-    'priority.high': 'მაღალი',
-    'priority.urgent': 'გადაუდებელი',
-    
-    // Business
-    'business.companyFormation': 'კომპანიის რეგისტრაცია',
-    'business.bankAccount': 'ბანკის ანგარიშის გახსნა',
-    'business.taxResidency': 'საგადასახადო რეზიდენტობა',
-    'business.accounting': 'საბუღალტრო სერვისები',
-    'business.legal': 'იურიდიული კონსულტაცია',
-    'business.visa': 'ვიზა და რეზიდენტობა',
-  },
-  
-  ru: {
-    // Navigation
-    'nav.countries': 'Страны',
-    'nav.services': 'Услуги',
-    'nav.about': 'О нас',
-    'nav.contact': 'Контакты',
-    'nav.blog': 'Блог',
-    'nav.getStarted': 'Начать',
-    'nav.signIn': 'Войти',
-    'nav.signOut': 'Выйти',
-    
-    // Dashboard
-    'dashboard.welcome': 'Добро пожаловать',
-    'dashboard.overview': 'Обзор',
-    'dashboard.projects': 'Проекты',
-    'dashboard.documents': 'Документы',
-    'dashboard.messages': 'Сообщения',
-    'dashboard.settings': 'Настройки',
-    
-    // Common
-    'common.loading': 'Загрузка...',
-    'common.save': 'Сохранить',
-    'common.cancel': 'Отмена',
-    'common.delete': 'Удалить',
-    'common.edit': 'Редактировать',
-    'common.view': 'Просмотр',
-    'common.search': 'Поиск',
-    'common.filter': 'Фильтр',
-    'common.refresh': 'Обновить',
-    'common.download': 'Скачать',
-    'common.upload': 'Загрузить',
-    'common.send': 'Отправить',
-    'common.back': 'Назад',
-    'common.next': 'Далее',
-    'common.previous': 'Предыдущий',
-    'common.close': 'Закрыть',
-    'common.confirm': 'Подтвердить',
-    'common.yes': 'Да',
-    'common.no': 'Нет',
-    
-    // Business
-    'business.companyFormation': 'Регистрация компании',
-    'business.bankAccount': 'Открытие банковского счета',
-    'business.taxResidency': 'Налоговое резидентство',
-    'business.accounting': 'Бухгалтерские услуги',
-    'business.legal': 'Юридическое консультирование',
-    'business.visa': 'Виза и резидентство',
-  },
-  
   es: {
     // Navigation
     'nav.countries': 'Países',
@@ -434,26 +316,6 @@ const translations: Record<SupportedLanguage, Record<string, string>> = {
     'business.accounting': 'Buchhaltungsdienstleistungen',
     'business.legal': 'Rechtsberatung',
     'business.visa': 'Visa und Aufenthalt',
-  },
-  
-  ar: {
-    // Navigation
-    'nav.countries': 'البلدان',
-    'nav.services': 'الخدمات',
-    'nav.about': 'معلومات عنا',
-    'nav.contact': 'اتصل بنا',
-    'nav.blog': 'المدونة',
-    'nav.getStarted': 'ابدأ',
-    'nav.signIn': 'تسجيل الدخول',
-    'nav.signOut': 'تسجيل الخروج',
-    
-    // Business
-    'business.companyFormation': 'تأسيس الشركة',
-    'business.bankAccount': 'فتح حساب مصرفي',
-    'business.taxResidency': 'الإقامة الضريبية',
-    'business.accounting': 'خدمات المحاسبة',
-    'business.legal': 'الاستشارة القانونية',
-    'business.visa': 'التأشيرة والإقامة',
   }
 };
 

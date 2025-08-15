@@ -29,14 +29,9 @@ interface MultilingualChatProps {
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
   { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
-  { code: 'ka', name: 'ქართული', flag: '🇬🇪' },
-  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
   { code: 'es', name: 'Español', flag: '🇪🇸' },
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-  { code: 'pt', name: 'Português', flag: '🇵🇹' },
-  { code: 'ar', name: 'العربية', flag: '🇸🇦' }
 ];
 
 // Mock DeepL translation function
