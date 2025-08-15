@@ -329,14 +329,14 @@ const ClientDocuments = () => {
               className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              Panele Geri Dön
             </Link>
           </div>
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Documents</h1>
-              <p className="text-gray-600 mt-1">Upload and manage your business documents</p>
+              <h1 className="text-2xl font-bold text-gray-900">Belgelerim</h1>
+              <p className="text-gray-600 mt-1">İş belgelerinizi yükleyin ve yönetin</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -344,14 +344,14 @@ const ClientDocuments = () => {
                 className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
               >
                 <Plus className="h-5 w-5" />
-                <span>Upload Document</span>
+                <span>Belge Yükle</span>
               </button>
               <button
                 onClick={fetchDocuments}
                 className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
               >
                 <RefreshCw className="h-5 w-5" />
-                <span>Refresh</span>
+                <span>Yenile</span>
               </button>
             </div>
           </div>
@@ -364,7 +364,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Documents</p>
+                <p className="text-sm font-medium text-gray-600">Toplam Belge</p>
                 <p className="text-3xl font-bold text-gray-900">{stats.totalDocuments}</p>
               </div>
               <FileText className="h-8 w-8 text-gray-600" />
@@ -374,7 +374,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending Review</p>
+                <p className="text-sm font-medium text-gray-600">İnceleme Bekleyen</p>
                 <p className="text-3xl font-bold text-blue-600">{stats.pendingReview}</p>
               </div>
               <Clock className="h-8 w-8 text-blue-600" />
@@ -384,7 +384,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Approved</p>
+                <p className="text-sm font-medium text-gray-600">Onaylanan</p>
                 <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -394,7 +394,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Rejected</p>
+                <p className="text-sm font-medium text-gray-600">Reddedilen</p>
                 <p className="text-3xl font-bold text-red-600">{stats.rejected}</p>
               </div>
               <XCircle className="h-8 w-8 text-red-600" />
@@ -404,7 +404,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Needs Revision</p>
+                <p className="text-sm font-medium text-gray-600">Revizyon Gerekli</p>
                 <p className="text-3xl font-bold text-yellow-600">{stats.needsRevision}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
@@ -414,7 +414,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Size</p>
+                <p className="text-sm font-medium text-gray-600">Toplam Boyut</p>
                 <p className="text-2xl font-bold text-purple-600">{formatFileSize(stats.totalSize)}</p>
               </div>
               <Archive className="h-8 w-8 text-purple-600" />
@@ -429,24 +429,24 @@ const ClientDocuments = () => {
               <Upload className="h-6 w-6 text-blue-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">Document Upload Guidelines</h3>
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">Belge Yükleme Rehberi</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
                 <div>
-                  <h4 className="font-medium mb-2">Accepted Formats:</h4>
+                  <h4 className="font-medium mb-2">Kabul Edilen Formatlar:</h4>
                   <ul className="space-y-1">
-                    <li>• PDF documents (.pdf)</li>
-                    <li>• Images (.jpg, .jpeg, .png)</li>
-                    <li>• Word documents (.doc, .docx)</li>
-                    <li>• Excel files (.xls, .xlsx)</li>
+                    <li>• PDF belgeleri (.pdf)</li>
+                    <li>• Resim dosyaları (.jpg, .jpeg, .png)</li>
+                    <li>• Word belgeleri (.doc, .docx)</li>
+                    <li>• Excel dosyaları (.xls, .xlsx)</li>
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-medium mb-2">Requirements:</h4>
+                  <h4 className="font-medium mb-2">Gereksinimler:</h4>
                   <ul className="space-y-1">
-                    <li>• Maximum file size: 50MB</li>
-                    <li>• Clear, readable documents</li>
-                    <li>• Original or certified copies</li>
-                    <li>• English translation if needed</li>
+                    <li>• Maksimum dosya boyutu: 50MB</li>
+                    <li>• Net, okunabilir belgeler</li>
+                    <li>• Orijinal veya onaylı kopyalar</li>
+                    <li>• Gerekirse İngilizce çeviri</li>
                   </ul>
                 </div>
               </div>
@@ -458,12 +458,12 @@ const ClientDocuments = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Documents</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Belge Ara</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Document name or type..."
+                  placeholder="Belge adı veya türü..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -472,13 +472,13 @@ const ClientDocuments = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">All Categories</option>
+                <option value="all">Tüm Kategoriler</option>
                 {documentCategories.map(cat => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
                 ))}
@@ -486,22 +486,22 @@ const ClientDocuments = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">All Status</option>
-                <option value="pending">Pending Review</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="needs_revision">Needs Revision</option>
+                <option value="all">Tüm Durumlar</option>
+                <option value="pending">İnceleme Bekleyen</option>
+                <option value="approved">Onaylanan</option>
+                <option value="rejected">Reddedilen</option>
+                <option value="needs_revision">Revizyon Gerekli</option>
               </select>
             </div>
 
             <div className="text-sm text-gray-600">
-              Showing {filteredDocuments.length} of {documents.length} documents
+              {documents.length} belgeden {filteredDocuments.length} tanesi gösteriliyor
             </div>
           </div>
         </div>
@@ -515,8 +515,8 @@ const ClientDocuments = () => {
             </h3>
             <p className="text-gray-600 mb-6">
               {documents.length === 0 
-                ? 'Upload your first document to get started with the verification process.'
-                : 'No documents match your current filters.'
+                ? 'Doğrulama sürecine başlamak için ilk belgenizi yükleyin.'
+                : 'Mevcut filtrelerinizle eşleşen belge bulunamadı.'
               }
             </p>
             {documents.length === 0 && (
@@ -524,7 +524,7 @@ const ClientDocuments = () => {
                 onClick={() => setShowUploadModal(true)}
                 className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
               >
-                Upload First Document
+                İlk Belgeyi Yükle
               </button>
             )}
           </div>
@@ -534,11 +534,11 @@ const ClientDocuments = () => {
               const categoryInfo = getCategoryInfo(document.category);
               
               return (
-                <div key={document.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                <div key={document.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-4 mb-3">
-                        <div className={`${categoryInfo.color} rounded-lg p-2`}>
+                        <div className={`${categoryInfo.color} rounded-lg p-3 shadow-sm`}>
                           {getFileIcon(document.name)}
                         </div>
                         <div>
@@ -547,7 +547,7 @@ const ClientDocuments = () => {
                         </div>
                         <div className="flex items-center space-x-1">
                           {getStatusIcon(document.status)}
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${getStatusColor(document.status)}`}>
                             {document.status === 'pending' ? 'PENDING REVIEW' :
                              document.status === 'approved' ? 'APPROVED' :
                              document.status === 'rejected' ? 'REJECTED' :
@@ -560,27 +560,27 @@ const ClientDocuments = () => {
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
                         <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
-                          <span>Uploaded: {new Date(document.uploaded_at).toLocaleDateString()}</span>
+                          <span>Yüklendi: {new Date(document.uploaded_at).toLocaleDateString('tr-TR')}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Paperclip className="h-4 w-4" />
-                          <span>Size: {document.file_size ? formatFileSize(document.file_size) : 'Unknown'}</span>
+                          <span>Boyut: {document.file_size ? formatFileSize(document.file_size) : 'Bilinmiyor'}</span>
                         </div>
                         {document.reviewed_at && (
                           <div className="flex items-center space-x-1">
                             <Shield className="h-4 w-4" />
-                            <span>Reviewed: {new Date(document.reviewed_at).toLocaleDateString()}</span>
+                            <span>İncelendi: {new Date(document.reviewed_at).toLocaleDateString('tr-TR')}</span>
                           </div>
                         )}
                         {document.reviewer && (
                           <div className="flex items-center space-x-1">
                             <User className="h-4 w-4" />
-                            <span>By: {document.reviewer.full_name}</span>
+                            <span>İnceleyen: {document.reviewer.full_name}</span>
                           </div>
                         )}
                       </div>
 
-                      <div className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${categoryInfo.color}`}>
+                      <div className={`inline-flex px-3 py-1 rounded-full text-xs font-medium shadow-sm ${categoryInfo.color}`}>
                         {categoryInfo.label}
                       </div>
 
@@ -596,7 +596,7 @@ const ClientDocuments = () => {
                             document.status === 'needs_revision' ? 'text-yellow-900' :
                             'text-green-900'
                           }`}>
-                            Consultant Notes:
+                            Danışman Notları:
                           </h4>
                           <p className={`text-sm ${
                             document.status === 'rejected' ? 'text-red-800' :
@@ -615,26 +615,26 @@ const ClientDocuments = () => {
                           setSelectedDocument(document);
                           setShowDocumentDetail(true);
                         }}
-                        className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
+                        className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                       >
                         <Eye className="h-4 w-4" />
-                        <span>View</span>
+                        <span>Görüntüle</span>
                       </button>
 
                       {document.file_url && (
                         <button
                           onClick={() => window.open(document.file_url, '_blank')}
-                          className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center space-x-2"
+                          className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                         >
                           <Download className="h-4 w-4" />
-                          <span>Download</span>
+                          <span>İndir</span>
                         </button>
                       )}
 
                       {document.status === 'pending' && (
                         <button
                           onClick={() => handleDeleteDocument(document.id)}
-                          className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors"
+                          className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-all duration-200 transform hover:scale-105 shadow-sm"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -654,7 +654,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Upload New Document</h2>
+                <h2 className="text-xl font-bold text-gray-900">Yeni Belge Yükle</h2>
                 <button
                   onClick={resetUploadForm}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -668,9 +668,9 @@ const ClientDocuments = () => {
               {/* File Upload Area */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select File *
+                  Dosya Seç *
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-all duration-200 bg-gray-50 hover:bg-purple-50">
                   <input
                     type="file"
                     required
@@ -680,7 +680,7 @@ const ClientDocuments = () => {
                         // Check file size (50MB limit)
                         if (file.size > 50 * 1024 * 1024) {
                           console.log('ClientDocuments: File size exceeds 50MB limit. Rejecting upload.');
-                          alert('File size must be less than 50MB. Please compress your file and try again.');
+                          alert('Dosya boyutu 50MB\'dan küçük olmalıdır. Lütfen dosyanızı sıkıştırıp tekrar deneyin.');
                           e.target.value = '';
                           return;
                         }
@@ -699,20 +699,20 @@ const ClientDocuments = () => {
                   <label htmlFor="file-upload" className="cursor-pointer">
                     <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-lg font-medium text-gray-900 mb-2">
-                      {uploadForm.file ? uploadForm.file.name : 'Choose a file to upload'}
+                      {uploadForm.file ? uploadForm.file.name : 'Yüklenecek dosyayı seçin'}
                     </p>
                     <p className="text-sm text-gray-600">
-                      PDF, DOC, DOCX, JPG, PNG, XLS, XLSX up to 50MB
+                      PDF, DOC, DOCX, JPG, PNG, XLS, XLSX - maksimum 50MB
                     </p>
                   </label>
                 </div>
                 {uploadForm.file && (
-                  <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="mt-3 p-4 bg-green-50 rounded-lg border border-green-200 shadow-sm">
                     <div className="flex items-center space-x-3">
                       {getFileIcon(uploadForm.file.name)}
                       <div>
                         <p className="font-medium text-green-900">{uploadForm.file.name}</p>
-                        <p className="text-sm text-green-700">Size: {formatFileSize(uploadForm.file.size)}</p>
+                        <p className="text-sm text-green-700">Boyut: {formatFileSize(uploadForm.file.size)}</p>
                       </div>
                     </div>
                   </div>
@@ -723,7 +723,7 @@ const ClientDocuments = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Document Name *
+                    Belge Adı *
                   </label>
                   <input
                     type="text"
@@ -731,13 +731,13 @@ const ClientDocuments = () => {
                     value={uploadForm.name}
                     onChange={(e) => setUploadForm(prev => ({ ...prev, name: e.target.value }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="e.g., Passport Copy"
+                    placeholder="Örn: Pasaport Kopyası"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Document Type *
+                    Belge Türü *
                   </label>
                   <select
                     required
@@ -745,7 +745,7 @@ const ClientDocuments = () => {
                     onChange={(e) => setUploadForm(prev => ({ ...prev, type: e.target.value }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="">Select document type...</option>
+                    <option value="">Belge türünü seçin...</option>
                     {documentTypes.map(type => (
                       <option key={type} value={type}>{type}</option>
                     ))}
@@ -756,7 +756,7 @@ const ClientDocuments = () => {
               {/* Category Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Document Category *
+                  Belge Kategorisi *
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {documentCategories.map((category) => (
@@ -764,10 +764,10 @@ const ClientDocuments = () => {
                       key={category.value}
                       type="button"
                       onClick={() => setUploadForm(prev => ({ ...prev, category: category.value }))}
-                      className={`p-4 rounded-lg border-2 transition-colors text-left ${
+                      className={`p-4 rounded-lg border-2 transition-all duration-200 text-left hover:shadow-md ${
                         uploadForm.category === category.value
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
+                          ? 'border-purple-500 bg-purple-50 shadow-md transform scale-105'
+                          : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50 hover:transform hover:scale-102'
                       }`}
                     >
                       <div className="flex items-center space-x-3 mb-2">
@@ -784,11 +784,11 @@ const ClientDocuments = () => {
               <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
                 <div className="flex items-center space-x-2 mb-2">
                   <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                  <h4 className="font-medium text-yellow-900">Important Notice</h4>
+                  <h4 className="font-medium text-yellow-900">Önemli Bilgilendirme</h4>
                 </div>
                 <p className="text-sm text-yellow-800">
-                  Your consultant will review all uploaded documents. You'll receive notifications 
-                  about the review status. Please ensure documents are clear and readable.
+                  Danışmanınız yüklenen tüm belgeleri inceleyecektir. İnceleme durumu hakkında 
+                  bildirimler alacaksınız. Lütfen belgelerin net ve okunabilir olduğundan emin olun.
                 </p>
               </div>
 
@@ -799,22 +799,22 @@ const ClientDocuments = () => {
                   onClick={resetUploadForm}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
-                  Cancel
+                  İptal
                 </button>
                 <button
                   type="submit"
                   disabled={uploading || !uploadForm.file}
-                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 >
                   {uploading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Uploading...</span>
+                      <span>Yükleniyor...</span>
                     </>
                   ) : (
                     <>
                       <Upload className="h-5 w-5" />
-                      <span>Upload Document</span>
+                      <span>Belgeyi Yükle</span>
                     </>
                   )}
                 </button>
@@ -830,7 +830,7 @@ const ClientDocuments = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Document Details</h2>
+                <h2 className="text-xl font-bold text-gray-900">Belge Detayları</h2>
                 <button
                   onClick={() => setShowDocumentDetail(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -844,24 +844,24 @@ const ClientDocuments = () => {
               {/* Document Overview */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Belge Bilgileri</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Document Name:</span>
+                      <span className="text-sm text-gray-600">Belge Adı:</span>
                       <p className="font-medium">{selectedDocument.name}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Document Type:</span>
+                      <span className="text-sm text-gray-600">Belge Türü:</span>
                       <p className="font-medium">{selectedDocument.type}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Category:</span>
+                      <span className="text-sm text-gray-600">Kategori:</span>
                       <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getCategoryInfo(selectedDocument.category).color}`}>
                         {getCategoryInfo(selectedDocument.category).label}
                       </span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm text-gray-600">Durum:</span>
                       <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedDocument.status)}`}>
                         {selectedDocument.status === 'pending' ? 'PENDING REVIEW' :
                          selectedDocument.status === 'approved' ? 'APPROVED' :
@@ -874,25 +874,25 @@ const ClientDocuments = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">File Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Dosya Bilgileri</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">File Size:</span>
+                      <span className="text-sm text-gray-600">Dosya Boyutu:</span>
                       <p className="font-medium">{selectedDocument.file_size ? formatFileSize(selectedDocument.file_size) : 'Unknown'}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Upload Date:</span>
-                      <p className="font-medium">{new Date(selectedDocument.uploaded_at).toLocaleString()}</p>
+                      <span className="text-sm text-gray-600">Yükleme Tarihi:</span>
+                      <p className="font-medium">{new Date(selectedDocument.uploaded_at).toLocaleString('tr-TR')}</p>
                     </div>
                     {selectedDocument.reviewed_at && (
                       <div>
-                        <span className="text-sm text-gray-600">Review Date:</span>
-                        <p className="font-medium">{new Date(selectedDocument.reviewed_at).toLocaleString()}</p>
+                        <span className="text-sm text-gray-600">İnceleme Tarihi:</span>
+                        <p className="font-medium">{new Date(selectedDocument.reviewed_at).toLocaleString('tr-TR')}</p>
                       </div>
                     )}
                     {selectedDocument.reviewer && (
                       <div>
-                        <span className="text-sm text-gray-600">Reviewed By:</span>
+                        <span className="text-sm text-gray-600">İnceleyen:</span>
                         <p className="font-medium">{selectedDocument.reviewer.full_name}</p>
                       </div>
                     )}
@@ -903,7 +903,7 @@ const ClientDocuments = () => {
               {/* Review Notes */}
               {selectedDocument.notes && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Review Notes</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">İnceleme Notları</h3>
                   <div className={`p-4 rounded-lg border ${
                     selectedDocument.status === 'rejected' ? 'bg-red-50 border-red-200' :
                     selectedDocument.status === 'needs_revision' ? 'bg-yellow-50 border-yellow-200' :
@@ -922,13 +922,13 @@ const ClientDocuments = () => {
 
               {/* Document Timeline */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Timeline</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Belge Zaman Çizelgesi</h3>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                     <Upload className="h-5 w-5 text-blue-600" />
                     <div>
-                      <p className="font-medium text-blue-900">Document Uploaded</p>
-                      <p className="text-sm text-blue-700">{new Date(selectedDocument.uploaded_at).toLocaleString()}</p>
+                      <p className="font-medium text-blue-900">Belge Yüklendi</p>
+                      <p className="text-sm text-blue-700">{new Date(selectedDocument.uploaded_at).toLocaleString('tr-TR')}</p>
                     </div>
                   </div>
                   
@@ -951,16 +951,16 @@ const ClientDocuments = () => {
                           selectedDocument.status === 'rejected' ? 'text-red-900' :
                           'text-yellow-900'
                         }`}>
-                          Document {selectedDocument.status === 'approved' ? 'Approved' :
-                                   selectedDocument.status === 'rejected' ? 'Rejected' :
-                                   'Needs Revision'}
+                          Belge {selectedDocument.status === 'approved' ? 'Onaylandı' :
+                                 selectedDocument.status === 'rejected' ? 'Reddedildi' :
+                                 'Revizyon Gerekli'}
                         </p>
                         <p className={`text-sm ${
                           selectedDocument.status === 'approved' ? 'text-green-700' :
                           selectedDocument.status === 'rejected' ? 'text-red-700' :
                           'text-yellow-700'
                         }`}>
-                          {new Date(selectedDocument.reviewed_at).toLocaleString()}
+                          {new Date(selectedDocument.reviewed_at).toLocaleString('tr-TR')}
                         </p>
                       </div>
                     </div>
@@ -973,10 +973,10 @@ const ClientDocuments = () => {
                 {selectedDocument.file_url && (
                   <button
                     onClick={() => window.open(selectedDocument.file_url, '_blank')}
-                    className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                    className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-lg"
                   >
                     <Download className="h-5 w-5" />
-                    <span>Download File</span>
+                    <span>Dosyayı İndir</span>
                   </button>
                 )}
 
@@ -986,10 +986,10 @@ const ClientDocuments = () => {
                       setShowDocumentDetail(false);
                       setShowUploadModal(true);
                     }}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-lg"
                   >
                     <Upload className="h-5 w-5" />
-                    <span>Upload Revised Version</span>
+                    <span>Revize Edilmiş Sürümü Yükle</span>
                   </button>
                 )}
 
@@ -999,10 +999,10 @@ const ClientDocuments = () => {
                       setShowDocumentDetail(false);
                       handleDeleteDocument(selectedDocument.id);
                     }}
-                    className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
+                    className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-lg"
                   >
                     <Trash2 className="h-5 w-5" />
-                    <span>Delete Document</span>
+                    <span>Belgeyi Sil</span>
                   </button>
                 )}
               </div>
@@ -1014,4 +1014,4 @@ const ClientDocuments = () => {
   );
 };
 
-export default ClientDocuments
+export default ClientDocuments;

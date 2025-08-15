@@ -356,8 +356,8 @@ const AccountingManagement = () => {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Accounting Management</h1>
-              <p className="text-gray-600 mt-1">Manage client documents, track deadlines, and automate reminders</p>
+              <h1 className="text-2xl font-bold text-gray-900">Muhasebe Yönetimi</h1>
+              <p className="text-gray-600 mt-1">Müşteri belgelerini yönetin, son tarihleri takip edin ve hatırlatıcıları otomatikleştirin</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -365,14 +365,14 @@ const AccountingManagement = () => {
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
               >
                 <MessageSquare className="h-5 w-5" />
-                <span>Send Message</span>
+                <span>Mesaj Gönder</span>
               </button>
               <button
                 onClick={fetchData}
                 className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
               >
                 <RefreshCw className="h-5 w-5" />
-                <span>Refresh</span>
+                <span>Yenile</span>
               </button>
             </div>
           </div>
@@ -385,7 +385,7 @@ const AccountingManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Clients</p>
+                <p className="text-sm font-medium text-gray-600">Toplam Müşteri</p>
                 <p className="text-3xl font-bold text-gray-900">{totalClients}</p>
               </div>
               <Users className="h-8 w-8 text-blue-600" />
@@ -395,7 +395,7 @@ const AccountingManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active Clients</p>
+                <p className="text-sm font-medium text-gray-600">Aktif Müşteri</p>
                 <p className="text-3xl font-bold text-green-600">{activeClients}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -405,7 +405,7 @@ const AccountingManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Overdue Documents</p>
+                <p className="text-sm font-medium text-gray-600">Geciken Belgeler</p>
                 <p className="text-3xl font-bold text-red-600">{overdueDocuments}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-600" />
@@ -415,7 +415,7 @@ const AccountingManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending Tasks</p>
+                <p className="text-sm font-medium text-gray-600">Bekleyen Görevler</p>
                 <p className="text-3xl font-bold text-orange-600">{pendingTasks}</p>
               </div>
               <Clock className="h-8 w-8 text-orange-600" />
@@ -425,7 +425,7 @@ const AccountingManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
+                <p className="text-sm font-medium text-gray-600">Aylık Gelir</p>
                 <p className="text-3xl font-bold text-purple-600">${monthlyRevenue.toLocaleString()}</p>
               </div>
               <DollarSign className="h-8 w-8 text-purple-600" />
@@ -438,11 +438,11 @@ const AccountingManagement = () => {
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6">
               {[
-                { key: 'clients', label: 'Clients', icon: Users, count: totalClients },
-                { key: 'documents', label: 'Documents', icon: FileText, count: documents.length },
-                { key: 'tasks', label: 'Tasks', icon: CheckCircle, count: tasks.length },
-                { key: 'reminders', label: 'Reminders', icon: Bell, count: reminders.length },
-                { key: 'messages', label: 'Messages', icon: MessageSquare, count: 0 }
+                { key: 'clients', label: 'Müşteriler', icon: Users, count: totalClients },
+                { key: 'documents', label: 'Belgeler', icon: FileText, count: documents.length },
+                { key: 'tasks', label: 'Görevler', icon: CheckCircle, count: tasks.length },
+                { key: 'reminders', label: 'Hatırlatıcılar', icon: Bell, count: reminders.length },
+                { key: 'messages', label: 'Mesajlar', icon: MessageSquare, count: 0 }
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -471,7 +471,7 @@ const AccountingManagement = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search clients, documents, or tasks..."
+                  placeholder="Müşteri, belge veya görev ara..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -487,21 +487,21 @@ const AccountingManagement = () => {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="all">All Status</option>
+                    <option value="all">Tüm Durumlar</option>
                     {activeTab === 'clients' && (
                       <>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="suspended">Suspended</option>
+                        <option value="active">Aktif</option>
+                        <option value="inactive">Pasif</option>
+                        <option value="suspended">Askıya Alınmış</option>
                       </>
                     )}
                     {activeTab === 'documents' && (
                       <>
-                        <option value="pending">Pending</option>
-                        <option value="received">Received</option>
-                        <option value="processed">Processed</option>
-                        <option value="completed">Completed</option>
-                        <option value="overdue">Overdue</option>
+                        <option value="pending">Bekleyen</option>
+                        <option value="received">Alınan</option>
+                        <option value="processed">İşlenen</option>
+                        <option value="completed">Tamamlanan</option>
+                        <option value="overdue">Geciken</option>
                       </>
                     )}
                   </select>
@@ -513,11 +513,11 @@ const AccountingManagement = () => {
                     onChange={(e) => setPriorityFilter(e.target.value)}
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="all">All Priority</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
+                    <option value="all">Tüm Öncelikler</option>
+                    <option value="urgent">Acil</option>
+                    <option value="high">Yüksek</option>
+                    <option value="medium">Orta</option>
+                    <option value="low">Düşük</option>
                   </select>
                 )}
               </div>
@@ -531,33 +531,33 @@ const AccountingManagement = () => {
                 {filteredClients.length === 0 ? (
                   <div className="text-center py-12">
                     <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Clients Found</h3>
-                    <p className="text-gray-600">No accounting clients match your current filters.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Müşteri Bulunamadı</h3>
+                    <p className="text-gray-600">Mevcut filtrelerinizle eşleşen muhasebe müşterisi bulunamadı.</p>
                   </div>
                 ) : (
                   filteredClients.map((client) => (
-                    <div key={client.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
+                    <div key={client.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-4 mb-2">
                             <h3 className="text-lg font-semibold text-gray-900">{client.company_name}</h3>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(client.status)}`}>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${getStatusColor(client.status)}`}>
                               {client.status.toUpperCase()}
                             </span>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
                             <div>
-                              <span className="font-medium">Contact:</span> {client.client?.profile?.full_name}
+                              <span className="font-medium">İletişim:</span> {client.client?.profile?.full_name}
                             </div>
                             <div>
                               <span className="font-medium">Email:</span> {client.client?.profile?.email}
                             </div>
                             <div>
-                              <span className="font-medium">Package:</span> {client.service_package}
+                              <span className="font-medium">Paket:</span> {client.service_package}
                             </div>
                             <div>
-                              <span className="font-medium">Monthly Fee:</span> ${client.monthly_fee}
+                              <span className="font-medium">Aylık Ücret:</span> ${client.monthly_fee}
                             </div>
                           </div>
 
@@ -565,7 +565,7 @@ const AccountingManagement = () => {
                             <div className="mt-2 flex items-center space-x-2">
                               <Calendar className="h-4 w-4 text-orange-500" />
                               <span className="text-sm text-orange-600 font-medium">
-                                Next Deadline: {new Date(client.next_deadline).toLocaleDateString()}
+                                Sonraki Son Tarih: {new Date(client.next_deadline).toLocaleDateString('tr-TR')}
                               </span>
                             </div>
                           )}
@@ -577,20 +577,20 @@ const AccountingManagement = () => {
                               setSelectedClient(client);
                               setIsChatOpen(true);
                             }}
-                            className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
+                            className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                           >
                             <MessageSquare className="h-4 w-4" />
-                            <span>Message</span>
+                            <span>Mesaj</span>
                           </button>
                           <button
                             onClick={() => {
                               setSelectedClient(client);
                               setShowClientModal(true);
                             }}
-                            className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors flex items-center space-x-2"
+                            className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                           >
                             <Eye className="h-4 w-4" />
-                            <span>View</span>
+                            <span>Görüntüle</span>
                           </button>
                         </div>
                       </div>
@@ -605,36 +605,36 @@ const AccountingManagement = () => {
                 {filteredDocuments.length === 0 ? (
                   <div className="text-center py-12">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Found</h3>
-                    <p className="text-gray-600">No documents match your current filters.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Belge Bulunamadı</h3>
+                    <p className="text-gray-600">Mevcut filtrelerinizle eşleşen belge bulunamadı.</p>
                   </div>
                 ) : (
                   filteredDocuments.map((document) => (
-                    <div key={document.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
+                    <div key={document.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-4 mb-2">
                             <div className={`w-3 h-3 rounded-full ${getPriorityColor(document.priority)}`}></div>
                             <h3 className="text-lg font-semibold text-gray-900">{document.title}</h3>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${getStatusColor(document.status)}`}>
                               {document.status.toUpperCase()}
                             </span>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
                             <div>
-                              <span className="font-medium">Client:</span> {document.client?.company_name}
+                              <span className="font-medium">Müşteri:</span> {document.client?.company_name}
                             </div>
                             <div>
-                              <span className="font-medium">Type:</span> {document.document_type}
+                              <span className="font-medium">Tür:</span> {document.document_type}
                             </div>
                             <div>
-                              <span className="font-medium">Category:</span> {document.category}
+                              <span className="font-medium">Kategori:</span> {document.category}
                             </div>
                             <div>
-                              <span className="font-medium">Due Date:</span> 
+                              <span className="font-medium">Son Tarih:</span> 
                               <span className={document.due_date && new Date(document.due_date) < new Date() ? 'text-red-600 font-medium' : ''}>
-                                {document.due_date ? new Date(document.due_date).toLocaleDateString() : 'N/A'}
+                                {document.due_date ? new Date(document.due_date).toLocaleDateString('tr-TR') : 'Yok'}
                               </span>
                             </div>
                           </div>
@@ -642,7 +642,7 @@ const AccountingManagement = () => {
                           {document.reminder_sent && (
                             <div className="flex items-center space-x-2 text-sm text-blue-600">
                               <Bell className="h-4 w-4" />
-                              <span>Reminder sent ({document.reminder_count} times)</span>
+                              <span>Hatırlatıcı gönderildi ({document.reminder_count} kez)</span>
                             </div>
                           )}
                         </div>
@@ -651,10 +651,10 @@ const AccountingManagement = () => {
                           {document.status === 'pending' && (
                             <button
                               onClick={() => sendReminder(document.id, document.client_id)}
-                              className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-colors flex items-center space-x-2"
+                              className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                             >
                               <Bell className="h-4 w-4" />
-                              <span>Send Reminder</span>
+                              <span>Hatırlatıcı Gönder</span>
                             </button>
                           )}
                           
@@ -663,11 +663,11 @@ const AccountingManagement = () => {
                             onChange={(e) => updateDocumentStatus(document.id, e.target.value)}
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           >
-                            <option value="pending">Pending</option>
-                            <option value="received">Received</option>
-                            <option value="processed">Processed</option>
-                            <option value="completed">Completed</option>
-                            <option value="overdue">Overdue</option>
+                            <option value="pending">Bekleyen</option>
+                            <option value="received">Alınan</option>
+                            <option value="processed">İşlenen</option>
+                            <option value="completed">Tamamlanan</option>
+                            <option value="overdue">Geciken</option>
                           </select>
                         </div>
                       </div>
@@ -682,18 +682,18 @@ const AccountingManagement = () => {
                 {tasks.length === 0 ? (
                   <div className="text-center py-12">
                     <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Tasks Found</h3>
-                    <p className="text-gray-600">No tasks available.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Görev Bulunamadı</h3>
+                    <p className="text-gray-600">Mevcut görev bulunmuyor.</p>
                   </div>
                 ) : (
                   tasks.map((task) => (
-                    <div key={task.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
+                    <div key={task.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-4 mb-2">
                             <div className={`w-3 h-3 rounded-full ${getPriorityColor(task.priority)}`}></div>
                             <h3 className="text-lg font-semibold text-gray-900">{task.title}</h3>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${getStatusColor(task.status)}`}>
                               {task.status.replace('_', ' ').toUpperCase()}
                             </span>
                           </div>
@@ -702,18 +702,18 @@ const AccountingManagement = () => {
                           
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
                             <div>
-                              <span className="font-medium">Client:</span> {task.client?.company_name}
+                              <span className="font-medium">Müşteri:</span> {task.client?.company_name}
                             </div>
                             <div>
-                              <span className="font-medium">Type:</span> {task.task_type.replace('_', ' ')}
+                              <span className="font-medium">Tür:</span> {task.task_type.replace('_', ' ')}
                             </div>
                             <div>
-                              <span className="font-medium">Due Date:</span> 
-                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}
+                              <span className="font-medium">Son Tarih:</span> 
+                              {task.due_date ? new Date(task.due_date).toLocaleDateString('tr-TR') : 'Yok'}
                             </div>
                             <div>
-                              <span className="font-medium">Hours:</span> 
-                              {task.estimated_hours ? `${task.estimated_hours}h estimated` : 'N/A'}
+                              <span className="font-medium">Saat:</span> 
+                              {task.estimated_hours ? `${task.estimated_hours}s tahmini` : 'Yok'}
                             </div>
                           </div>
                         </div>
@@ -729,18 +729,18 @@ const AccountingManagement = () => {
                 {reminders.length === 0 ? (
                   <div className="text-center py-12">
                     <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Reminders Found</h3>
-                    <p className="text-gray-600">No reminders available.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Hatırlatıcı Bulunamadı</h3>
+                    <p className="text-gray-600">Mevcut hatırlatıcı bulunmuyor.</p>
                   </div>
                 ) : (
                   reminders.map((reminder) => (
-                    <div key={reminder.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
+                    <div key={reminder.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-4 mb-2">
                             <Bell className="h-5 w-5 text-orange-500" />
                             <h3 className="text-lg font-semibold text-gray-900">{reminder.title}</h3>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(reminder.status)}`}>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${getStatusColor(reminder.status)}`}>
                               {reminder.status.toUpperCase()}
                             </span>
                           </div>
@@ -749,17 +749,17 @@ const AccountingManagement = () => {
                           
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
                             <div>
-                              <span className="font-medium">Client:</span> {reminder.client?.company_name}
+                              <span className="font-medium">Müşteri:</span> {reminder.client?.company_name}
                             </div>
                             <div>
-                              <span className="font-medium">Type:</span> {reminder.reminder_type.replace('_', ' ')}
+                              <span className="font-medium">Tür:</span> {reminder.reminder_type.replace('_', ' ')}
                             </div>
                             <div>
-                              <span className="font-medium">Due Date:</span> 
-                              {reminder.due_date ? new Date(reminder.due_date).toLocaleDateString() : 'N/A'}
+                              <span className="font-medium">Son Tarih:</span> 
+                              {reminder.due_date ? new Date(reminder.due_date).toLocaleDateString('tr-TR') : 'Yok'}
                             </div>
                             <div>
-                              <span className="font-medium">Level:</span> {reminder.reminder_level}
+                              <span className="font-medium">Seviye:</span> {reminder.reminder_level}
                               {reminder.client?.preferred_language && (
                                 <span className="ml-2 text-blue-600">({reminder.client.preferred_language.toUpperCase()})</span>
                               )}
@@ -776,14 +776,14 @@ const AccountingManagement = () => {
             {activeTab === 'messages' && (
               <div className="text-center py-12">
                 <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Multilingual Messaging</h3>
-                <p className="text-gray-600 mb-6">Send messages to your clients in their preferred language</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Çok Dilli Mesajlaşma</h3>
+                <p className="text-gray-600 mb-6">Müşterilerinize tercih ettikleri dilde mesaj gönderin</p>
                 <button
                   onClick={() => setShowMessageModal(true)}
                   className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2 mx-auto"
                 >
                   <Send className="h-5 w-5" />
-                  <span>Send New Message</span>
+                  <span>Yeni Mesaj Gönder</span>
                 </button>
               </div>
             )}

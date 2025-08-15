@@ -295,8 +295,8 @@ const DocumentManagement = () => {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Document Management</h1>
-              <p className="text-gray-600 mt-1">Review, approve and manage client documents</p>
+              <h1 className="text-2xl font-bold text-gray-900">Belge Yönetimi</h1>
+              <p className="text-gray-600 mt-1">Müşteri belgelerini inceleyin, onaylayın ve yönetin</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -304,7 +304,7 @@ const DocumentManagement = () => {
                 className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
               >
                 <RefreshCw className="h-5 w-5" />
-                <span>Refresh</span>
+                <span>Yenile</span>
               </button>
             </div>
           </div>
@@ -317,7 +317,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Documents</p>
+                <p className="text-sm font-medium text-gray-600">Toplam Belge</p>
                 <p className="text-3xl font-bold text-gray-900">{stats.totalDocuments}</p>
               </div>
               <FileText className="h-8 w-8 text-gray-600" />
@@ -327,7 +327,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending Review</p>
+                <p className="text-sm font-medium text-gray-600">İnceleme Bekleyen</p>
                 <p className="text-3xl font-bold text-blue-600">{stats.pendingReview}</p>
               </div>
               <Clock className="h-8 w-8 text-blue-600" />
@@ -337,7 +337,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Approved</p>
+                <p className="text-sm font-medium text-gray-600">Onaylanan</p>
                 <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -347,7 +347,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Rejected</p>
+                <p className="text-sm font-medium text-gray-600">Reddedilen</p>
                 <p className="text-3xl font-bold text-red-600">{stats.rejected}</p>
               </div>
               <XCircle className="h-8 w-8 text-red-600" />
@@ -357,7 +357,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Needs Revision</p>
+                <p className="text-sm font-medium text-gray-600">Revizyon Gerekli</p>
                 <p className="text-3xl font-bold text-yellow-600">{stats.needsRevision}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
@@ -367,7 +367,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Size</p>
+                <p className="text-sm font-medium text-gray-600">Toplam Boyut</p>
                 <p className="text-2xl font-bold text-purple-600">{formatFileSize(stats.totalSize)}</p>
               </div>
               <Archive className="h-8 w-8 text-purple-600" />
@@ -379,12 +379,12 @@ const DocumentManagement = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Documents</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Belge Ara</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Document name, type, client..."
+                  placeholder="Belge adı, türü, müşteri..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -393,13 +393,13 @@ const DocumentManagement = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">All Categories</option>
+                <option value="all">Tüm Kategoriler</option>
                 {documentCategories.map(cat => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
                 ))}
@@ -407,28 +407,28 @@ const DocumentManagement = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">All Status</option>
-                <option value="pending">Pending Review</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="needs_revision">Needs Revision</option>
+                <option value="all">Tüm Durumlar</option>
+                <option value="pending">İnceleme Bekleyen</option>
+                <option value="approved">Onaylanan</option>
+                <option value="rejected">Reddedilen</option>
+                <option value="needs_revision">Revizyon Gerekli</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Client</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Müşteri</label>
               <select
                 value={clientFilter}
                 onChange={(e) => setClientFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">All Clients</option>
+                <option value="all">Tüm Müşteriler</option>
                 {clients.map(client => (
                   <option key={client.id} value={client.id}>
                     {client.company_name || client.profile?.full_name || client.profile?.email}
@@ -438,7 +438,7 @@ const DocumentManagement = () => {
             </div>
 
             <div className="text-sm text-gray-600">
-              Showing {filteredDocuments.length} of {documents.length} documents
+              {documents.length} belgeden {filteredDocuments.length} tanesi gösteriliyor
             </div>
           </div>
         </div>
@@ -447,11 +447,11 @@ const DocumentManagement = () => {
         {filteredDocuments.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Belge Bulunamadı</h3>
             <p className="text-gray-600">
               {documents.length === 0 
-                ? 'No documents have been uploaded by your clients yet.'
-                : 'No documents match your current filters.'
+                ? 'Müşterileriniz henüz belge yüklememiş.'
+                : 'Mevcut filtrelerinizle eşleşen belge bulunamadı.'
               }
             </p>
           </div>
@@ -461,11 +461,11 @@ const DocumentManagement = () => {
               const categoryInfo = getCategoryInfo(document.category);
               
               return (
-                <div key={document.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                <div key={document.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-4 mb-3">
-                        <div className={`${categoryInfo.color} rounded-lg p-2`}>
+                        <div className={`${categoryInfo.color} rounded-lg p-3 shadow-sm`}>
                           <categoryInfo.icon className="h-5 w-5" />
                         </div>
                         <div>
@@ -474,7 +474,7 @@ const DocumentManagement = () => {
                         </div>
                         <div className="flex items-center space-x-1">
                           {getStatusIcon(document.status)}
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${getStatusColor(document.status)}`}>
                             {document.status === 'pending' ? 'PENDING REVIEW' :
                              document.status === 'approved' ? 'APPROVED' :
                              document.status === 'rejected' ? 'REJECTED' :
@@ -487,25 +487,25 @@ const DocumentManagement = () => {
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
                         <div className="flex items-center space-x-1">
                           <User className="h-4 w-4" />
-                          <span>{document.client?.company_name || document.client?.profile?.full_name || 'Unknown Client'}</span>
+                          <span>{document.client?.company_name || document.client?.profile?.full_name || 'Bilinmeyen Müşteri'}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
-                          <span>Uploaded: {new Date(document.uploaded_at).toLocaleDateString()}</span>
+                          <span>Yüklendi: {new Date(document.uploaded_at).toLocaleDateString('tr-TR')}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Paperclip className="h-4 w-4" />
-                          <span>Size: {document.file_size ? formatFileSize(document.file_size) : 'Unknown'}</span>
+                          <span>Boyut: {document.file_size ? formatFileSize(document.file_size) : 'Bilinmiyor'}</span>
                         </div>
                         {document.reviewed_at && (
                           <div className="flex items-center space-x-1">
                             <Shield className="h-4 w-4" />
-                            <span>Reviewed: {new Date(document.reviewed_at).toLocaleDateString()}</span>
+                            <span>İncelendi: {new Date(document.reviewed_at).toLocaleDateString('tr-TR')}</span>
                           </div>
                         )}
                       </div>
 
-                      <div className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${categoryInfo.color}`}>
+                      <div className={`inline-flex px-3 py-1 rounded-full text-xs font-medium shadow-sm ${categoryInfo.color}`}>
                         {categoryInfo.label}
                       </div>
                     </div>
@@ -515,27 +515,27 @@ const DocumentManagement = () => {
                         <>
                           <button
                             onClick={() => handleQuickReview(document.id, 'approved')}
-                            className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center space-x-2"
+                            className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                           >
                             <CheckCircle className="h-4 w-4" />
-                            <span>Approve</span>
+                            <span>Onayla</span>
                           </button>
                           <button
                             onClick={() => handleQuickReview(document.id, 'rejected')}
-                            className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center space-x-2"
+                            className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                           >
                             <XCircle className="h-4 w-4" />
-                            <span>Reject</span>
+                            <span>Reddet</span>
                           </button>
                           <button
                             onClick={() => {
                               setSelectedDocument(document);
                               setShowReviewModal(true);
                             }}
-                            className="bg-yellow-50 text-yellow-600 px-4 py-2 rounded-lg font-medium hover:bg-yellow-100 transition-colors flex items-center space-x-2"
+                            className="bg-yellow-50 text-yellow-600 px-4 py-2 rounded-lg font-medium hover:bg-yellow-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                           >
                             <AlertTriangle className="h-4 w-4" />
-                            <span>Detailed Review</span>
+                            <span>Detaylı İnceleme</span>
                           </button>
                         </>
                       )}
@@ -545,19 +545,19 @@ const DocumentManagement = () => {
                           setSelectedDocument(document);
                           setShowDocumentDetail(true);
                         }}
-                        className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
+                        className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                       >
                         <Eye className="h-4 w-4" />
-                        <span>View</span>
+                        <span>Görüntüle</span>
                       </button>
 
                       {document.file_url && (
                         <button
                           onClick={() => window.open(document.file_url, '_blank')}
-                          className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors flex items-center space-x-2"
+                          className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                         >
                           <Download className="h-4 w-4" />
-                          <span>Download</span>
+                          <span>İndir</span>
                         </button>
                       )}
                     </div>
@@ -575,7 +575,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Document Details</h2>
+                <h2 className="text-xl font-bold text-gray-900">Belge Detayları</h2>
                 <button
                   onClick={() => setShowDocumentDetail(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -589,24 +589,24 @@ const DocumentManagement = () => {
               {/* Document Overview */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Belge Bilgileri</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Document Name:</span>
+                      <span className="text-sm text-gray-600">Belge Adı:</span>
                       <p className="font-medium">{selectedDocument.name}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Document Type:</span>
+                      <span className="text-sm text-gray-600">Belge Türü:</span>
                       <p className="font-medium">{selectedDocument.type}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Category:</span>
+                      <span className="text-sm text-gray-600">Kategori:</span>
                       <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getCategoryInfo(selectedDocument.category).color}`}>
                         {getCategoryInfo(selectedDocument.category).label}
                       </span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm text-gray-600">Durum:</span>
                       <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedDocument.status)}`}>
                         {selectedDocument.status === 'pending' ? 'PENDING REVIEW' :
                          selectedDocument.status === 'approved' ? 'APPROVED' :
@@ -619,15 +619,15 @@ const DocumentManagement = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Client Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Müşteri Bilgileri</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Company:</span>
-                      <p className="font-medium">{selectedDocument.client?.company_name || 'Not specified'}</p>
+                      <span className="text-sm text-gray-600">Şirket:</span>
+                      <p className="font-medium">{selectedDocument.client?.company_name || 'Belirtilmemiş'}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Contact:</span>
-                      <p className="font-medium">{selectedDocument.client?.profile?.full_name || 'Not specified'}</p>
+                      <span className="text-sm text-gray-600">İletişim:</span>
+                      <p className="font-medium">{selectedDocument.client?.profile?.full_name || 'Belirtilmemiş'}</p>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">Email:</span>
@@ -639,21 +639,21 @@ const DocumentManagement = () => {
 
               {/* File Information */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">File Information</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Dosya Bilgileri</h3>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <span className="text-sm text-gray-600">File Size:</span>
-                      <p className="font-medium">{selectedDocument.file_size ? formatFileSize(selectedDocument.file_size) : 'Unknown'}</p>
+                      <span className="text-sm text-gray-600">Dosya Boyutu:</span>
+                      <p className="font-medium">{selectedDocument.file_size ? formatFileSize(selectedDocument.file_size) : 'Bilinmiyor'}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Upload Date:</span>
-                      <p className="font-medium">{new Date(selectedDocument.uploaded_at).toLocaleString()}</p>
+                      <span className="text-sm text-gray-600">Yükleme Tarihi:</span>
+                      <p className="font-medium">{new Date(selectedDocument.uploaded_at).toLocaleString('tr-TR')}</p>
                     </div>
                     {selectedDocument.reviewed_at && (
                       <div>
-                        <span className="text-sm text-gray-600">Review Date:</span>
-                        <p className="font-medium">{new Date(selectedDocument.reviewed_at).toLocaleString()}</p>
+                        <span className="text-sm text-gray-600">İnceleme Tarihi:</span>
+                        <p className="font-medium">{new Date(selectedDocument.reviewed_at).toLocaleString('tr-TR')}</p>
                       </div>
                     )}
                   </div>
@@ -668,28 +668,28 @@ const DocumentManagement = () => {
                       setShowDocumentDetail(false);
                       setShowReviewModal(true);
                     }}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-lg"
                   >
                     <Shield className="h-5 w-5" />
-                    <span>Detailed Review</span>
+                    <span>Detaylı İnceleme</span>
                   </button>
                 )}
 
                 {selectedDocument.file_url && (
                   <button
                     onClick={() => window.open(selectedDocument.file_url, '_blank')}
-                    className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                    className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-lg"
                   >
                     <Download className="h-5 w-5" />
-                    <span>Download File</span>
+                    <span>Dosyayı İndir</span>
                   </button>
                 )}
 
                 <button
-                  className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                  className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-lg"
                 >
                   <MessageSquare className="h-5 w-5" />
-                  <span>Contact Client</span>
+                  <span>Müşteriyle İletişim</span>
                 </button>
               </div>
             </div>
@@ -703,7 +703,7 @@ const DocumentManagement = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Document Review</h2>
+                <h2 className="text-xl font-bold text-gray-900">Belge İncelemesi</h2>
                 <button
                   onClick={() => {
                     setShowReviewModal(false);
@@ -722,10 +722,10 @@ const DocumentManagement = () => {
                 <h4 className="font-medium text-gray-900 mb-2">{selectedDocument.name}</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                   <div>
-                    <span className="font-medium">Tür:</span> {selectedDocument.type}
+                    <span className="font-medium">Türü:</span> {selectedDocument.type}
                   </div>
                   <div>
-                    <span className="font-medium">Kategori:</span> {getCategoryInfo(selectedDocument.category).label}
+                    <span className="font-medium">Kategorisi:</span> {getCategoryInfo(selectedDocument.category).label}
                   </div>
                   <div>
                     <span className="font-medium">Müşteri:</span> {selectedDocument.client?.company_name || selectedDocument.client?.profile?.full_name}
@@ -739,43 +739,43 @@ const DocumentManagement = () => {
               {/* Review Decision */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Review Decision
+                  İnceleme Kararı
                 </label>
                 <div className="grid grid-cols-3 gap-3">
                   <button
                     onClick={() => setReviewDecision('approved')}
-                    className={`p-4 rounded-lg border-2 transition-colors ${
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-md ${
                       reviewDecision === 'approved' 
-                        ? 'border-green-500 bg-green-50 text-green-700' 
-                        : 'border-gray-200 hover:border-green-300'
+                        ? 'border-green-500 bg-green-50 text-green-700 shadow-md transform scale-105' 
+                        : 'border-gray-200 hover:border-green-300 hover:transform hover:scale-102'
                     }`}
                   >
                     <CheckCircle className="h-6 w-6 mx-auto mb-2" />
-                    <div className="text-sm font-medium">Approve</div>
+                    <div className="text-sm font-medium">Onayla</div>
                   </button>
                   
                   <button
                     onClick={() => setReviewDecision('needs_revision')}
-                    className={`p-4 rounded-lg border-2 transition-colors ${
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-md ${
                       reviewDecision === 'needs_revision' 
-                        ? 'border-yellow-500 bg-yellow-50 text-yellow-700' 
-                        : 'border-gray-200 hover:border-yellow-300'
+                        ? 'border-yellow-500 bg-yellow-50 text-yellow-700 shadow-md transform scale-105' 
+                        : 'border-gray-200 hover:border-yellow-300 hover:transform hover:scale-102'
                     }`}
                   >
                     <AlertTriangle className="h-6 w-6 mx-auto mb-2" />
-                    <div className="text-sm font-medium">Request Revision</div>
+                    <div className="text-sm font-medium">Revizyon İste</div>
                   </button>
                   
                   <button
                     onClick={() => setReviewDecision('rejected')}
-                    className={`p-4 rounded-lg border-2 transition-colors ${
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-md ${
                       reviewDecision === 'rejected' 
-                        ? 'border-red-500 bg-red-50 text-red-700' 
-                        : 'border-gray-200 hover:border-red-300'
+                        ? 'border-red-500 bg-red-50 text-red-700 shadow-md transform scale-105' 
+                        : 'border-gray-200 hover:border-red-300 hover:transform hover:scale-102'
                     }`}
                   >
                     <XCircle className="h-6 w-6 mx-auto mb-2" />
-                    <div className="text-sm font-medium">Reject</div>
+                    <div className="text-sm font-medium">Reddet</div>
                   </button>
                 </div>
               </div>
@@ -783,7 +783,7 @@ const DocumentManagement = () => {
               {/* Review Notes */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Review Notes {reviewDecision !== 'approved' && <span className="text-red-500">*</span>}
+                  İnceleme Notları {reviewDecision !== 'approved' && <span className="text-red-500">*</span>}
                 </label>
                 <textarea
                   rows={4}
@@ -791,9 +791,9 @@ const DocumentManagement = () => {
                   onChange={(e) => setReviewNotes(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder={
-                    reviewDecision === 'approved' ? 'Document approved. You can add optional notes...' :
-                    reviewDecision === 'rejected' ? 'Explain why the document was rejected...' :
-                    'Specify what revisions need to be made...'
+                    reviewDecision === 'approved' ? 'Belge onaylandı. İsteğe bağlı notlar ekleyebilirsiniz...' :
+                    reviewDecision === 'rejected' ? 'Belgenin neden reddedildiğini açıklayın...' :
+                    'Hangi revizyonların yapılması gerektiğini belirtin...'
                   }
                   required={reviewDecision !== 'approved'}
                 />
@@ -815,15 +815,15 @@ const DocumentManagement = () => {
                     <h4 className={`font-medium ${
                       reviewDecision === 'rejected' ? 'text-red-900' : 'text-yellow-900'
                     }`}>
-                      {reviewDecision === 'rejected' ? 'Document Rejection' : 'Revision Request'}
+                      {reviewDecision === 'rejected' ? 'Belge Reddi' : 'Revizyon Talebi'}
                     </h4>
                   </div>
                   <p className={`text-sm ${
                     reviewDecision === 'rejected' ? 'text-red-800' : 'text-yellow-800'
                   }`}>
                     {reviewDecision === 'rejected' 
-                      ? 'This document will be rejected and the client will be notified. Please explain the reason for rejection.'
-                      : 'The client will be asked to revise the document. Please specify the required changes.'
+                      ? 'Bu belge reddedilecek ve müşteri bilgilendirilecektir. Lütfen red nedenini açıklayın.'
+                      : 'Müşteriden belgeyi revize etmesi istenecektir. Lütfen gerekli değişiklikleri belirtin.'
                     }
                   </p>
                 </div>
@@ -838,7 +838,7 @@ const DocumentManagement = () => {
                   }}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
-                  Cancel
+                  İptal
                 </button>
                 <button
                   onClick={handleReviewDocument}
@@ -851,9 +851,9 @@ const DocumentManagement = () => {
                 >
                   <Save className="h-5 w-5" />
                   <span>
-                    {reviewDecision === 'approved' ? 'Approve' :
-                     reviewDecision === 'rejected' ? 'Reject' :
-                     'Request Revision'}
+                    {reviewDecision === 'approved' ? 'Onayla' :
+                     reviewDecision === 'rejected' ? 'Reddet' :
+                     'Revizyon İste'}
                   </span>
                 </button>
               </div>
