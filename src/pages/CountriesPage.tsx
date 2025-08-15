@@ -33,13 +33,13 @@ const CountriesPage = () => {
                          country.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRegion = selectedRegion === 'all' || getRegion(country) === selectedRegion;
     const matchesLanguage = selectedLanguage === 'all' || 
-                           country.supportedLanguages.includes(selectedLanguage);
+                           country.supported_languages?.includes(selectedLanguage);
     
     return matchesSearch && matchesRegion && matchesLanguage;
   });
 
   const availableLanguages = Array.from(
-    new Set(countries.flatMap(country => country.supportedLanguages))
+    new Set(countries.flatMap(country => country.supported_languages || []).filter(Boolean))
   );
 
   if (loading) {
@@ -126,7 +126,7 @@ const CountriesPage = () => {
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="all">All Languages</option>
-                {availableLanguages.map(lang => (
+                {availableLanguages.filter(Boolean).map(lang => (
                   <option key={lang} value={lang}>
                     {lang.toUpperCase()}
                   </option>
