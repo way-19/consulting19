@@ -1,3 +1,8 @@
+// IMMEDIATE DEBUG - This should show in console right away
+console.log('🚀 ClientDocuments.tsx file is being loaded!');
+console.log('📍 Current URL:', window.location.href);
+console.log('🔗 Current pathname:', window.location.pathname);
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -69,12 +74,13 @@ interface DocumentStats {
 const ClientDocuments = () => {
   const { profile } = useAuth();
   
-  // Force debug logging at component start
-  console.log('🚀 ClientDocuments component is rendering!');
-  console.log('👤 Profile:', profile);
-  console.log('🆔 Profile ID:', profile?.id);
-  console.log('📧 Profile Email:', profile?.email);
-  console.log('🔑 Profile Role:', profile?.role);
+  // IMMEDIATE DEBUG - This should show when component renders
+  console.log('🎯 ClientDocuments component is RENDERING!');
+  console.log('👤 Profile in component:', profile);
+  console.log('🆔 Profile ID in component:', profile?.id);
+  console.log('📧 Profile Email in component:', profile?.email);
+  console.log('🔑 Profile Role in component:', profile?.role);
+  console.log('📍 Component URL check:', window.location.pathname);
 
   const [documents, setDocuments] = useState<DocumentWithDetails[]>([]);
   const [documentRequests, setDocumentRequests] = useState<DocumentRequest[]>([]);
