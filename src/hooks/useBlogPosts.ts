@@ -33,7 +33,6 @@ export function useBlogPosts(countryId?: string) {
       query = query.eq('country_id', countryId);
     }
 
-    query
       .then(({ data, error }) => {
         if (error) throw error;
         setData((data as BlogPost[]) ?? []);
