@@ -77,29 +77,6 @@ const HomePage = () => {
     return () => clearInterval(timer);
   }, [heroSlides.length]);
 
-  const aiFeatures = [
-    {
-      icon: Bot,
-      title: 'AI-Powered Matching',
-      description:
-        'Intelligent consultant matching based on your specific requirements',
-      color: 'bg-blue-500'
-    },
-    {
-      icon: Shield,
-      title: 'Legal Oversight',
-      description:
-        'Every AI interaction monitored by legal experts for compliance',
-      color: 'bg-green-500'
-    },
-    {
-      icon: Zap,
-      title: 'Instant Responses',
-      description: '24/7 AI assistance with human expert backup when needed',
-      color: 'bg-purple-500'
-    }
-  ];
-
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -360,28 +337,276 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* AI Oracle Band */}
-      <section className="py-16 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+      {/* Real-Time Platform Analytics */}
+      <section className="py-20 bg-gradient-to-br from-slate-900 to-purple-900 text-white relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute top-10 left-10 w-32 h-32 bg-white/5 rounded-full animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-48 h-48 bg-purple-400/10 rounded-full animate-bounce" />
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Powered by AI Oracle</h2>
+            <h2 className="text-4xl font-bold mb-4">
+              Real-Time Platform <span className="text-cyan-400">Analytics</span>
+            </h2>
             <p className="text-xl text-indigo-100">
-              Advanced AI technology with human expertise oversight
+              Live insights from our worldwide network of expert consultants and AI-powered 
+              analytics driving successful business formations.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {aiFeatures.map((feature, index) => (
-              <div key={index} className="text-center group">
-                <div
-                  className={`inline-flex items-center justify-center w-16 h-16 ${feature.color} rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-200`}
-                >
-                  <feature.icon className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-indigo-100">{feature.description}</p>
+          {/* Analytics Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-12">
+            {/* Active Consultations */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 text-center">
+              <div className="bg-blue-500 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <MessageSquare className="h-8 w-8 text-white" />
               </div>
-            ))}
+              <div className="text-3xl font-bold text-white mb-2">1,247+</div>
+              <div className="text-white/80 text-sm">Active Consultations</div>
+              <div className="text-cyan-400 text-xs mt-1">Ongoing client engagements worldwide</div>
+            </div>
+
+            {/* Strategic Jurisdictions */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 text-center">
+              <div className="bg-green-500 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <Globe className="h-8 w-8 text-white" />
+              </div>
+              <div className="text-3xl font-bold text-white mb-2">127</div>
+              <div className="text-white/80 text-sm">Strategic Jurisdictions</div>
+              <div className="text-cyan-400 text-xs mt-1">Countries with expert consultants</div>
+            </div>
+
+            {/* Success Rate */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 text-center">
+              <div className="bg-purple-500 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <TrendingUp className="h-8 w-8 text-white" />
+              </div>
+              <div className="text-3xl font-bold text-white mb-2">98.5%</div>
+              <div className="text-white/80 text-sm">Success Rate</div>
+              <div className="text-cyan-400 text-xs mt-1">Successful business formations</div>
+            </div>
+
+            {/* Avg Response Time */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 text-center">
+              <div className="bg-orange-500 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <Clock className="h-8 w-8 text-white" />
+              </div>
+              <div className="text-3xl font-bold text-white mb-2">2.1h</div>
+              <div className="text-white/80 text-sm">Avg Response Time</div>
+              <div className="text-cyan-400 text-xs mt-1">AI-powered instant support</div>
+            </div>
+
+            {/* AI-Powered Matching */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 text-center">
+              <div className="bg-cyan-500 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <Bot className="h-8 w-8 text-white" />
+              </div>
+              <div className="text-3xl font-bold text-white mb-2">AI</div>
+              <div className="text-white/80 text-sm">AI-Powered Matching</div>
+              <div className="text-cyan-400 text-xs mt-1">Intelligent consultant-client pairing based on expertise and requirements</div>
+            </div>
+
+            {/* Legal Compliance */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 text-center">
+              <div className="bg-yellow-500 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <Shield className="h-8 w-8 text-white" />
+              </div>
+              <div className="text-3xl font-bold text-white mb-2">100%</div>
+              <div className="text-white/80 text-sm">Legal Compliance</div>
+              <div className="text-cyan-400 text-xs mt-1">All recommendations reviewed by legal experts for full compliance assurance</div>
+            </div>
+          </div>
+
+          {/* Success Optimization */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 text-center">
+            <div className="bg-green-500 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <CheckCircle className="h-8 w-8 text-white" />
+            </div>
+            <div className="text-3xl font-bold text-white mb-2">Success Optimization</div>
+            <div className="text-white/80 text-sm">Continuous optimization based on successful case patterns</div>
+          </div>
+
+          {/* CTA Section */}
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-white/20 text-center">
+            <h3 className="text-2xl font-bold text-white mb-4">
+              Join Thousands of Successful Businesses
+            </h3>
+            <p className="text-white/90 mb-6">
+              Experience the power of AI-enhanced consulting with expert guidance across 8 
+              strategic jurisdictions worldwide.
+            </p>
+            <Link
+              to="/get-started"
+              className="inline-flex items-center space-x-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 px-8 py-4 rounded-xl font-bold hover:opacity-90 transition-opacity shadow-lg"
+            >
+              <span>Start Your Journey</span>
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Experience the Future of Business Consulting */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Bot className="h-6 w-6 text-blue-500" />
+              <span className="text-blue-600 font-medium">AI Intelligence Preview</span>
+            </div>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Experience the Future of <span className="text-blue-600">Business Consulting</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-4xl mx-auto">
+              Our AI assistant combines global regulatory knowledge with real-time market 
+              insights to provide personalized recommendations for your international 
+              business needs.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* AI Chat Interface Mockup */}
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                    <Bot className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">AI Business Oracle</h3>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-blue-100 text-sm">Online & Ready</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4 h-80 overflow-y-auto">
+                {/* AI Message */}
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 rounded-2xl px-4 py-3 max-w-xs">
+                    <p className="text-sm text-gray-900">
+                      Based on your tech startup requirements, I recommend Estonia for e-Residency benefits or Delaware for US market access.
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">AI Oracle • Just now</p>
+                  </div>
+                </div>
+
+                {/* User Message */}
+                <div className="flex justify-end">
+                  <div className="bg-blue-600 rounded-2xl px-4 py-3 max-w-xs">
+                    <p className="text-sm text-white">
+                      What about tax implications?
+                    </p>
+                    <p className="text-xs text-blue-200 mt-2">You • Now</p>
+                  </div>
+                </div>
+
+                {/* AI Response */}
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 rounded-2xl px-4 py-3 max-w-xs">
+                    <p className="text-sm text-gray-900">
+                      Estonia offers 0% tax on retained earnings, while Delaware provides excellent tax treaties. Both have been verified by our legal experts for compliance.
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">✓ Verified by legal experts</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 p-4">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="text"
+                    placeholder="Ask about international business formation..."
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled
+                  />
+                  <button className="bg-blue-600 text-white p-2 rounded-lg">
+                    <Send className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Intelligent Business Guidance */}
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">Intelligent Business Guidance</h3>
+                
+                {/* Smart Country Matching */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-6">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="bg-blue-100 rounded-lg p-3">
+                      <Globe className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Smart Country Matching</h4>
+                      <p className="text-sm text-gray-600">AI analyzes your business profile to recommend optimal jurisdictions</p>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <p className="text-sm text-blue-800">
+                      "Based on your tech startup profile, I recommend Estonia for digital-first governance 
+                      or Delaware for US market access. Both offer excellent tax advantages for your business model."
+                    </p>
+                  </div>
+                </div>
+
+                {/* AI-Powered Insights */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-6">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="bg-purple-100 rounded-lg p-3">
+                      <Sparkles className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">AI-Powered Insights</h4>
+                      <p className="text-sm text-gray-600">Real-time market analysis with intelligent recommendations</p>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-700">
+                    Every AI response is reviewed by legal experts for complete compliance assurance.
+                  </div>
+                </div>
+
+                {/* Multilingual Support */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-6">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="bg-green-100 rounded-lg p-3">
+                      <Users className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Multilingual Support</h4>
+                      <p className="text-sm text-gray-600">Communicate seamlessly in English, Turkish, Portuguese, or Spanish</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Instant Responses */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="bg-orange-100 rounded-lg p-3">
+                      <Zap className="h-6 w-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Instant Responses</h4>
+                      <p className="text-sm text-gray-600">Get immediate answers with human consultant backup within 0.3 seconds</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <Link
+                  to="/ai-assistant"
+                  className="inline-flex items-center space-x-2 bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg"
+                >
+                  <Bot className="h-5 w-5" />
+                  <span>Try AI Assistant Now</span>
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -797,17 +1022,135 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* AI Assistant Demo */}
-      <section className="py-20 bg-gray-100">
+      {/* Expert Insights from Our Global Consultants */}
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
+          <div className="text-center mb-16">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Users className="h-6 w-6 text-purple-600" />
+              <span className="text-purple-600 font-medium">Latest Insights</span>
+            </div>
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              AI Assistant Demo
+              Expert Insights from Our <span className="text-purple-600">Global Consultants</span>
             </h2>
-            <p className="text-xl text-gray-600">
-              Experience our AI-powered consulting platform
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Stay updated with the latest regulatory changes, market opportunities, and 
+              expert analysis from our consultants across 8 strategic jurisdictions.
             </p>
           </div>
+
+          {/* Blog Posts Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            {/* Singapore Banking Post */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src="https://images.pexels.com/photos/259027/pexels-photo-259027.jpeg?auto=compress&cs=tinysrgb&w=800"
+                  alt="Singapore Banking"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+                  Banking
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <span className="text-2xl">🇸🇬</span>
+                  <span className="text-sm text-gray-500">Wei Chen • Singapore • 5 min read</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  New Investment Opportunities in Estonia
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  Complete guide to setting up your business in Dubai with latest regulations. 
+                  Residency benefits and international entrepreneur programs and e-...
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">25 Jan 10, 2024</span>
+                  <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                    Read More →
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Malta Golden Visa Post */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src="https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg?auto=compress&cs=tinysrgb&w=800"
+                  alt="Malta Golden Visa"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute top-4 left-4 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+                  Investment
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <span className="text-2xl">🇦🇪</span>
+                  <span className="text-sm text-gray-500">Antonia Rossi • Malta • 8 min read</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  UAE Company Formation Guide 2024
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  Complete guide to setting up your business in Dubai with latest regulations. 
+                  Residency benefits and international entrepreneur programs and e-...
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">25 Jan 12, 2024</span>
+                  <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">
+                    Read More →
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* UK Post-Brexit Post */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800"
+                  alt="UK Post-Brexit Business"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute top-4 left-4 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+                  Featured
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <span className="text-2xl">🇨🇾</span>
+                  <span className="text-sm text-gray-500">James Thompson • Cyprus • 12 min read</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  Cyprus Visa Updates for 2024
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  Latest changes in Cyprus immigration policy and new visa categories for investors. 
+                  Complete analysis of the new EU investment...
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">25 Jan 30, 2024</span>
+                  <button className="text-green-600 hover:text-green-700 font-medium text-sm">
+                    Read More →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <Link
+              to="/blog"
+              className="inline-flex items-center space-x-2 bg-white border border-purple-600 text-purple-600 px-8 py-4 rounded-xl font-bold hover:bg-purple-50 transition-colors shadow-sm"
+            >
+              <FileText className="h-5 w-5" />
+              <span>View All Insights</span>
+              <ArrowRight className="h-5 w-5" />
+            </Link>
         </div>
       </section>
 
