@@ -1,445 +1,312 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Bot, CheckCircle, Globe, Star, TrendingUp, Users, Zap, Building, Calculator, Scale, BarChart3, CreditCard, Shield } from 'lucide-react';
+import { ArrowRight, Bot, Shield, Zap, BarChart3, MessageSquare, Users, Globe2, TrendingUp, Clock, Building, CheckCircle, Calculator, Scale, Plane, Search, CreditCard, Mail, Globe, Eye, Sparkles, FileText } from 'lucide-react';
+import CountryCard from '../components/ModernCountryCard';
+import ServiceCard from '../components/ServiceCard';
 import { useCountries } from '../hooks/useCountries';
-import CountryCard from '../components/CountryCard';
+import { useServices } from '../hooks/useServices';
+import { getPublicImageUrl } from '../lib/supabase';
 
 const HomePage = () => {
   const { countries, loading: countriesLoading } = useCountries(true);
+  const { services, loading: servicesLoading } = useServices(true);
   
-  // Get first 6 countries for display
-  const featuredCountries = countries.slice(0, 6);
+  const featuredCountries = countries.slice(0, 8);
+  
+  // Hero Slider State
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const heroSlides = [
+    {
+      id: 1,
+      title: "AI-Enhanced Global Intelligence",
+      subtitle: "at Your Service",
+      description: "Next-level regulatory guidance with intelligent automation. Our AI-powered platform connects you with expert consultants across the world's most business-friendly jurisdictions.",
+      backgroundImage: "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      primaryButton: "Get Started Today",
+      secondaryButton: "Explore Services",
+      stats: { companies: "15,247", countries: "127", successRate: "98.2%" }
+    },
+    {
+      id: 2,
+      title: "Global Business Formation",
+      subtitle: "Made Simple",
+      description: "Expert consultants guide you through international business setup with AI-powered jurisdiction matching. Start your global expansion with confidence and legal compliance.",
+      backgroundImage: "https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      primaryButton: "Start Formation",
+      secondaryButton: "View Countries",
+      stats: { companies: "12,500+", countries: "50+", successRate: "99.1%" }
+    },
+    {
+      id: 3,
+      title: "Tax Optimization Strategies",
+      subtitle: "Worldwide",
+      description: "Minimize your global tax burden legally with our expert tax consultants. From 0% territorial taxation to offshore structures, we optimize your international tax strategy.",
+      backgroundImage: "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      primaryButton: "Optimize Taxes",
+      secondaryButton: "Tax Calculator",
+      stats: { saved: "$50M+", clients: "3,200+", avgSaving: "35%" }
+    },
+    {
+      id: 4,
+      title: "Banking & Financial Services",
+      subtitle: "Global Access",
+      description: "Open international bank accounts and access global financial services. Our banking specialists help you establish financial infrastructure in business-friendly jurisdictions.",
+      backgroundImage: "https://images.pexels.com/photos/259027/pexels-photo-259027.jpeg?auto=compress&cs=tinysrgb&w=1920",
+      primaryButton: "Open Account",
+      secondaryButton: "Banking Guide",
+      stats: { accounts: "8,900+", banks: "150+", countries: "45+" }
+    }
+  ];
+
+  // Auto-advance slider
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [heroSlides.length]);
+
+  const aiFeatures = [
+    {
+      icon: Bot,
+      title: 'AI-Powered Matching',
+      description: 'Intelligent consultant matching based on your specific requirements',
+      color: 'bg-blue-500'
+    },
+    {
+      icon: Shield,
+      title: 'Legal Oversight',
+      description: 'Every AI interaction monitored by legal experts for compliance',
+      color: 'bg-green-500'
+    },
+    {
+      icon: Zap,
+      title: 'Instant Responses',
+      description: '24/7 AI assistance with human expert backup when needed',
+      color: 'bg-purple-500'
+    }
+  ];
+
+  const analyticsMetrics = [
+    { value: '15,247', label: 'Active Businesses', icon: Users },
+    { value: '98.2%', label: 'Success Rate', icon: TrendingUp },
+    { value: '127', label: 'Countries Served', icon: Globe2 },
+    { value: '47min', label: 'Avg Response Time', icon: Clock }
+  ];
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-purple-600 via-indigo-700 to-blue-800 text-white overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left Content */}
-            <div className="text-center lg:text-left">
-              <div className="flex items-center justify-center lg:justify-start space-x-2 mb-6">
-                <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
-                  <div className="flex items-center space-x-2">
-                    <Bot className="h-5 w-5 text-yellow-300" />
-                    <span className="text-sm font-medium text-white">AI-Enhanced Platform</span>
-                  </div>
-                </div>
-                <div className="bg-green-500/20 backdrop-blur-sm rounded-full px-3 py-1 border border-green-400/30">
-                  <div className="flex items-center space-x-1">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-xs font-medium text-green-300">Live</span>
-                  </div>
-                </div>
-              </div>
-              
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                World's First{' '}
-                <span className="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
-                  AI-Enhanced
-                </span>{' '}
-                Business Consulting
-              </h1>
-              
-              <p className="text-xl text-purple-100 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                Revolutionary platform combining artificial intelligence with human expertise. 
-                Get instant guidance, expert matching, and comprehensive support for your 
-                international business journey.
-              </p>
+      <section className="relative h-screen overflow-hidden">
+        {/* Background Images with Transitions */}
+        {heroSlides.map((slide, index) => (
+          <div
+            key={slide.id}
+            className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+              index === currentSlide 
+                ? 'opacity-100 scale-100' 
+                : 'opacity-0 scale-105'
+            }`}
+          >
+            <img
+              src={slide.backgroundImage}
+              alt={slide.title}
+              className="w-full h-full object-cover"
+            />
+            {/* Multiple Shadow Overlays */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-purple-900/60" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/50 via-transparent to-indigo-900/50" />
+          </div>
+        ))}
 
-              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center lg:justify-start">
+        {/* Animated Background Elements */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-white/5 rounded-full animate-pulse backdrop-blur-sm" />
+        <div className="absolute bottom-20 right-10 w-48 h-48 bg-yellow-300/10 rounded-full animate-bounce backdrop-blur-sm" />
+        <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-purple-400/20 rounded-full animate-ping" />
+        <div className="absolute bottom-1/3 right-1/3 w-24 h-24 bg-indigo-400/15 rounded-full animate-pulse" />
+        
+        {/* Content */}
+        <div className="relative z-10 flex items-center justify-center h-full">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-5xl mx-auto">
+              {/* Slide Content */}
+              <div className="mb-8">
+                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-white">
+                  {heroSlides[currentSlide].title}{' '}
+                  <span className="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+                    {heroSlides[currentSlide].subtitle}
+                  </span>
+                </h1>
+                
+                <p className="text-xl text-white/90 mb-8 max-w-4xl mx-auto leading-relaxed backdrop-blur-sm bg-black/20 rounded-2xl p-6 border border-white/10">
+                  {heroSlides[currentSlide].description}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-12">
                 <Link
                   to="/get-started"
-                  className="bg-white text-gray-900 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center space-x-2"
+                  className="bg-white text-purple-700 px-10 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center space-x-3 backdrop-blur-sm border border-white/20"
                 >
-                  <Bot className="h-5 w-5" />
-                  <span>Try AI Oracle</span>
+                  <span>{heroSlides[currentSlide].primaryButton}</span>
+                  <ArrowRight className="h-5 w-5" />
                 </Link>
-                <Link
-                  to="/countries"
-                  className="border-2 border-white/30 text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 transition-all duration-200 backdrop-blur-sm flex items-center justify-center space-x-2"
-                >
-                  <Globe className="h-5 w-5" />
-                  <span>Explore Countries</span>
-                </Link>
-              </div>
-
-              {/* Trust Indicators */}
-              <div className="mt-12 flex items-center justify-center lg:justify-start space-x-8 text-sm">
-                <div className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-yellow-300" />
-                  <span className="text-white/90">15,000+ Businesses Formed</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Star className="h-5 w-5 text-yellow-300 fill-current" />
-                  <span className="text-white/90">4.9/5 Rating</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Globe className="h-5 w-5 text-yellow-300" />
-                  <span className="text-white/90">127 Countries</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Content - AI Demo */}
-            <div className="relative">
-              <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20 shadow-2xl">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-white font-medium">AI Oracle is online</span>
-                </div>
                 
-                <div className="space-y-4">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30">
-                    <p className="text-white/90 text-sm mb-2">👤 "I want to start a tech company with low taxes"</p>
-                  </div>
-                  
-                  <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-xl p-4 border border-blue-400/30">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Bot className="h-4 w-4 text-blue-300" />
-                      <span className="text-blue-200 text-xs font-medium">AI Oracle</span>
-                    </div>
-                    <p className="text-white text-sm">
-                      🤖 Based on your tech startup requirements, I recommend <strong>Estonia</strong> for 
-                      e-Residency benefits or <strong>Delaware</strong> for US market access. Both offer 
-                      excellent tax advantages for your business model.
-                    </p>
-                    <div className="mt-3 flex items-center space-x-4 text-xs text-blue-200">
-                      <span>✓ Verified by legal experts</span>
-                      <span>⚡ Response time: 0.3s</span>
-                    </div>
-                  </div>
-                </div>
+                <Link
+                  to="/services"
+                  className="border-2 border-white/40 text-white px-10 py-4 rounded-xl font-bold hover:bg-white/20 transition-all duration-300 backdrop-blur-sm shadow-xl hover:shadow-2xl"
+                >
+                  {heroSlides[currentSlide].secondaryButton}
+                </Link>
               </div>
-              
-              {/* Floating Elements */}
-              <div className="absolute -top-4 -right-4 bg-yellow-400 rounded-full p-3 shadow-lg animate-bounce">
-                <Zap className="h-6 w-6 text-yellow-900" />
-              </div>
-              <div className="absolute -bottom-4 -left-4 bg-green-400 rounded-full p-3 shadow-lg animate-pulse">
-                <CheckCircle className="h-6 w-6 text-green-900" />
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+                {Object.entries(heroSlides[currentSlide].stats).map(([key, value], index) => (
+                  <div key={key} className="text-center backdrop-blur-sm bg-white/10 rounded-xl p-4 border border-white/20 shadow-lg">
+                    <div className="text-2xl sm:text-3xl font-bold text-white mb-1">{value}</div>
+                    <div className="text-white/80 text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* AI Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Powered by <span className="text-purple-600">Artificial Intelligence</span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Experience the future of business consulting with our revolutionary AI Oracle system
-            </p>
-          </div>
+        {/* Slide Indicators */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                index === currentSlide 
+                  ? 'bg-white shadow-lg scale-125' 
+                  : 'bg-white/40 hover:bg-white/60'
+              }`}
+            />
+          ))}
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                icon: Bot,
-                title: 'AI Oracle Intelligence',
-                description: 'Advanced AI analyzes your needs and matches you with perfect jurisdictions',
-                color: 'bg-purple-500'
-              },
-              {
-                icon: Zap,
-                title: 'Instant Responses',
-                description: '24/7 AI assistance with real-time answers to complex business questions',
-                color: 'bg-blue-500'
-              },
-              {
-                icon: Users,
-                title: 'Expert Matching',
-                description: 'AI-powered consultant matching based on expertise and specialization',
-                color: 'bg-green-500'
-              },
-              {
-                icon: Shield,
-                title: 'Legal Oversight',
-                description: 'Every AI recommendation verified by legal experts for compliance',
-                color: 'bg-red-500'
-              }
-            ].map((feature, index) => (
-              <div key={index} className="text-center group">
-                <div className={`inline-flex items-center justify-center w-16 h-16 ${feature.color} rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-200 shadow-lg`}>
-                  <feature.icon className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
-          </div>
+        {/* Navigation Arrows */}
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
+          className="absolute left-6 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 z-20 border border-white/30"
+        >
+          <ArrowRight className="h-6 w-6 text-white rotate-180" />
+        </button>
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev + 1) % heroSlides.length)}
+          className="absolute right-6 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 z-20 border border-white/30"
+        >
+          <ArrowRight className="h-6 w-6 text-white" />
+        </button>
+
+        {/* Slide Counter */}
+        <div className="absolute top-8 right-8 bg-black/30 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm font-medium z-20 border border-white/20">
+          {currentSlide + 1} / {heroSlides.length}
         </div>
       </section>
 
-      {/* Expert Services Section */}
-      <section id="services" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Expert <span className="text-purple-600">Business Services</span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Comprehensive international business solutions delivered by expert consultants 
-              with AI-enhanced efficiency and precision.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Company Formation */}
-            <Link to="/services/company-formation" className="group relative overflow-hidden rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-white h-80">
-              <div className="relative h-full overflow-hidden">
-                <img
-                  src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800"
-                  alt="Company Formation"
-                  className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
-                  <div className="bg-white/25 backdrop-blur-md rounded-lg p-2 w-fit mb-4">
-                    <Building className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold drop-shadow-2xl mb-3">Company Formation</h3>
-                  <p className="text-white/95 text-sm mb-4 leading-relaxed">
-                    Complete business registration and incorporation services across 127+ jurisdictions
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold">From $2,500</span>
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Investment Advisory */}
-            <Link to="/services/investment-advisory" className="group relative overflow-hidden rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-white h-80">
-              <div className="relative h-full overflow-hidden">
-                <img
-                  src="https://images.pexels.com/photos/6801648/pexels-photo-6801648.jpeg?auto=compress&cs=tinysrgb&w=800"
-                  alt="Investment Advisory"
-                  className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
-                  <div className="bg-white/25 backdrop-blur-md rounded-lg p-2 w-fit mb-4">
-                    <TrendingUp className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold drop-shadow-2xl mb-3">Investment Advisory</h3>
-                  <p className="text-white/95 text-sm mb-4 leading-relaxed">
-                    Strategic investment guidance and portfolio optimization for international markets
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold">From $1,500</span>
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Legal Consulting */}
-            <Link to="/services/legal-consulting" className="group relative overflow-hidden rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-white h-80">
-              <div className="relative h-full overflow-hidden">
-                <img
-                  src="https://images.pexels.com/photos/5668772/pexels-photo-5668772.jpeg?auto=compress&cs=tinysrgb&w=800"
-                  alt="Legal Consulting"
-                  className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
-                  <div className="bg-white/25 backdrop-blur-md rounded-lg p-2 w-fit mb-4">
-                    <Scale className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold drop-shadow-2xl mb-3">Legal Consulting</h3>
-                  <p className="text-white/95 text-sm mb-4 leading-relaxed">
-                    Expert legal advice and compliance support for international business operations
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold">From $800</span>
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Accounting Services */}
-            <Link to="/services/accounting-services" className="group relative overflow-hidden rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-white h-80">
-              <div className="relative h-full overflow-hidden">
-                <img
-                  src="https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800"
-                  alt="Accounting Services"
-                  className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
-                  <div className="bg-white/25 backdrop-blur-md rounded-lg p-2 w-fit mb-4">
-                    <Calculator className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold drop-shadow-2xl mb-3">Accounting Services</h3>
-                  <p className="text-white/95 text-sm mb-4 leading-relaxed">
-                    Professional bookkeeping, tax preparation, and financial reporting services
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold">From $500/mo</span>
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Market Research */}
-            <Link to="/services/market-research" className="group relative overflow-hidden rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-white h-80">
-              <div className="relative h-full overflow-hidden">
-                <img
-                  src="https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=800"
-                  alt="Market Research"
-                  className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
-                  <div className="bg-white/25 backdrop-blur-md rounded-lg p-2 w-fit mb-4">
-                    <BarChart3 className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold drop-shadow-2xl mb-3">Market Research</h3>
-                  <p className="text-white/95 text-sm mb-4 leading-relaxed">
-                    In-depth market analysis and business intelligence for strategic decision making
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold">From $1,200</span>
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Banking Solutions */}
-            <Link to="/services/banking-solutions" className="group relative overflow-hidden rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-white h-80">
-              <div className="relative h-full overflow-hidden">
-                <img
-                  src="https://images.pexels.com/photos/259027/pexels-photo-259027.jpeg?auto=compress&cs=tinysrgb&w=800"
-                  alt="Banking Solutions"
-                  className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
-                  <div className="bg-white/25 backdrop-blur-md rounded-lg p-2 w-fit mb-4">
-                    <CreditCard className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold drop-shadow-2xl mb-3">Banking Solutions</h3>
-                  <p className="text-white/95 text-sm mb-4 leading-relaxed">
-                    International banking setup, account opening, and financial infrastructure
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold">From $800</span>
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Ongoing Compliance */}
-            <Link to="/services/ongoing-compliance" className="group relative overflow-hidden rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-white h-80">
-              <div className="relative h-full overflow-hidden">
-                <img
-                  src="https://images.pexels.com/photos/6863515/pexels-photo-6863515.jpeg?auto=compress&cs=tinysrgb&w=800"
-                  alt="Ongoing Compliance"
-                  className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
-                  <div className="bg-white/25 backdrop-blur-md rounded-lg p-2 w-fit mb-4">
-                    <Shield className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold drop-shadow-2xl mb-3">Ongoing Compliance</h3>
-                  <p className="text-white/95 text-sm mb-4 leading-relaxed">
-                    Continuous compliance monitoring and regulatory updates for your business
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold">From $300/mo</span>
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </div>
-
-          <div className="text-center mt-12">
-            <Link
-              to="/services"
-              className="inline-flex items-center space-x-2 bg-white border border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              <span>View All Services</span>
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Countries Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Choose Your <span className="text-purple-600">Perfect Jurisdiction</span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Explore business-friendly countries with our expert consultants and AI-powered recommendations
-            </p>
-          </div>
-
-          {countriesLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredCountries.map((country) => (
-                <CountryCard key={country.id} country={country} />
-              ))}
-            </div>
-          )}
-
-          <div className="text-center mt-12">
-            <Link
-              to="/countries"
-              className="inline-flex items-center space-x-2 bg-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-purple-700 transition-colors shadow-lg"
-            >
-              <span>Explore All Countries</span>
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-20 bg-gradient-to-br from-slate-900 to-purple-900 text-white">
+      {/* AI-Powered Consulting Process Slider */}
+      <section className="py-20 bg-gradient-to-br from-slate-800 to-gray-900 text-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">
-              Trusted by <span className="text-yellow-300">Thousands</span> Worldwide
+              AI-Powered <span className="text-cyan-400">Consulting Process</span>
             </h2>
-            <p className="text-xl text-purple-100">
-              Join the global community of successful entrepreneurs
+            <p className="text-xl text-gray-300">
+              Revolutionary approach combining artificial intelligence with human expertise
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { value: '15,000+', label: 'Businesses Formed', icon: Building },
-              { value: '127', label: 'Countries Served', icon: Globe },
-              { value: '98.5%', label: 'Success Rate', icon: TrendingUp },
-              { value: '4.9/5', label: 'Client Rating', icon: Star }
-            ].map((stat, index) => (
-              <div key={index} className="text-center group">
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 group-hover:bg-white/20 transition-colors border border-white/20">
-                  <stat.icon className="h-8 w-8 text-yellow-300 mx-auto mb-4" />
-                  <div className="text-3xl font-bold text-white mb-2">{stat.value}</div>
-                  <div className="text-purple-200 text-sm">{stat.label}</div>
+              {
+                step: '01',
+                icon: '🤖',
+                title: 'AI Analysis',
+                description: 'Advanced algorithms analyze your business requirements',
+                image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=400',
+                tech: 'Machine Learning',
+                color: 'from-cyan-400 to-blue-600'
+              },
+              {
+                step: '02',
+                icon: '🎯',
+                title: 'Smart Matching',
+                description: 'Intelligent matching with optimal jurisdictions and consultants',
+                image: 'https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg?auto=compress&cs=tinysrgb&w=400',
+                tech: 'Neural Networks',
+                color: 'from-green-400 to-emerald-600'
+              },
+              {
+                step: '03',
+                icon: '👨‍💼',
+                title: 'Expert Review',
+                description: 'Human experts validate and enhance AI recommendations',
+                image: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=400',
+                tech: 'Human Intelligence',
+                color: 'from-purple-400 to-pink-600'
+              },
+              {
+                step: '04',
+                icon: '⚡',
+                title: 'Instant Execution',
+                description: 'Rapid implementation with continuous monitoring',
+                image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400',
+                tech: 'Automation',
+                color: 'from-orange-400 to-red-600'
+              }
+            ].map((process, index) => (
+              <div key={index} className="group relative">
+                <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                  {/* Step number */}
+                  <div className="absolute top-4 left-4 z-10">
+                    <div className={`bg-gradient-to-r ${process.color} rounded-full w-12 h-12 flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
+                      {process.step}
+                    </div>
+                  </div>
+                  
+                  {/* Image with overlay */}
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={process.image}
+                      alt={process.title}
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    <div className="absolute top-4 right-4 text-3xl drop-shadow-lg">
+                      {process.icon}
+                    </div>
+                    <div className={`absolute bottom-4 right-4 bg-gradient-to-r ${process.color} rounded-lg px-3 py-1 text-white text-xs font-bold shadow-lg`}>
+                      {process.tech}
+                    </div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-cyan-400 transition-colors">
+                      {process.title}
+                    </h3>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      {process.description}
+                    </p>
+                  </div>
+                  
+                  {/* Animated progress bar */}
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-700">
+                    <div className={`h-full bg-gradient-to-r ${process.color} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-1000 origin-left`} />
+                  </div>
+                  
+                  {/* Floating particles */}
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full animate-ping opacity-75" />
+                  <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
                 </div>
               </div>
             ))}
@@ -447,28 +314,823 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold mb-4">Ready to Start Your Global Business?</h2>
-          <p className="text-xl text-purple-100 mb-8">
-            Get instant AI-powered guidance and connect with expert consultants in minutes
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-            <Link
-              to="/get-started"
-              className="bg-white text-purple-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-lg flex items-center space-x-2"
-            >
-              <Bot className="h-5 w-5" />
-              <span>Start with AI Oracle</span>
-            </Link>
+
+      {/* AI-Powered Country Recommendations */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              AI-Powered Country <span className="text-purple-600">Recommendations</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Advanced AI analyzes your business needs with intelligent guidance from 
+              our AI-powered consultants and comprehensive business services.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {countriesLoading ? (
+              <div className="col-span-full flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+              </div>
+            ) : (
+              featuredCountries.slice(0, 8).map((country) => (
+                <CountryCard key={country.id} country={country} />
+              ))
+            )}
+          </div>
+          <div className="text-center mt-12">
             <Link
               to="/countries"
-              className="border-2 border-white/30 text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 transition-colors backdrop-blur-sm"
+              className="inline-flex items-center space-x-2 border border-purple-600 text-purple-600 px-6 py-3 rounded-lg font-medium hover:bg-purple-600 hover:text-white transition-colors"
             >
-              Explore Countries
+              <span>View All Countries</span>
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* AI Oracle Band */}
+      <section className="py-16 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Powered by AI Oracle</h2>
+            <p className="text-xl text-indigo-100">
+              Advanced AI technology with human expertise oversight
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {aiFeatures.map((feature, index) => (
+              <div key={index} className="text-center group">
+                <div className={`inline-flex items-center justify-center w-16 h-16 ${feature.color} rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-200`}>
+                  <feature.icon className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                <p className="text-indigo-100">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Expert Services */}
+      <section id="services" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Expert Services for <span className="text-purple-600">Global Success</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              From company formation to ongoing compliance, our AI-enhanced platform connects you with 
+              expert consultants for every aspect of international business.
+            </p>
+          </div>
+
+          {/* Service Categories Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Building className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Company Formation</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Complete business registration and incorporation services across 127+ jurisdictions
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">LLC & Corporation setup</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Legal documentation</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Compliance support</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=company_formation"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Get Started</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/7357/startup-photos.jpg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <TrendingUp className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Investment Advisory</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Strategic investment guidance and portfolio optimization for international markets
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Market analysis</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Risk assessment</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Portfolio strategy</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=investment"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Learn More</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/5668772/pexels-photo-5668772.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Scale className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Legal Consulting</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Expert legal advice and documentation for international business operations
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Contract drafting</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Compliance review</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Legal representation</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=legal"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Explore</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Calculator className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Accounting Services</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Professional bookkeeping, tax preparation, and financial reporting services
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Monthly bookkeeping</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Tax preparation</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Financial reports</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=accounting"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>View Services</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Globe className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Visa & Residence</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Comprehensive visa and residence permit services for global mobility
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Visa applications</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Residence permits</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Citizenship pathways</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=visa"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Apply Now</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3184306/pexels-photo-3184306.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Users className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Market Research</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    In-depth market analysis and business intelligence for informed decision making
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Market analysis</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Competitor research</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Industry insights</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=research"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Research</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/259027/pexels-photo-259027.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <CreditCard className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Banking Solutions</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    International banking services and account opening assistance worldwide
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Account opening</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Multi-currency accounts</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Online banking setup</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=banking"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Open Account</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <FileText className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Ongoing Compliance</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Continuous compliance monitoring and regulatory updates for your business
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Regulatory monitoring</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Annual filings</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Updates & alerts</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=compliance"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Stay Compliant</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <Globe className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Digital Nomad Services</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Specialized services for location-independent professionals and remote workers
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Remote work setup</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Tax residency planning</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Visa strategies</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=digital_nomad"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Start Journey</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3184287/pexels-photo-3184287.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <TrendingUp className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Wealth Management</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Comprehensive wealth preservation and growth strategies for high-net-worth individuals
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Asset protection</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Investment planning</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Estate planning</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=wealth"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Manage Wealth</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Assistant Demo */}
+      <section className="py-20 bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Globe className="h-6 w-6 text-blue-400" />
+              <span className="text-blue-400 font-medium">Global Intelligence Network</span>
+            </div>
+            <h2 className="text-3xl font-bold mb-4">
+              Real-Time Platform <span className="text-blue-400">Analytics</span>
+            </h2>
+            <p className="text-xl text-slate-300">
+              Live insights from our worldwide network of expert consultants and AI-powered 
+              analytics driving successful business formations.
+            </p>
+          </div>
+
+          {/* Top Row - Main Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Mail className="h-8 w-8 text-blue-400 mx-auto mb-3" />
+                <div className="text-3xl font-bold text-white mb-1">1,247+</div>
+                <div className="text-slate-400 text-sm">Active Consultations</div>
+                <div className="text-xs text-blue-400 mt-1">Consultations with expert consultants worldwide</div>
+              </div>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Globe className="h-8 w-8 text-green-400 mx-auto mb-3" />
+                <div className="text-3xl font-bold text-white mb-1">127</div>
+                <div className="text-slate-400 text-sm">Strategic Jurisdictions</div>
+                <div className="text-xs text-green-400 mt-1">Countries with expert consultants</div>
+              </div>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Users className="h-8 w-8 text-purple-400 mx-auto mb-3" />
+                <div className="text-3xl font-bold text-white mb-1">98.5%</div>
+                <div className="text-slate-400 text-sm">Success Rate</div>
+                <div className="text-xs text-purple-400 mt-1">Successful business formations</div>
+              </div>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Eye className="h-8 w-8 text-orange-400 mx-auto mb-3" />
+                <div className="text-3xl font-bold text-white mb-1">47min</div>
+                <div className="text-slate-400 text-sm">Avg Response Time</div>
+                <div className="text-xs text-orange-400 mt-1">AI-powered instant support</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Row - AI Features */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Bot className="h-8 w-8 text-yellow-400 mx-auto mb-3" />
+                <div className="text-2xl font-bold text-white mb-1">AI-Powered Matching</div>
+                <div className="text-slate-400 text-sm">Intelligent consultant-client pairing based on expertise and requirements</div>
+              </div>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Shield className="h-8 w-8 text-green-400 mx-auto mb-3" />
+                <div className="text-2xl font-bold text-white mb-1">Legal Compliance</div>
+                <div className="text-slate-400 text-sm">All recommendations reviewed by legal experts for full compliance</div>
+              </div>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-slate-800 rounded-2xl p-6 group-hover:bg-slate-700 transition-colors border border-slate-700">
+                <Zap className="h-8 w-8 text-purple-400 mx-auto mb-3" />
+                <div className="text-2xl font-bold text-white mb-1">Success Optimization</div>
+                <div className="text-slate-400 text-sm">Continuous optimization based on successful case patterns</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Join CTA */}
+      <section className="py-20 bg-gradient-to-br from-slate-800 to-purple-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">
+              Join Thousands of Successful Businesses
+            </h2>
+            <p className="text-xl text-purple-100 max-w-3xl mx-auto">
+              Experience the power of AI-enhanced consulting with expert guidance across 8 
+              strategic jurisdictions worldwide.
+            </p>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+            <div className="text-center">
+              <div className="inline-flex items-center space-x-2 bg-yellow-400/20 text-yellow-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <Sparkles className="h-4 w-4" />
+                <span>Start Your Journey</span>
+              </div>
+              <h3 className="text-2xl font-bold mb-4">
+                AI-Powered Business Consulting
+              </h3>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center space-x-3">
+                  <MessageSquare className="h-5 w-5 text-purple-600" />
+                  <span className="text-gray-700">Instant AI-powered responses</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Shield className="h-5 w-5 text-purple-600" />
+                  <span className="text-gray-700">Legal oversight and compliance</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  <span className="text-gray-700">Expert human backup</span>
+                </div>
+              </div>
+
+              <Link
+                to="/ai-assistant"
+                className="inline-flex items-center space-x-2 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+              >
+                <span>Try AI Assistant</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* AI Assistant Mockup */}
+            <div className="relative">
+              <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center space-x-2">
+                  <div className="flex space-x-1">
+                    <div className="w-3 h-3 bg-red-400 rounded-full" />
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full" />
+                    <div className="w-3 h-3 bg-green-400 rounded-full" />
+                  </div>
+                  <span className="text-sm text-gray-600 ml-4">AI Business Assistant</span>
+                </div>
+                
+                <div className="p-6 space-y-4 h-80 overflow-y-auto">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                      <Bot className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <div className="bg-gray-100 rounded-lg px-4 py-2 max-w-xs">
+                      <p className="text-sm text-gray-800">
+                        Hello! I can help you choose the best jurisdiction for your business. What type of company are you planning to establish?
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 justify-end">
+                    <div className="bg-purple-600 text-white rounded-lg px-4 py-2 max-w-xs">
+                      <p className="text-sm">
+                        I'm looking to start a tech startup with international clients
+                      </p>
+                    </div>
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-sm">👤</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                      <Bot className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <div className="bg-gray-100 rounded-lg px-4 py-2 max-w-xs">
+                      <p className="text-sm text-gray-800">
+                        Based on your requirements, I recommend Estonia for e-Residency benefits or Delaware for US market access. Would you like detailed comparisons?
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 rounded-lg p-3">
+                    <p className="text-sm text-blue-800 font-medium">✨ AI Analysis Complete</p>
+                    <p className="text-xs text-blue-600">Matched with 3 expert consultants in relevant jurisdictions</p>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 p-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex-1 bg-gray-100 rounded-lg px-3 py-2">
+                      <input 
+                        type="text" 
+                        placeholder="Ask about any jurisdiction..."
+                        className="w-full bg-transparent text-sm text-gray-600 outline-none"
+                        disabled
+                      />
+                    </div>
+                    <button className="bg-purple-600 text-white p-2 rounded-lg hover:bg-purple-700 transition-colors">
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Expert Insights */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Expert Insights from Our <span className="text-purple-600">Global Consultants</span>
+            </h2>
+            <p className="text-xl text-gray-600">
+              Latest insights and updates from our country specialists around the world.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Dynamic insights from countries */}
+            {/* Sample insights - these would come from blog_posts table */}
+            {[
+              {
+                id: 1,
+                title: 'New Investment Opportunities in Georgia 2024',
+                excerpt: 'Latest developments in Georgia\'s business landscape and emerging opportunities for international investors.',
+                country: { name: 'Georgia', flag_emoji: '🇬🇪', slug: 'georgia' },
+                category: 'Market Update',
+                readTime: '5 min read'
+              },
+              {
+                id: 2,
+                title: 'UAE Free Zone Benefits for Tech Companies',
+                excerpt: 'Comprehensive guide to UAE free zones and their advantages for technology startups.',
+                country: { name: 'UAE', flag_emoji: '🇦🇪', slug: 'uae' },
+                category: 'Business Guide',
+                readTime: '7 min read'
+              },
+              {
+                id: 3,
+                title: 'Estonia e-Residency: Digital Nomad Paradise',
+                excerpt: 'How Estonia\'s e-Residency program is revolutionizing remote business operations.',
+                country: { name: 'Estonia', flag_emoji: '🇪🇪', slug: 'estonia' },
+                category: 'Digital Innovation',
+                readTime: '6 min read'
+              }
+            ].map((insight, index) => (
+              <article key={insight.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow group">
+                <div className={`h-48 bg-gradient-to-br ${
+                  index === 0 ? 'from-blue-500 to-purple-600' :
+                  index === 1 ? 'from-green-500 to-teal-600' :
+                  'from-orange-500 to-red-600'
+                }`} />
+                <div className="p-6">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <span className="text-lg">{insight.country.flag_emoji}</span>
+                    <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                      index === 0 ? 'bg-blue-100 text-blue-700' :
+                      index === 1 ? 'bg-green-100 text-green-700' :
+                      'bg-orange-100 text-orange-700'
+                    }`}>
+                      {insight.category}
+                    </span>
+                    <span className="text-gray-400 text-sm">•</span>
+                    <span className="text-gray-500 text-sm">{insight.readTime}</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors">
+                    {insight.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    {insight.excerpt}
+                  </p>
+                  <Link
+                    to={`/blog/${insight.id}`}
+                    className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1"
+                  >
+                    <span>Read More</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link
+              to="/blog"
+              className="inline-flex items-center space-x-2 border border-purple-600 text-purple-600 px-6 py-3 rounded-lg font-medium hover:bg-purple-600 hover:text-white transition-colors"
+            >
+              <span>View All Insights</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Join CTA */}
+      <section className="py-16 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold mb-4">Join Thousands of Successful Businesses</h2>
+          <p className="text-xl text-purple-100 mb-8">
+            Discover AI-enhanced business consulting trusted by entrepreneurs worldwide
+          </p>
+          <Link
+            to="/get-started"
+            className="inline-flex items-center space-x-2 bg-white text-purple-700 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors shadow-lg"
+          >
+            <span>Start Your Journey</span>
+            <ArrowRight className="h-5 w-5" />
+          </Link>
         </div>
       </section>
     </div>
