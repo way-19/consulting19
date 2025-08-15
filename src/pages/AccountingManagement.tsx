@@ -157,7 +157,7 @@ const AccountingManagement = () => {
         .from('clients')
         .select('id')
         .eq('profile_id', profile.id)
-        .single();
+       .maybeSingle();
 
       if (error) {
         console.error('fetch clientId error:', error);
