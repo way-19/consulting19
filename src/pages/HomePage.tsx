@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight, Bot, Shield, Zap, Users, Globe2, TrendingUp, Clock,
   Building, CheckCircle, Calculator, Scale, Globe, CreditCard, FileText,
-  Star, Award, BarChart3, MessageSquare, Send, Sparkles, Building2
+  Star, Users, Globe, TrendingUp, CheckCircle, Bot, Zap, Shield, Clock, Award, BarChart3, MessageSquare, Send, Sparkles, Building2, ArrowRight
 } from 'lucide-react';
 
 import { useCountries } from '../hooks/useCountries';
