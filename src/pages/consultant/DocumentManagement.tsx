@@ -826,6 +826,158 @@ const DocumentManagement = () => {
         </div>
       )}
 
+      {/* Document Request Modal */}
+      {showRequestModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Müşteriden Belge Talep Et</h2>
+                <button
+                  onClick={resetRequestForm}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleRequestDocument} className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Müşteri Seç *
+                </label>
+                <select
+                  required
+                  value={requestForm.client_id}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, client_id: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">Müşteri seçin...</option>
+                  {clients.map(client => (
+                    <option key={client.id} value={client.id}>
+                      {client.company_name || client.profile?.full_name || client.profile?.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Belge Adı *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={requestForm.name}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Örn: Ağustos 2025 Banka Dökümü"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Belge Türü *
+                  </label>
+                  <select
+                    required
+                    value={requestForm.type}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, type: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="">Belge türünü seçin...</option>
+                    <option value="Bank Statement">Banka Ekstresi</option>
+                    <option value="Invoice">Fatura</option>
+                    <option value="Receipt">Makbuz</option>
+                    <option value="Tax Return">Vergi Beyannamesi</option>
+                    <option value="Financial Statement">Mali Tablo</option>
+                    <option value="Passport">Pasaport</option>
+                    <option value="National ID">Kimlik Kartı</option>
+                    <option value="Proof of Address">İkametgah Belgesi</option>
+                    <option value="Business License">İş Lisansı</option>
+                    <option value="Other">Diğer</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Kategori *
+                  </label>
+                  <select
+                    required
+                    value={requestForm.category}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, category: e.target.value as any }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="identity">Kimlik Belgeleri</option>
+                    <option value="business">İş Belgeleri</option>
+                    <option value="financial">Mali Belgeler</option>
+                    <option value="medical">Sağlık Belgeleri</option>
+                    <option value="other">Diğer</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Son Tarih
+                </label>
+                <input
+                  type="date"
+                  value={requestForm.due_date}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, due_date: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Açıklama ve Gereksinimler *
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={requestForm.description}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Bu belge neden gerekli? Özel gereksinimler var mı? Elektronik imza gerekli mi?"
+                />
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  <h4 className="font-medium text-blue-900">Elektronik İmza Rehberi</h4>
+                </div>
+                <p className="text-sm text-blue-800">
+                  Elektronik imza gerektiren belgeler için müşterinize dijital olarak imzalanmış PDF dosyaları yüklemesini söyleyin. 
+                  E-imzanın bulunduğu ülkede yasal olarak geçerli olduğundan emin olun.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={resetRequestForm}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Send className="h-5 w-5" />
+                  <span>Belge Talep Et</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Document Detail Modal */}
       {showDocumentDetail && selectedDocument && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
