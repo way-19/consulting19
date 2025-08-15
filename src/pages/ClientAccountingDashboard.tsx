@@ -12,7 +12,7 @@ import MultilingualChat from '../components/MultilingualChat';
 import {
   FileText, Calendar, AlertTriangle, CheckCircle, Clock, Upload, Download,
   MessageSquare, Bell, DollarSign, Eye, Search, Filter, Mail, Plus,
-  Lightbulb, Star, TrendingUp, Globe
+  Lightbulb, Star, TrendingUp, Globe, X, Save, User, Paperclip, Shield
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
@@ -85,6 +85,23 @@ const ClientAccountingDashboard = () => {
     { id: 'vm-2', name: 'kljlkl', type: 'Bank Account Information', trackingNo: 'VM20250813-1C935C81', status: 'SENT', shippingFeeUSD: 0, payment: 'WAIVED', sizeKB: 116.6, sentAt: '2025-08-13' }
   ]);
   const [selectedMail, setSelectedMail] = useState<MailItem | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadForm, setUploadForm] = useState({
+    name: '',
+    type: '',
+    category: 'other' as 'identity' | 'business' | 'financial' | 'medical' | 'other',
+    description: '',
+    file: null as File | null
+  });
+
+  const documentCategories = [
+    { value: 'identity', label: 'Identity Documents', icon: User, color: 'bg-blue-100 text-blue-800' },
+    { value: 'business', label: 'Business Documents', icon: FileText, color: 'bg-green-100 text-green-800' },
+    { value: 'financial', label: 'Financial Documents', icon: Calendar, color: 'bg-purple-100 text-purple-800' },
+    { value: 'medical', label: 'Medical Documents', icon: Shield, color: 'bg-red-100 text-red-800' },
+    { value: 'other', label: 'Other Documents', icon: Paperclip, color: 'bg-gray-100 text-gray-800' }
+  ];
 
   useEffect(() => {
     if (profile?.id) {
@@ -198,6 +215,81 @@ const ClientAccountingDashboard = () => {
   const handleInvoicePaymentError = (error: string) => { alert(`Invoice payment failed: ${error}`); };
   const handleInvoicePaymentCancel = () => { setShowInvoiceCheckout(false); setSelectedInvoice(null); };
 
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!uploadForm.file) {
+      alert('Please select a file to upload');
+      return;
+    }
+
+    try {
+      setUploadingFile(true);
+
+      // Simulate file upload (in real implementation, upload to Supabase Storage)
+      const mockFileUrl = `https://example.com/documents/${uploadForm.file.name}`;
+      const fileSize = uploadForm.file.size;
+
+      // Get client data
+      const { data: clientData } = await supabase
+        .from('clients')
+        .select('id, assigned_consultant_id')
+        .eq('profile_id', profile?.id)
+        .single();
+
+      if (!clientData) throw new Error('Client record not found');
+
+      const { error } = await supabase
+        .from('documents')
+        .insert([{
+          client_id: clientData.id,
+          name: uploadForm.name,
+          type: uploadForm.type,
+          category: uploadForm.category,
+          status: 'pending',
+          file_url: mockFileUrl,
+          file_size: fileSize,
+          uploaded_at: new Date().toISOString()
+        }]);
+
+      if (error) throw error;
+
+      // Notify assigned consultant
+      if (clientData.assigned_consultant_id) {
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: clientData.assigned_consultant_id,
+            type: 'document_uploaded',
+            title: 'New Document Uploaded',
+            message: `${uploadForm.name} has been uploaded by client`,
+            priority: 'normal',
+            related_table: 'documents',
+            action_url: '/consultant/documents'
+          }]);
+      }
+
+      resetUploadForm();
+      alert('Document uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      alert('Failed to upload document');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const resetUploadForm = () => {
+    setUploadForm({
+      name: '',
+      type: '',
+      category: 'other',
+      description: '',
+      file: null
+    });
+    setShowUploadModal(false);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800';
@@ -256,7 +348,7 @@ const ClientAccountingDashboard = () => {
               <h1 className="text-2xl font-bold text-gray-900">Accounting Dashboard</h1>
               <p className="text-gray-600 mt-1">Manage your documents, invoices, and accounting communications</p>
             </div>
-            <div className="text-right">
+            <div className="flex items-center space-x-4">
               <p className="text-sm text-gray-600">Consultant</p>
               <p className="font-medium text-gray-900">{accountingProfile.consultant?.full_name}</p>
               <button
@@ -266,13 +358,13 @@ const ClientAccountingDashboard = () => {
                 <MessageSquare className="h-4 w-4" />
                 <span>Contact Advisor</span>
               </button>
-              <Link
-                to="/client/documents"
+              <button
+                onClick={() => setShowUploadModal(true)}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
               >
                 <Upload className="h-4 w-4" />
                 <span>Upload Documents</span>
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -462,6 +554,17 @@ const ClientAccountingDashboard = () => {
             {/* Documents */}
             {activeTab === 'documents' && (
               <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Document Management</h3>
+                  <button
+                    onClick={() => setShowUploadModal(true)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Upload New Document</span>
+                  </button>
+                </div>
+
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                   <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -848,6 +951,140 @@ const ClientAccountingDashboard = () => {
           onClose={() => setShowRequestModal(false)}
           onSuccess={() => { setShowRequestModal(false); alert('Custom service request submitted successfully!'); }}
         />
+      )}
+
+      {/* Upload Document Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Upload Document</h2>
+                <button
+                  onClick={resetUploadForm}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleUploadSubmit} className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Document Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={uploadForm.name}
+                  onChange={(e) => setUploadForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="e.g., Passport Copy"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Document Type *
+                  </label>
+                  <select
+                    required
+                    value={uploadForm.type}
+                    onChange={(e) => setUploadForm(prev => ({ ...prev, type: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="">Select document type...</option>
+                    <option value="Passport">Passport</option>
+                    <option value="National ID">National ID</option>
+                    <option value="Driver License">Driver License</option>
+                    <option value="Birth Certificate">Birth Certificate</option>
+                    <option value="Bank Statement">Bank Statement</option>
+                    <option value="Tax Return">Tax Return</option>
+                    <option value="Proof of Address">Proof of Address</option>
+                    <option value="Business License">Business License</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Category *
+                  </label>
+                  <select
+                    required
+                    value={uploadForm.category}
+                    onChange={(e) => setUploadForm(prev => ({ ...prev, category: e.target.value as any }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="identity">Identity Documents</option>
+                    <option value="business">Business Documents</option>
+                    <option value="financial">Financial Documents</option>
+                    <option value="medical">Medical Documents</option>
+                    <option value="other">Other Documents</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  rows={3}
+                  value={uploadForm.description}
+                  onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Additional notes about this document..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select File *
+                </label>
+                <input
+                  type="file"
+                  required
+                  onChange={(e) => setUploadForm(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 50MB)
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={resetUploadForm}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={uploadingFile}
+                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  {uploadingFile ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-5 w-5" />
+                      <span>Upload Document</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Document Details Modal */}
