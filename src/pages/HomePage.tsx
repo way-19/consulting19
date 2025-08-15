@@ -423,7 +423,6 @@ const HomePage = () => {
             </Link>
           </div>
         </div>
-        </div>
       </section>
 
       {/* Real-Time Platform Analytics */}
