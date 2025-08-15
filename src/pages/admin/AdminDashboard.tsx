@@ -20,7 +20,8 @@ import {
   RefreshCw,
   Eye,
   Edit,
-  Plus
+  Plus,
+  User
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -90,28 +91,23 @@ const AdminDashboard = () => {
       console.log('📊 fetchDashboardData: Starting parallel queries...');
       const [
         usersResult,
-        consultantsResult,
         clientsResult,
         countriesResult,
         projectsResult,
         tasksResult,
-        auditLogsResult
       ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('legacy_role', 'consultant'),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('legacy_role', 'client'),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'client'),
         supabase.from('countries').select('id', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('projects').select('id, status', { count: 'exact' }),
-        supabase.from('tasks').select('id, status', { count: 'exact' }),
-        supabase.from('audit_logs').select(`
-          id,
-          action,
-          target_table,
-          timestamp,
-          user_id,
-          profiles!audit_logs_user_id_fkey (full_name, email)
-        `).order('timestamp', { ascending: false }).limit(10)
+        supabase.from('tasks').select('id, status', { count: 'exact' })
       ]);
+
+      // Get consultants count separately
+      const consultantsResult = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'consultant');
 
       console.log('📊 fetchDashboardData: Query results:');
       console.log('  - Users count:', usersResult.count, 'Error:', usersResult.error);
@@ -120,7 +116,7 @@ const AdminDashboard = () => {
       console.log('  - Countries count:', countriesResult.count, 'Error:', countriesResult.error);
       console.log('  - Projects data length:', projectsResult.data?.length, 'Error:', projectsResult.error);
       console.log('  - Tasks data length:', tasksResult.data?.length, 'Error:', tasksResult.error);
-      console.log('  - Audit logs data length:', auditLogsResult.data?.length, 'Error:', auditLogsResult.error);
+      
       // Calculate stats
       console.log('🧮 fetchDashboardData: Calculating stats...');
       const newStats: DashboardStats = {
@@ -142,19 +138,8 @@ const AdminDashboard = () => {
       console.log('📈 fetchDashboardData: Calculated stats:', newStats);
       setStats(newStats);
 
-      // Process recent activity
-      console.log('📝 fetchDashboardData: Processing recent activity...');
-      const activities: RecentActivity[] = (auditLogsResult.data || []).map(log => ({
-        id: log.id,
-        type: log.action,
-        description: `${log.action} on ${log.target_table}`,
-        user: (log.profiles as any)?.full_name || (log.profiles as any)?.email || 'Unknown',
-        timestamp: log.timestamp,
-        status: 'success'
-      }));
-
-      console.log('📝 fetchDashboardData: Processed activities:', activities.length, 'items');
-      setRecentActivity(activities);
+      // Set empty recent activity since audit_logs table doesn't exist
+      setRecentActivity([]);
 
       console.log('✅ fetchDashboardData: All data processed successfully');
     } catch (error) {
