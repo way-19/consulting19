@@ -432,7 +432,7 @@ const HomePage = () => {
               Join Thousands of Successful Businesses
             </h3>
             <p className="text-white/90 mb-6">
-              Experience the power of AI-enhanced consulting with expert guidance across 8 
+              Experience the power of AI-enhanced consulting with expert guidance across 10 
               strategic jurisdictions worldwide.
             </p>
             <Link
