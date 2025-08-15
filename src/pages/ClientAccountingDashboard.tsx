@@ -16,7 +16,8 @@ import {
   DollarSign,
   Eye,
   Search,
-  Filter
+  Filter,
+  Mail
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
