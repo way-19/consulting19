@@ -23,6 +23,7 @@ import TermsOfServicePage from './pages/TermsOfServicePage';
 import FAQPage from './pages/FAQPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentCancelledPage from './pages/PaymentCancelledPage';
+import PartnershipProgramPage from './pages/PartnershipProgramPage';
 
 // Protected Pages - Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
