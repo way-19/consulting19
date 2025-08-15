@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { CreditCard, Lock, CheckCircle, AlertTriangle, X } from 'lucide-react';
-import { createPaymentIntent, confirmPayment } from '../lib/stripe';
+import { processDirectPayment } from '../lib/stripe';
 
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY 
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) 
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
   : null;
 
 interface CheckoutFormProps {
@@ -34,32 +34,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Create payment intent when component mounts
-    const initializePayment = async () => {
-      try {
-        const { client_secret } = await createPaymentIntent(amount, currency, {
-          order_id: orderId,
-          service_name: orderDetails.serviceName,
-          consultant_name: orderDetails.consultantName
-        });
-        setClientSecret(client_secret);
-      } catch (err) {
-        setError('Failed to initialize payment');
-        onError('Failed to initialize payment');
-      }
-    };
-
-    initializePayment();
-  }, [amount, currency, orderId]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!stripe || !elements || !clientSecret) {
+    if (!stripe || !elements) {
       return;
     }
 
@@ -75,22 +55,69 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     }
 
     try {
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: {
-            name: orderDetails.consultantName,
-          },
+      const { paymentIntent } = await processDirectPayment(
+        stripe,
+        cardElement,
+        amount,
+        currency,
+        {
+          order_id: orderId,
+          service_name: orderDetails.serviceName,
+          consultant_name: orderDetails.consultantName,
+          customer_name: orderDetails.consultantName
+        }
+      );
+
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
+        onSuccess(paymentIntent.id);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
+      setError(errorMessage);
+      onError(errorMessage);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Alternative: Redirect to Stripe Checkout
+  const handleRedirectCheckout = async () => {
+    if (!stripe) return;
+
+    try {
+      setProcessing(true);
+      setError(null);
+
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          amount: Math.round(amount * 100),
+          currency: currency.toLowerCase(),
+          metadata: {
+            order_id: orderId,
+            service_name: orderDetails.serviceName,
+            consultant_name: orderDetails.consultantName
+          },
+          success_url: `${window.location.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${window.location.origin}/payment-cancelled`
+        })
       });
 
-      if (stripeError) {
-        setError(stripeError.message || 'Payment failed');
-        onError(stripeError.message || 'Payment failed');
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Confirm payment on our backend
-        await confirmPayment(paymentIntent.id, orderId);
-        onSuccess(paymentIntent.id);
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      const { sessionId } = await response.json();
+      
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: sessionId
+      });
+
+      if (error) {
+        throw new Error(error.message);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
@@ -175,6 +202,40 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
           </p>
         </div>
 
+        <div className="mb-4">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-3">Choose payment method:</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="submit"
+                disabled={!stripe || processing}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              >
+                {processing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-4 w-4" />
+                    <span>Pay Here</span>
+                  </>
+                )}
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleRedirectCheckout}
+                disabled={!stripe || processing}
+                className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              >
+                <span>Stripe Checkout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="flex items-center space-x-4">
           <button
             type="button"
@@ -182,23 +243,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!stripe || processing || !clientSecret}
-            className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-          >
-            {processing ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Processing...</span>
-              </>
-            ) : (
-              <>
-                <CreditCard className="h-4 w-4" />
-                <span>Pay ${amount.toLocaleString()}</span>
-              </>
-            )}
           </button>
         </div>
       </form>
@@ -237,16 +281,16 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
           <div className="text-center">
-            <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Payment System Unavailable</h2>
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Payment System Ready</h2>
             <p className="text-gray-600 mb-4">
-              Stripe payment system is not configured. Please contact support.
+              Using Stripe test environment with your custom integration.
             </p>
             <button
               onClick={onClose}
-              className="bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
             >
-              Close
+              Continue
             </button>
           </div>
         </div>

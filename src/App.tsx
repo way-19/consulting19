@@ -21,6 +21,8 @@ import AIAssistantPage from './pages/AIAssistantPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import FAQPage from './pages/FAQPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentCancelledPage from './pages/PaymentCancelledPage';
 
 // Protected Pages - Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -85,6 +87,8 @@ export default function App() {
           <Route path="/get-started" element={<AIAssistantPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsOfServicePage />} />
+          <Route path="/payment-success" element={<PaymentSuccessPage />} />
+          <Route path="/payment-cancelled" element={<PaymentCancelledPage />} />
           
           {/* Auth Routes */}
           <Route path="/login" element={<LoginPage />} />
