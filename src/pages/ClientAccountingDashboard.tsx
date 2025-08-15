@@ -20,7 +20,8 @@ import {
   Eye,
   Search,
   Filter,
-  Mail
+  Mail,
+  Plus
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
