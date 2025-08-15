@@ -186,13 +186,21 @@ const ClientDocuments = () => {
   ];
 
   useEffect(() => {
-    // Always use demo data for now - remove this after migration is working
-    console.log('🎯 ClientDocuments: Using demo data');
+    console.log('🎯 ClientDocuments: Loading demo data...');
+    setLoading(true);
+    
+    // Use demo data immediately
     setDocuments(demoUploadedDocuments);
     setRequestedDocuments(demoRequestedDocuments);
     calculateStats(demoUploadedDocuments);
+    
+    console.log('📊 Demo data loaded:', {
+      uploadedDocs: demoUploadedDocuments.length,
+      requestedDocs: demoRequestedDocuments.length
+    });
+    
     setLoading(false);
-  }, [profile]);
+  }, []); // Empty dependency array to run only once
 
   const fetchData = async () => {
     try {
