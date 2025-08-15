@@ -21,79 +21,82 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: Supported
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
+
+    const fetchFAQs = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Check if Supabase is properly configured
+        if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+          console.warn('Supabase configuration missing. Using fallback data.');
+          if (active) {
+            setFaqs([]);
+            setError('Database configuration missing');
+          }
+          return;
+        }
+
+        console.log('🔍 useFAQs: Fetching FAQs with filters:', filters);
+
+        let query = supabase
+          .from('faqs')
+          .select('*')
+          .order('sort_order', { ascending: true });
+
+        if (filters?.isActive !== undefined) {
+          query = query.eq('is_active', filters.isActive);
+        }
+        if (filters?.languageCode) {
+          query = query.eq('language_code', filters.languageCode);
+        }
+        if (filters?.countryId) {
+          query = query.eq('country_id', filters.countryId);
+        }
+        if (filters?.category) {
+          query = query.eq('category', filters.category);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          console.error('❌ useFAQs: Database error:', error);
+          throw error;
+        }
+        
+        console.log('✅ useFAQs: Successfully fetched', data?.length || 0, 'FAQs');
+        
+        if (active) {
+          setFaqs(data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching FAQs:', err);
+        if (active) {
+          // Handle different types of errors gracefully
+          const errorMessage = err instanceof Error
+            ? (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')
+                ? 'Network error: Cannot connect to database. Please check your internet connection.'
+                : err.message)
+            : 'Unknown error occurred';
+          
+          console.warn('FAQs unavailable, using fallback');
+          setError(errorMessage);
+          setFaqs([]); // Safe fallback to prevent UI crashes
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
     fetchFAQs();
+    
+    return () => {
+      active = false;
+    };
   }, [filters]);
-
-  const fetchFAQs = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Check if Supabase is properly configured (this check is for development/setup)
-      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-        console.warn('Supabase configuration missing. Using fallback data.');
-        setFaqs([]);
-        setLoading(false);
-        return;
-      }
-
-      console.log('🔍 useFAQs: Fetching FAQs with filters:', filters);
-
-      let query = supabase
-        .from('faqs')
-        .select('*')
-        .order('sort_order', { ascending: true });
-
-      if (filters?.isActive !== undefined) {
-        query = query.eq('is_active', filters.isActive);
-        console.log('📋 useFAQs: Filtering by is_active:', filters.isActive);
-      }
-      if (filters?.languageCode) {
-        query = query.eq('language_code', filters.languageCode);
-        console.log('🌐 useFAQs: Filtering by language:', filters.languageCode);
-      }
-      if (filters?.countryId) {
-        query = query.eq('country_id', filters.countryId);
-        console.log('🏳️ useFAQs: Filtering by country_id:', filters.countryId);
-      }
-      if (filters?.category) {
-        query = query.eq('category', filters.category);
-        console.log('📂 useFAQs: Filtering by category:', filters.category);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('❌ useFAQs: Database error:', error);
-        // Gracefully handle database errors for the user
-        const errorMessage = error.message?.includes('Failed to fetch') 
-          ? 'Ağ/CORS hatası: Supabase projesine ulaşılamıyor.'
-          : error.message || 'Veritabanı hatası.';
-        setError(errorMessage);
-        setFaqs([]);
-        return;
-      }
-      
-      console.log('✅ useFAQs: Successfully fetched', data?.length || 0, 'FAQs');
-      console.log('📊 useFAQs: FAQ data sample:', data?.slice(0, 2));
-      
-      setFaqs(data || []);
-    } catch (err) {
-      console.error('Error fetching FAQs:', err);
-      // Handle any remaining errors gracefully
-      const errorMessage = err instanceof Error
-        ? (err.message?.includes('Failed to fetch')
-            ? 'Ağ/CORS hatası: Supabase projesine ulaşılamıyor.'
-            : err.message)
-        : 'Bilinmeyen hata';
-      
-      console.warn('FAQs unavailable, using fallback');
-      setError(errorMessage);
-      setFaqs([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const refreshFAQs = () => {
     fetchFAQs();

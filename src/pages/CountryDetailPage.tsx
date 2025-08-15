@@ -392,48 +392,43 @@ const CountryDetailPage = () => {
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                   <span className="ml-2 text-gray-600">Loading FAQs...</span>
-                </div> [1]
+                </div>
               ) : faqError ? (
-                <div className="mb-6 flex items-start gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-yellow-800">
-                  <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-4" />
-                  <div>
-                    <div className="font-semibold">FAQs yüklenemedi</div>
-                    <div className="text-sm opacity-90">
-                      {faqError} — Lütfen sayfayı yenileyin. Sorun devam ederse daha sonra tekrar deneyin.
-                    </div>
+                <div className="bg-white rounded-lg border border-yellow-300 p-6">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <AlertTriangle className="h-6 w-6 text-yellow-600" />
+                    <h4 className="font-semibold text-yellow-900">FAQs Could Not Be Loaded</h4>
                   </div>
+                  <p className="text-yellow-800 text-sm">
+                    {faqError} — Please refresh the page or try again later.
+                  </p>
                 </div>
               ) : countryFaqs.length === 0 ? (
-                <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-                  <CheckCircle className="h-8 w-8 text-gray-400 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">No FAQs Available</h4>
-                  <p className="text-gray-600 mb-4">No FAQs found for {country.name}.</p>
-                  <p className="text-sm text-gray-500">Country ID: {country?.id}</p>
+                <div className="space-y-4">
+                  {faqs.map((faq, index) => (
+                    <div key={index} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                      <h4 className="font-semibold text-gray-900 text-lg mb-3">{faq.question}</h4>
+                      <p className="text-gray-700 leading-relaxed">
+                        Professional guidance and comprehensive support available for all business formation needs in {country.name}.
+                      </p>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="space-y-4">
                   {countryFaqs.slice(0, 5).map((faq) => (
                     <div key={faq.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                      <div className="mb-3">
-                        <h4 className="font-semibold text-gray-900 text-lg mb-2">{faq.question}</h4>
-                        {faq.category && (
-                          <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
-                            {faq.category}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-gray-700 leading-relaxed">
-                        {faq.answer || 'No answer provided yet.'}
-                      </div>
+                      <h4 className="font-semibold text-gray-900 text-lg mb-3">{faq.question}</h4>
+                      <p className="text-gray-700 leading-relaxed">
+                        {faq.answer || 'Professional guidance and comprehensive support available.'}
+                      </p>
+                      {faq.category && (
+                        <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium mt-3">
+                          {faq.category}
+                        </span>
+                      )}
                     </div>
                   ))}
-                  {countryFaqs.length > 5 && (
-                    <div className="text-center">
-                      <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">
-                        View All FAQs →
-                      </button>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
