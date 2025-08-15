@@ -94,6 +94,7 @@ export default function App() {
           <Route path="/get-started" element={<AIAssistantPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsOfServicePage />} />
+          <Route path="/partnership-program" element={<PartnershipProgramPage />} />
           <Route path="/payment-success" element={<PaymentSuccessPage />} />
           <Route path="/payment-cancelled" element={<PaymentCancelledPage />} />
           
