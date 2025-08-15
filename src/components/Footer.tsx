@@ -111,9 +111,6 @@ const Footer = () => {
               <Link to="/ai-assistant" className="block text-slate-300 hover:text-white transition-colors">
                 AI Assistant
               </Link>
-              <Link to="/faq" className="block text-slate-300 hover:text-white transition-colors">
-                FAQ
-              </Link>
               <Link to="/contact" className="block text-slate-300 hover:text-white transition-colors">
                 Contact Support
               </Link>
