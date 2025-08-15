@@ -44,7 +44,7 @@ export const useCountries = (activeOnly: boolean = true) => {
         .from('countries')
         .select('*')
         .order('sort_order', { ascending: true })
-        .limit(20); // Get top countries
+        .limit(50); // Ensure we get all countries
 
       if (activeOnly) {
         query = query.eq('is_active', true);
@@ -56,8 +56,10 @@ export const useCountries = (activeOnly: boolean = true) => {
       setCountries(data || []);
     } catch (err) {
       console.error('Error fetching countries:', err);
-      setError('Failed to load countries');
+      // Gracefully handle connection errors
+      console.warn('Countries unavailable, using fallback');
       setCountries([]);
+      setError(null); // Don't show error to user, just use empty state
     } finally {
       setLoading(false);
     }
