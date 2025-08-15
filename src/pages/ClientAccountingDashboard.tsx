@@ -37,9 +37,6 @@ interface ClientDocument {
   id: string;
   document_type: string;
   category: string;
-  X,
-  Save,
-  Paperclip
   title: string;
   due_date?: string;
   received_date?: string;
@@ -242,7 +239,7 @@ const ClientAccountingDashboard = () => {
 
       if (!clientData) throw new Error('Client record not found');
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('documents')
         .insert([{
           client_id: clientData.id,
@@ -364,7 +361,7 @@ const ClientAccountingDashboard = () => {
                 <MessageSquare className="h-4 w-4" />
                 <span>Contact Advisor</span>
               </button>
-              <button
+            </div>
           </div>
         </div>
       </div>
