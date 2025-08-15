@@ -611,7 +611,7 @@ const AccountingManagement = () => {
                       <>
                         <option value="pending">Waiting</option>
                         <option value="received">Received</option>
-                        <option value="processed">İşlenen</option>
+                        <option value="processed">Processed</option>
                         <option value="completed">Completed</option>
                         <option value="overdue">Delayed</option>
                       </>
