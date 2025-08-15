@@ -73,12 +73,12 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'Şimdi';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} dakika önce`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} saat önce`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} gün önce`;
+    if (diffInSeconds < 60) return 'Now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
     
-    return date.toLocaleDateString('tr-TR', { 
+    return date.toLocaleDateString('en-US', { 
       day: 'numeric', 
       month: 'short', 
       hour: '2-digit', 
@@ -88,14 +88,14 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
 
   const getSenderDisplayName = (senderId: string, senderRole: string) => {
     if (senderId === currentUserId) {
-      return profile?.full_name || profile?.email || 'Siz';
+      return profile?.full_name || profile?.email || 'You';
     }
     
     switch (senderRole) {
-      case 'admin': return 'Sistem Yöneticisi';
-      case 'consultant': return 'Danışman';
-      case 'client': return 'Müşteri';
-      default: return 'Kullanıcı';
+      case 'admin': return 'System Administrator';
+      case 'consultant': return 'Consultant';
+      case 'client': return 'Client';
+      default: return 'User';
     }
   };
 
@@ -117,7 +117,7 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
             senderName: 'Sistem Yöneticisi',
             originalText: 'Hello! How are your clients doing this week?',
             originalLanguage: 'en',
-            translatedText: 'Merhaba! Bu hafta müşterileriniz nasıl gidiyor?',
+            translatedText: 'Hello! How are your clients doing this week?',
             targetLanguage: 'tr',
             timestamp: new Date(Date.now() - 3600000),
             isTranslated: true,
@@ -155,7 +155,7 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
             senderId: currentUserId,
             senderRole: currentUserRole,
             senderName: profile?.full_name || profile?.email,
-            originalText: 'Merhaba! Tabii ki yardımcı olabilirim. Hangi belgeler eksik?',
+            originalText: 'Hello! Of course I can help. Which documents are missing?',
             originalLanguage: 'tr',
             translatedText: 'Hello! Of course I can help. Which documents are missing?',
             targetLanguage: 'en',
@@ -167,10 +167,10 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
             id: '3',
             senderId: 'client-1',
             senderRole: 'client',
-            senderName: 'Müşteri',
+            senderName: 'Client',
             originalText: 'I need the bank account opening documents and tax registration forms.',
             originalLanguage: 'en',
-            translatedText: 'Banka hesabı açma belgeleri ve vergi kayıt formlarına ihtiyacım var.',
+            translatedText: 'I need the bank account opening documents and tax registration forms.',
             targetLanguage: 'tr',
             timestamp: new Date(Date.now() - 3600000),
             isTranslated: true,
@@ -276,6 +276,13 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">{getChatTitle()}</h3>
+              <div className="flex items-center space-x-2 text-xs text-gray-500">
+                <Globe className="h-3 w-3" />
+                <span>Messages will be automatically translated for recipient</span>
+                <span>•</span>
+                <Shield className="h-3 w-3" />
+                <span>Secure end-to-end encryption</span>
+              </div>
               <p className="text-sm text-gray-500">{recipientInfo.name} • {recipientInfo.role}</p>
             </div>
           </div>
@@ -425,7 +432,7 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={`Type your message in ${selectedLang?.name}...`}
+                placeholder={\`Type your message in ${selectedLang?.name}...`}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 rows={2}
               />
