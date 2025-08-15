@@ -78,15 +78,27 @@ const CountryManagement = () => {
 
   const fetchData = async () => {
     try {
+      console.log('🔄 CountryManagement: Starting fetchData...');
       setLoading(true);
-      await Promise.all([
-        fetchCountries(),
-        fetchConsultants(),
-        fetchAssignments()
-      ]);
+      
+      console.log('📊 CountryManagement: Fetching countries...');
+      await fetchCountries();
+      console.log('✅ CountryManagement: Countries fetched successfully');
+      
+      console.log('👥 CountryManagement: Fetching consultants...');
+      await fetchConsultants();
+      console.log('✅ CountryManagement: Consultants fetched successfully');
+      
+      console.log('🔗 CountryManagement: Fetching assignments...');
+      await fetchAssignments();
+      console.log('✅ CountryManagement: Assignments fetched successfully');
+      
+      console.log('🎉 CountryManagement: All data fetched successfully');
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('❌ CountryManagement: Error fetching data:', error);
+      console.error('❌ CountryManagement: Error details:', error.message);
     } finally {
+      console.log('🏁 CountryManagement: Setting loading to false');
       setLoading(false);
     }
   };
