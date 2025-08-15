@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type SupportedLanguage = 'en' | 'tr' | 'es' | 'fr' | 'de';
+export type SupportedLanguage = 'en' | 'tr' | 'es' | 'fr' | 'de' | 'pt';
 
 interface Language {
   code: SupportedLanguage;
@@ -26,6 +26,7 @@ export const SUPPORTED_LANGUAGES: Language[] = [
   { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
   { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
   { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
+  { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇵🇹' },
 ];
 
 // Translation keys and values
@@ -388,6 +389,105 @@ const translations: Record<SupportedLanguage, Record<string, string>> = {
     'business.accounting': 'Buchhaltungsdienstleistungen',
     'business.legal': 'Rechtsberatung',
     'business.visa': 'Visa und Aufenthalt',
+  },
+  
+  pt: {
+    // Navigation
+    'nav.countries': 'Países',
+    'nav.services': 'Serviços',
+    'nav.about': 'Sobre Nós',
+    'nav.contact': 'Contato',
+    'nav.blog': 'Blog',
+    'nav.getStarted': 'Começar',
+    'nav.signIn': 'Entrar',
+    'nav.signOut': 'Sair',
+    
+    // Dashboard
+    'dashboard.welcome': 'Bem-vindo de volta',
+    'dashboard.overview': 'Visão Geral',
+    'dashboard.projects': 'Projetos',
+    'dashboard.documents': 'Documentos',
+    'dashboard.messages': 'Mensagens',
+    'dashboard.settings': 'Configurações',
+    
+    // Common
+    'common.loading': 'Carregando...',
+    'common.save': 'Salvar',
+    'common.cancel': 'Cancelar',
+    'common.delete': 'Excluir',
+    'common.edit': 'Editar',
+    'common.view': 'Visualizar',
+    'common.search': 'Pesquisar',
+    'common.filter': 'Filtrar',
+    'common.refresh': 'Atualizar',
+    'common.download': 'Baixar',
+    'common.upload': 'Carregar',
+    'common.send': 'Enviar',
+    'common.back': 'Voltar',
+    'common.next': 'Próximo',
+    'common.previous': 'Anterior',
+    'common.close': 'Fechar',
+    'common.confirm': 'Confirmar',
+    'common.yes': 'Sim',
+    'common.no': 'Não',
+    
+    // Status
+    'status.active': 'Ativo',
+    'status.inactive': 'Inativo',
+    'status.pending': 'Pendente',
+    'status.completed': 'Concluído',
+    'status.approved': 'Aprovado',
+    'status.rejected': 'Rejeitado',
+    'status.inProgress': 'Em Andamento',
+    'status.onHold': 'Em Espera',
+    'status.cancelled': 'Cancelado',
+    
+    // Priority
+    'priority.low': 'Baixa',
+    'priority.medium': 'Média',
+    'priority.high': 'Alta',
+    'priority.urgent': 'Urgente',
+    
+    // Forms
+    'form.email': 'Endereço de E-mail',
+    'form.password': 'Senha',
+    'form.fullName': 'Nome Completo',
+    'form.phone': 'Número de Telefone',
+    'form.country': 'País',
+    'form.company': 'Nome da Empresa',
+    'form.description': 'Descrição',
+    'form.title': 'Título',
+    'form.message': 'Mensagem',
+    'form.subject': 'Assunto',
+    'form.required': 'Obrigatório',
+    'form.optional': 'Opcional',
+    
+    // Messages
+    'message.success': 'Sucesso',
+    'message.error': 'Erro',
+    'message.warning': 'Aviso',
+    'message.info': 'Informação',
+    'message.saveSuccess': 'Salvo com sucesso',
+    'message.deleteSuccess': 'Excluído com sucesso',
+    'message.updateSuccess': 'Atualizado com sucesso',
+    'message.uploadSuccess': 'Carregado com sucesso',
+    
+    // Errors
+    'error.general': 'Ocorreu um erro',
+    'error.network': 'Erro de rede',
+    'error.unauthorized': 'Acesso não autorizado',
+    'error.notFound': 'Não encontrado',
+    'error.validation': 'Erro de validação',
+    'error.fileSize': 'Tamanho do arquivo muito grande',
+    'error.fileType': 'Tipo de arquivo inválido',
+    
+    // Business
+    'business.companyFormation': 'Formação de Empresa',
+    'business.bankAccount': 'Abertura de Conta Bancária',
+    'business.taxResidency': 'Residência Fiscal',
+    'business.accounting': 'Serviços de Contabilidade',
+    'business.legal': 'Consultoria Jurídica',
+    'business.visa': 'Visto e Residência',
   }
 };
 
