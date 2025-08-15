@@ -170,7 +170,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Detailed Description *
+              Detaylı Açıklama *
             </label>
             <textarea
               required
@@ -178,7 +178,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Describe the service you need in detail..."
+              placeholder="İhtiyacınız olan hizmeti detaylı olarak açıklayın..."
             />
           </div>
 
@@ -186,7 +186,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bütçe Aralığı
+                Budget Range
               </label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -195,7 +195,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
                   onChange={(e) => setFormData(prev => ({ ...prev, budget_range: e.target.value }))}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  <option value="">Bütçe seçin...</option>
+                  <option value="">Select budget...</option>
                   {budgetRanges.map(range => (
                     <option key={range.value} value={range.value}>{range.label}</option>
                   ))}
