@@ -225,7 +225,7 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 step: '01',
@@ -333,7 +333,7 @@ const HomePage = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
               </div>
             ) : (
-              featuredCountries.map((country) => (
+              featuredCountries.slice(0, 8).map((country) => (
                 <CountryCard key={country.id} country={country} />
               ))
             )}
