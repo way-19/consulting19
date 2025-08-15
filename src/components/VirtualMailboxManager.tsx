@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import StripeCheckout from './StripeCheckout';
 import { 
   Plus, 
   FileText, 
@@ -20,7 +21,10 @@ import {
   Mail,
   Truck,
   CreditCard,
-  AlertCircle
+  AlertCircle,
+  MapPin,
+  User,
+  Home
 } from 'lucide-react';
 
 interface VirtualMailboxItem {
@@ -35,6 +39,8 @@ interface VirtualMailboxItem {
   tracking_number: string;
   shipping_fee: number;
   payment_status: 'unpaid' | 'paid' | 'waived';
+  shipping_option?: string;
+  shipping_address?: any;
   sent_date?: string;
   delivered_date?: string;
   viewed_date?: string;
@@ -64,6 +70,18 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<VirtualMailboxItem | null>(null);
   const [showItemDetail, setShowItemDetail] = useState(false);
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [showStripeCheckout, setShowStripeCheckout] = useState(false);
+  const [selectedShippingOption, setSelectedShippingOption] = useState<'normal' | 'express'>('normal');
+  const [shippingAddress, setShippingAddress] = useState({
+    full_name: '',
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
+    postal_code: '',
+    country: '',
+    phone: ''
+  });
 
   const [formData, setFormData] = useState({
     client_id: clientId || '',
@@ -188,6 +206,111 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     } catch (error) {
       console.error('Error updating payment status:', error);
     }
+  };
+
+  const handleViewDocument = async (item: VirtualMailboxItem) => {
+    try {
+      // Mark as viewed if not already viewed
+      if (!item.viewed_date) {
+        await supabase
+          .from('virtual_mailbox_items')
+          .update({ 
+            status: 'viewed',
+            viewed_date: new Date().toISOString()
+          })
+          .eq('id', item.id);
+        
+        await fetchItems();
+      }
+      
+      // Open document in new tab
+      if (item.file_url) {
+        window.open(item.file_url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error viewing document:', error);
+    }
+  };
+
+  const handleDownloadDocument = async (item: VirtualMailboxItem) => {
+    try {
+      // Mark as downloaded if not already downloaded
+      if (!item.downloaded_date) {
+        await supabase
+          .from('virtual_mailbox_items')
+          .update({ 
+            status: 'downloaded',
+            downloaded_date: new Date().toISOString()
+          })
+          .eq('id', item.id);
+        
+        await fetchItems();
+      }
+      
+      // Trigger download
+      if (item.file_url) {
+        const link = document.createElement('a');
+        link.href = item.file_url;
+        link.download = item.document_name;
+        link.click();
+      }
+    } catch (error) {
+      console.error('Error downloading document:', error);
+    }
+  };
+
+  const handleShippingRequest = (item: VirtualMailboxItem) => {
+    setSelectedItem(item);
+    setShowShippingModal(true);
+  };
+
+  const handleShippingSubmit = () => {
+    if (!selectedItem) return;
+    
+    const shippingCost = selectedShippingOption === 'express' ? 25 : 15;
+    setShowShippingModal(false);
+    setShowStripeCheckout(true);
+  };
+
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
+    if (!selectedItem) return;
+
+    try {
+      // Update item with shipping info and payment
+      await supabase
+        .from('virtual_mailbox_items')
+        .update({
+          payment_status: 'paid',
+          shipping_option: selectedShippingOption,
+          shipping_address: shippingAddress,
+          shipping_fee: selectedShippingOption === 'express' ? 25 : 15
+        })
+        .eq('id', selectedItem.id);
+
+      setShowStripeCheckout(false);
+      setSelectedItem(null);
+      await fetchItems();
+      
+      alert('Ödeme başarılı! Belgeniz kargo ile gönderilecektir.');
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      alert('Ödeme işlenirken hata oluştu.');
+    }
+  };
+
+  const resetShippingForm = () => {
+    setShippingAddress({
+      full_name: '',
+      address_line_1: '',
+      address_line_2: '',
+      city: '',
+      postal_code: '',
+      country: '',
+      phone: ''
+    });
+    setSelectedShippingOption('normal');
+    setShowShippingModal(false);
+    setSelectedItem(null);
   };
 
   const resetForm = () => {
@@ -486,24 +609,32 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       {item.payment_status === 'paid' && item.file_url && (
                         <button
                           onClick={() => {
-                            updateStatus(item.id, 'downloaded');
-                            // In real implementation, this would download the file
-                            window.open(item.file_url, '_blank');
+                            handleViewDocument(item);
                           }}
-                          className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          <span>Download</span>
-                        </button>
-                      )}
-                      
-                      {item.payment_status === 'paid' && !item.viewed_date && (
-                        <button
-                          onClick={() => updateStatus(item.id, 'viewed')}
                           className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
                         >
                           <Eye className="h-4 w-4" />
-                          <span>View</span>
+                          <span>Görüntüle</span>
+                        </button>
+                      )}
+                      
+                      {item.payment_status === 'paid' && item.file_url && (
+                        <button
+                          onClick={() => handleDownloadDocument(item)}
+                          className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>İndir</span>
+                        </button>
+                      )}
+                      
+                      {item.payment_status === 'paid' && !item.shipping_option && (
+                        <button
+                          onClick={() => handleShippingRequest(item)}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                        >
+                          <Truck className="h-4 w-4" />
+                          <span>Kargo Talep Et</span>
                         </button>
                       )}
                     </>
@@ -780,12 +911,210 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           </div>
         </div>
       )}
+
+      {/* Shipping Options Modal */}
+      {showShippingModal && selectedItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Kargo Seçenekleri</h2>
+                <button
+                  onClick={resetShippingForm}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Document Info */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-2">{selectedItem.document_name}</h4>
+                <p className="text-sm text-gray-600">{selectedItem.document_type}</p>
+              </div>
+
+              {/* Shipping Options */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Kargo Seçeneği *
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedShippingOption('normal')}
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 text-left ${
+                      selectedShippingOption === 'normal'
+                        ? 'border-blue-500 bg-blue-50 shadow-md'
+                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-900">Normal Kargo</h4>
+                      <span className="text-lg font-bold text-blue-600">$15</span>
+                    </div>
+                    <p className="text-sm text-gray-600">5-7 iş günü teslimat</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedShippingOption('express')}
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 text-left ${
+                      selectedShippingOption === 'express'
+                        ? 'border-green-500 bg-green-50 shadow-md'
+                        : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-900">Hızlı Kargo</h4>
+                      <span className="text-lg font-bold text-green-600">$25</span>
+                    </div>
+                    <p className="text-sm text-gray-600">2-3 iş günü teslimat</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Shipping Address */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Teslimat Adresi *
+                </label>
+                <div className="space-y-4">
+                  <div>
+                    <input
+                      type="text"
+                      required
+                      value={shippingAddress.full_name}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, full_name: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Ad Soyad"
+                    />
+                  </div>
+                  
+                  <div>
+                    <input
+                      type="text"
+                      required
+                      value={shippingAddress.address_line_1}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_1: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Adres Satırı 1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <input
+                      type="text"
+                      value={shippingAddress.address_line_2}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_2: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Adres Satırı 2 (İsteğe bağlı)"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input
+                      type="text"
+                      required
+                      value={shippingAddress.city}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Şehir"
+                    />
+                    <input
+                      type="text"
+                      required
+                      value={shippingAddress.postal_code}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Posta Kodu"
+                    />
+                    <input
+                      type="text"
+                      required
+                      value={shippingAddress.country}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, country: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Ülke"
+                    />
+                  </div>
+                  
+                  <div>
+                    <input
+                      type="tel"
+                      value={shippingAddress.phone}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, phone: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Telefon Numarası (İsteğe bağlı)"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-2">Sipariş Özeti</h4>
+                <div className="space-y-2 text-sm text-blue-800">
+                  <div className="flex justify-between">
+                    <span>Belge:</span>
+                    <span>{selectedItem.document_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Kargo Türü:</span>
+                    <span>{selectedShippingOption === 'express' ? 'Hızlı Kargo (2-3 gün)' : 'Normal Kargo (5-7 gün)'}</span>
+                  </div>
+                  <div className="flex justify-between font-medium">
+                    <span>Toplam Ücret:</span>
+                    <span>${selectedShippingOption === 'express' ? '25' : '15'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={resetShippingForm}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={handleShippingSubmit}
+                  disabled={!shippingAddress.full_name || !shippingAddress.address_line_1 || !shippingAddress.city || !shippingAddress.postal_code || !shippingAddress.country}
+                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <CreditCard className="h-5 w-5" />
+                  <span>Ödemeye Geç</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stripe Checkout */}
+      {showStripeCheckout && selectedItem && (
+        <StripeCheckout
+          isOpen={showStripeCheckout}
+          onClose={() => {
+            setShowStripeCheckout(false);
+            setSelectedItem(null);
+          }}
+          amount={selectedShippingOption === 'express' ? 25 : 15}
+          currency="USD"
+          orderId={selectedItem.id}
+          orderDetails={{
+            serviceName: `${selectedItem.document_name} - ${selectedShippingOption === 'express' ? 'Hızlı' : 'Normal'} Kargo`,
+            consultantName: 'Virtual Mailbox Service',
+            deliveryTime: selectedShippingOption === 'express' ? 3 : 7
+          }}
+          onSuccess={handlePaymentSuccess}
+          onError={(error) => alert(`Ödeme hatası: ${error}`)}
+        />
+      )}
     </div>
   );
 };
-
-
-
-
 
 export default VirtualMailboxManager
