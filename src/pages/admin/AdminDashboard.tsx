@@ -69,16 +69,25 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🚀 AdminDashboard useEffect triggered');
+    console.log('👤 Profile:', profile);
+    console.log('🔑 Profile role:', profile?.legacy_role);
+    
     if (profile?.legacy_role === 'admin') {
+      console.log('✅ Admin role confirmed, calling fetchDashboardData...');
       fetchDashboardData();
+    } else {
+      console.log('❌ Not admin role or no profile, skipping data fetch');
     }
   }, [profile]);
 
   const fetchDashboardData = async () => {
     try {
+      console.log('🔄 fetchDashboardData: Starting...');
       setLoading(true);
 
       // Fetch all stats in parallel
+      console.log('📊 fetchDashboardData: Starting parallel queries...');
       const [
         usersResult,
         consultantsResult,
@@ -104,7 +113,16 @@ const AdminDashboard = () => {
         `).order('timestamp', { ascending: false }).limit(10)
       ]);
 
+      console.log('📊 fetchDashboardData: Query results:');
+      console.log('  - Users count:', usersResult.count, 'Error:', usersResult.error);
+      console.log('  - Consultants count:', consultantsResult.count, 'Error:', consultantsResult.error);
+      console.log('  - Clients count:', clientsResult.count, 'Error:', clientsResult.error);
+      console.log('  - Countries count:', countriesResult.count, 'Error:', countriesResult.error);
+      console.log('  - Projects data length:', projectsResult.data?.length, 'Error:', projectsResult.error);
+      console.log('  - Tasks data length:', tasksResult.data?.length, 'Error:', tasksResult.error);
+      console.log('  - Audit logs data length:', auditLogsResult.data?.length, 'Error:', auditLogsResult.error);
       // Calculate stats
+      console.log('🧮 fetchDashboardData: Calculating stats...');
       const newStats: DashboardStats = {
         totalUsers: usersResult.count || 0,
         totalConsultants: consultantsResult.count || 0,
@@ -121,9 +139,11 @@ const AdminDashboard = () => {
         }
       };
 
+      console.log('📈 fetchDashboardData: Calculated stats:', newStats);
       setStats(newStats);
 
       // Process recent activity
+      console.log('📝 fetchDashboardData: Processing recent activity...');
       const activities: RecentActivity[] = (auditLogsResult.data || []).map(log => ({
         id: log.id,
         type: log.action,
@@ -133,11 +153,15 @@ const AdminDashboard = () => {
         status: 'success'
       }));
 
+      console.log('📝 fetchDashboardData: Processed activities:', activities.length, 'items');
       setRecentActivity(activities);
 
+      console.log('✅ fetchDashboardData: All data processed successfully');
     } catch (error) {
+      console.error('❌ fetchDashboardData: Error occurred:', error);
       console.error('Error fetching dashboard data:', error);
     } finally {
+      console.log('🏁 fetchDashboardData: Setting loading to false');
       setLoading(false);
     }
   };
