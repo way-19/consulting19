@@ -285,6 +285,12 @@ export default function App() {
             }
           />
 
+          {/* Debug Route - Test ClientDocuments directly */}
+          <Route
+            path="/test-documents"
+            element={<ClientDocuments />}
+          />
+
           {/* Profile Management - Available to all authenticated users */}
           <Route
             path="/my-profile"

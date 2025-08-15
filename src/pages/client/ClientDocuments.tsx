@@ -68,6 +68,14 @@ interface DocumentStats {
 
 const ClientDocuments = () => {
   const { profile } = useAuth();
+  
+  // Force debug logging at component start
+  console.log('🚀 ClientDocuments component is rendering!');
+  console.log('👤 Profile:', profile);
+  console.log('🆔 Profile ID:', profile?.id);
+  console.log('📧 Profile Email:', profile?.email);
+  console.log('🔑 Profile Role:', profile?.role);
+
   const [documents, setDocuments] = useState<DocumentWithDetails[]>([]);
   const [documentRequests, setDocumentRequests] = useState<DocumentRequest[]>([]);
   const [loading, setLoading] = useState(true);
