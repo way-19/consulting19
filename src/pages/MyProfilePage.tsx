@@ -21,7 +21,9 @@ import {
   Key,
   Edit,
   Upload,
-  Settings
+  Settings,
+  Bell,
+  MessageSquare
 } from 'lucide-react';
 
 interface ProfileFormData {
