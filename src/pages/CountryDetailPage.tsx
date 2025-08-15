@@ -342,7 +342,7 @@ const CountryDetailPage = () => {
                       
                       {/* Features as small badges */}
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {(service.features || []).slice(0, 2).map((feature, index) => (
+                        {(Array.isArray(service.features) ? service.features : []).slice(0, 2).map((feature, index) => (
                           <span 
                             key={index}
                             className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium border border-white/30"
