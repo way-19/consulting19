@@ -236,7 +236,7 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
                       <CreditCard className="h-4 w-4" />
                       <span>Pay Now</span>
                     </Link>
-                  </div>
+                  <h4 className="font-medium text-yellow-900">Payment Reminder</h4>
                 </div>
               </div>
             );

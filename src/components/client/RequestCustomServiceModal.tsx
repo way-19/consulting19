@@ -114,7 +114,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Özel Hizmet Talep Et</h2>
+            <h2 className="text-xl font-bold text-gray-900">Request Custom Service</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -123,7 +123,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
             </button>
           </div>
           <p className="text-gray-600 mt-2">
-            İhtiyacınız olan özel hizmeti detaylı olarak açıklayın. Danışmanınız size özel bir teklif hazırlayacaktır.
+            Describe the custom service you need in detail. Your consultant will prepare a personalized proposal for you.
           </p>
         </div>
 
@@ -131,7 +131,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           {/* Service Type Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Hizmet Türü *
+              Service Type *
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {serviceTypes.map((type) => (
@@ -155,7 +155,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Hizmet Başlığı *
+              Service Title *
             </label>
             <input
               type="text"
@@ -163,14 +163,14 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Örn: Almanya'da şirket kurma danışmanlığı"
+              placeholder="e.g., Company formation consulting in Germany"
             />
           </div>
 
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Detaylı Açıklama *
+              Detailed Description *
             </label>
             <textarea
               required
@@ -178,7 +178,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="İhtiyacınız olan hizmeti detaylı olarak açıklayın..."
+              placeholder="Describe the service you need in detail..."
             />
           </div>
 
@@ -186,7 +186,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bütçe Aralığı
+                Budget Range
               </label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -195,7 +195,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
                   onChange={(e) => setFormData(prev => ({ ...prev, budget_range: e.target.value }))}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  <option value="">Bütçe seçin...</option>
+                  <option value="">Select budget...</option>
                   {budgetRanges.map(range => (
                     <option key={range.value} value={range.value}>{range.label}</option>
                   ))}
@@ -205,7 +205,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tercih Edilen Zaman
+                Preferred Timeline
               </label>
               <div className="relative">
                 <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -214,7 +214,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
                   onChange={(e) => setFormData(prev => ({ ...prev, preferred_timeline: e.target.value }))}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  <option value="">Zaman seçin...</option>
+                  <option value="">Select timeline...</option>
                   {timelines.map(timeline => (
                     <option key={timeline.value} value={timeline.value}>{timeline.label}</option>
                   ))}
@@ -226,14 +226,14 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           {/* Priority */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Öncelik Seviyesi
+              Priority Level
             </label>
             <div className="grid grid-cols-4 gap-3">
               {[
-                { value: 'low', label: 'Düşük', color: 'bg-gray-100 text-gray-800' },
-                { value: 'medium', label: 'Orta', color: 'bg-yellow-100 text-yellow-800' },
-                { value: 'high', label: 'Yüksek', color: 'bg-orange-100 text-orange-800' },
-                { value: 'urgent', label: 'Acil', color: 'bg-red-100 text-red-800' }
+                { value: 'low', label: 'Low', color: 'bg-gray-100 text-gray-800' },
+                { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
+                { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-800' },
+                { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800' }
               ].map((priority) => (
                 <button
                   key={priority.value}
@@ -256,14 +256,14 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           {/* Additional Notes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ek Notlar
+              Additional Notes
             </label>
             <textarea
               rows={3}
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Varsa ek bilgiler, özel istekler veya sorularınız..."
+              placeholder="Any additional information, special requests or questions..."
             />
           </div>
 
@@ -272,7 +272,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <div className="flex items-center space-x-2 mb-2">
                 <FileText className="h-5 w-5 text-blue-600" />
-                <h4 className="font-medium text-blue-900">Seçilen Hizmet Türü</h4>
+                <h4 className="font-medium text-blue-900">Selected Service Type</h4>
               </div>
               <p className="text-sm text-blue-800">{selectedServiceType.description}</p>
             </div>
@@ -282,13 +282,13 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
             <div className="flex items-center space-x-2 mb-2">
               <AlertTriangle className="h-5 w-5 text-yellow-600" />
-              <h4 className="font-medium text-yellow-900">Önemli Bilgilendirme</h4>
+              <h4 className="font-medium text-yellow-900">Important Information</h4>
             </div>
             <div className="text-sm text-yellow-800 space-y-1">
-              <p>• Talebiniz danışmanınız tarafından incelenecektir</p>
-              <p>• 24-48 saat içinde size dönüş yapılacaktır</p>
-              <p>• Özel hizmetler için ayrı fiyatlandırma uygulanabilir</p>
-              <p>• Teklif onayınızdan sonra hizmet başlatılacaktır</p>
+              <p>• Your request will be reviewed by your consultant</p>
+              <p>• You will receive a response within 24-48 hours</p>
+              <p>• Separate pricing may apply for custom services</p>
+              <p>• Service will begin after proposal approval</p>
             </div>
           </div>
 

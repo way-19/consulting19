@@ -665,7 +665,7 @@ const ClientAccountingDashboard = () => {
                           <button className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
                             <Download className="h-4 w-4" /><span>Download</span>
                           </button>
-                          <button onClick={() => alert('Fiziksel gönderim talebi alındı. Danışmanınız sizinle iletişime geçecek.')} className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
+                          <button onClick={() => alert('Physical shipping request received. Your consultant will contact you.')} className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
                             <Mail className="h-4 w-4" /><span>Physical Shipping</span>
                           </button>
                         </div>
@@ -878,7 +878,7 @@ const ClientAccountingDashboard = () => {
             <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-end space-x-3">
               <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Preview</button>
               <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Download</button>
-              <button onClick={() => { setSelectedMail(null); alert('Fiziksel gönderim talebi alındı.'); }} className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700">
+              <button onClick={() => { setSelectedMail(null); alert('Physical shipping request received.'); }} className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700">
                 Request Physical Ship
               </button>
             </div>

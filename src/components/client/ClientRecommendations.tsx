@@ -87,13 +87,13 @@ const ClientRecommendations: React.FC<ClientRecommendationsProps> = ({ clientId 
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center space-x-2">
           <Lightbulb className="h-5 w-5 text-yellow-500" />
-          <h2 className="text-lg font-semibold text-gray-900">Sizin İçin Öneriler</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Recommendations for You</h2>
           <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
-            {recommendations.filter(r => !r.is_read).length} yeni
+            {recommendations.filter(r => !r.is_read).length} new
           </span>
-        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No Recommendations Yet</h3>
         <p className="text-sm text-gray-600 mt-1">
-          Sektörünüze ve ihtiyaçlarınıza özel öneriler
+          Recommendations tailored to your industry and needs
         </p>
       </div>
 
@@ -129,7 +129,7 @@ const ClientRecommendations: React.FC<ClientRecommendationsProps> = ({ clientId 
                       {recommendation.expires_at && (
                         <div className="flex items-center space-x-1 text-orange-600">
                           <AlertTriangle className="h-3 w-3" />
-                          <span>Süresi: {new Date(recommendation.expires_at).toLocaleDateString('tr-TR')}</span>
+                          <span>Expires: {new Date(recommendation.expires_at).toLocaleDateString()}</span>
                         </div>
                       )}
                     </div>
@@ -160,7 +160,7 @@ const ClientRecommendations: React.FC<ClientRecommendationsProps> = ({ clientId 
         {recommendations.length > 5 && (
           <div className="mt-4 text-center">
             <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">
-              Tüm Önerileri Görüntüle ({recommendations.length})
+              View All Recommendations ({recommendations.length})
             </button>
           </div>
         )}
