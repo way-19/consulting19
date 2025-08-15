@@ -344,7 +344,7 @@ const ConsultantCountryManagement = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const filteredServices = (allServices || []).filter(service => {
+  const filteredCustomServices = (services || []).filter(service => {
     const matchesSearch = service.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || 
       (statusFilter === 'active' && service.is_active) ||
@@ -353,7 +353,7 @@ const ConsultantCountryManagement = () => {
   });
 
   // Combine predefined and custom services for display
-  const allServices = [...georgiaServices, ...filteredServices];
+  const allServicesForDisplay = [...georgiaServices, ...filteredCustomServices];
 
   if (loading) {
     return (
@@ -403,7 +403,7 @@ const ConsultantCountryManagement = () => {
             <nav className="flex space-x-8 px-6">
               {[
                 { key: 'countries', label: 'Countries', icon: Globe, count: countries.length },
-                { key: 'services', label: 'My Services', icon: Settings, count: 0 }
+                { key: 'services', label: 'My Services', icon: Settings, count: allServicesForDisplay.length }
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -417,7 +417,7 @@ const ConsultantCountryManagement = () => {
                   <tab.icon className="h-4 w-4" />
                   <span>{tab.label}</span>
                   <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-                    {tab.key === 'countries' ? countries.length : allServices.length}
+                    {tab.key === 'countries' ? countries.length : allServicesForDisplay.length}
                   </span>
                 </button>
               ))}
@@ -465,7 +465,7 @@ const ConsultantCountryManagement = () => {
             </div>
 
             <div className="mt-4 text-sm text-gray-600">
-              Showing {activeTab === 'countries' ? filteredCountries.length : allServices.length} of {activeTab === 'countries' ? countries.length : allServices.length} {activeTab}
+              Showing {activeTab === 'countries' ? filteredCountries.length : allServicesForDisplay.length} of {activeTab === 'countries' ? countries.length : allServicesForDisplay.length} {activeTab}
             </div>
           </div>
 
@@ -511,7 +511,7 @@ const ConsultantCountryManagement = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {allServices.map((service, index) => {
+                {allServicesForDisplay.map((service, index) => {
                   const IconComponent = getServiceIcon(service.category);
                   const isCustomService = !georgiaServices.find(gs => gs.id === service.id);
                   
