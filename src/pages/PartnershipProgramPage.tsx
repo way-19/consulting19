@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bot, Globe, Users, DollarSign, Mail, Send, CheckCircle, AlertTriangle, ArrowRight, Star, Shield, Zap, TrendingUp, Award, Building, Clock, Target, BarChart3 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useCountries } from '../hooks/useCountries';
 import useNotifications from '../hooks/useNotifications';
 
 const PartnershipProgramPage = () => {
+  const { countries, loading: countriesLoading } = useCountries(true);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -587,18 +589,28 @@ const PartnershipProgramPage = () => {
                   <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
                     Country of Specialization *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     id="country"
                     name="country"
                     required
                     value={formData.country}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
-                    placeholder="e.g., Turkey, Brazil, Canada"
-                  />
+                  >
+                    <option value="">Select your country of expertise...</option>
+                    {countriesLoading ? (
+                      <option disabled>Loading countries...</option>
+                    ) : (
+                      countries.map(country => (
+                        <option key={country.id} value={country.name}>
+                          {country.flag_emoji} {country.name}
+                        </option>
+                      ))
+                    )}
+                    <option value="Other">🌍 Other (Not Listed)</option>
+                  </select>
                   <p className="text-xs text-gray-500 mt-1">
-                    Must be a country where Consulting19 doesn't currently operate
+                    Choose your area of expertise or select "Other" for unlisted countries
                   </p>
                 </div>
               </div>
