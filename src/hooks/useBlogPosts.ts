@@ -42,6 +42,11 @@ export function useBlogPosts(countryId?: string) {
         setData((data as BlogPost[]) ?? []);
       })
       .catch((e: any) => {
+        // Don't treat AbortError as a critical failure
+        if (e?.name === 'AbortError') {
+          console.log('Blog posts fetch was aborted');
+          return;
+        }
         console.error('Error fetching blog posts:', {
           message: e?.message || String(e),
           details: e?.cause || e
