@@ -299,10 +299,10 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       });
       
       await fetchItems();
-      alert('Kargo ödemesi başarılı! Belgeniz kargo ile gönderilecektir.');
+      alert('Shipping payment successful! Your document will be shipped.');
     } catch (error) {
       console.error('Error updating shipping info:', error);
-      alert('Kargo bilgileri güncellenemedi');
+      alert('Failed to update shipping information');
     }
   };
 
@@ -627,7 +627,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                           className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
                         >
                           <Truck className="h-4 w-4" />
-                          <span>Kargo Talep Et</span>
+                          <span>Request Shipping</span>
                         </button>
                       )}
                     </>
@@ -911,7 +911,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Kargo Seçenekleri</h2>
+                <h2 className="text-xl font-bold text-gray-900">Shipping Options</h2>
                 <button
                   onClick={() => setShowShippingModal(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -931,7 +931,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               {/* Shipping Options */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Kargo Seçeneği
+                  Shipping Option
                 </label>
                 <div className="space-y-3">
                   <div
@@ -944,8 +944,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium text-gray-900">Normal Kargo</h4>
-                        <p className="text-sm text-gray-600">5-7 iş günü</p>
+                        <h4 className="font-medium text-gray-900">Standard Shipping</h4>
+                        <p className="text-sm text-gray-600">5-7 business days</p>
                       </div>
                       <div className="text-lg font-bold text-gray-900">$15</div>
                     </div>
@@ -961,8 +961,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium text-gray-900">Hızlı Kargo</h4>
-                        <p className="text-sm text-gray-600">2-3 iş günü</p>
+                        <h4 className="font-medium text-gray-900">Express Shipping</h4>
+                        <p className="text-sm text-gray-600">2-3 business days</p>
                       </div>
                       <div className="text-lg font-bold text-gray-900">$25</div>
                     </div>
@@ -973,13 +973,13 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               {/* Shipping Address */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Gönderim Adresi
+                  Shipping Address
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <input
                       type="text"
-                      placeholder="Ad Soyad"
+                      placeholder="Full Name"
                       value={shippingAddress.full_name}
                       onChange={(e) => setShippingAddress(prev => ({ ...prev, full_name: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -989,7 +989,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div>
                     <input
                       type="tel"
-                      placeholder="Telefon"
+                      placeholder="Phone Number"
                       value={shippingAddress.phone}
                       onChange={(e) => setShippingAddress(prev => ({ ...prev, phone: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -999,7 +999,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div className="md:col-span-2">
                     <input
                       type="text"
-                      placeholder="Adres Satırı 1"
+                      placeholder="Address Line 1"
                       value={shippingAddress.address_line_1}
                       onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_1: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -1009,7 +1009,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div className="md:col-span-2">
                     <input
                       type="text"
-                      placeholder="Adres Satırı 2 (İsteğe bağlı)"
+                      placeholder="Address Line 2 (Optional)"
                       value={shippingAddress.address_line_2}
                       onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_2: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -1018,7 +1018,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div>
                     <input
                       type="text"
-                      placeholder="Şehir"
+                      placeholder="City"
                       value={shippingAddress.city}
                       onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -1028,7 +1028,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div>
                     <input
                       type="text"
-                      placeholder="Posta Kodu"
+                      placeholder="Postal Code"
                       value={shippingAddress.postal_code}
                       onChange={(e) => setShippingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -1038,7 +1038,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <div className="md:col-span-2">
                     <input
                       type="text"
-                      placeholder="Ülke"
+                      placeholder="Country"
                       value={shippingAddress.country}
                       onChange={(e) => setShippingAddress(prev => ({ ...prev, country: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -1055,7 +1055,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   onClick={() => setShowShippingModal(false)}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
-                  İptal
+                  Cancel
                 </button>
                 <button
                   onClick={handleShippingSubmit}
@@ -1063,7 +1063,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   className="flex-1 bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                 >
                   <CreditCard className="h-5 w-5" />
-                  <span>Ödeme Yap (${shippingOption === 'express' ? '25' : '15'})</span>
+                  <span>Pay Now (${shippingOption === 'express' ? '25' : '15'})</span>
                 </button>
               </div>
             </div>
@@ -1080,12 +1080,12 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           currency="USD"
           orderId={selectedItemForShipping.id}
           orderDetails={{
-            serviceName: `${shippingOption === 'express' ? 'Hızlı' : 'Normal'} Kargo - ${selectedItemForShipping.document_name}`,
+            serviceName: `${shippingOption === 'express' ? 'Express' : 'Standard'} Shipping - ${selectedItemForShipping.document_name}`,
             consultantName: 'Virtual Mailbox',
             deliveryTime: shippingOption === 'express' ? 3 : 7
           }}
           onSuccess={handleShippingPaymentSuccess}
-          onError={(error) => alert('Ödeme hatası: ' + error)}
+          onError={(error) => alert('Payment error: ' + error)}
         />
       )}
     </div>
