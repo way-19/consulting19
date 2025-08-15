@@ -12,7 +12,7 @@ export type BlogPost = {
   author?: { full_name?: string | null; email?: string | null; role?: string | null } | null;
 };
 
-export function useBlogPosts(limit = 10) {
+export function useBlogPosts() {
   const [items, setItems] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export function useBlogPosts(limit = 10) {
         .select(select)
         .eq('is_published', true)
         .order('published_at', { ascending: false })
-        .limit(limit);
+        // .limit(limit); // Removed limit to fetch all posts
 
       if (error) throw error;
       return (data as BlogPost[]) ?? [];

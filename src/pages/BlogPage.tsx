@@ -7,11 +7,7 @@ const BlogPage = () => {
   const { posts: blogPosts, loading, error } = useBlogPosts(); // Fetch all published posts
 
   // Filter posts to only show those by consultants
-  const consultantPosts = React.useMemo(() => {
-    if (!blogPosts) return [];
-    return blogPosts.filter(post => post.author?.role === 'consultant');
-  }, [blogPosts]);
-
+  const postsToDisplay = blogPosts; // Display all fetched posts
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -61,7 +57,7 @@ const BlogPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {consultantPosts.map((post) => (
+              {postsToDisplay.map((post) => (
                 <div key={post.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
                   {post.cover_image && (
                     <img
