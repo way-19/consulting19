@@ -1,102 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 export interface BlogPost {
   id: string;
   title: string;
   slug: string;
-  content: string;
   excerpt?: string;
-  author_id?: string;
-  category?: string;
-  tags: string[];
-  language_code: string;
-  is_published: boolean;
-  published_at?: string;
-  featured_image_url?: string;
-  seo_title?: string;
-  seo_description?: string;
-  created_at: string;
-  updated_at: string;
-  country_id?: string;
-  author?: {
-    full_name: string;
-    email: string;
-  };
+  cover_image?: string;
+  published_at: string;
+  author?: { full_name?: string; email?: string } | null;
 }
 
-export const useBlogPosts = (filters?: { isPublished?: boolean; languageCode?: string; countryId?: string }) => {
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+export function useBlogPosts(countryId?: string) {
+  const [data, setData] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchBlogPosts();
-  }, [filters]);
+    if (!countryId) return; // id yoksa çağrı yapma
 
-  const fetchBlogPosts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    const ctrl = new AbortController();
+    setLoading(true);
+    setError(null);
 
-      // Check if Supabase is properly configured
-      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-        console.warn('Supabase configuration missing. Using fallback data.');
-        setBlogPosts([]);
-        setLoading(false);
-        return;
-      }
+    supabase
+      .from('public.blog_posts')
+      .select(
+        'id,title,slug,excerpt,cover_image,published_at,author:author_id(full_name,email)'
+      )
+      .eq('is_published', true)
+      .eq('country_id', countryId)
+      .order('published_at', { ascending: false })
+      .limit(10)
+      .abortSignal?.(ctrl.signal) // supabase-js v2
+      .then(({ data, error }) => {
+        if (error) throw error;
+        setData((data as BlogPost[]) ?? []);
+      })
+      .catch((e: any) => {
+        console.error('Error fetching blog posts:', {
+          message: e?.message || String(e),
+          details: e?.cause || e
+        });
+        setError(e?.message || 'Failed to fetch');
+      })
+      .finally(() => setLoading(false));
 
-      let query = supabase
-        .from('blog_posts')
-        .select(`
-          *,
-          author:author_id (
-            full_name,
-            email
-          )
-        `)
-        .order('published_at', { ascending: false });
+    return () => ctrl.abort();
+  }, [countryId]);
 
-      if (filters?.isPublished !== undefined) {
-        query = query.eq('is_published', filters.isPublished);
-      }
-      if (filters?.languageCode) {
-        query = query.eq('language_code', filters.languageCode);
-      }
-      if (filters?.countryId) {
-        query = query.eq('country_id', filters.countryId);
-      }
+  return { data, loading, error };
+}
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setBlogPosts(data || []);
-    } catch (err) {
-      console.error('Error fetching blog posts:', err);
-      // Gracefully handle connection errors
-      console.warn('Blog posts unavailable, using fallback');
-      setBlogPosts([]);
-      setError(null); // Don't show error to user, just use empty state
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const refreshBlogPosts = () => {
-    fetchBlogPosts();
-  };
-
-  return {
-    blogPosts,
-    loading,
-    error,
-    refreshBlogPosts
-  };
-};
-
+// Keep the old interface for backward compatibility
 export const useBlogPost = (slug: string) => {
-  const [blogPost, setBlogPost] = useState<BlogPost | null>(null);
+  const [blogPost, setBlogPost] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -164,7 +122,7 @@ export const useBlogCategories = () => {
       const uniqueCategories = Array.from(new Set(data?.map(p => p.category).filter(Boolean) || []));
       setCategories(uniqueCategories);
     } catch (err) {
-      console.error('Error fetching categories:', err);
+      console.error('Error fetching FAQ categories:', err);
     } finally {
       setLoading(false);
     }
