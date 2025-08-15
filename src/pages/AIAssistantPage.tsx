@@ -386,7 +386,7 @@ const AIAssistantPage = () => {
           <h2 className="text-3xl font-bold mb-4">Ready to Start Your Business Journey?</h2>
           <p className="text-xl text-purple-100 mb-8">
             Get personalized guidance from our AI assistant and connect with expert consultants
-          </p>
+            for their international expansion across 19+ countries.
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <Link
               to="/get-started"

@@ -60,7 +60,7 @@ const AboutPage = () => {
   const stats = [
     { value: '8+', label: 'Years of Excellence', icon: Award },
     { value: '15,000+', label: 'Businesses Formed', icon: TrendingUp },
-    { value: '127', label: 'Countries Served', icon: Globe },
+    { value: '19+', label: 'Countries Served', icon: Globe },
     { value: '98.5%', label: 'Success Rate', icon: Star }
   ];
 

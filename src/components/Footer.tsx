@@ -34,7 +34,7 @@ const Footer = () => {
               <Globe className="h-12 w-26 text-purple-400 hidden" />
             </div>
             <p className="text-slate-300 mb-6 leading-relaxed">
-              AI-enhanced global business consulting. Expert guidance for international 
+              AI-enhanced global business consulting serving 19+ countries. Expert guidance for international 
               business formation and growth strategies.
             </p>
             <div className="space-y-3">

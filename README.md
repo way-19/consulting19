@@ -5,7 +5,7 @@ A revolutionary business consulting platform that combines artificial intelligen
 ## Features
 
 - 🤖 **AI Oracle** - World's first AI-enhanced business consulting
-- 🌍 **Global Reach** - Services across 127+ countries
+- 🌍 **Global Reach** - Services across 19+ countries
 - 👥 **Expert Consultants** - Specialized consultants for each jurisdiction
 - 📊 **Real-time Analytics** - Live platform performance metrics
 - 🔐 **Secure Platform** - Enterprise-grade security with RLS
