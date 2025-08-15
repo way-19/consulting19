@@ -87,6 +87,7 @@ const CustomersManagement = () => {
   const [showClientModal, setShowClientModal] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showMailboxModal, setShowMailboxModal] = useState(false);
+  const [showServiceRequestsModal, setShowServiceRequestsModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
   const [stats, setStats] = useState<ClientStats>({
@@ -991,6 +992,50 @@ const CustomersManagement = () => {
                   <FileText className="h-5 w-5" />
                   <span>Generate Report</span>
                 </button>
+                <button
+                  onClick={() => {
+                    setShowClientModal(false);
+                    setShowServiceRequestsModal(true);
+                  }}
+                  className="bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span>Service Requests</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Service Requests Modal */}
+      {showServiceRequestsModal && selectedClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Service Requests - {selectedClient.company_name || selectedClient.profile?.full_name}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowServiceRequestsModal(false);
+                    setSelectedClient(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="text-center py-8">
+                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Service Requests</h3>
+                <p className="text-gray-600">
+                  Bu müşterinin hizmet talepleri burada görünecektir.
+                </p>
               </div>
             </div>
           </div>
