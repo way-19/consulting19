@@ -194,6 +194,7 @@ const ClientDocuments = () => {
     console.log('📋 Demo requested documents:', demoRequestedDocuments.length);
     console.log('📈 Initial stats:', initialStats);
     setLoading(false);
+  }, []);
 
   const fetchData = async () => {
     console.log('🔄 fetchData called - using demo data');
