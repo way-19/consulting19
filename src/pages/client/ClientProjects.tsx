@@ -276,12 +276,12 @@ const ClientProjects = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Projects</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Proje Ara</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Project name, description, consultant..."
+                  placeholder="Proje adı, açıklama, danışman..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -290,38 +290,38 @@ const ClientProjects = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">All Status</option>
-                <option value="planning">Planning</option>
-                <option value="active">Active</option>
-                <option value="on_hold">On Hold</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="all">Tüm Durumlar</option>
+                <option value="planning">Planlama</option>
+                <option value="active">Aktif</option>
+                <option value="on_hold">Beklemede</option>
+                <option value="completed">Tamamlandı</option>
+                <option value="cancelled">İptal Edildi</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Sıralama</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="created_at">Date Created</option>
-                <option value="name">Project Name</option>
-                <option value="progress">Progress</option>
-                <option value="due_date">Due Date</option>
+                <option value="created_at">Oluşturulma Tarihi</option>
+                <option value="name">Proje Adı</option>
+                <option value="progress">İlerleme</option>
+                <option value="due_date">Bitiş Tarihi</option>
               </select>
             </div>
           </div>
 
           <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredProjects.length} of {projects.length} projects
+            {projects.length} projeden {filteredProjects.length} tanesi gösteriliyor
           </div>
         </div>
 
@@ -330,12 +330,12 @@ const ClientProjects = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {projects.length === 0 ? 'No Projects Yet' : 'No Projects Found'}
+              {projects.length === 0 ? 'Henüz Proje Yok' : 'Proje Bulunamadı'}
             </h3>
             <p className="text-gray-600 mb-6">
               {projects.length === 0 
-                ? 'Your consultant will create projects as your business journey progresses.'
-                : 'No projects match your current filters.'
+                ? 'İş süreciniz ilerledikçe danışmanınız projeler oluşturacaktır.'
+                : 'Mevcut filtrelerinizle eşleşen proje bulunamadı.'
               }
             </p>
             {projects.length === 0 && (
@@ -343,7 +343,7 @@ const ClientProjects = () => {
                 to="/services"
                 className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
               >
-                Browse Services
+                Hizmetleri İncele
               </Link>
             )}
           </div>
@@ -372,16 +372,16 @@ const ClientProjects = () => {
                       </div>
                       <div className="flex items-center space-x-1">
                         <CheckCircle className="h-4 w-4" />
-                        <span>{project.completed_tasks_count || 0} / {project.total_tasks_count || 0} tasks</span>
+                        <span>{project.completed_tasks_count || 0} / {project.total_tasks_count || 0} görev tamamlandı</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <ClockIcon className="h-4 w-4" />
-                        <span>{(project.time_logged || 0).toFixed(1)}h logged</span>
+                        <span>{(project.time_logged || 0).toFixed(1)}h kaydedildi</span>
                       </div>
                       {project.budget && (
                         <div className="flex items-center space-x-1">
                           <DollarSign className="h-4 w-4" />
-                          <span>${project.budget.toLocaleString()}</span>
+                          <span>Bütçe: ${project.budget.toLocaleString()}</span>
                         </div>
                       )}
                     </div>
@@ -389,14 +389,20 @@ const ClientProjects = () => {
                     {/* Progress Bar */}
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">Project Progress</span>
+                        <span className="text-sm font-medium text-gray-700">Proje İlerlemesi</span>
                         <span className="text-sm text-gray-600">{project.progress}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div className="w-full bg-gray-200 rounded-full h-4 shadow-inner">
                         <div 
-                          className={`h-3 rounded-full ${getProgressColor(project.progress)} transition-all duration-300`}
+                          className={`h-4 rounded-full ${getProgressColor(project.progress)} transition-all duration-500 shadow-sm`}
                           style={{ width: `${project.progress}%` }}
                         ></div>
+                      </div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        {project.progress === 100 ? 'Proje tamamlandı!' :
+                         project.progress >= 75 ? 'Neredeyse bitti' :
+                         project.progress >= 50 ? 'Yarı yolda' :
+                         project.progress >= 25 ? 'İyi gidiyor' : 'Yeni başladı'}
                       </div>
                     </div>
 
@@ -405,20 +411,20 @@ const ClientProjects = () => {
                       {project.start_date && (
                         <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
-                          <span>Started: {new Date(project.start_date).toLocaleDateString()}</span>
+                          <span>Başlangıç: {new Date(project.start_date).toLocaleDateString('tr-TR')}</span>
                         </div>
                       )}
                       {project.end_date && (
                         <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
                           <span className={new Date(project.end_date) < new Date() && project.status !== 'completed' ? 'text-red-600 font-medium' : ''}>
-                            Due: {new Date(project.end_date).toLocaleDateString()}
+                            Bitiş: {new Date(project.end_date).toLocaleDateString('tr-TR')}
                           </span>
                         </div>
                       )}
                       <div className="flex items-center space-x-1">
                         <ClockIcon className="h-4 w-4" />
-                        <span>Updated: {new Date(project.updated_at).toLocaleDateString()}</span>
+                        <span>Güncelleme: {new Date(project.updated_at).toLocaleDateString('tr-TR')}</span>
                       </div>
                     </div>
                   </div>
@@ -429,7 +435,7 @@ const ClientProjects = () => {
                         className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
                       >
                         <MessageSquare className="h-4 w-4" />
-                        <span>Message</span>
+                        <span>Mesaj Gönder</span>
                       </button>
                     )}
                     
@@ -441,7 +447,7 @@ const ClientProjects = () => {
                       className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
                     >
                       <Eye className="h-4 w-4" />
-                      <span>View Details</span>
+                      <span>Detayları Görüntüle</span>
                     </button>
                   </div>
                 </div>
@@ -452,7 +458,7 @@ const ClientProjects = () => {
                     <div className="flex items-center space-x-2">
                       <AlertTriangle className="h-4 w-4 text-yellow-600" />
                       <span className="text-sm text-yellow-800 font-medium">
-                        Project is currently on hold. Contact your consultant for more information.
+                        Proje şu anda beklemede. Daha fazla bilgi için danışmanınızla iletişime geçin.
                       </span>
                     </div>
                   </div>
@@ -463,7 +469,7 @@ const ClientProjects = () => {
                     <div className="flex items-center space-x-2">
                       <AlertTriangle className="h-4 w-4 text-red-600" />
                       <span className="text-sm text-red-800 font-medium">
-                        Project is overdue. Please contact your consultant.
+                        Proje süresi geçti. Lütfen danışmanınızla iletişime geçin.
                       </span>
                     </div>
                   </div>
@@ -480,7 +486,7 @@ const ClientProjects = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">{selectedProject.name}</h2>
+                <h2 className="text-xl font-bold text-gray-900">Proje Detayları - {selectedProject.name}</h2>
                 <button
                   onClick={() => setShowProjectDetail(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -494,77 +500,77 @@ const ClientProjects = () => {
               {/* Project Overview */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Proje Bilgileri</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm text-gray-600">Durum:</span>
                       <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedProject.status)}`}>
                         {selectedProject.status.replace('_', ' ').toUpperCase()}
                       </span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Priority:</span>
+                      <span className="text-sm text-gray-600">Öncelik:</span>
                       <div className="inline-flex items-center space-x-2 ml-2">
                         <div className={`w-3 h-3 rounded-full ${getPriorityColor(selectedProject.priority)}`}></div>
                         <span className="font-medium">{selectedProject.priority.toUpperCase()}</span>
                       </div>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Consultant:</span>
+                      <span className="text-sm text-gray-600">Danışman:</span>
                       <p className="font-medium">{selectedProject.consultant?.full_name}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Email:</span>
+                      <span className="text-sm text-gray-600">E-posta:</span>
                       <p className="font-medium">{selectedProject.consultant?.email}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Created:</span>
-                      <p className="font-medium">{new Date(selectedProject.created_at).toLocaleDateString()}</p>
+                      <span className="text-sm text-gray-600">Oluşturulma:</span>
+                      <p className="font-medium">{new Date(selectedProject.created_at).toLocaleDateString('tr-TR')}</p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Progress & Timeline</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">İlerleme ve Zaman Çizelgesi</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Progress:</span>
+                      <span className="text-sm text-gray-600">İlerleme:</span>
                       <div className="mt-1">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium">{selectedProject.progress}%</span>
                           <span className="text-xs text-gray-500">
-                            {selectedProject.progress === 100 ? 'Complete' :
-                             selectedProject.progress >= 75 ? 'Nearly done' :
-                             selectedProject.progress >= 50 ? 'Half way' :
-                             selectedProject.progress >= 25 ? 'Getting started' : 'Just started'}
+                            {selectedProject.progress === 100 ? 'Tamamlandı' :
+                             selectedProject.progress >= 75 ? 'Neredeyse bitti' :
+                             selectedProject.progress >= 50 ? 'Yarı yolda' :
+                             selectedProject.progress >= 25 ? 'İyi gidiyor' : 'Yeni başladı'}
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
                           <div 
-                            className={`h-2 rounded-full ${getProgressColor(selectedProject.progress)}`}
+                            className={`h-3 rounded-full ${getProgressColor(selectedProject.progress)} shadow-sm transition-all duration-500`}
                             style={{ width: `${selectedProject.progress}%` }}
                           ></div>
                         </div>
                       </div>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Tasks:</span>
-                      <p className="font-medium">{selectedProject.completed_tasks_count} / {selectedProject.total_tasks_count} completed</p>
+                      <span className="text-sm text-gray-600">Görevler:</span>
+                      <p className="font-medium">{selectedProject.completed_tasks_count} / {selectedProject.total_tasks_count} tamamlandı</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Time Logged:</span>
-                      <p className="font-medium">{(selectedProject.time_logged || 0).toFixed(1)} hours</p>
+                      <span className="text-sm text-gray-600">Harcanan Zaman:</span>
+                      <p className="font-medium">{(selectedProject.time_logged || 0).toFixed(1)} saat</p>
                     </div>
                     {selectedProject.budget && (
                       <div>
-                        <span className="text-sm text-gray-600">Budget:</span>
+                        <span className="text-sm text-gray-600">Bütçe:</span>
                         <p className="font-medium">${selectedProject.budget.toLocaleString()}</p>
                       </div>
                     )}
                     {selectedProject.estimated_hours && (
                       <div>
-                        <span className="text-sm text-gray-600">Estimated Duration:</span>
-                        <p className="font-medium">{selectedProject.estimated_hours} hours</p>
+                        <span className="text-sm text-gray-600">Tahmini Süre:</span>
+                        <p className="font-medium">{selectedProject.estimated_hours} saat</p>
                       </div>
                     )}
                   </div>
@@ -574,7 +580,7 @@ const ClientProjects = () => {
               {/* Consultant Information */}
               {selectedProject.consultant && (
                 <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-6 border border-purple-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Consultant</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Danışmanınız</h3>
                   <div className="flex items-center space-x-4">
                     <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
                       {selectedProject.consultant.full_name[0].toUpperCase()}
@@ -585,22 +591,22 @@ const ClientProjects = () => {
                       <div className="flex items-center space-x-4 mt-2">
                         <div className="flex items-center space-x-1">
                           <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                          <span className="text-sm text-gray-600">4.9 Rating</span>
+                          <span className="text-sm text-gray-600">4.9 Puan</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Award className="h-4 w-4 text-purple-600" />
-                          <span className="text-sm text-gray-600">Expert Level</span>
+                          <span className="text-sm text-gray-600">Uzman Seviye</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex flex-col space-y-2">
                       <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
                         <MessageSquare className="h-4 w-4" />
-                        <span>Message</span>
+                        <span>Mesaj</span>
                       </button>
                       <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2">
                         <Phone className="h-4 w-4" />
-                        <span>Schedule Call</span>
+                        <span>Görüşme Planla</span>
                       </button>
                     </div>
                   </div>
@@ -610,7 +616,7 @@ const ClientProjects = () => {
               {/* Project Description */}
               {selectedProject.description && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Description</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Açıklama</h3>
                   <p className="text-gray-700 bg-gray-50 rounded-lg p-4">{selectedProject.description}</p>
                 </div>
               )}
@@ -618,7 +624,7 @@ const ClientProjects = () => {
               {/* Tasks List */}
               {selectedProject.tasks && selectedProject.tasks.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Tasks</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Proje Görevleri</h3>
                   <div className="space-y-3">
                     {selectedProject.tasks.map((task) => (
                       <div key={task.id} className="bg-gray-50 rounded-lg p-4">
@@ -636,10 +642,10 @@ const ClientProjects = () => {
                             )}
                             <div className="flex items-center space-x-4 text-xs text-gray-500">
                               {task.due_date && (
-                                <span>Due: {new Date(task.due_date).toLocaleDateString()}</span>
+                                <span>Son Tarih: {new Date(task.due_date).toLocaleDateString('tr-TR')}</span>
                               )}
-                              <span>Hours: {task.actual_hours} / {task.estimated_hours || 0}</span>
-                              <span>Created: {new Date(task.created_at).toLocaleDateString()}</span>
+                              <span>Saat: {task.actual_hours} / {task.estimated_hours || 0}</span>
+                              <span>Oluşturulma: {new Date(task.created_at).toLocaleDateString('tr-TR')}</span>
                             </div>
                           </div>
                         </div>
@@ -651,13 +657,13 @@ const ClientProjects = () => {
 
               {/* Timeline */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Zaman Çizelgesi</h3>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                     <Calendar className="h-5 w-5 text-blue-600" />
                     <div>
-                      <p className="font-medium text-blue-900">Project Created</p>
-                      <p className="text-sm text-blue-700">{new Date(selectedProject.created_at).toLocaleString()}</p>
+                      <p className="font-medium text-blue-900">Proje Oluşturuldu</p>
+                      <p className="text-sm text-blue-700">{new Date(selectedProject.created_at).toLocaleString('tr-TR')}</p>
                     </div>
                   </div>
                   
@@ -665,8 +671,8 @@ const ClientProjects = () => {
                     <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
                       <Target className="h-5 w-5 text-green-600" />
                       <div>
-                        <p className="font-medium text-green-900">Project Started</p>
-                        <p className="text-sm text-green-700">{new Date(selectedProject.start_date).toLocaleString()}</p>
+                        <p className="font-medium text-green-900">Proje Başladı</p>
+                        <p className="text-sm text-green-700">{new Date(selectedProject.start_date).toLocaleString('tr-TR')}</p>
                       </div>
                     </div>
                   )}
@@ -675,8 +681,8 @@ const ClientProjects = () => {
                     <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
                       <CheckCircle className="h-5 w-5 text-purple-600" />
                       <div>
-                        <p className="font-medium text-purple-900">Project Completed</p>
-                        <p className="text-sm text-purple-700">{new Date(selectedProject.updated_at).toLocaleString()}</p>
+                        <p className="font-medium text-purple-900">Proje Tamamlandı</p>
+                        <p className="text-sm text-purple-700">{new Date(selectedProject.updated_at).toLocaleString('tr-TR')}</p>
                       </div>
                     </div>
                   )}
@@ -686,9 +692,9 @@ const ClientProjects = () => {
                       <Calendar className="h-5 w-5 text-purple-600" />
                       <div>
                         <p className="font-medium text-purple-900">
-                          {selectedProject.status === 'completed' ? 'Completed On' : 'Expected Completion'}
+                          {selectedProject.status === 'completed' ? 'Tamamlanma Tarihi' : 'Beklenen Tamamlanma'}
                         </p>
-                        <p className="text-sm text-purple-700">{new Date(selectedProject.end_date).toLocaleString()}</p>
+                        <p className="text-sm text-purple-700">{new Date(selectedProject.end_date).toLocaleString('tr-TR')}</p>
                       </div>
                     </div>
                   )}
@@ -697,19 +703,19 @@ const ClientProjects = () => {
 
               {/* Project Actions */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-3">Available Actions</h4>
+                <h4 className="font-medium text-gray-900 mb-3">Mevcut İşlemler</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2">
                     <MessageSquare className="h-4 w-4" />
-                    <span>Contact Consultant</span>
+                    <span>Danışmanla İletişim</span>
                   </button>
                   <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2">
                     <FileText className="h-4 w-4" />
-                    <span>View Documents</span>
+                    <span>Belgeleri Görüntüle</span>
                   </button>
                   <button className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2">
                     <Download className="h-4 w-4" />
-                    <span>Download Report</span>
+                    <span>Rapor İndir</span>
                   </button>
                 </div>
               </div>

@@ -396,7 +396,7 @@ const TaskManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-sm font-medium text-gray-600">Bekleyen</p>
                 <p className="text-3xl font-bold text-yellow-600">{pendingTasks}</p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -406,7 +406,7 @@ const TaskManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">In Progress</p>
+                <p className="text-sm font-medium text-gray-600">Devam Eden</p>
                 <p className="text-3xl font-bold text-blue-600">{inProgressTasks}</p>
               </div>
               <Play className="h-8 w-8 text-blue-600" />
@@ -416,7 +416,7 @@ const TaskManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Overdue</p>
+                <p className="text-sm font-medium text-gray-600">Geciken</p>
                 <p className="text-3xl font-bold text-red-600">{overdueTasks}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-600" />
@@ -426,7 +426,7 @@ const TaskManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-sm font-medium text-gray-600">Tamamlanan</p>
                 <p className="text-3xl font-bold text-green-600">{completedTasks}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -436,7 +436,7 @@ const TaskManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Hours</p>
+                <p className="text-sm font-medium text-gray-600">Toplam Saat</p>
                 <p className="text-3xl font-bold text-purple-600">{totalHours.toFixed(1)}h</p>
               </div>
               <Timer className="h-8 w-8 text-purple-600" />
@@ -446,7 +446,7 @@ const TaskManagement = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Efficiency</p>
+                <p className="text-sm font-medium text-gray-600">Verimlilik</p>
                 <p className="text-3xl font-bold text-indigo-600">
                   {estimatedHours > 0 ? Math.round((totalHours / estimatedHours) * 100) : 0}%
                 </p>
@@ -465,9 +465,9 @@ const TaskManagement = () => {
                   <Timer className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-blue-900">Active Time Tracking</h3>
+                  <h3 className="text-lg font-semibold text-blue-900">Aktif Zaman Takibi</h3>
                   <p className="text-blue-700">
-                    {tasks.find(t => t.id === activeTimer)?.title || 'Unknown Task'}
+                    {tasks.find(t => t.id === activeTimer)?.title || 'Bilinmeyen Görev'}
                   </p>
                 </div>
               </div>
@@ -480,7 +480,7 @@ const TaskManagement = () => {
                   className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
                 >
                   <Square className="h-5 w-5" />
-                  <span>Stop</span>
+                  <span>Durdur</span>
                 </button>
               </div>
             </div>
@@ -491,12 +491,12 @@ const TaskManagement = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Tasks</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Görev Ara</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Title, description, client..."
+                  placeholder="Başlık, açıklama, müşteri..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -505,37 +505,37 @@ const TaskManagement = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="overdue">Overdue</option>
+                <option value="all">Tüm Durumlar</option>
+                <option value="pending">Beklemede</option>
+                <option value="in_progress">Devam Ediyor</option>
+                <option value="completed">Tamamlandı</option>
+                <option value="overdue">Gecikti</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Öncelik</label>
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="all">All Priorities</option>
-                <option value="urgent">Urgent</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
+                <option value="all">Tüm Öncelikler</option>
+                <option value="urgent">Acil</option>
+                <option value="high">Yüksek</option>
+                <option value="medium">Orta</option>
+                <option value="low">Düşük</option>
               </select>
             </div>
 
             <div className="text-sm text-gray-600">
-              Showing {filteredTasks.length} of {tasks.length} tasks
+              {tasks.length} görevden {filteredTasks.length} tanesi gösteriliyor
             </div>
           </div>
         </div>
@@ -544,13 +544,13 @@ const TaskManagement = () => {
         {filteredTasks.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Tasks Found</h3>
-            <p className="text-gray-600 mb-6">Create your first task to get started.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Görev Bulunamadı</h3>
+            <p className="text-gray-600 mb-6">Başlamak için ilk görevinizi oluşturun.</p>
             <button
               onClick={() => setShowTaskModal(true)}
               className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
             >
-              Create First Task
+              İlk Görevi Oluştur
             </button>
           </div>
         ) : (
@@ -591,15 +591,15 @@ const TaskManagement = () => {
                       {task.due_date && (
                         <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
-                          <span className={new Date(task.due_date) < new Date() ? 'text-red-600 font-medium' : ''}>
-                            Due: {new Date(task.due_date).toLocaleDateString()}
+                          <span className={new Date(task.due_date) < new Date() && task.status !== 'completed' ? 'text-red-600 font-medium' : ''}>
+                            Son Tarih: {new Date(task.due_date).toLocaleDateString('tr-TR')}
                           </span>
                         </div>
                       )}
                       <div className="flex items-center space-x-1">
                         <Clock className="h-4 w-4" />
                         <span>
-                          {task.actual_hours.toFixed(1)}h / {task.estimated_hours || 0}h
+                          Harcanan: {task.actual_hours.toFixed(1)}h / Tahmini: {task.estimated_hours || 0}h
                         </span>
                       </div>
                       <div className="flex items-center space-x-1">
@@ -616,20 +616,25 @@ const TaskManagement = () => {
                     {task.estimated_hours && task.estimated_hours > 0 && (
                       <div className="mb-3">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-gray-700">Progress</span>
+                          <span className="text-sm font-medium text-gray-700">İlerleme</span>
                           <span className="text-sm text-gray-600">
                             {Math.min(100, Math.round((task.actual_hours / task.estimated_hours) * 100))}%
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
                           <div 
                             className={`h-2 rounded-full ${
-                              task.actual_hours >= task.estimated_hours ? 'bg-red-500' :
-                              task.actual_hours >= task.estimated_hours * 0.8 ? 'bg-yellow-500' :
-                              'bg-blue-500'
-                            }`}
+                              task.actual_hours >= task.estimated_hours ? 'bg-red-500 shadow-sm' :
+                              task.actual_hours >= task.estimated_hours * 0.8 ? 'bg-yellow-500 shadow-sm' :
+                              'bg-blue-500 shadow-sm'
+                            } transition-all duration-500`}
                             style={{ width: `${Math.min(100, (task.actual_hours / task.estimated_hours) * 100)}%` }}
                           ></div>
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          {task.actual_hours >= task.estimated_hours ? 'Tahmini süre aşıldı' :
+                           task.actual_hours >= task.estimated_hours * 0.8 ? 'Neredeyse tamamlandı' :
+                           task.actual_hours >= task.estimated_hours * 0.5 ? 'Yarı yolda' : 'İyi gidiyor'}
                         </div>
                       </div>
                     )}
@@ -647,7 +652,7 @@ const TaskManagement = () => {
                           className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center space-x-2"
                         >
                           <Square className="h-4 w-4" />
-                          <span>Stop</span>
+                          <span>Durdur</span>
                         </button>
                       </div>
                     ) : (
@@ -657,7 +662,7 @@ const TaskManagement = () => {
                         className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Play className="h-4 w-4" />
-                        <span>Start</span>
+                        <span>Başlat</span>
                       </button>
                     )}
 
@@ -667,10 +672,10 @@ const TaskManagement = () => {
                       onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value as any)}
                       className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
-                      <option value="pending">Pending</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                      <option value="overdue">Overdue</option>
+                      <option value="pending">Beklemede</option>
+                      <option value="in_progress">Devam Ediyor</option>
+                      <option value="completed">Tamamlandı</option>
+                      <option value="overdue">Gecikti</option>
                     </select>
 
                     <button
@@ -711,7 +716,7 @@ const TaskManagement = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {editingTask ? 'Edit Task' : 'Create New Task'}
+                  {editingTask ? 'Görevi Düzenle' : 'Yeni Görev Oluştur'}
                 </h2>
                 <button
                   onClick={resetForm}
@@ -725,7 +730,7 @@ const TaskManagement = () => {
             <form onSubmit={handleSubmitTask} className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Task Title *
+                  Görev Başlığı *
                 </label>
                 <input
                   type="text"
@@ -733,27 +738,27 @@ const TaskManagement = () => {
                   value={taskForm.title}
                   onChange={(e) => setTaskForm(prev => ({ ...prev, title: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="e.g., Review client documents"
+                  placeholder="Örn: Müşteri belgelerini incele"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
+                  Açıklama
                 </label>
                 <textarea
                   rows={3}
                   value={taskForm.description}
                   onChange={(e) => setTaskForm(prev => ({ ...prev, description: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Detailed task description..."
+                  placeholder="Detaylı görev açıklaması..."
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Client *
+                    Müşteri *
                   </label>
                   <select
                     required
@@ -761,7 +766,7 @@ const TaskManagement = () => {
                     onChange={(e) => setTaskForm(prev => ({ ...prev, client_id: e.target.value }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="">Select client...</option>
+                    <option value="">Müşteri seçin...</option>
                     {clients.map(client => (
                       <option key={client.id} value={client.id}>
                         {client.company_name || client.profile?.full_name || client.profile?.email}
@@ -772,39 +777,39 @@ const TaskManagement = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
+                    Durum
                   </label>
                   <select
                     value={taskForm.status}
                     onChange={(e) => setTaskForm(prev => ({ ...prev, status: e.target.value as any }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="pending">Pending</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="overdue">Overdue</option>
+                    <option value="pending">Beklemede</option>
+                    <option value="in_progress">Devam Ediyor</option>
+                    <option value="completed">Tamamlandı</option>
+                    <option value="overdue">Gecikti</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Priority
+                    Öncelik
                   </label>
                   <select
                     value={taskForm.priority}
                     onChange={(e) => setTaskForm(prev => ({ ...prev, priority: e.target.value as any }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
+                    <option value="low">Düşük</option>
+                    <option value="medium">Orta</option>
+                    <option value="high">Yüksek</option>
+                    <option value="urgent">Acil</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Due Date
+                    Son Tarih
                   </label>
                   <input
                     type="date"
@@ -817,7 +822,7 @@ const TaskManagement = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Estimated Hours
+                  Tahmini Saat
                 </label>
                 <input
                   type="number"
@@ -828,6 +833,7 @@ const TaskManagement = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="0"
                 />
+                <p className="text-xs text-gray-500 mt-1">Bu görevin tamamlanması için tahmini süre</p>
               </div>
 
               {/* Actions */}
@@ -837,14 +843,14 @@ const TaskManagement = () => {
                   onClick={resetForm}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
-                  Cancel
+                  İptal
                 </button>
                 <button
                   type="submit"
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
                 >
                   <Save className="h-5 w-5" />
-                  <span>{editingTask ? 'Update' : 'Create'}</span>
+                  <span>{editingTask ? 'Güncelle' : 'Oluştur'}</span>
                 </button>
               </div>
             </form>
@@ -858,7 +864,7 @@ const TaskManagement = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Task Details</h2>
+                <h2 className="text-xl font-bold text-gray-900">Görev Detayları</h2>
                 <button
                   onClick={() => setShowTaskDetail(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -872,14 +878,14 @@ const TaskManagement = () => {
               {/* Task Overview */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Görev Bilgileri</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Title:</span>
+                      <span className="text-sm text-gray-600">Başlık:</span>
                       <p className="font-medium">{selectedTask.title}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm text-gray-600">Durum:</span>
                       <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedTask.status)}`}>
                         {selectedTask.status === 'pending' ? 'PENDING' :
                          selectedTask.status === 'in_progress' ? 'IN PROGRESS' :
@@ -888,7 +894,7 @@ const TaskManagement = () => {
                       </span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Priority:</span>
+                      <span className="text-sm text-gray-600">Öncelik:</span>
                       <div className="inline-flex items-center space-x-2 ml-2">
                         <div className={`w-3 h-3 rounded-full ${getPriorityColor(selectedTask.priority)}`}></div>
                         <span className="font-medium">
@@ -899,25 +905,25 @@ const TaskManagement = () => {
                       </div>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Client:</span>
+                      <span className="text-sm text-gray-600">Müşteri:</span>
                       <p className="font-medium">{selectedTask.client?.company_name || selectedTask.client?.profile?.full_name}</p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Time Tracking</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Zaman Takibi</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Estimated Time:</span>
-                      <p className="font-medium">{selectedTask.estimated_hours || 0} hours</p>
+                      <span className="text-sm text-gray-600">Tahmini Süre:</span>
+                      <p className="font-medium">{selectedTask.estimated_hours || 0} saat</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Time Spent:</span>
-                      <p className="font-medium">{selectedTask.actual_hours.toFixed(1)} hours</p>
+                      <span className="text-sm text-gray-600">Harcanan Zaman:</span>
+                      <p className="font-medium">{selectedTask.actual_hours.toFixed(1)} saat</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Efficiency:</span>
+                      <span className="text-sm text-gray-600">Verimlilik:</span>
                       <p className="font-medium">
                         {selectedTask.estimated_hours && selectedTask.estimated_hours > 0 
                           ? `${Math.round((selectedTask.actual_hours / selectedTask.estimated_hours) * 100)}%`
@@ -927,9 +933,9 @@ const TaskManagement = () => {
                     </div>
                     {selectedTask.due_date && (
                       <div>
-                        <span className="text-sm text-gray-600">Due Date:</span>
+                        <span className="text-sm text-gray-600">Son Tarih:</span>
                         <p className={`font-medium ${new Date(selectedTask.due_date) < new Date() ? 'text-red-600' : ''}`}>
-                          {new Date(selectedTask.due_date).toLocaleDateString()}
+                          {new Date(selectedTask.due_date).toLocaleDateString('tr-TR')}
                         </p>
                       </div>
                     )}
@@ -940,20 +946,20 @@ const TaskManagement = () => {
               {/* Description */}
               {selectedTask.description && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Description</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Açıklama</h3>
                   <p className="text-gray-700 bg-gray-50 rounded-lg p-4">{selectedTask.description}</p>
                 </div>
               )}
 
               {/* Timeline */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Timeline</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Görev Zaman Çizelgesi</h3>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                     <Calendar className="h-5 w-5 text-blue-600" />
                     <div>
-                      <p className="font-medium text-blue-900">Task Created</p>
-                      <p className="text-sm text-blue-700">{new Date(selectedTask.created_at).toLocaleString()}</p>
+                      <p className="font-medium text-blue-900">Görev Oluşturuldu</p>
+                      <p className="text-sm text-blue-700">{new Date(selectedTask.created_at).toLocaleString('tr-TR')}</p>
                     </div>
                   </div>
                   
@@ -961,8 +967,8 @@ const TaskManagement = () => {
                     <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
                       <Play className="h-5 w-5 text-green-600" />
                       <div>
-                        <p className="font-medium text-green-900">Task Started</p>
-                        <p className="text-sm text-green-700">{new Date(selectedTask.updated_at).toLocaleString()}</p>
+                        <p className="font-medium text-green-900">Görev Başladı</p>
+                        <p className="text-sm text-green-700">{new Date(selectedTask.updated_at).toLocaleString('tr-TR')}</p>
                       </div>
                     </div>
                   )}
@@ -971,8 +977,8 @@ const TaskManagement = () => {
                     <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
                       <CheckCircle className="h-5 w-5 text-purple-600" />
                       <div>
-                        <p className="font-medium text-purple-900">Task Completed</p>
-                        <p className="text-sm text-purple-700">{new Date(selectedTask.updated_at).toLocaleString()}</p>
+                        <p className="font-medium text-purple-900">Görev Tamamlandı</p>
+                        <p className="text-sm text-purple-700">{new Date(selectedTask.updated_at).toLocaleString('tr-TR')}</p>
                       </div>
                     </div>
                   )}
@@ -989,7 +995,7 @@ const TaskManagement = () => {
                   className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
                 >
                   <Edit className="h-5 w-5" />
-                  <span>Edit</span>
+                  <span>Düzenle</span>
                 </button>
                 
                 {selectedTask.status !== 'completed' && (
@@ -1001,7 +1007,7 @@ const TaskManagement = () => {
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
                   >
                     <CheckCircle className="h-5 w-5" />
-                    <span>Complete</span>
+                    <span>Tamamla</span>
                   </button>
                 )}
               </div>
