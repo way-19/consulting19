@@ -23,103 +23,6 @@ import {
   Send
 } from 'lucide-react';
 
-// Demo data - moved outside component to avoid circular dependency
-const demoRequestedDocuments: DocumentWithDetails[] = [
-  {
-    id: 'demo-req-1',
-    client_id: 'demo-client',
-    name: 'Ağustos 2025 Banka Dökümü',
-    type: 'Bank Statement',
-    category: 'financial',
-    status: 'requested',
-    uploaded_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    is_request: true,
-    requested_by_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
-    due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    notes: 'Ağustos ayı için tüm banka hesap hareketlerini içeren resmi banka dökümü gerekli.',
-    consultant: {
-      full_name: 'Nino Kvaratskhelia',
-      email: 'georgia@consulting19.com'
-    }
-  },
-  {
-    id: 'demo-req-2',
-    client_id: 'demo-client',
-    name: 'Şirket Gider Faturaları',
-    type: 'Expense Receipts',
-    category: 'business',
-    status: 'requested',
-    uploaded_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    is_request: true,
-    requested_by_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
-    due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-    notes: 'Ağustos ayında yapılan tüm şirket giderlerinin faturalarını yükleyin.',
-    consultant: {
-      full_name: 'Nino Kvaratskhelia',
-      email: 'georgia@consulting19.com'
-    }
-  },
-  {
-    id: 'demo-req-3',
-    client_id: 'demo-client',
-    name: 'Çalışan Bordro Bilgileri',
-    type: 'Payroll Documents',
-    category: 'business',
-    status: 'requested',
-    uploaded_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    is_request: true,
-    requested_by_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
-    due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-    notes: 'Ağustos ayı çalışan bordro bilgileri ve SGK ödemeleri.',
-    consultant: {
-      full_name: 'Nino Kvaratskhelia',
-      email: 'georgia@consulting19.com'
-    }
-  }
-];
-
-const demoUploadedDocuments: DocumentWithDetails[] = [
-  {
-    id: 'demo-doc-1',
-    client_id: 'demo-client',
-    name: 'Temmuz 2025 Banka Dökümü',
-    type: 'Bank Statement',
-    category: 'financial',
-    status: 'approved',
-    file_url: 'https://example.com/documents/july-bank-statement.pdf',
-    file_size: 245760,
-    uploaded_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    reviewed_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-    is_request: false
-  },
-  {
-    id: 'demo-doc-2',
-    client_id: 'demo-client',
-    name: 'Şirket Kuruluş Belgesi',
-    type: 'Company Registration',
-    category: 'business',
-    status: 'approved',
-    file_url: 'https://example.com/documents/company-registration.pdf',
-    file_size: 512000,
-    uploaded_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    reviewed_at: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-    is_request: false
-  },
-  {
-    id: 'demo-doc-3',
-    client_id: 'demo-client',
-    name: 'Vergi Levhası',
-    type: 'Tax Certificate',
-    category: 'business',
-    status: 'needs_revision',
-    file_url: 'https://example.com/documents/tax-certificate.pdf',
-    file_size: 128000,
-    uploaded_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    reviewed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    is_request: false
-  }
-];
-
 interface DocumentWithDetails {
   id: string;
   client_id: string;
@@ -153,12 +56,21 @@ interface DocumentStats {
 
 const ClientDocuments = () => {
   const { profile } = useAuth();
-  const [documents, setDocuments] = useState<DocumentWithDetails[]>(demoUploadedDocuments);
-  const [requestedDocuments, setRequestedDocuments] = useState<DocumentWithDetails[]>(demoRequestedDocuments);
+  const [documents, setDocuments] = useState<DocumentWithDetails[]>([]);
+  const [documentRequests, setDocumentRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<DocumentWithDetails | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+
+  const [stats, setStats] = useState<DocumentStats>({
+    totalDocuments: 0,
+    pendingReview: 0,
+    approved: 0,
+    rejected: 0,
+    needsRevision: 0,
+    requestedDocuments: 0
+  });
 
   const [uploadForm, setUploadForm] = useState({
     name: '',
@@ -167,18 +79,6 @@ const ClientDocuments = () => {
     description: '',
     file: null as File | null
   });
-
-  // Calculate initial stats from demo data
-  const initialStats: DocumentStats = {
-    totalDocuments: demoUploadedDocuments.length,
-    pendingReview: demoUploadedDocuments.filter(d => d.status === 'pending').length,
-    approved: demoUploadedDocuments.filter(d => d.status === 'approved').length,
-    rejected: demoUploadedDocuments.filter(d => d.status === 'rejected').length,
-    needsRevision: demoUploadedDocuments.filter(d => d.status === 'needs_revision').length,
-    requestedDocuments: demoRequestedDocuments.length
-  };
-
-  const [stats, setStats] = useState<DocumentStats>(initialStats);
 
   const documentCategories = [
     { value: 'identity', label: 'Identity Documents', icon: User, color: 'bg-blue-100 text-blue-800' },
@@ -189,30 +89,82 @@ const ClientDocuments = () => {
   ];
 
   useEffect(() => {
-    console.log('🎯 ClientDocuments: Component mounted with demo data');
-    console.log('📊 Demo uploaded documents:', demoUploadedDocuments.length);
-    console.log('📋 Demo requested documents:', demoRequestedDocuments.length);
-    console.log('📈 Initial stats:', initialStats);
-    setLoading(false);
-  }, []);
+    if (profile?.id) {
+      fetchData();
+    }
+  }, [profile]);
 
   const fetchData = async () => {
-    console.log('🔄 fetchData called - using demo data');
-    // Just use demo data for now
-    setDocuments(demoUploadedDocuments);
-    setRequestedDocuments(demoRequestedDocuments);
-    calculateStats(demoUploadedDocuments);
+    try {
+      setLoading(true);
+      console.log('🔄 Fetching real document data for client...');
+      
+      // Get client ID first
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('profile_id', profile?.id)
+        .single();
+
+      if (clientError || !clientData) {
+        console.error('❌ Client not found:', clientError);
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ Client found:', clientData.id);
+
+      // Fetch document requests from consultant
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('document_requests')
+        .select(`
+          *,
+          consultant:consultant_id (
+            full_name,
+            email
+          )
+        `)
+        .eq('client_id', clientData.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (requestsError) {
+        console.error('❌ Error fetching document requests:', requestsError);
+      } else {
+        console.log('✅ Document requests found:', requestsData?.length || 0);
+        setDocumentRequests(requestsData || []);
+      }
+
+      // Fetch uploaded documents
+      const { data: documentsData, error: documentsError } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('client_id', clientData.id)
+        .order('uploaded_at', { ascending: false });
+
+      if (documentsError) {
+        console.error('❌ Error fetching documents:', documentsError);
+      } else {
+        console.log('✅ Documents found:', documentsData?.length || 0);
+        setDocuments(documentsData || []);
+        calculateStats(documentsData || []);
+      }
+
+    } catch (error) {
+      console.error('💥 Error in fetchData:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchDocuments = async () => {
-    console.log('📁 fetchDocuments: Using demo data');
-    setDocuments(demoUploadedDocuments);
-    calculateStats(demoUploadedDocuments);
+    // This function is now part of fetchData
+    await fetchData();
   };
 
   const fetchRequestedDocuments = async () => {
-    console.log('📋 fetchRequestedDocuments: Using demo data');
-    setRequestedDocuments(demoRequestedDocuments);
+    // This function is now part of fetchData
+    await fetchData();
   };
 
   const calculateStats = (documentsData: DocumentWithDetails[]) => {
@@ -222,18 +174,18 @@ const ClientDocuments = () => {
       approved: documentsData.filter(d => d.status === 'approved').length,
       rejected: documentsData.filter(d => d.status === 'rejected').length,
       needsRevision: documentsData.filter(d => d.status === 'needs_revision').length,
-      requestedDocuments: demoRequestedDocuments.length
+      requestedDocuments: documentRequests.length
     };
     setStats(stats);
   };
 
-  const handleUploadForRequest = (request: DocumentWithDetails) => {
+  const handleUploadForRequest = (request: any) => {
     setSelectedRequest(request);
     setUploadForm({
-      name: request.name,
-      type: request.type,
+      name: request.document_name || request.name,
+      type: request.document_type || request.type,
       category: request.category,
-      description: request.notes || '',
+      description: request.description || request.notes || '',
       file: null
     });
     setShowUploadModal(true);
@@ -257,30 +209,48 @@ const ClientDocuments = () => {
       if (selectedRequest) {
         // Update existing request
         const { error } = await supabase
-          .from('documents')
-          .update({
-            file_url: mockFileUrl,
-            file_size: fileSize,
-            status: 'pending',
-            is_request: false,
-            uploaded_at: new Date().toISOString()
-          })
+          .from('document_requests')
+          .update({ status: 'uploaded' })
           .eq('id', selectedRequest.id);
 
         if (error) throw error;
 
+        // Create new document record
+        const { data: clientData } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('profile_id', profile?.id)
+          .single();
+
+        if (!clientData) throw new Error('Client record not found');
+
+        const { error: docError } = await supabase
+          .from('documents')
+          .insert([{
+            client_id: clientData.id,
+            request_id: selectedRequest.id,
+            name: uploadForm.name,
+            type: uploadForm.type,
+            category: uploadForm.category,
+            status: 'pending',
+            file_url: mockFileUrl,
+            file_size: fileSize,
+            uploaded_at: new Date().toISOString()
+          }]);
+
+        if (docError) throw docError;
+
         // Notify consultant
-        if (selectedRequest.requested_by_consultant_id) {
+        if (selectedRequest.consultant_id) {
           await supabase
             .from('notifications')
             .insert([{
-              user_id: selectedRequest.requested_by_consultant_id,
+              user_id: selectedRequest.consultant_id,
               type: 'document_uploaded',
               title: 'Document Uploaded',
               message: `${uploadForm.name} has been uploaded by client`,
               priority: 'normal',
               related_table: 'documents',
-              related_id: selectedRequest.id,
               action_url: '/consultant/documents'
             }]);
         }
@@ -496,18 +466,18 @@ const ClientDocuments = () => {
         </div>
 
         {/* Document Requests from Consultant */}
-        {requestedDocuments.length > 0 && (
+        {documentRequests.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
             <div className="flex items-center space-x-2 mb-6">
               <Bell className="h-5 w-5 text-purple-600" />
               <h2 className="text-xl font-semibold text-gray-900">Documents Requested by Your Consultant</h2>
               <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
-                {requestedDocuments.length} pending
+                {documentRequests.length} pending
               </span>
             </div>
             
             <div className="space-y-4">
-              {requestedDocuments.map((request) => {
+              {documentRequests.map((request) => {
                 const categoryInfo = getCategoryInfo(request.category);
                 
                 return (
@@ -519,17 +489,17 @@ const ClientDocuments = () => {
                             <categoryInfo.icon className="h-4 w-4" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-gray-900">{request.name}</h3>
-                            <p className="text-sm text-gray-600">{request.type}</p>
+                            <h3 className="font-semibold text-gray-900">{request.document_name}</h3>
+                            <p className="text-sm text-gray-600">{request.document_type}</p>
                           </div>
                           <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
-                            REQUESTED
+                            {request.status.toUpperCase()}
                           </span>
                         </div>
 
-                        {request.notes && (
+                        {request.description && (
                           <p className="text-gray-700 mb-3 bg-white rounded p-3 border border-purple-200">
-                            <strong>Requirements:</strong> {request.notes}
+                            <strong>Requirements:</strong> {request.description}
                           </p>
                         )}
 
@@ -548,7 +518,7 @@ const ClientDocuments = () => {
                           )}
                           <div className="flex items-center space-x-1">
                             <Clock className="h-4 w-4" />
-                            <span>Requested: {new Date(request.uploaded_at).toLocaleDateString()}</span>
+                            <span>Requested: {new Date(request.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
                       </div>
@@ -567,19 +537,6 @@ const ClientDocuments = () => {
             </div>
           </div>
         )}
-
-        {/* Debug Panel - Remove after testing */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
-          <h3 className="font-medium text-green-900 mb-2">✅ Demo Mode Active</h3>
-          <div className="text-sm text-green-800 space-y-1">
-            <p><strong>Requested Documents:</strong> {demoRequestedDocuments.length} demo requests</p>
-            <p><strong>Uploaded Documents:</strong> {demoUploadedDocuments.length} demo documents</p>
-            <p><strong>Status:</strong> Using demo data for testing</p>
-            <p className="text-xs text-green-700 mt-2">
-              💡 After running the migration, this will switch to real database data
-            </p>
-          </div>
-        </div>
 
         {/* My Documents */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
