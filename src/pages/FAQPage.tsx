@@ -2,13 +2,11 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, ChevronDown, HelpCircle, MessageSquare, Globe, CheckCircle } from 'lucide-react';
 import { useFAQs, useFAQCategories } from '../hooks/useFAQs';
-import { useTranslation } from '../contexts/LanguageContext';
 
 const FAQPage = () => {
-  const { t, currentLanguage } = useTranslation();
   const { faqs, loading, error } = useFAQs({ 
     isActive: true, 
-    languageCode: currentLanguage 
+    languageCode: 'en' 
   });
   const { categories } = useFAQCategories();
   
@@ -62,7 +60,7 @@ const FAQPage = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-                Sıkça Sorulan <span className="text-yellow-300">Sorular</span>
+                Frequently Asked <span className="text-yellow-300">Questions</span>
               </h1>
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
@@ -79,7 +77,7 @@ const FAQPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center bg-white rounded-lg shadow-md p-8">
           <HelpCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">SSS Yüklenemedi</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to Load FAQs</h3>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -98,13 +96,10 @@ const FAQPage = () => {
               </div>
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-              {currentLanguage === 'tr' ? 'Sıkça Sorulan' : 'Frequently Asked'} <span className="text-yellow-300">{currentLanguage === 'tr' ? 'Sorular' : 'Questions'}</span>
+              Frequently Asked <span className="text-yellow-300">Questions</span>
             </h1>
             <p className="text-xl text-purple-100 max-w-3xl mx-auto">
-              {currentLanguage === 'tr' 
-                ? 'Uluslararası iş kurma süreçleri hakkında en çok merak edilen sorular ve uzman yanıtları'
-                : 'Most frequently asked questions about international business formation processes and expert answers'
-              }
+              Most frequently asked questions about international business formation processes and expert answers
             </p>
           </div>
         </div>
@@ -119,7 +114,7 @@ const FAQPage = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder={currentLanguage === 'tr' ? 'Soru veya yanıt ara...' : 'Search questions or answers...'}
+                placeholder="Search questions or answers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -135,7 +130,7 @@ const FAQPage = () => {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  <option value="all">{currentLanguage === 'tr' ? 'Tüm Kategoriler' : 'All Categories'}</option>
+                  <option value="all">All Categories</option>
                   {categories.map(category => (
                     <option key={category} value={category}>
                       {getCategoryIcon(category)} {category}
@@ -147,7 +142,7 @@ const FAQPage = () => {
           </div>
 
           <div className="mt-4 text-sm text-gray-600">
-            {filteredFAQs.length} {currentLanguage === 'tr' ? 'soru gösteriliyor' : 'questions showing'}
+            {filteredFAQs.length} questions showing
           </div>
         </div>
       </section>
@@ -161,10 +156,10 @@ const FAQPage = () => {
                 <Search className="h-12 w-12 mx-auto" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {currentLanguage === 'tr' ? 'Soru bulunamadı' : 'No questions found'}
+                No questions found
               </h3>
               <p className="text-gray-600">
-                {currentLanguage === 'tr' ? 'Arama kriterlerinizi değiştirmeyi deneyin' : 'Try adjusting your search criteria'}
+                Try adjusting your search criteria
               </p>
             </div>
           ) : (
@@ -204,14 +199,14 @@ const FAQPage = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2 text-sm text-gray-500">
                               <CheckCircle className="h-4 w-4 text-green-500" />
-                              <span>{currentLanguage === 'tr' ? 'Bu yanıt yardımcı oldu mu?' : 'Was this answer helpful?'}</span>
+                              <span>Was this answer helpful?</span>
                             </div>
                             <div className="flex items-center space-x-2">
                               <button className="text-sm text-green-600 hover:text-green-700 font-medium">
-                                {currentLanguage === 'tr' ? 'Evet' : 'Yes'}
+                                Yes
                               </button>
                               <button className="text-sm text-red-600 hover:text-red-700 font-medium">
-                                {currentLanguage === 'tr' ? 'Hayır' : 'No'}
+                                No
                               </button>
                             </div>
                           </div>
@@ -232,13 +227,10 @@ const FAQPage = () => {
           <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-8 border border-purple-200">
             <MessageSquare className="h-12 w-12 text-purple-600 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {currentLanguage === 'tr' ? 'Aradığınız Yanıtı Bulamadınız mı?' : 'Couldn\'t Find the Answer You\'re Looking For?'}
+              Couldn't Find the Answer You're Looking For?
             </h2>
             <p className="text-lg text-gray-600 mb-8">
-              {currentLanguage === 'tr' 
-                ? 'Uzman danışmanlarımız size yardımcı olmaya hazır. Doğrudan iletişime geçin.'
-                : 'Our expert consultants are ready to help you. Get in touch directly.'
-              }
+              Our expert consultants are ready to help you. Get in touch directly.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
               <Link
@@ -246,14 +238,14 @@ const FAQPage = () => {
                 className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center space-x-2"
               >
                 <MessageSquare className="h-5 w-5" />
-                <span>{currentLanguage === 'tr' ? 'İletişime Geçin' : 'Contact Us'}</span>
+                <span>Contact Us</span>
               </Link>
               <Link
                 to="/contact"
                 className="border border-purple-600 text-purple-600 px-8 py-4 rounded-lg font-semibold hover:bg-purple-50 transition-colors flex items-center space-x-2"
               >
                 <Globe className="h-5 w-5" />
-                <span>{currentLanguage === 'tr' ? 'İletişim Formu' : 'Contact Form'}</span>
+                <span>Contact Form</span>
               </Link>
             </div>
           </div>
