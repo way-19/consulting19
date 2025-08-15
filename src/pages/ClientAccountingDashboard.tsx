@@ -559,109 +559,6 @@ const ClientAccountingDashboard = () => {
           </div>
         </div>
 
-        {/* Virtual Mailbox Shipping System */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-5 w-5 text-blue-600" />
-                  <h2 className="text-lg font-semibold text-gray-900">Virtual Mailbox & Document Shipping</h2>
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                    2 documents ready
-                  </span>
-                </div>
-                <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
-                  View All Documents →
-                </button>
-              </div>
-              <p className="text-sm text-gray-600 mt-1">
-                Receive official documents digitally and request physical shipping when needed
-              </p>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3 flex-1">
-                      <div className="bg-white rounded-lg p-2 shadow-sm">
-                        <FileText className="h-5 w-5 text-green-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="font-semibold text-gray-900">Company Registration Certificate</h4>
-                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                            READY FOR DOWNLOAD
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-700 mb-2">Your official company registration certificate is ready for download or shipping.</p>
-                        <div className="flex items-center space-x-4 text-xs text-gray-500">
-                          <span>Tracking: VM20250813-REG001</span>
-                          <span>•</span>
-                          <span>Shipping fee: $25</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2">
-                        <Download className="h-4 w-4" />
-                        <span>Download</span>
-                      </button>
-                      <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
-                        <Mail className="h-4 w-4" />
-                        <span>Ship Physical Copy</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3 flex-1">
-                      <div className="bg-white rounded-lg p-2 shadow-sm">
-                        <Shield className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="font-semibold text-gray-900">Tax Registration Document</h4>
-                          <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
-                            PAYMENT REQUIRED
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-700 mb-2">Official tax registration certificate ready for delivery.</p>
-                        <div className="flex items-center space-x-4 text-xs text-gray-500">
-                          <span>Tracking: VM20250813-TAX002</span>
-                          <span>•</span>
-                          <span>Shipping fee: $25</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2">
-                        <DollarSign className="h-4 w-4" />
-                        <span>Pay $25</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Mail className="h-5 w-5 text-blue-600" />
-                  <h4 className="font-medium text-blue-900">How Virtual Mailbox Works</h4>
-                </div>
-                <div className="text-sm text-blue-800 space-y-1">
-                  <p>• Documents are prepared digitally by your consultant</p>
-                  <p>• Download immediately or request physical shipping</p>
-                  <p>• Track your documents with unique tracking numbers</p>
-                  <p>• Secure payment system for shipping fees</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -1031,6 +928,10 @@ const ClientAccountingDashboard = () => {
 
             {activeTab === 'mailbox' && (
               <div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">My Virtual Mailbox</h3>
+                  <p className="text-gray-600">Receive official documents digitally and request physical shipping when needed</p>
+                </div>
                 <VirtualMailboxManager viewMode="client" />
               </div>
             )}
