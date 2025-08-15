@@ -35,10 +35,8 @@ export function useBlogPosts(countryId?: string) {
       query = query.eq('country_id', countryId);
     }
 
-    query.abortSignal?.(ctrl.signal) // supabase-js v2
-      .order('published_at', { ascending: false })
-      .limit(10)
-      .abortSignal?.(ctrl.signal) // supabase-js v2
+    query
+      .abortSignal(ctrl.signal)
       .then(({ data, error }) => {
         if (error) throw error;
         setData((data as BlogPost[]) ?? []);
