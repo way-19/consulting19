@@ -173,3 +173,5 @@ const ClientRecommendations: React.FC<ClientRecommendationsProps> = ({ clientId 
 };
 
 export default ClientRecommendations;
+
+export default ClientRecommendations
