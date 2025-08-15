@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useServiceRequests } from '../hooks/useServiceRequests';
-import { useServiceRequests } from '../hooks/useServiceRequests';
 import MultilingualChat from '../components/MultilingualChat';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import { 
