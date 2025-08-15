@@ -29,7 +29,9 @@ import {
   Settings,
   RefreshCw,
   Globe,
-  Mail
+  Mail,
+  X,
+  Save
 } from 'lucide-react';
 
 interface AccountingClient {
@@ -45,6 +47,7 @@ interface AccountingClient {
   last_document_received?: string;
   next_deadline?: string;
   reminder_frequency: number;
+  preferred_language?: string;
   client?: {
     profile_id: string;
     profile?: {
@@ -123,6 +126,21 @@ const AccountingManagement = () => {
   const [showClientModal, setShowClientModal] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+
+  // Client editing form state
+  const [editingClient, setEditingClient] = useState<AccountingClient | null>(null);
+  const [clientForm, setClientForm] = useState({
+    company_name: '',
+    tax_number: '',
+    business_type: 'limited_company',
+    accounting_period: 'monthly',
+    service_package: 'basic',
+    monthly_fee: 0,
+    status: 'active',
+    next_deadline: '',
+    reminder_frequency: 7,
+    preferred_language: 'en'
+  });
 
   // Stats
   const totalClients = clients.length;
@@ -265,6 +283,69 @@ const AccountingManagement = () => {
       console.error('Error sending reminder:', error);
       alert('Failed to send reminder');
     }
+  };
+
+  const handleEditClient = (client: AccountingClient) => {
+    setEditingClient(client);
+    setClientForm({
+      company_name: client.company_name,
+      tax_number: client.tax_number || '',
+      business_type: client.business_type,
+      accounting_period: client.accounting_period,
+      service_package: client.service_package,
+      monthly_fee: client.monthly_fee,
+      status: client.status,
+      next_deadline: client.next_deadline ? new Date(client.next_deadline).toISOString().split('T')[0] : '',
+      reminder_frequency: client.reminder_frequency,
+      preferred_language: client.preferred_language || 'en'
+    });
+    setShowClientModal(true);
+  };
+
+  const handleSaveClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingClient) return;
+
+    try {
+      const updateData = {
+        ...clientForm,
+        next_deadline: clientForm.next_deadline ? new Date(clientForm.next_deadline).toISOString() : null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('accounting_clients')
+        .update(updateData)
+        .eq('id', editingClient.id);
+
+      if (error) throw error;
+
+      await fetchClients();
+      setShowClientModal(false);
+      setEditingClient(null);
+      alert('Client information updated successfully!');
+    } catch (error) {
+      console.error('Error updating client:', error);
+      alert('Failed to update client information');
+    }
+  };
+
+  const resetClientForm = () => {
+    setClientForm({
+      company_name: '',
+      tax_number: '',
+      business_type: 'limited_company',
+      accounting_period: 'monthly',
+      service_package: 'basic',
+      monthly_fee: 0,
+      status: 'active',
+      next_deadline: '',
+      reminder_frequency: 7,
+      preferred_language: 'en'
+    });
+    setEditingClient(null);
+    setShowClientModal(false);
   };
 
   const updateDocumentStatus = async (documentId: string, newStatus: string) => {
@@ -584,13 +665,12 @@ const AccountingManagement = () => {
                           </button>
                           <button
                             onClick={() => {
-                              setSelectedClient(client);
-                              setShowClientModal(true);
+                              handleEditClient(client);
                             }}
                             className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                           >
                             <Eye className="h-4 w-4" />
-                            <span>Görüntüle</span>
+                            <span>Düzenle</span>
                           </button>
                         </div>
                       </div>
@@ -804,6 +884,224 @@ const AccountingManagement = () => {
           currentUserRole="consultant"
           targetUserId={selectedClient.client?.profile_id}
         />
+      )}
+
+      {/* Client Edit Modal */}
+      {showClientModal && editingClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Müşteri Bilgilerini Düzenle</h2>
+                <button
+                  onClick={resetClientForm}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveClient} className="p-6 space-y-6">
+              {/* Company Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Şirket Bilgileri</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Şirket Adı *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={clientForm.company_name}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, company_name: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Şirket adını girin"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Vergi Numarası
+                    </label>
+                    <input
+                      type="text"
+                      value={clientForm.tax_number}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, tax_number: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Vergi numarasını girin"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      İş Türü
+                    </label>
+                    <select
+                      value={clientForm.business_type}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, business_type: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value="limited_company">Limited Company</option>
+                      <option value="sole_proprietorship">Sole Proprietorship</option>
+                      <option value="partnership">Partnership</option>
+                      <option value="corporation">Corporation</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Muhasebe Dönemi
+                    </label>
+                    <select
+                      value={clientForm.accounting_period}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, accounting_period: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value="monthly">Aylık</option>
+                      <option value="quarterly">Üç Aylık</option>
+                      <option value="yearly">Yıllık</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Hizmet Bilgileri</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Hizmet Paketi
+                    </label>
+                    <select
+                      value={clientForm.service_package}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, service_package: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value="basic">Temel Paket</option>
+                      <option value="standard">Standart Paket</option>
+                      <option value="premium">Premium Paket</option>
+                      <option value="enterprise">Kurumsal Paket</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Aylık Ücret (USD) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="0.01"
+                      value={clientForm.monthly_fee}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, monthly_fee: parseFloat(e.target.value) || 0 }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Durum
+                    </label>
+                    <select
+                      value={clientForm.status}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, status: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value="active">Aktif</option>
+                      <option value="inactive">Pasif</option>
+                      <option value="suspended">Askıya Alınmış</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sonraki Son Tarih
+                    </label>
+                    <input
+                      type="date"
+                      value={clientForm.next_deadline}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, next_deadline: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Hatırlatıcı Sıklığı (Gün)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={clientForm.reminder_frequency}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, reminder_frequency: parseInt(e.target.value) || 7 }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tercih Edilen Dil
+                    </label>
+                    <select
+                      value={clientForm.preferred_language}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, preferred_language: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value="en">English</option>
+                      <option value="tr">Türkçe</option>
+                      <option value="ka">ქართული</option>
+                      <option value="ru">Русский</option>
+                      <option value="es">Español</option>
+                      <option value="fr">Français</option>
+                      <option value="de">Deutsch</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Current Package Details */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-2">Paket Detayları</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-blue-800">
+                  <div>
+                    <span className="font-medium">Mevcut Paket:</span> {clientForm.service_package}
+                  </div>
+                  <div>
+                    <span className="font-medium">Aylık Ücret:</span> ${clientForm.monthly_fee}
+                  </div>
+                  <div>
+                    <span className="font-medium">Dönem:</span> {clientForm.accounting_period}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={resetClientForm}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Save className="h-5 w-5" />
+                  <span>Değişiklikleri Kaydet</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
