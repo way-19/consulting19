@@ -414,11 +414,14 @@ const CountryDetailPage = () => {
               </h2>
               <p className="text-gray-600 mb-8">
                 Expert updates and market intelligence from our {country.name} specialists
-              </p>
-
+                  <div key={faq.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                    <button className="w-full text-left flex items-center justify-between group">
               {blogLoading ? (
-                <div className="flex items-center justify-center py-8">
+                      <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                    <div className="mt-3 text-sm text-gray-600 leading-relaxed">
+                      {faq.answer}
+                    </div>
                 </div>
               ) : countryBlogPosts.length === 0 ? (
                 <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-6 text-white">
