@@ -34,6 +34,8 @@ import {
   Save
 } from 'lucide-react';
 
+const [clientId, setClientId] = React.useState<string | null>(null);
+
 interface AccountingClient {
   id: string;
   client_id: string;
@@ -148,6 +150,23 @@ const AccountingManagement = () => {
     virtual_address_next_payment_date: ''
   });
 
+  React.useEffect(() => {
+    if (!profile?.id) return;
+
+    supabase
+      .from('clients')
+      .select('id')
+      .eq('profile_id', profile.id)
+      .single()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('fetch clientId error:', error);
+          return;
+        }
+        setClientId(data?.id ?? null);
+      });
+  }, [profile?.id]);
+
   // Stats
   const totalClients = clients.length;
   const activeClients = clients.filter(c => c.status === 'active').length;
@@ -174,7 +193,7 @@ const AccountingManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+        .eq('consultant_id', profile?.id || '')
 
   const fetchClients = async () => {
     const { data, error } = await supabase
@@ -312,6 +331,8 @@ const AccountingManagement = () => {
   };
 
   const handleSaveClient = async (e: React.FormEvent) => {
+    if (!selectedClient?.id) return;
+
     e.preventDefault();
     
     if (!editingClient) return;
@@ -336,7 +357,7 @@ const AccountingManagement = () => {
       alert('Client information updated successfully!');
     } catch (error) {
       console.error('Error updating client:', error);
-      alert('Failed to update client information');
+        .eq('id', selectedClient.id);
     }
   };
 
