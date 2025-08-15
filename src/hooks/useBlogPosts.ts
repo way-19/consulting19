@@ -18,19 +18,24 @@ export function useBlogPosts(countryId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!countryId) return; // id yoksa çağrı yapma
-
     const ctrl = new AbortController();
     setLoading(true);
     setError(null);
 
-    supabase
+    let query = supabase
       .from('blog_posts')
       .select(
         'id,title,slug,content,excerpt,cover_image,published_at,author:author_id(full_name,email,role)' // Added 'content' and 'role'
       )
       .eq('is_published', true)
-      .eq('country_id', countryId)
+      .order('published_at', { ascending: false })
+      .limit(10);
+
+    if (countryId) {
+      query = query.eq('country_id', countryId);
+    }
+
+    query.abortSignal?.(ctrl.signal) // supabase-js v2
       .order('published_at', { ascending: false })
       .limit(10)
       .abortSignal?.(ctrl.signal) // supabase-js v2
