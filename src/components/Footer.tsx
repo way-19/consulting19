@@ -114,6 +114,9 @@ const Footer = () => {
               <Link to="/contact" className="block text-slate-300 hover:text-white transition-colors">
                 Contact Support
               </Link>
+              <Link to="/partnership-program" className="block text-slate-300 hover:text-white transition-colors">
+                Partnership Program
+              </Link>
               <Link to="/privacy" className="block text-slate-300 hover:text-white transition-colors">
                 Privacy Policy
               </Link>
