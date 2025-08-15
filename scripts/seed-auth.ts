@@ -75,7 +75,7 @@ async function main() {
             id: authUser.user.id,
             auth_user_id: authUser.user.id,
             email: userData.email,
-            role: userData.role,
+            legacy_role: userData.role,
             full_name: userData.email.split('@')[0].replace('.', ' '),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
