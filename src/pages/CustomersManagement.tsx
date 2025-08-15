@@ -94,7 +94,6 @@ const CustomersManagement = () => {
   const { requests: serviceRequests, loading: requestsLoading } = useServiceRequests(undefined, profile?.id);
   const [showMailboxModal, setShowMailboxModal] = useState(false);
   const [showServiceRequestsModal, setShowServiceRequestsModal] = useState(false);
-  const [showServiceRequestsModal, setShowServiceRequestsModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
   const [stats, setStats] = useState<ClientStats>({
@@ -107,12 +106,6 @@ const CustomersManagement = () => {
     total_revenue: 0,
     avg_satisfaction: 0
   });
-
-  // Service requests hook for selected client
-  const { requests: serviceRequests, loading: requestsLoading } = useServiceRequests(
-    undefined, // clientId - will be set when viewing specific client
-    profile?.id // consultantId
-  );
 
   useEffect(() => {
     if (profile?.id) {
@@ -684,13 +677,10 @@ const CustomersManagement = () => {
                               Last: {client.last_contact ? new Date(client.last_contact).toLocaleDateString() : 'Never'}
                             </p>
                           </div>
-                { key: 'requests', label: 'Service Requests', icon: FileText, count: serviceRequests.length }
                         </div>
 
                         {/* Contact Info */}
-                  onClick={() => setActiveTab(tab.key as any)}
                         <div className="col-span-2">
-                    activeTab === tab.key
                           <div className="space-y-1">
                             {client.phone && (
                               <div className="flex items-center space-x-1">
@@ -706,7 +696,6 @@ const CustomersManagement = () => {
                               <Calendar className="h-3 w-3 text-gray-400" />
                               <span className="text-xs text-gray-600">
                                 {new Date(client.created_at).toLocaleDateString()}
-            {activeTab === 'overview' && (
                               </span>
                             </div>
                           </div>
@@ -983,6 +972,138 @@ const CustomersManagement = () => {
                 </div>
               </div>
 
+              {/* Tabs */}
+              <div className="border-b border-gray-200">
+                <nav className="-mb-px flex space-x-8">
+                  {[
+                    { key: 'overview', label: 'Overview', icon: Eye, count: null },
+                    { key: 'requests', label: 'Service Requests', icon: FileText, count: serviceRequests.length }
+                  ].map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key as any)}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                        activeTab === tab.key
+                          ? 'border-purple-500 text-purple-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <tab.icon className="h-4 w-4" />
+                      <span>{tab.label}</span>
+                      {tab.count !== null && (
+                        <span className="bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs">
+                          {tab.count}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Tab Content */}
+              {activeTab === 'overview' && (
+                <div className="space-y-4">
+                  <div className="text-center py-8">
+                    <Eye className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Client Overview</h3>
+                    <p className="text-gray-600">
+                      Detailed client information and project overview will be displayed here.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'requests' && (
+                <div className="space-y-4">
+                  {requestsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                    </div>
+                  ) : serviceRequests.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Hizmet Talebi Yok</h3>
+                      <p className="text-gray-600">Müşterilerinizden henüz özel hizmet talebi gelmemiş.</p>
+                    </div>
+                  ) : (
+                    serviceRequests.map((request) => (
+                      <div key={request.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-4 mb-3">
+                              <h3 className="text-lg font-semibold text-gray-900">{request.title}</h3>
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
+                                request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                request.status === 'in_review' ? 'bg-blue-100 text-blue-800' :
+                                request.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                request.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {request.status.replace('_', ' ').toUpperCase()}
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                request.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                                request.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                                request.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {request.priority.toUpperCase()}
+                              </span>
+                            </div>
+                            
+                            <p className="text-gray-600 mb-3">{request.description}</p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
+                              <div>
+                                <span className="font-medium">Müşteri:</span> {request.client?.company_name || request.client?.profile?.full_name}
+                              </div>
+                              <div>
+                                <span className="font-medium">Hizmet Türü:</span> {request.requested_service_type.replace('_', ' ')}
+                              </div>
+                              <div>
+                                <span className="font-medium">Bütçe:</span> {request.budget_range || 'Belirtilmemiş'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Zaman:</span> {request.preferred_timeline || 'Esnek'}
+                              </div>
+                            </div>
+
+                            <div className="text-xs text-gray-500">
+                              Talep Tarihi: {new Date(request.created_at).toLocaleDateString('tr-TR')}
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {request.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => {/* Update status to in_review */}}
+                                  className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                  <span>İncele</span>
+                                </button>
+                                <button
+                                  onClick={() => {/* Update status to approved */}}
+                                  className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </button>
+                              </>
+                            )}
+                            
+                            <button
+                              className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
                 <button
@@ -1019,50 +1140,6 @@ const CustomersManagement = () => {
                   <Plus className="h-5 w-5" />
                   <span>Service Requests</span>
                 </button>
-                <button
-                  onClick={() => {
-                    setShowClientModal(false);
-                    setShowServiceRequestsModal(true);
-                  }}
-                  className="bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
-                >
-                  <Plus className="h-5 w-5" />
-                  <span>Service Requests</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Service Requests Modal */}
-      {showServiceRequestsModal && selectedClient && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Service Requests - {selectedClient.company_name || selectedClient.profile?.full_name}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowServiceRequestsModal(false);
-                    setSelectedClient(null);
-                  }}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Service Requests</h3>
-                <p className="text-gray-600">
-                  Bu müşterinin hizmet talepleri burada görünecektir.
-                </p>
               </div>
             </div>
           </div>
@@ -1149,95 +1226,3 @@ const CustomersManagement = () => {
 };
 
 export default CustomersManagement;
-            )}
-
-            {activeTab === 'requests' && (
-              <div className="space-y-4">
-                {requestsLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                  </div>
-                ) : serviceRequests.length === 0 ? (
-                  <div className="text-center py-12">
-                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Hizmet Talebi Yok</h3>
-                    <p className="text-gray-600">Müşterilerinizden henüz özel hizmet talebi gelmemiş.</p>
-                  </div>
-                ) : (
-                  serviceRequests.map((request) => (
-                    <div key={request.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-4 mb-3">
-                            <h3 className="text-lg font-semibold text-gray-900">{request.title}</h3>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
-                              request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              request.status === 'in_review' ? 'bg-blue-100 text-blue-800' :
-                              request.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              request.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {request.status.replace('_', ' ').toUpperCase()}
-                            </span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              request.priority === 'urgent' ? 'bg-red-100 text-red-800' :
-                              request.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                              request.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {request.priority.toUpperCase()}
-                            </span>
-                          </div>
-                          
-                          <p className="text-gray-600 mb-3">{request.description}</p>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
-                            <div>
-                              <span className="font-medium">Müşteri:</span> {request.client?.company_name || request.client?.profile?.full_name}
-                            </div>
-                            <div>
-                              <span className="font-medium">Hizmet Türü:</span> {request.requested_service_type.replace('_', ' ')}
-                            </div>
-                            <div>
-                              <span className="font-medium">Bütçe:</span> {request.budget_range || 'Belirtilmemiş'}
-                            </div>
-                            <div>
-                              <span className="font-medium">Zaman:</span> {request.preferred_timeline || 'Esnek'}
-                            </div>
-                          </div>
-
-                          <div className="text-xs text-gray-500">
-                            Talep Tarihi: {new Date(request.created_at).toLocaleDateString('tr-TR')}
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {request.status === 'pending' && (
-                            <>
-                              <button
-                                onClick={() => {/* Update status to in_review */}}
-                                className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
-                              >
-                                <Eye className="h-4 w-4" />
-                                <span>İncele</span>
-                              </button>
-                              <button
-                                onClick={() => {/* Update status to approved */}}
-                                className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors"
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </button>
-                            </>
-                          )}
-                          
-                          <button
-                            className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors"
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
