@@ -1,5 +1,5 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useMemo } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Globe, Users, TrendingUp, MessageCircle, Clock, DollarSign, Star, AlertTriangle } from 'lucide-react';
 import { useCountry } from '../hooks/useCountries';
 import { useServices } from '../hooks/useServices';
@@ -11,14 +11,18 @@ const CountryDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { country, loading, error } = useCountry(slug || '');
   const { services: countryServices, loading: servicesLoading } = useServices(true);
-  const { data: countryBlogPosts, loading: blogLoading } = useBlogPosts(country?.id);
-  const { faqs: countryFaqs, loading: faqLoading, error: faqError } = useFAQs({ 
+
+  const faqFilters = useMemo(() => ({
     isActive: true, 
     countryId: country?.id,
     languageCode: 'en'
-  });
+  }), [country?.id]);
+
+  const { faqs: countryFaqs, loading: faqLoading, error: faqError } = useFAQs(faqFilters);
+  const { data: countryBlogPosts, loading: blogLoading } = useBlogPosts(country?.id);
 
   // Debug logging
+  // This debug logging can be removed after confirming the fix
   React.useEffect(() => {
     if (country?.id) {
       console.log('🔍 CountryDetailPage: Loading FAQs for country:', country.name, country.id);
