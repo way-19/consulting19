@@ -9,35 +9,15 @@ import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import StripeCheckout from '../components/StripeCheckout';
 import MultilingualChat from '../components/MultilingualChat';
 import {
-  FileText,
-  Calendar,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Upload,
-  Download,
-  MessageSquare,
-  Bell,
-  DollarSign,
-  Eye,
-  Search,
-  Filter,
-  Mail,
-  Plus,
-  Lightbulb,
-  Star,
-  TrendingUp,
-  Globe,
-  Building,
-  User,
-  Shield,
-  Zap
+  FileText, Calendar, AlertTriangle, CheckCircle, Clock, Upload, Download,
+  MessageSquare, Bell, DollarSign, Eye, Search, Filter, Mail, Plus,
+  Lightbulb, Star, TrendingUp, Globe
 } from 'lucide-react';
 
 interface ClientAccountingProfile {
   id: string;
   client_id?: string;
-  consultant_id?: string; // added (used by Chat)
+  consultant_id?: string;
   company_name: string;
   tax_number?: string;
   business_type: string;
@@ -46,10 +26,7 @@ interface ClientAccountingProfile {
   monthly_fee: number;
   status: string;
   next_deadline?: string;
-  consultant?: {
-    full_name: string;
-    email: string;
-  };
+  consultant?: { full_name: string; email: string; };
 }
 
 interface ClientDocument {
@@ -63,46 +40,24 @@ interface ClientDocument {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   file_url?: string;
 }
-
 interface ClientInvoice {
-  id: string;
-  invoice_number: string;
-  period_start?: string;
-  period_end?: string;
-  amount: number;
-  currency: string;
+  id: string; invoice_number: string; period_start?: string; period_end?: string;
+  amount: number; currency: string;
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-  due_date?: string;
-  sent_at?: string;
-  paid_at?: string;
+  due_date?: string; sent_at?: string; paid_at?: string;
 }
-
 interface ClientMessage {
-  id: string;
-  subject?: string;
-  message: string;
-  message_type: string;
-  is_read: boolean;
-  created_at: string;
-  sender?: {
-    full_name: string;
-    email: string;
-  };
+  id: string; subject?: string; message: string; message_type: string;
+  is_read: boolean; created_at: string;
+  sender?: { full_name: string; email: string; };
 }
 
 type MailItemStatus = 'PENDING' | 'SENT';
 type MailPayment = 'UNPAID' | 'WAIVED' | 'PAID';
-
 interface MailItem {
-  id: string;
-  name: string;
-  type: string;
-  trackingNo: string;
-  status: MailItemStatus;
-  shippingFeeUSD: number;
-  payment: MailPayment;
-  sizeKB: number;
-  sentAt?: string;
+  id: string; name: string; type: string; trackingNo: string;
+  status: MailItemStatus; shippingFeeUSD: number; payment: MailPayment;
+  sizeKB: number; sentAt?: string;
 }
 
 const ClientAccountingDashboard = () => {
@@ -121,45 +76,22 @@ const ClientAccountingDashboard = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
 
-  // Virtual mailbox UI state
   const [mailItems] = useState<MailItem[]>([
-    {
-      id: 'vm-1',
-      name: 'dfgdf',
-      type: 'Tax Registration Document',
-      trackingNo: 'VM20250813-AA512107',
-      status: 'PENDING',
-      shippingFeeUSD: 0,
-      payment: 'UNPAID',
-      sizeKB: 116.6
-    },
-    {
-      id: 'vm-2',
-      name: 'kljlkl',
-      type: 'Bank Account Information',
-      trackingNo: 'VM20250813-1C935C81',
-      status: 'SENT',
-      shippingFeeUSD: 0,
-      payment: 'WAIVED',
-      sizeKB: 116.6,
-      sentAt: '2025-08-13'
-    }
+    { id: 'vm-1', name: 'dfgdf', type: 'Tax Registration Document', trackingNo: 'VM20250813-AA512107', status: 'PENDING', shippingFeeUSD: 0, payment: 'UNPAID', sizeKB: 116.6 },
+    { id: 'vm-2', name: 'kljlkl', type: 'Bank Account Information', trackingNo: 'VM20250813-1C935C81', status: 'SENT', shippingFeeUSD: 0, payment: 'WAIVED', sizeKB: 116.6, sentAt: '2025-08-13' }
   ]);
   const [selectedMail, setSelectedMail] = useState<MailItem | null>(null);
 
   useEffect(() => {
     if (profile?.id) {
-      console.log('🔍 ClientAccountingDashboard: Starting data fetch for profile:', profile.id, profile.email);
       fetchData();
     }
   }, [profile]);
 
   const fetchData = async () => {
     try {
-      console.log('📊 Starting comprehensive data fetch...');
       await fetchAccountingProfile();
       setTimeout(async () => {
-        console.log('📋 Fetching additional data...');
         await Promise.all([fetchDocuments(), fetchInvoices(), fetchMessages()]);
       }, 500);
     } catch (error) {
@@ -170,122 +102,53 @@ const ClientAccountingDashboard = () => {
   };
 
   const fetchAccountingProfile = async () => {
-    console.log('🔍 Step 1: Fetching accounting profile for user:', profile?.id, profile?.email);
-
     const { data: clientData, error: clientError } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('profile_id', profile?.id)
-      .limit(1);
-
-    if (clientError) {
-      console.error('❌ Error fetching client:', clientError);
-      return;
-    }
-
-    const client = clientData && clientData.length > 0 ? clientData[0] : null;
-    console.log('📋 Step 2: Client record lookup result:', client);
+      .from('clients').select('id').eq('profile_id', profile?.id).limit(1);
+    if (clientError) return console.error('❌ Error fetching client:', clientError);
+    const client = clientData?.[0] ?? null;
 
     if (!client) {
-      console.log('⚠️ No client record found — creating...');
       const { data: newClient, error: createClientErr } = await supabase
-        .from('clients')
-        .insert([
-          {
-            profile_id: profile?.id,
-            assigned_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
-            status: 'new',
-            priority: 'medium',
-            service_type: 'company_formation',
-            progress: 0
-          }
-        ])
-        .select()
-        .limit(1);
-
-      if (createClientErr || !newClient?.[0]) {
-        console.error('❌ Error creating client record:', createClientErr);
-        return;
-      }
-
+        .from('clients').insert([{
+          profile_id: profile?.id,
+          assigned_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
+          status: 'new', priority: 'medium', service_type: 'company_formation', progress: 0
+        }]).select().limit(1);
+      if (createClientErr || !newClient?.[0]) return console.error('❌ Error creating client record:', createClientErr);
       const createdClient = newClient[0];
       setClientId(createdClient.id);
 
       const { data: newAccountingProfile, error: accountingError } = await supabase
         .from('accounting_clients')
-        .insert([
-          {
-            client_id: createdClient.id,
-            consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
-            company_name: 'Georgia Tech Solutions LLC',
-            business_type: 'limited_company',
-            accounting_period: 'monthly',
-            service_package: 'basic',
-            monthly_fee: 500,
-            status: 'active',
-            reminder_frequency: 7,
-            preferred_language: 'en'
-          }
-        ])
-        .select(
-          `
-          *,
-          consultant:consultant_id (
-            full_name,
-            email
-          )`
-        )
-        .limit(1);
+        .insert([{
+          client_id: createdClient.id, consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
+          company_name: 'Georgia Tech Solutions LLC', business_type: 'limited_company',
+          accounting_period: 'monthly', service_package: 'basic', monthly_fee: 500, status: 'active',
+          reminder_frequency: 7, preferred_language: 'en'
+        }])
+        .select(`*, consultant:consultant_id ( full_name, email )`).limit(1);
 
-      if (accountingError || !newAccountingProfile?.[0]) {
-        console.error('❌ Error creating accounting profile:', accountingError);
-        return;
-      }
-
+      if (accountingError || !newAccountingProfile?.[0]) return console.error('❌ Error creating accounting profile:', accountingError);
       setAccountingProfile(newAccountingProfile[0]);
       return;
     }
 
     setClientId(client.id);
-
     const { data: accountingData, error } = await supabase
       .from('accounting_clients')
-      .select(
-        `
-        *,
-        consultant:consultant_id (
-          full_name,
-          email
-        )`
-      )
-      .eq('client_id', client.id)
-      .limit(1);
-
-    console.log('💼 Step 3: Accounting profile lookup result:', accountingData);
-
-    if (error) {
-      console.error('❌ Error fetching accounting profile:', error.message, error.code);
-      return;
-    }
-
-    if (accountingData && accountingData.length > 0) {
-      setAccountingProfile(accountingData[0]);
-    }
+      .select(`*, consultant:consultant_id ( full_name, email )`)
+      .eq('client_id', client.id).limit(1);
+    if (error) return console.error('❌ Error fetching accounting profile:', error.message, error.code);
+    if (accountingData?.[0]) setAccountingProfile(accountingData[0]);
   };
 
   const fetchDocuments = async () => {
     if (!accountingProfile) return;
     const { data, error } = await supabase
       .from('accounting_documents')
-      .select('*')
-      .eq('client_id', accountingProfile.id)
+      .select('*').eq('client_id', accountingProfile.id)
       .order('due_date', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching documents:', error);
-      return;
-    }
-
+    if (error) return console.error('Error fetching documents:', error);
     setDocuments(data || []);
   };
 
@@ -293,129 +156,64 @@ const ClientAccountingDashboard = () => {
     if (!accountingProfile) return;
     const { data, error } = await supabase
       .from('accounting_invoices')
-      .select('*')
-      .eq('client_id', accountingProfile.id)
+      .select('*').eq('client_id', accountingProfile.id)
       .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching invoices:', error);
-      return;
-    }
-
+    if (error) return console.error('Error fetching invoices:', error);
     setInvoices(data || []);
   };
 
   const fetchMessages = async () => {
     const { data: clientData, error: clientError } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('profile_id', profile?.id)
-      .limit(1);
-
-    if (clientError || !clientData?.[0]) {
-      console.error('Error fetching client for messages:', clientError);
-      return;
-    }
-
+      .from('clients').select('id').eq('profile_id', profile?.id).limit(1);
+    if (clientError || !clientData?.[0]) return console.error('Error fetching client for messages:', clientError);
     const client = clientData[0];
 
     const { data: accountingClientData, error: accountingError } = await supabase
-      .from('accounting_clients')
-      .select('id')
-      .eq('client_id', client.id)
-      .limit(1);
-
-    if (accountingError || !accountingClientData?.[0]) {
-      console.error('Error fetching accounting client for messages:', accountingError);
-      return;
-    }
+      .from('accounting_clients').select('id').eq('client_id', client.id).limit(1);
+    if (accountingError || !accountingClientData?.[0]) return console.error('Error fetching accounting client for messages:', accountingError);
 
     const { data, error: messageError } = await supabase
       .from('accounting_messages')
-      .select(
-        `
-        *,
-        sender:sender_id (
-          full_name,
-          email
-        )`
-      )
+      .select(`*, sender:sender_id ( full_name, email )`)
       .eq('recipient_id', profile?.id)
       .order('created_at', { ascending: false });
-
-    if (messageError) {
-      console.error('Error fetching messages:', messageError);
-      return;
-    }
-
+    if (messageError) return console.error('Error fetching messages:', messageError);
     setMessages(data || []);
   };
 
-  const handlePayInvoice = (invoice: ClientInvoice) => {
-    setSelectedInvoice(invoice);
-    setShowInvoiceCheckout(true);
-  };
-
+  const handlePayInvoice = (invoice: ClientInvoice) => { setSelectedInvoice(invoice); setShowInvoiceCheckout(true); };
   const handleInvoicePaymentSuccess = async (paymentIntentId: string) => {
-    setShowInvoiceCheckout(false);
-    setSelectedInvoice(null);
+    setShowInvoiceCheckout(false); setSelectedInvoice(null);
     if (selectedInvoice) {
-      await supabase
-        .from('accounting_invoices')
-        .update({
-          status: 'paid',
-          stripe_invoice_id: paymentIntentId
-        })
+      await supabase.from('accounting_invoices')
+        .update({ status: 'paid', stripe_invoice_id: paymentIntentId })
         .eq('id', selectedInvoice.id);
     }
-    await fetchInvoices();
-    alert('Invoice payment successful!');
+    await fetchInvoices(); alert('Invoice payment successful!');
   };
-
-  const handleInvoicePaymentError = (error: string) => {
-    alert(`Invoice payment failed: ${error}`);
-  };
-
-  const handleInvoicePaymentCancel = () => {
-    setShowInvoiceCheckout(false);
-    setSelectedInvoice(null);
-  };
+  const handleInvoicePaymentError = (error: string) => { alert(`Invoice payment failed: ${error}`); };
+  const handleInvoicePaymentCancel = () => { setShowInvoiceCheckout(false); setSelectedInvoice(null); };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'received':
-        return 'bg-blue-100 text-blue-800';
-      case 'processed':
-        return 'bg-purple-100 text-purple-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'overdue':
-        return 'bg-red-100 text-red-800';
-      case 'paid':
-        return 'bg-green-100 text-green-800';
-      case 'sent':
-        return 'bg-blue-100 text-blue-800';
-      case 'draft':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'received': return 'bg-blue-100 text-blue-800';
+      case 'processed': return 'bg-purple-100 text-purple-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'overdue': return 'bg-red-100 text-red-800';
+      case 'paid': return 'bg-green-100 text-green-800';
+      case 'sent': return 'bg-blue-100 text-blue-800';
+      case 'draft': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
-
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent':
-        return 'bg-red-500';
-      case 'high':
-        return 'bg-orange-500';
-      case 'medium':
-        return 'bg-yellow-500';
-      case 'low':
-        return 'bg-gray-400';
-      default:
-        return 'bg-gray-400';
+      case 'urgent': return 'bg-red-500';
+      case 'high': return 'bg-orange-500';
+      case 'medium': return 'bg-yellow-500';
+      case 'low': return 'bg-gray-400';
+      default: return 'bg-gray-400';
     }
   };
 
@@ -454,18 +252,16 @@ const ClientAccountingDashboard = () => {
               <h1 className="text-2xl font-bold text-gray-900">Accounting Dashboard</h1>
               <p className="text-gray-600 mt-1">Manage your documents, invoices, and accounting communications</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm text-gray-600">Consultant</p>
-                <p className="font-medium text-gray-900">{accountingProfile.consultant?.full_name}</p>
-                <button
-                  onClick={() => setIsChatOpen(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  <span>Contact Advisor</span>
-                </button>
-              </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-600">Consultant</p>
+              <p className="font-medium text-gray-900">{accountingProfile.consultant?.full_name}</p>
+              <button
+                onClick={() => setIsChatOpen(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>Contact Advisor</span>
+              </button>
             </div>
           </div>
         </div>
@@ -473,27 +269,8 @@ const ClientAccountingDashboard = () => {
 
       {/* Body */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <UpcomingPayments clientId={clientId} />
-        </div>
 
-        {/* Request Custom Service */}
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-8 border border-purple-200 mb-8">
-          <div className="text-center">
-            <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Plus className="h-8 w-8 text-purple-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Request Custom Service</h2>
-            <p className="text-lg text-gray-600 mb-6">Need a specialized service? Request a custom solution from your consultant.</p>
-            <button
-              onClick={() => setShowRequestModal(true)}
-              className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 mx-auto shadow-lg"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Request Custom Service</span>
-            </button>
-          </div>
-        </div>
+        {/* ⛔️ ESKİ: Üstteki Upcoming Payments ve Request Custom Service KALDIRILDI */}
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -506,7 +283,6 @@ const ClientAccountingDashboard = () => {
               <Clock className="h-8 w-8 text-yellow-600" />
             </div>
           </div>
-
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -516,7 +292,6 @@ const ClientAccountingDashboard = () => {
               <AlertTriangle className="h-8 w-8 text-red-600" />
             </div>
           </div>
-
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -526,7 +301,6 @@ const ClientAccountingDashboard = () => {
               <DollarSign className="h-8 w-8 text-orange-600" />
             </div>
           </div>
-
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -569,83 +343,6 @@ const ClientAccountingDashboard = () => {
               </div>
             </div>
           )}
-        </div>
-
-        {/* AI Recommendations (static UI) - Moved to bottom */}
-        <div className="mt-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center space-x-2">
-                <Lightbulb className="h-5 w-5 text-yellow-500" />
-                <h2 className="text-lg font-semibold text-gray-900">AI-Powered Recommendations</h2>
-                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">3 new</span>
-              </div>
-              <p className="text-sm text-gray-600 mt-1">Personalized recommendations based on your business profile and goals</p>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div className="border-l-4 border-l-blue-500 bg-blue-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-white rounded-lg p-2 shadow-sm">
-                      <Star className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-semibold text-gray-900">Estonia E-Residency Program</h4>
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                      </div>
-                      <p className="text-sm text-gray-700 mb-2">
-                        Based on your tech business profile, Estonia's e-Residency could provide significant tax advantages and EU market access.
-                      </p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span>AI Recommendation</span>
-                        <span>•</span>
-                        <span>95% confidence</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-l-4 border-l-green-500 bg-green-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-white rounded-lg p-2 shadow-sm">
-                      <TrendingUp className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">Tax Optimization Service</h4>
-                      <p className="text-sm text-gray-700 mb-2">Our analysis shows you could save 15-20% on taxes with proper structure optimization.</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span>Service Recommendation</span>
-                        <span>•</span>
-                        <span>Potential savings: $3,000/year</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-l-4 border-l-purple-500 bg-purple-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-white rounded-lg p-2 shadow-sm">
-                      <Globe className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">UAE Free Zone Expansion</h4>
-                      <p className="text-sm text-gray-700 mb-2">Consider expanding to UAE for Middle East market access with 0% corporate tax benefits.</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span>Market Opportunity</span>
-                        <span>•</span>
-                        <span>High growth potential</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 text-center">
-                <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">View All Recommendations (5) →</button>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Tabs */}
@@ -787,12 +484,8 @@ const ClientAccountingDashboard = () => {
                               </div>
 
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
-                                <div>
-                                  <span className="font-medium">Type:</span> {document.document_type}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Category:</span> {document.category}
-                                </div>
+                                <div><span className="font-medium">Type:</span> {document.document_type}</div>
+                                <div><span className="font-medium">Category:</span> {document.category}</div>
                                 <div>
                                   <span className="font-medium">Due Date:</span>{' '}
                                   <span className={document.due_date && new Date(document.due_date) < new Date() ? 'text-red-600 font-medium' : ''}>
@@ -846,20 +539,10 @@ const ClientAccountingDashboard = () => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                              <div>
-                                <span className="font-medium">Amount:</span> ${invoice.amount} {invoice.currency}
-                              </div>
-                              <div>
-                                <span className="font-medium">Period:</span> Monthly Service
-                              </div>
-                              <div>
-                                <span className="font-medium">Due Date:</span>{' '}
-                                {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Paid:</span>{' '}
-                                {invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString() : 'Not paid'}
-                              </div>
+                              <div><span className="font-medium">Amount:</span> ${invoice.amount} {invoice.currency}</div>
+                              <div><span className="font-medium">Period:</span> Monthly Service</div>
+                              <div><span className="font-medium">Due Date:</span> {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}</div>
+                              <div><span className="font-medium">Paid:</span> {invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString() : 'Not paid'}</div>
                             </div>
                           </div>
 
@@ -908,9 +591,7 @@ const ClientAccountingDashboard = () => {
                               <p className="text-sm text-gray-600">{new Date(message.created_at).toLocaleDateString()}</p>
                             </div>
                           </div>
-                          {!message.is_read && (
-                            <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">New</span>
-                          )}
+                          {!message.is_read && <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">New</span>}
                         </div>
 
                         {message.subject && <h4 className="font-medium text-gray-900 mb-2">{message.subject}</h4>}
@@ -942,86 +623,50 @@ const ClientAccountingDashboard = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">My Virtual Mailbox</h3>
                   <p className="text-gray-600">Receive official documents digitally and request physical shipping when needed</p>
                 </div>
-
                 <div className="space-y-4">
                   {mailItems.map((m) => (
-                    <div
-                      key={m.id}
-                      className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md"
-                    >
+                    <div key={m.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-all duration-200 transform hover:-translate-y-1 shadow-sm hover:shadow-md">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-4 mb-3">
-                            <div className="bg-purple-100 rounded-lg p-2">
-                              <FileText className="h-5 w-5 text-purple-600" />
-                            </div>
+                            <div className="bg-purple-100 rounded-lg p-2"><FileText className="h-5 w-5 text-purple-600" /></div>
                             <div>
                               <h3 className="text-lg font-semibold text-gray-900">{m.name}</h3>
                               <p className="text-sm text-gray-600">{m.type}</p>
                             </div>
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                m.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
-                              }`}
-                            >
-                              {m.status}
-                            </span>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${m.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>{m.status}</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
-                            <div>
-                              <span className="font-medium">Tracking:</span> {m.trackingNo}
-                            </div>
-                            <div>
-                              <span className="font-medium">Shipping Fee:</span> ${m.shippingFeeUSD}
-                            </div>
+                            <div><span className="font-medium">Tracking:</span> {m.trackingNo}</div>
+                            <div><span className="font-medium">Shipping Fee:</span> ${m.shippingFeeUSD}</div>
                             <div>
                               <span className="font-medium">Payment:</span>{' '}
-                              <span
-                                className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                                  m.payment === 'UNPAID'
-                                    ? 'bg-red-100 text-red-800'
-                                    : m.payment === 'PAID'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-blue-100 text-blue-800'
-                                }`}
-                              >
-                                {m.payment}
-                              </span>
+                              <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                                m.payment === 'UNPAID' ? 'bg-red-100 text-red-800'
+                                  : m.payment === 'PAID' ? 'bg-green-100 text-green-800'
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>{m.payment}</span>
                             </div>
-                            <div>
-                              <span className="font-medium">Size:</span> {m.sizeKB} KB
-                            </div>
+                            <div><span className="font-medium">Size:</span> {m.sizeKB} KB</div>
                           </div>
 
                           {m.sentAt && (
                             <div className="text-sm text-gray-600 flex items-center space-x-2">
-                              <span>📨</span>
-                              <span>
-                                Sent: {new Date(m.sentAt).toLocaleDateString()}
-                              </span>
+                              <span>📨</span><span>Sent: {new Date(m.sentAt).toLocaleDateString()}</span>
                             </div>
                           )}
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => setSelectedMail(m)}
-                            className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
-                          >
-                            <Eye className="h-4 w-4" />
-                            <span>Preview</span>
+                          <button onClick={() => setSelectedMail(m)} className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
+                            <Eye className="h-4 w-4" /><span>Preview</span>
                           </button>
                           <button className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
-                            <Download className="h-4 w-4" />
-                            <span>Download</span>
+                            <Download className="h-4 w-4" /><span>Download</span>
                           </button>
-                          <button
-                            onClick={() => alert('Fiziksel gönderim talebi alındı. Danışmanınız sizinle iletişime geçecek.')}
-                            className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
-                          >
-                            <Mail className="h-4 w-4" />
-                            <span>Physical Shipping</span>
+                          <button onClick={() => alert('Fiziksel gönderim talebi alındı. Danışmanınız sizinle iletişime geçecek.')} className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
+                            <Mail className="h-4 w-4" /><span>Physical Shipping</span>
                           </button>
                         </div>
                       </div>
@@ -1032,6 +677,108 @@ const ClientAccountingDashboard = () => {
             )}
           </div>
         </div>
+
+        {/* ===== BOTTOM SECTION ===== */}
+        <div className="mt-12">
+          {/* 2 sütun: Upcoming Payments + Request Custom Service */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Upcoming Payments column (boxed) */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Payments</h2>
+              <UpcomingPayments clientId={clientId} />
+            </div>
+
+            {/* Request Custom Service column */}
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-8 border border-purple-200">
+              <div className="text-center">
+                <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Plus className="h-8 w-8 text-purple-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Request Custom Service</h2>
+                <p className="text-gray-600 mb-6">Need a specialized service? Request a custom solution from your consultant.</p>
+                <button
+                  onClick={() => setShowRequestModal(true)}
+                  className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 mx-auto shadow-lg"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span>Request Custom Service</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* AI-Powered Recommendations en altta */}
+          <div className="mt-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <Lightbulb className="h-5 w-5 text-yellow-500" />
+                  <h2 className="text-lg font-semibold text-gray-900">AI-Powered Recommendations</h2>
+                  <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">3 new</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">Personalized recommendations based on your business profile and goals</p>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="border-l-4 border-l-blue-500 bg-blue-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-white rounded-lg p-2 shadow-sm">
+                        <Star className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h4 className="font-semibold text-gray-900">Estonia E-Residency Program</h4>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2">
+                          Based on your tech business profile, Estonia's e-Residency could provide significant tax advantages and EU market access.
+                        </p>
+                        <div className="flex items-center space-x-4 text-xs text-gray-500">
+                          <span>AI Recommendation</span><span>•</span><span>95% confidence</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-l-4 border-l-green-500 bg-green-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-white rounded-lg p-2 shadow-sm">
+                        <TrendingUp className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">Tax Optimization Service</h4>
+                        <p className="text-sm text-gray-700 mb-2">Our analysis shows you could save 15-20% on taxes with proper structure optimization.</p>
+                        <div className="flex items-center space-x-4 text-xs text-gray-500">
+                          <span>Service Recommendation</span><span>•</span><span>Potential savings: $3,000/year</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-l-4 border-l-purple-500 bg-purple-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-white rounded-lg p-2 shadow-sm">
+                        <Globe className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">UAE Free Zone Expansion</h4>
+                        <p className="text-sm text-gray-700 mb-2">Consider expanding to UAE for Middle East market access with 0% corporate tax benefits.</p>
+                        <div className="flex items-center space-x-4 text-xs text-gray-500">
+                          <span>Market Opportunity</span><span>•</span><span>High growth potential</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 text-center">
+                  <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">View All Recommendations (5) →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* ===== /BOTTOM SECTION ===== */}
       </div>
 
       {/* Invoice Payment Checkout */}
@@ -1069,10 +816,7 @@ const ClientAccountingDashboard = () => {
         <RequestCustomServiceModal
           isOpen={showRequestModal}
           onClose={() => setShowRequestModal(false)}
-          onSuccess={() => {
-            setShowRequestModal(false);
-            alert('Custom service request submitted successfully!');
-          }}
+          onSuccess={() => { setShowRequestModal(false); alert('Custom service request submitted successfully!'); }}
         />
       )}
 
@@ -1101,26 +845,18 @@ const ClientAccountingDashboard = () => {
                 <div className="space-y-2 text-sm text-gray-700">
                   <div>
                     <span className="font-medium">Status:</span>{' '}
-                    <span
-                      className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedMail.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
-                      }`}
-                    >
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${selectedMail.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
                       {selectedMail.status}
                     </span>
                   </div>
                   <div><span className="font-medium">Shipping Fee:</span> ${selectedMail.shippingFeeUSD}</div>
                   <div>
                     <span className="font-medium">Payment Status:</span>{' '}
-                    <span
-                      className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedMail.payment === 'UNPAID'
-                          ? 'bg-red-100 text-red-800'
-                          : selectedMail.payment === 'PAID'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}
-                    >
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                      selectedMail.payment === 'UNPAID' ? 'bg-red-100 text-red-800'
+                        : selectedMail.payment === 'PAID' ? 'bg-green-100 text-green-800'
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
                       {selectedMail.payment}
                     </span>
                   </div>
@@ -1142,13 +878,7 @@ const ClientAccountingDashboard = () => {
             <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-end space-x-3">
               <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Preview</button>
               <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Download</button>
-              <button
-                onClick={() => {
-                  setSelectedMail(null);
-                  alert('Fiziksel gönderim talebi alındı.');
-                }}
-                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
-              >
+              <button onClick={() => { setSelectedMail(null); alert('Fiziksel gönderim talebi alındı.'); }} className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700">
                 Request Physical Ship
               </button>
             </div>
