@@ -621,14 +621,14 @@ const ClientAccountingDashboard = () => {
                         <div className="mt-3">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              message.message_type === 'urgent'
+                              (message.message_type || '') === 'urgent'
                                 ? 'bg-red-100 text-red-800'
-                                : message.message_type === 'reminder'
+                                : (message.message_type || '') === 'reminder'
                                 ? 'bg-orange-100 text-orange-800'
                                 : 'bg-gray-100 text-gray-800'
                             }`}
                           >
-                            {message.message_type.replace('_', ' ').toUpperCase()}
+                            {(message.message_type || '').replace('_', ' ').toUpperCase()}
                           </span>
                         </div>
                       </div>
