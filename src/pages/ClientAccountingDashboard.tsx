@@ -132,20 +132,40 @@ const ClientAccountingDashboard = () => {
   };
 
   const fetchAccountingProfile = async () => {
+    console.log('🏢 fetchAccountingProfile: Starting...');
+    console.log('👤 fetchAccountingProfile: Profile ID:', profile?.id);
+    
     const { data: clientData, error: clientError } = await supabase
       .from('clients').select('id').eq('profile_id', profile?.id).limit(1);
-    if (clientError) return console.error('❌ Error fetching client:', clientError);
+    
+    console.log('🔍 fetchAccountingProfile: Client query result:', { data: clientData, error: clientError });
+    
+    if (clientError) {
+      console.error('❌ Error fetching client:', clientError);
+      return;
+    }
+    
     const client = clientData?.[0] ?? null;
+    console.log('👤 fetchAccountingProfile: Found client:', client);
 
     if (!client) {
+      console.log('🆕 fetchAccountingProfile: No client found, creating new client...');
       const { data: newClient, error: createClientErr } = await supabase
         .from('clients').insert([{
           profile_id: profile?.id,
           assigned_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
           status: 'new', priority: 'medium', service_type: 'company_formation', progress: 0
         }]).select().limit(1);
-      if (createClientErr || !newClient?.[0]) return console.error('❌ Error creating client record:', createClientErr);
+      
+      console.log('🆕 fetchAccountingProfile: New client creation result:', { data: newClient, error: createClientErr });
+      
+      if (createClientErr || !newClient?.[0]) {
+        console.error('❌ Error creating client record:', createClientErr);
+        return;
+      }
+      
       const createdClient = newClient[0];
+      console.log('✅ fetchAccountingProfile: Created client:', createdClient);
       setClientId(createdClient.id);
 
       const { data: newAccountingProfile, error: accountingError } = await supabase
@@ -158,18 +178,39 @@ const ClientAccountingDashboard = () => {
         }])
         .select(`*, consultant:consultant_id ( full_name, email )`).limit(1);
 
-      if (accountingError || !newAccountingProfile?.[0]) return console.error('❌ Error creating accounting profile:', accountingError);
+      console.log('🆕 fetchAccountingProfile: New accounting profile result:', { data: newAccountingProfile, error: accountingError });
+      
+      if (accountingError || !newAccountingProfile?.[0]) {
+        console.error('❌ Error creating accounting profile:', accountingError);
+        return;
+      }
+      
+      console.log('✅ fetchAccountingProfile: Setting new accounting profile:', newAccountingProfile[0]);
       setAccountingProfile(newAccountingProfile[0]);
       return;
     }
 
+    console.log('🔍 fetchAccountingProfile: Using existing client, setting clientId:', client.id);
     setClientId(client.id);
+    
     const { data: accountingData, error } = await supabase
       .from('accounting_clients')
       .select(`*, consultant:consultant_id ( full_name, email )`)
       .eq('client_id', client.id).limit(1);
-    if (error) return console.error('❌ Error fetching accounting profile:', error.message, error.code);
-    if (accountingData?.[0]) setAccountingProfile(accountingData[0]);
+    
+    console.log('🔍 fetchAccountingProfile: Accounting profile query result:', { data: accountingData, error });
+    
+    if (error) {
+      console.error('❌ Error fetching accounting profile:', error.message, error.code);
+      return;
+    }
+    
+    if (accountingData?.[0]) {
+      console.log('✅ fetchAccountingProfile: Setting existing accounting profile:', accountingData[0]);
+      setAccountingProfile(accountingData[0]);
+    } else {
+      console.log('⚠️ fetchAccountingProfile: No accounting profile found for client:', client.id);
+    }
   };
 
   const fetchDocuments = async () => {
