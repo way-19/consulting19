@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, X, CheckCircle, AlertTriangle, MessageSquare, FileText, Calendar, Eye, Upload } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from '../contexts/LanguageContext';
 
 interface Notification {
   id: string;
@@ -25,6 +26,7 @@ interface NotificationDropdownProps {
 
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onClose }) => {
   const { profile } = useAuth();
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -155,14 +157,14 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Bildirimler</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('notifications.title')}</h3>
             <div className="flex items-center space-x-2">
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
                   className="text-sm text-purple-600 hover:text-purple-700 font-medium"
                 >
-                  Tümünü Okundu İşaretle
+                  {t('notifications.markAllAsRead')}
                 </button>
               )}
               <button
@@ -175,7 +177,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
           </div>
           {unreadCount > 0 && (
             <p className="text-sm text-gray-600 mt-1">
-              {unreadCount} okunmamış bildirim
+              {t(`notifications.unreadCount_${unreadCount === 1 ? 'one' : 'other'}`, { count: unreadCount })}
             </p>
           )}
         </div>
@@ -189,7 +191,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
           ) : notifications.length === 0 ? (
             <div className="text-center py-8">
               <Bell className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-600 text-sm">Henüz bildirim yok</p>
+              <p className="text-gray-600 text-sm">{t('notifications.noNotifications')}</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
@@ -236,7 +238,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
         {notifications.length > 0 && (
           <div className="p-3 border-t border-gray-200 bg-gray-50">
             <button className="w-full text-center text-sm text-purple-600 hover:text-purple-700 font-medium">
-              Tüm Bildirimleri Görüntüle
+              {t('notifications.viewAll')}
             </button>
           </div>
         )}

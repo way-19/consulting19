@@ -136,6 +136,14 @@ const translations: Record<SupportedLanguage, Record<string, string>> = {
     'time.weeks': 'weeks',
     'time.months': 'months',
     
+    // Notifications
+    'notifications.title': 'Notifications',
+    'notifications.markAllAsRead': 'Mark All As Read',
+    'notifications.unreadCount_one': '{{count}} unread notification',
+    'notifications.unreadCount_other': '{{count}} unread notifications',
+    'notifications.noNotifications': 'No notifications yet',
+    'notifications.viewAll': 'View All Notifications',
+    
     // Recommendations
     'recommendations.noRecommendations': 'No Recommendations Yet',
     'recommendations.noRecommendationsDesc': 'Personalized recommendations will appear here as your business process progresses.',
@@ -285,6 +293,14 @@ const translations: Record<SupportedLanguage, Record<string, string>> = {
     'time.days': 'gün',
     'time.weeks': 'hafta',
     'time.months': 'ay',
+    
+    // Notifications
+    'notifications.title': 'Bildirimler',
+    'notifications.markAllAsRead': 'Tümünü Okundu İşaretle',
+    'notifications.unreadCount_one': '{{count}} okunmamış bildirim',
+    'notifications.unreadCount_other': '{{count}} okunmamış bildirim',
+    'notifications.noNotifications': 'Henüz bildirim yok',
+    'notifications.viewAll': 'Tüm Bildirimleri Görüntüle',
     
     // Recommendations
     'recommendations.noRecommendations': 'Henüz Öneri Yok',
