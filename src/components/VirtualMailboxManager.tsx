@@ -128,23 +128,25 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           query = query.eq('client_id', clientId);
         }
       } else {
-        // Client view - use provided clientId or get from profile
-        let targetClientId = clientId;
-        
-        if (!targetClientId) {
-          const { data: clientData } = await supabase
+        // Client view - always use provided clientId
+        if (clientId) {
+          query = query.eq('client_id', clientId);
+        } else {
+          // Fallback: get client ID from profile
+          const { data: clientData, error: clientError } = await supabase
             .from('clients')
             .select('id')
             .eq('profile_id', profile?.id)
-            .single();
+            .limit(1);
           
-          if (clientData) {
-            targetClientId = clientData.id;
+          if (clientError || !clientData?.[0]) {
+            console.error('Error fetching client ID for mailbox:', clientError);
+            setItems([]);
+            setLoading(false);
+            return;
           }
-        }
-        
-        if (targetClientId) {
-          query = query.eq('client_id', targetClientId);
+          
+          query = query.eq('client_id', clientData[0].id);
         }
       }
 
@@ -154,6 +156,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       setItems(data || []);
     } catch (error) {
       console.error('Error fetching mailbox items:', error);
+      setItems([]);
     } finally {
       setLoading(false);
     }

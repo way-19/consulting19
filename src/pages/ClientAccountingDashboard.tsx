@@ -136,15 +136,21 @@ const ClientAccountingDashboard = () => {
     console.log('🔍 Step 1: Fetching accounting profile for user:', profile?.id, profile?.email)
     
     // First get the client record
-    const { data: clientData } = await supabase
+    const { data: clientData, error: clientError } = await supabase
       .from('clients')
       .select('id')
       .eq('profile_id', profile?.id)
-      .single();
+      .limit(1);
 
-    console.log('📋 Step 2: Client record lookup result:', clientData)
+    if (clientError) {
+      console.error('❌ Error fetching client:', clientError);
+      return;
+    }
 
-    if (!clientData) {
+    const client = clientData?.[0];
+    console.log('📋 Step 2: Client record lookup result:', client)
+
+    if (!client) {
       console.log('⚠️ No client record found for profile:', profile?.id)
       console.log('🔧 Creating client record automatically...')
       
@@ -160,21 +166,21 @@ const ClientAccountingDashboard = () => {
           progress: 0
         }])
         .select()
-        .single();
+        .limit(1);
       
-      if (clientError) {
+      if (clientError || !newClient?.[0]) {
         console.error('❌ Error creating client record:', clientError);
         return;
       }
       
-      console.log('✅ Client record created:', newClient);
-      setClientId(newClient.id);
+      console.log('✅ Client record created:', newClient[0]);
+      setClientId(newClient[0].id);
       
       // Now create accounting profile
       const { data: newAccountingProfile, error: accountingError } = await supabase
         .from('accounting_clients')
         .insert([{
-          client_id: newClient.id,
+          client_id: newClient[0].id,
           consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
           company_name: 'Georgia Tech Solutions LLC',
           business_type: 'limited_company',
@@ -192,21 +198,21 @@ const ClientAccountingDashboard = () => {
             email
           )
         `)
-        .single();
+        .limit(1);
       
-      if (accountingError) {
+      if (accountingError || !newAccountingProfile?.[0]) {
         console.error('❌ Error creating accounting profile:', accountingError);
         return;
       }
       
-      console.log('✅ Accounting profile created:', newAccountingProfile);
-      setAccountingProfile(newAccountingProfile);
+      console.log('✅ Accounting profile created:', newAccountingProfile[0]);
+      setAccountingProfile(newAccountingProfile[0]);
       return;
     }
 
-    setClientId(clientData.id);
+    setClientId(client.id);
 
-    const { data, error } = await supabase
+    const { data: accountingData, error } = await supabase
       .from('accounting_clients')
       .select(`
         *,
@@ -215,24 +221,24 @@ const ClientAccountingDashboard = () => {
           email
         )
       `)
-      .eq('client_id', clientData.id)
-      .single();
+      .eq('client_id', client.id)
+      .limit(1);
 
-    console.log('💼 Step 3: Accounting profile lookup result:', data)
+    console.log('💼 Step 3: Accounting profile lookup result:', accountingData)
 
     if (error) {
       console.error('❌ Error fetching accounting profile:', error.message, error.code);
       
       if (error.code === 'PGRST116') {
         // No accounting profile found, create one
-      console.log('⚠️ No accounting profile found for client:', clientData.id)
+      console.log('⚠️ No accounting profile found for client:', client.id)
       console.log('🔧 Creating accounting profile automatically...')
       
       // Auto-create accounting profile if missing
       const { data: newAccountingProfile, error: accountingError } = await supabase
         .from('accounting_clients')
         .insert([{
-          client_id: clientData.id,
+          client_id: client.id,
           consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
           company_name: 'Georgia Tech Solutions LLC',
           business_type: 'limited_company',
@@ -250,21 +256,23 @@ const ClientAccountingDashboard = () => {
             email
           )
         `)
-        .single();
+        .limit(1);
       
-      if (accountingError) {
+      if (accountingError || !newAccountingProfile?.[0]) {
         console.error('❌ Error creating accounting profile:', accountingError);
         return;
       }
       return;
       }
       
-      console.log('✅ Accounting profile auto-created:', newAccountingProfile);
-      setAccountingProfile(newAccountingProfile);
+      console.log('✅ Accounting profile auto-created:', newAccountingProfile[0]);
+      setAccountingProfile(newAccountingProfile[0]);
       return;
     }
 
-    setAccountingProfile(data);
+    if (accountingData?.[0]) {
+      setAccountingProfile(accountingData[0]);
+    }
   };
 
   const fetchDocuments = async () => {
@@ -303,24 +311,32 @@ const ClientAccountingDashboard = () => {
 
   const fetchMessages = async () => {
     // First get the client record to get the client_id for accounting_clients
-    const { data: clientData } = await supabase
+    const { data: clientData, error: clientError } = await supabase
       .from('clients')
       .select('id')
       .eq('profile_id', profile?.id)
-      .maybeSingle();
+      .limit(1);
 
-    if (!clientData) return;
+    if (clientError || !clientData?.[0]) {
+      console.error('Error fetching client for messages:', clientError);
+      return;
+    }
+
+    const client = clientData[0];
 
     // Then get the accounting_client record
-    const { data: accountingClientData } = await supabase
+    const { data: accountingClientData, error: accountingError } = await supabase
       .from('accounting_clients')
       .select('id')
-      .eq('client_id', clientData.id)
-      .maybeSingle();
+      .eq('client_id', client.id)
+      .limit(1);
 
-    if (!accountingClientData) return;
+    if (accountingError || !accountingClientData?.[0]) {
+      console.error('Error fetching accounting client for messages:', accountingError);
+      return;
+    }
 
-    const { data, error } = await supabase
+    const { data, error: messageError } = await supabase
       .from('accounting_messages')
       .select(`
         *,
@@ -332,7 +348,7 @@ const ClientAccountingDashboard = () => {
       .eq('recipient_id', profile?.id)
       .order('created_at', { ascending: false });
 
-    if (error) {
+    if (messageError) {
       console.error('Error fetching messages:', error);
       return;
     }
