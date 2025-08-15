@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Globe, Users, TrendingUp, MessageCircle, Clock, DollarSign, Star, AlertTriangle } from 'lucide-react';
+import { ArrowRight, CheckCircle, Globe, Users, TrendingUp, MessageCircle, Clock, DollarSign, Star, AlertTriangle, ChevronDown } from 'lucide-react';
 import { useCountry } from '../hooks/useCountries';
 import { useServices } from '../hooks/useServices';
 import { useBlogPosts } from '../hooks/useBlogPosts';
@@ -408,29 +408,40 @@ const CountryDetailPage = () => {
                   </p>
                 </div>
               ) : countryFaqs.length === 0 ? (
-                <div className="space-y-4">
+                <div className="">
                   {faqs.map((faq, index) => (
-                    <div key={index} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                      <h4 className="font-semibold text-gray-900 text-lg mb-3">{faq.question}</h4>
-                      <p className="text-gray-700 leading-relaxed">
-                        Professional guidance and comprehensive support available for all business formation needs in {country.name}.
-                      </p>
+                    <div key={index} className="border-b border-gray-200 py-4 last:border-b-0">
+                      <details className="group">
+                        <summary className="flex cursor-pointer items-center justify-between text-lg font-semibold text-gray-900 hover:text-purple-600 transition-colors">
+                          {faq.question}
+                          <ChevronDown className="h-5 w-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                        </summary>
+                        <div className="mt-2 text-gray-700 leading-relaxed">
+                          Professional guidance and comprehensive support available for all business formation needs in {country.name}.
+                        </div>
+                      </details>
                     </div>
+
                   ))}
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="">
                   {countryFaqs.slice(0, 5).map((faq) => (
-                    <div key={faq.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                      <h4 className="font-semibold text-gray-900 text-lg mb-3">{faq.question}</h4>
-                      <p className="text-gray-700 leading-relaxed">
-                        {faq.answer || 'Professional guidance and comprehensive support available.'}
-                      </p>
-                      {faq.category && (
-                        <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium mt-3">
-                          {faq.category}
-                        </span>
-                      )}
+                    <div key={faq.id} className="border-b border-gray-200 py-4 last:border-b-0">
+                      <details className="group">
+                        <summary className="flex cursor-pointer items-center justify-between text-lg font-semibold text-gray-900 hover:text-purple-600 transition-colors">
+                          {faq.question}
+                          <ChevronDown className="h-5 w-5 text-gray-500 group-open:rotate-180 transition-transform" />
+                        </summary>
+                        <div className="mt-2 text-gray-700 leading-relaxed">
+                          {faq.answer || 'Professional guidance and comprehensive support available.'}
+                        </div>
+                        {faq.category && (
+                          <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium mt-3">
+                            {faq.category}
+                          </span>
+                        )}
+                      </details>
                     </div>
                   ))}
                 </div>
