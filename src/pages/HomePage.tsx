@@ -6,6 +6,7 @@ import {
   Mail, Eye, Sparkles, MessageSquare, Send
 } from 'lucide-react';
 
+import CountryCard from '../components/ModernCountryCard';
 import { useCountries } from '../hooks/useCountries';
 
 const HomePage = () => {
