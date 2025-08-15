@@ -63,6 +63,103 @@ const ClientDocuments = () => {
   const [selectedRequest, setSelectedRequest] = useState<DocumentWithDetails | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
 
+  // Demo data for testing - remove after migration is working
+  const [demoRequestedDocuments] = useState<DocumentWithDetails[]>([
+    {
+      id: 'demo-req-1',
+      client_id: 'demo-client',
+      name: 'Ağustos 2025 Banka Dökümü',
+      type: 'Bank Statement',
+      category: 'financial',
+      status: 'requested',
+      uploaded_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      is_request: true,
+      requested_by_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
+      due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      notes: 'Ağustos ayı için tüm banka hesap hareketlerini içeren resmi banka dökümü gerekli.',
+      consultant: {
+        full_name: 'Nino Kvaratskhelia',
+        email: 'georgia@consulting19.com'
+      }
+    },
+    {
+      id: 'demo-req-2',
+      client_id: 'demo-client',
+      name: 'Şirket Gider Faturaları',
+      type: 'Expense Receipts',
+      category: 'business',
+      status: 'requested',
+      uploaded_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      is_request: true,
+      requested_by_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
+      due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+      notes: 'Ağustos ayında yapılan tüm şirket giderlerinin faturalarını yükleyin.',
+      consultant: {
+        full_name: 'Nino Kvaratskhelia',
+        email: 'georgia@consulting19.com'
+      }
+    },
+    {
+      id: 'demo-req-3',
+      client_id: 'demo-client',
+      name: 'Çalışan Bordro Bilgileri',
+      type: 'Payroll Documents',
+      category: 'business',
+      status: 'requested',
+      uploaded_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      is_request: true,
+      requested_by_consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
+      due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      notes: 'Ağustos ayı çalışan bordro bilgileri ve SGK ödemeleri.',
+      consultant: {
+        full_name: 'Nino Kvaratskhelia',
+        email: 'georgia@consulting19.com'
+      }
+    }
+  ]);
+
+  // Demo uploaded documents
+  const [demoUploadedDocuments] = useState<DocumentWithDetails[]>([
+    {
+      id: 'demo-doc-1',
+      client_id: 'demo-client',
+      name: 'Temmuz 2025 Banka Dökümü',
+      type: 'Bank Statement',
+      category: 'financial',
+      status: 'approved',
+      file_url: 'https://example.com/documents/july-bank-statement.pdf',
+      file_size: 245760,
+      uploaded_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      reviewed_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+      is_request: false
+    },
+    {
+      id: 'demo-doc-2',
+      client_id: 'demo-client',
+      name: 'Şirket Kuruluş Belgesi',
+      type: 'Company Registration',
+      category: 'business',
+      status: 'approved',
+      file_url: 'https://example.com/documents/company-registration.pdf',
+      file_size: 512000,
+      uploaded_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      reviewed_at: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
+      is_request: false
+    },
+    {
+      id: 'demo-doc-3',
+      client_id: 'demo-client',
+      name: 'Vergi Levhası',
+      type: 'Tax Certificate',
+      category: 'business',
+      status: 'needs_revision',
+      file_url: 'https://example.com/documents/tax-certificate.pdf',
+      file_size: 128000,
+      uploaded_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      reviewed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      is_request: false
+    }
+  ]);
   const [uploadForm, setUploadForm] = useState({
     name: '',
     type: '',
