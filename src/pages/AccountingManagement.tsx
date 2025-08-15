@@ -963,7 +963,7 @@ const AccountingManagement = () => {
                       value={clientForm.company_name}
                       onChange={(e) => setClientForm(prev => ({ ...prev, company_name: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Şirket adını girin"
+                      placeholder="Enter your company name"
                     />
                   </div>
 
@@ -976,7 +976,7 @@ const AccountingManagement = () => {
                       value={clientForm.tax_number}
                       onChange={(e) => setClientForm(prev => ({ ...prev, tax_number: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Vergi numarasını girin"
+                      placeholder="Enter your tax number"
                     />
                   </div>
 
