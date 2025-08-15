@@ -111,14 +111,23 @@ const ClientAccountingDashboard = () => {
 
   const fetchData = async () => {
     try {
+      console.log('🚀 fetchData: Starting...');
       await fetchAccountingProfile();
+      console.log('✅ fetchData: fetchAccountingProfile completed');
+      
+      // Wait a bit for state to update, then fetch other data
       setTimeout(async () => {
+        console.log('🔄 fetchData: Starting secondary data fetch...');
         await Promise.all([fetchDocuments(), fetchInvoices(), fetchMessages()]);
-      }, 500);
+        console.log('✅ fetchData: All secondary data fetched');
+      }, 100);
     } catch (error) {
       console.error('💥 Error in fetchData:', error);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        console.log('🏁 fetchData: Setting loading to false');
+        setLoading(false);
+      }, 200);
     }
   };
 
