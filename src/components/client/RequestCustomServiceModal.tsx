@@ -155,7 +155,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Service Title *
+              Hizmet Başlığı *
             </label>
             <input
               type="text"
@@ -163,14 +163,14 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="e.g., Company formation consultation in Germany"
+              placeholder="Örn: Almanya'da şirket kurma danışmanlığı"
             />
           </div>
 
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Detaylı Açıklama *
+              Detailed Description *
             </label>
             <textarea
               required
@@ -178,7 +178,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="İhtiyacınız olan hizmeti detaylı olarak açıklayın..."
+              placeholder="Describe the service you need in detail..."
             />
           </div>
 
