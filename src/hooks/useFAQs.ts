@@ -36,6 +36,8 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; c
         return;
       }
 
+      console.log('🔍 useFAQs: Fetching FAQs with filters:', filters);
+
       let query = supabase
         .from('faqs')
         .select('*')
@@ -43,27 +45,38 @@ export const useFAQs = (filters?: { isActive?: boolean; languageCode?: string; c
 
       if (filters?.isActive !== undefined) {
         query = query.eq('is_active', filters.isActive);
+        console.log('📋 useFAQs: Filtering by is_active:', filters.isActive);
       }
       if (filters?.languageCode) {
         query = query.eq('language_code', filters.languageCode);
+        console.log('🌐 useFAQs: Filtering by language:', filters.languageCode);
       }
       if (filters?.countryId) {
         query = query.eq('country_id', filters.countryId);
+        console.log('🏳️ useFAQs: Filtering by country_id:', filters.countryId);
       }
       if (filters?.category) {
         query = query.eq('category', filters.category);
+        console.log('📂 useFAQs: Filtering by category:', filters.category);
       }
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ useFAQs: Database error:', error);
+        throw error;
+      }
+      
+      console.log('✅ useFAQs: Successfully fetched', data?.length || 0, 'FAQs');
+      console.log('📊 useFAQs: FAQ data sample:', data?.slice(0, 2));
+      
       setFaqs(data || []);
     } catch (err) {
       console.error('Error fetching FAQs:', err);
       // Gracefully handle connection errors
       console.warn('FAQs unavailable, using fallback');
       setFaqs([]);
-      setError(null); // Don't show error to user, just use empty state
+      setError(err instanceof Error ? err.message : 'Failed to load FAQs');
     } finally {
       setLoading(false);
     }

@@ -12,10 +12,21 @@ const CountryDetailPage = () => {
   const { country, loading, error } = useCountry(slug || '');
   const { services: countryServices, loading: servicesLoading } = useServices(true);
   const { data: countryBlogPosts, loading: blogLoading } = useBlogPosts(country?.id);
-  const { faqs: countryFaqs, loading: faqLoading } = useFAQs({ 
+  const { faqs: countryFaqs, loading: faqLoading, error: faqError } = useFAQs({ 
     isActive: true, 
-    countryId: country?.id 
+    countryId: country?.id,
+    languageCode: 'en'
   });
+
+  // Debug logging
+  React.useEffect(() => {
+    if (country?.id) {
+      console.log('🔍 CountryDetailPage: Loading FAQs for country:', country.name, country.id);
+      console.log('📊 FAQ loading state:', faqLoading);
+      console.log('📋 FAQ data:', countryFaqs);
+      console.log('❌ FAQ error:', faqError);
+    }
+  }, [country, countryFaqs, faqLoading, faqError]);
 
   if (loading) {
     return (
@@ -380,22 +391,40 @@ const CountryDetailPage = () => {
               {faqLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  <span className="ml-2 text-gray-600">Loading FAQs...</span>
+                </div>
+              ) : faqError ? (
+                <div className="bg-red-50 rounded-lg border border-red-200 p-8 text-center">
+                  <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-4" />
+                  <p className="text-red-600">Error loading FAQs: {faqError}</p>
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                  >
+                    Retry
+                  </button>
                 </div>
               ) : countryFaqs.length === 0 ? (
                 <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
                   <CheckCircle className="h-8 w-8 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No FAQs available for {country.name} yet.</p>
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">No FAQs Available</h4>
+                  <p className="text-gray-600 mb-4">No FAQs found for {country.name}.</p>
+                  <p className="text-sm text-gray-500">Country ID: {country?.id}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {countryFaqs.slice(0, 5).map((faq) => (
-                    <div key={faq.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
-                      <button className="w-full text-left flex items-center justify-between group">
-                        <span className="font-medium text-gray-900">{faq.question}</span>
-                        <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
-                      </button>
-                      <div className="mt-3 text-sm text-gray-600 leading-relaxed">
-                        {faq.answer}
+                    <div key={faq.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                      <div className="mb-3">
+                        <h4 className="font-semibold text-gray-900 text-lg mb-2">{faq.question}</h4>
+                        {faq.category && (
+                          <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                            {faq.category}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-gray-700 leading-relaxed">
+                        {faq.answer || 'No answer provided yet.'}
                       </div>
                     </div>
                   ))}
