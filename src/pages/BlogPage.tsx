@@ -6,8 +6,6 @@ import { useBlogPosts, BlogPost as BlogItem } from '../hooks/useBlogPosts'; // R
 const BlogPage = () => {
   const { posts: blogPosts, loading, error } = useBlogPosts(); // Fetch all published posts
 
-  // Filter posts to only show those by consultants
-  const postsToDisplay = blogPosts; // Display all fetched posts
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -49,7 +47,7 @@ const BlogPage = () => {
       {/* Blog Posts Grid */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {consultantPosts.length === 0 ? (
+          {blogPosts.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-lg shadow-md">
               <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-gray-900 mb-2">No Blog Posts Yet</h3>
@@ -57,7 +55,7 @@ const BlogPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {postsToDisplay.map((post) => (
+              {blogPosts.map((post) => (
                 <div key={post.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
                   {post.cover_image && (
                     <img

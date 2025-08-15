@@ -30,8 +30,7 @@ export function useBlogPosts() {
         .from('blog_posts')
         .select(select)
         .eq('is_published', true)
-        .order('published_at', { ascending: false })
-        // .limit(limit); // Removed limit to fetch all posts
+        .order('published_at', { ascending: false });
 
       if (error) throw error;
       return (data as BlogPost[]) ?? [];
@@ -78,7 +77,7 @@ export function useBlogPosts() {
     return () => {
       ignore = true;
     };
-  }, [limit]);
+  }, []);
 
   // Dışarıya "posts" olarak döndür.
   return { posts: items, loading, error };
