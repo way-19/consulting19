@@ -344,7 +344,7 @@ const ConsultantCountryManagement = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const filteredServices = (services || []).filter(service => {
+  const filteredServices = (allServices || []).filter(service => {
     const matchesSearch = service.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || 
       (statusFilter === 'active' && service.is_active) ||
