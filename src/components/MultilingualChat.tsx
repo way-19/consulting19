@@ -273,9 +273,14 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-lg">
               {recipientInfo.avatar}
-                <span>Messages will be automatically translated for recipient</span>
+            </div>
             <div>
+              <h3 className="font-semibold text-gray-900">{getChatTitle()}</h3>
+              <div className="flex items-center space-x-2 text-xs text-gray-500">
+                <span>Messages will be automatically translated for recipient</span>
+                <span>•</span>
                 <span>Secure end-to-end encryption</span>
+              </div>
               <p className="text-sm text-gray-500">{recipientInfo.name} • {recipientInfo.role}</p>
             </div>
           </div>
@@ -361,7 +366,7 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
                       </div>
                       <p className={`text-sm ${
                         isOwnMessage ? 'text-blue-100' : 'text-gray-600'
-                          {typingUsers.join(', ')} typing...
+                      }`}>
                         {message.translatedText}
                       </p>
                     </div>
@@ -425,7 +430,7 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={`Type your message in ${selectedLang?.name}...`}
+                placeholder={\`Type your message in ${selectedLang?.name}...`}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 rows={2}
               />
