@@ -174,7 +174,7 @@ const ClientDocuments = () => {
     approved: 0,
     rejected: 0,
     needsRevision: 0,
-    requestedDocuments: 0
+    requestedDocuments: demoRequestedDocuments.length
   });
 
   const documentCategories = [
@@ -188,6 +188,12 @@ const ClientDocuments = () => {
   useEffect(() => {
     if (profile?.id) {
       fetchData();
+    } else {
+      // Use demo data when no profile
+      setDocuments(demoUploadedDocuments);
+      setRequestedDocuments(demoRequestedDocuments);
+      calculateStats(demoUploadedDocuments);
+      setLoading(false);
     }
   }, [profile]);
 
@@ -206,6 +212,11 @@ const ClientDocuments = () => {
   };
 
   const fetchDocuments = async () => {
+    // Always use demo data for now  
+    setDocuments(demoUploadedDocuments);
+    calculateStats(demoUploadedDocuments);
+    return;
+    
     // Get client record first
     const { data: clientData } = await supabase
       .from('clients')
@@ -230,6 +241,10 @@ const ClientDocuments = () => {
   };
 
   const fetchRequestedDocuments = async () => {
+    // Always use demo data for now
+    setRequestedDocuments(demoRequestedDocuments);
+    return;
+    
     // Get client record first
     const { data: clientData } = await supabase
       .from('clients')
@@ -264,7 +279,7 @@ const ClientDocuments = () => {
       approved: documentsData.filter(d => d.status === 'approved').length,
       rejected: documentsData.filter(d => d.status === 'rejected').length,
       needsRevision: documentsData.filter(d => d.status === 'needs_revision').length,
-      requestedDocuments: requestedDocuments.length
+      requestedDocuments: demoRequestedDocuments.length
     };
     setStats(stats);
   };
