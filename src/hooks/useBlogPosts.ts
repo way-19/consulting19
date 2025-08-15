@@ -32,6 +32,8 @@ export function useBlogPosts(countryId?: string) {
     if (countryId) {
       query = query.eq('country_id', countryId);
     }
+  }
+  )
 
   return { posts, loading, error };
 }
