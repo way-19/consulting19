@@ -1,6 +1,7 @@
 // src/pages/ClientAccountingDashboard.tsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import ClientRecommendations from '../components/client/ClientRecommendations';
