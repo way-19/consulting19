@@ -471,181 +471,183 @@ const ClientAccountingDashboard = () => {
         </div>
       </div>
 
-      {/* Body */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <UpcomingPayments clientId={clientId} />
-        </div>
-
-        {/* Request Custom Service */}
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-8 border border-purple-200 mb-8">
-          <div className="text-center">
-            <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Plus className="h-8 w-8 text-purple-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Request Custom Service</h2>
-            <p className="text-lg text-gray-600 mb-6">Need a specialized service? Request a custom solution from your consultant.</p>
-            <button
-              onClick={() => setShowRequestModal(true)}
-              className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 mx-auto shadow-lg"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Request Custom Service</span>
-            </button>
+          {/* Upcoming Payments */}
+          <div className="mb-8">
+            <UpcomingPayments clientId={clientId} />
           </div>
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
+          {/* Request Custom Service */}
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-8 border border-purple-200 mb-8">
+            <div className="text-center">
+              <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <Plus className="h-8 w-8 text-purple-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Request Custom Service</h2>
+              <p className="text-lg text-gray-600 mb-6">Need a specialized service? Request a custom solution from your consultant.</p>
+              <button
+                onClick={() => setShowRequestModal(true)}
+                className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 mx-auto shadow-lg"
+              >
+                <Plus className="h-5 w-5" />
+                <span>Request Custom Service</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Pending Documents</p>
+                  <p className="text-3xl font-bold text-yellow-600">{pendingDocuments}</p>
+                </div>
+                <Clock className="h-8 w-8 text-yellow-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Overdue Documents</p>
+                  <p className="text-3xl font-bold text-red-600">{overdueDocuments}</p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-red-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Unpaid Invoices</p>
+                  <p className="text-3xl font-bold text-orange-600">{unpaidInvoices}</p>
+                </div>
+                <DollarSign className="h-8 w-8 text-orange-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">New Messages</p>
+                  <p className="text-3xl font-bold text-blue-600">{unreadMessages}</p>
+                </div>
+                <MessageSquare className="h-8 w-8 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Company Info */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending Documents</p>
-                <p className="text-3xl font-bold text-yellow-600">{pendingDocuments}</p>
+                <p className="text-sm text-gray-600">Company Name</p>
+                <p className="font-medium text-gray-900">{accountingProfile.company_name}</p>
               </div>
-              <Clock className="h-8 w-8 text-yellow-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Overdue Documents</p>
-                <p className="text-3xl font-bold text-red-600">{overdueDocuments}</p>
+                <p className="text-sm text-gray-600">Business Type</p>
+                <p className="font-medium text-gray-900">{accountingProfile.business_type.toUpperCase()}</p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-red-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Unpaid Invoices</p>
-                <p className="text-3xl font-bold text-orange-600">{unpaidInvoices}</p>
+                <p className="text-sm text-gray-600">Service Package</p>
+                <p className="font-medium text-gray-900">{accountingProfile.service_package}</p>
               </div>
-              <DollarSign className="h-8 w-8 text-orange-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">New Messages</p>
-                <p className="text-3xl font-bold text-blue-600">{unreadMessages}</p>
+                <p className="text-sm text-gray-600">Monthly Fee</p>
+                <p className="font-medium text-gray-900">${accountingProfile.monthly_fee}</p>
               </div>
-              <MessageSquare className="h-8 w-8 text-blue-600" />
             </div>
+            {accountingProfile.next_deadline && (
+              <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-5 w-5 text-orange-600" />
+                  <span className="text-orange-800 font-medium">
+                    Next Deadline: {new Date(accountingProfile.next_deadline).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* Company Info */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Company Name</p>
-              <p className="font-medium text-gray-900">{accountingProfile.company_name}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Business Type</p>
-              <p className="font-medium text-gray-900">{accountingProfile.business_type.toUpperCase()}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Service Package</p>
-              <p className="font-medium text-gray-900">{accountingProfile.service_package}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Monthly Fee</p>
-              <p className="font-medium text-gray-900">${accountingProfile.monthly_fee}</p>
-            </div>
-          </div>
-          {accountingProfile.next_deadline && (
-            <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-orange-600" />
-                <span className="text-orange-800 font-medium">
-                  Next Deadline: {new Date(accountingProfile.next_deadline).toLocaleDateString()}
-                </span>
+          {/* AI Recommendations (static UI) - Moved to bottom */}
+          <div className="mt-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <Lightbulb className="h-5 w-5 text-yellow-500" />
+                  <h2 className="text-lg font-semibold text-gray-900">AI-Powered Recommendations</h2>
+                  <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">3 new</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">Personalized recommendations based on your business profile and goals</p>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* AI Recommendations (static UI) - Moved to bottom */}
-        <div className="mt-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center space-x-2">
-                <Lightbulb className="h-5 w-5 text-yellow-500" />
-                <h2 className="text-lg font-semibold text-gray-900">AI-Powered Recommendations</h2>
-                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">3 new</span>
-              </div>
-              <p className="text-sm text-gray-600 mt-1">Personalized recommendations based on your business profile and goals</p>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div className="border-l-4 border-l-blue-500 bg-blue-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-white rounded-lg p-2 shadow-sm">
-                      <Star className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-semibold text-gray-900">Estonia E-Residency Program</h4>
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="border-l-4 border-l-blue-500 bg-blue-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-white rounded-lg p-2 shadow-sm">
+                        <Star className="h-5 w-5 text-purple-600" />
                       </div>
-                      <p className="text-sm text-gray-700 mb-2">
-                        Based on your tech business profile, Estonia's e-Residency could provide significant tax advantages and EU market access.
-                      </p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span>AI Recommendation</span>
-                        <span>•</span>
-                        <span>95% confidence</span>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h4 className="font-semibold text-gray-900">Estonia E-Residency Program</h4>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2">
+                          Based on your tech business profile, Estonia's e-Residency could provide significant tax advantages and EU market access.
+                        </p>
+                        <div className="flex items-center space-x-4 text-xs text-gray-500">
+                          <span>AI Recommendation</span>
+                          <span>•</span>
+                          <span>95% confidence</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-l-4 border-l-green-500 bg-green-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-white rounded-lg p-2 shadow-sm">
+                        <TrendingUp className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">Tax Optimization Service</h4>
+                        <p className="text-sm text-gray-700 mb-2">Our analysis shows you could save 15-20% on taxes with proper structure optimization.</p>
+                        <div className="flex items-center space-x-4 text-xs text-gray-500">
+                          <span>Service Recommendation</span>
+                          <span>•</span>
+                          <span>Potential savings: $3,000/year</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-l-4 border-l-purple-500 bg-purple-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-white rounded-lg p-2 shadow-sm">
+                        <Globe className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">UAE Free Zone Expansion</h4>
+                        <p className="text-sm text-gray-700 mb-2">Consider expanding to UAE for Middle East market access with 0% corporate tax benefits.</p>
+                        <div className="flex items-center space-x-4 text-xs text-gray-500">
+                          <span>Market Opportunity</span>
+                          <span>•</span>
+                          <span>High growth potential</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="border-l-4 border-l-green-500 bg-green-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-white rounded-lg p-2 shadow-sm">
-                      <TrendingUp className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">Tax Optimization Service</h4>
-                      <p className="text-sm text-gray-700 mb-2">Our analysis shows you could save 15-20% on taxes with proper structure optimization.</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span>Service Recommendation</span>
-                        <span>•</span>
-                        <span>Potential savings: $3,000/year</span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="mt-6 text-center">
+                  <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">View All Recommendations (5) →</button>
                 </div>
-
-                <div className="border-l-4 border-l-purple-500 bg-purple-50 rounded-lg p-4 transition-all duration-200 hover:shadow-md cursor-pointer">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-white rounded-lg p-2 shadow-sm">
-                      <Globe className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">UAE Free Zone Expansion</h4>
-                      <p className="text-sm text-gray-700 mb-2">Consider expanding to UAE for Middle East market access with 0% corporate tax benefits.</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span>Market Opportunity</span>
-                        <span>•</span>
-                        <span>High growth potential</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 text-center">
-                <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">View All Recommendations (5) →</button>
               </div>
             </div>
           </div>
+        </div>
         </div>
 
         {/* Tabs */}
