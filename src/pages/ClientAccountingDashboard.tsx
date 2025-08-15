@@ -26,6 +26,9 @@ interface ClientAccountingProfile {
   monthly_fee: number;
   status: string;
   next_deadline?: string;
+  virtual_address?: string;
+  virtual_address_service_start_date?: string;
+  virtual_address_next_payment_date?: string;
   consultant?: { full_name: string; email: string; };
 }
 
@@ -315,7 +318,7 @@ const ClientAccountingDashboard = () => {
         {/* Company Info */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <p className="text-sm text-gray-600">Company Name</p>
               <p className="font-medium text-gray-900">{accountingProfile.company_name}</p>
@@ -332,7 +335,26 @@ const ClientAccountingDashboard = () => {
               <p className="text-sm text-gray-600">Monthly Fee</p>
               <p className="font-medium text-gray-900">${accountingProfile.monthly_fee}</p>
             </div>
+            {accountingProfile.virtual_address && (
+              <div className="md:col-span-2 lg:col-span-4">
+                <p className="text-sm text-gray-600">Virtual Address</p>
+                <p className="font-medium text-gray-900">{accountingProfile.virtual_address}</p>
+              </div>
+            )}
           </div>
+          {accountingProfile.virtual_address_next_payment_date && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5 text-blue-600" />
+                <span className="text-blue-800 font-medium">
+                  Virtual Address Service - Next Payment Due: {new Date(accountingProfile.virtual_address_next_payment_date).toLocaleDateString()}
+                </span>
+              </div>
+              <p className="text-sm text-blue-700 mt-1">
+                Service started: {accountingProfile.virtual_address_service_start_date ? new Date(accountingProfile.virtual_address_service_start_date).toLocaleDateString() : 'Not specified'}
+              </p>
+            </div>
+          )}
           {accountingProfile.next_deadline && (
             <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
               <div className="flex items-center space-x-2">

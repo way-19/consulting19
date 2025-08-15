@@ -48,6 +48,9 @@ interface AccountingClient {
   next_deadline?: string;
   reminder_frequency: number;
   preferred_language?: string;
+  virtual_address?: string;
+  virtual_address_service_start_date?: string;
+  virtual_address_next_payment_date?: string;
   client?: {
     profile_id: string;
     profile?: {
@@ -139,7 +142,10 @@ const AccountingManagement = () => {
     status: 'active',
     next_deadline: '',
     reminder_frequency: 7,
-    preferred_language: 'en'
+    preferred_language: 'en',
+    virtual_address: '',
+    virtual_address_service_start_date: '',
+    virtual_address_next_payment_date: ''
   });
 
   // Stats
@@ -297,7 +303,10 @@ const AccountingManagement = () => {
       status: client.status,
       next_deadline: client.next_deadline ? new Date(client.next_deadline).toISOString().split('T')[0] : '',
       reminder_frequency: client.reminder_frequency,
-      preferred_language: client.preferred_language || 'en'
+      preferred_language: client.preferred_language || 'en',
+      virtual_address: client.virtual_address || '',
+      virtual_address_service_start_date: client.virtual_address_service_start_date ? new Date(client.virtual_address_service_start_date).toISOString().split('T')[0] : '',
+      virtual_address_next_payment_date: client.virtual_address_next_payment_date ? new Date(client.virtual_address_next_payment_date).toISOString().split('T')[0] : ''
     });
     setShowClientModal(true);
   };
@@ -342,7 +351,10 @@ const AccountingManagement = () => {
       status: 'active',
       next_deadline: '',
       reminder_frequency: 7,
-      preferred_language: 'en'
+      preferred_language: 'en',
+      virtual_address: '',
+      virtual_address_service_start_date: '',
+      virtual_address_next_payment_date: ''
     });
     setEditingClient(null);
     setShowClientModal(false);
@@ -586,8 +598,21 @@ const AccountingManagement = () => {
                       </>
                     )}
                   </select>
+                  {client.virtual_address && (
+                    <div>
+                      <span className="font-medium">Virtual Address:</span> {client.virtual_address}
+                    </div>
+                  )}
                 </div>
 
+                {client.virtual_address_next_payment_date && (
+                  <div className="mt-2 flex items-center space-x-2">
+                    <Calendar className="h-4 w-4 text-purple-500" />
+                    <span className="text-sm text-purple-600 font-medium">
+                      Virtual Address Payment Due: {new Date(client.virtual_address_next_payment_date).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
                 {activeTab === 'documents' && (
                   <select
                     value={priorityFilter}
@@ -1066,6 +1091,52 @@ const AccountingManagement = () => {
                 </div>
               </div>
 
+              {/* Virtual Address Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Virtual Address Service</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Virtual Address
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={clientForm.virtual_address}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, virtual_address: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Enter virtual address if provided"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Service Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={clientForm.virtual_address_service_start_date}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, virtual_address_service_start_date: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Next Payment Date
+                    </label>
+                    <input
+                      type="date"
+                      value={clientForm.virtual_address_next_payment_date}
+                      onChange={(e) => setClientForm(prev => ({ ...prev, virtual_address_next_payment_date: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Virtual address payments: First 6 months prepaid, then every 6 months
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Current Package Details */}
               <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                 <h4 className="font-medium text-blue-900 mb-2">Package Details</h4>
@@ -1079,6 +1150,11 @@ const AccountingManagement = () => {
                   <div>
                     <span className="font-medium">Period:</span> {clientForm.accounting_period}
                   </div>
+                  {clientForm.virtual_address && (
+                    <div className="md:col-span-3">
+                      <span className="font-medium">Virtual Address:</span> {clientForm.virtual_address}
+                    </div>
+                  )}
                 </div>
               </div>
 
