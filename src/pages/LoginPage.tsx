@@ -330,33 +330,64 @@ const LoginPage = () => {
         </div>
 
         {/* Quick Login Credentials */}
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <h3 className="text-sm font-medium text-blue-800 mb-3">🏢 Test Credentials</h3>
-          <div className="space-y-2 text-xs">
-            <div className="bg-white rounded p-2">
-              <strong>Admin:</strong> admin@consulting19.com / SecureAdmin2025!
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-sm">
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="bg-blue-100 rounded-full p-2">
+              <User className="h-4 w-4 text-blue-600" />
             </div>
-            <div className="bg-white rounded p-2">
-              <strong>Consultant:</strong> georgia@consulting19.com / GeorgiaConsult2025!
+            <h3 className="text-sm font-semibold text-blue-900">Demo Account Credentials</h3>
+          </div>
+          <div className="space-y-3 text-xs">
+            <div className="bg-white rounded-lg p-3 border border-blue-100 hover:shadow-sm transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-gray-900">Platform Administrator</p>
+                  <p className="text-blue-600">admin@consulting19.com</p>
+                </div>
+                <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">ADMIN</span>
+              </div>
+              <p className="text-gray-600 mt-1 font-mono">SecureAdmin2025!</p>
             </div>
-            <div className="bg-white rounded p-2">
-              <strong>Client:</strong> client.georgia@consulting19.com / ClientGeorgia2025!
+            
+            <div className="bg-white rounded-lg p-3 border border-blue-100 hover:shadow-sm transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-gray-900">Georgia Specialist</p>
+                  <p className="text-blue-600">georgia@consulting19.com</p>
+                </div>
+                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">CONSULTANT</span>
+              </div>
+              <p className="text-gray-600 mt-1 font-mono">GeorgiaConsult2025!</p>
+            </div>
+            
+            <div className="bg-white rounded-lg p-3 border border-blue-100 hover:shadow-sm transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-gray-900">Test Client</p>
+                  <p className="text-blue-600">client.georgia@consulting19.com</p>
+                </div>
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">CLIENT</span>
+              </div>
+              <p className="text-gray-600 mt-1 font-mono">ClientGeorgia2025!</p>
             </div>
           </div>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3 animate-pulse">
                 <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-                <span className="text-sm text-red-700">{error}</span>
+                <div>
+                  <p className="text-sm font-medium text-red-800">Login Failed</p>
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                 Email Address
               </label>
               <div className="relative">
@@ -369,14 +400,14 @@ const LoginPage = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
                   placeholder="Enter your email"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -389,13 +420,13 @@ const LoginPage = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -451,10 +482,10 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={isButtonDisabled}
-              className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+              className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 transform ${
                 isButtonDisabled
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-purple-600 text-white hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2'
+                  : 'bg-purple-600 text-white hover:bg-purple-700 hover:scale-105 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-lg hover:shadow-xl'
               }`}
             >
               {loading ? 'Signing in...' : 'Sign In'}

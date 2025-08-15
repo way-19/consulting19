@@ -44,6 +44,7 @@ const MyProfilePage = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -187,31 +188,37 @@ const MyProfilePage = () => {
     if (!file) return;
 
     // Check file size (5MB limit for avatars)
-    console.log('MyProfilePage: Attempting to upload avatar with size:', file.size, 'bytes');
-    console.log('MyProfilePage: 50MB limit in bytes:', 50 * 1024 * 1024);
+    const maxSize = 5 * 1024 * 1024; // 5MB
     
-    if (file.size > 50 * 1024 * 1024) {
-      console.log('MyProfilePage: File size exceeds 50MB limit. Rejecting upload.');
-      setMessage({ type: 'error', text: 'Avatar image must be less than 50MB.' });
+    if (file.size > maxSize) {
+      setMessage({ type: 'error', text: 'Avatar image must be less than 5MB. Please compress your image.' });
+      return;
+    }
+
+    // Check file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      setMessage({ type: 'error', text: 'Please upload a valid image file (JPG, PNG, or GIF).' });
       return;
     }
 
     try {
-      console.log('MyProfilePage: File passed size check, proceeding with upload...');
-      setSaving(true);
+      setUploadingAvatar(true);
+      setMessage(null);
       
       // In a real implementation, you would upload to Supabase Storage
       // For demo purposes, we'll simulate the upload
-      const mockAvatarUrl = `https://example.com/avatars/${Date.now()}-${file.name}`;
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate upload delay
+      
+      const mockAvatarUrl = `https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150`;
       
       setProfileForm(prev => ({ ...prev, avatar_url: mockAvatarUrl }));
-      setMessage({ type: 'success', text: 'Avatar uploaded successfully!' });
+      setMessage({ type: 'success', text: 'Avatar uploaded successfully! Don\'t forget to save your changes.' });
     } catch (error) {
-      console.error('MyProfilePage: Error during avatar upload:', error);
       console.error('Error uploading avatar:', error);
-      setMessage({ type: 'error', text: 'Failed to upload avatar.' });
+      setMessage({ type: 'error', text: 'Failed to upload avatar. Please try again.' });
     } finally {
-      setSaving(false);
+      setUploadingAvatar(false);
     }
   };
 
@@ -308,30 +315,40 @@ const MyProfilePage = () => {
                 {/* Avatar Section */}
                 <div className="flex items-center space-x-6">
                   <div className="relative">
-                    <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                    <div className="w-32 h-32 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg border-4 border-white">
                       {profileForm.avatar_url ? (
                         <img 
                           src={profileForm.avatar_url} 
                           alt="Avatar" 
-                          className="w-24 h-24 rounded-full object-cover"
+                          className="w-32 h-32 rounded-full object-cover"
                         />
                       ) : (
                         (profileForm.full_name || profile.email)[0].toUpperCase()
                       )}
                     </div>
-                    <label className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
-                      <Camera className="h-4 w-4 text-gray-600" />
+                    <label className="absolute bottom-0 right-0 bg-white rounded-full p-3 shadow-lg border-2 border-gray-200 cursor-pointer hover:bg-gray-50 transition-all duration-200 transform hover:scale-110">
+                      {uploadingAvatar ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+                      ) : (
+                        <Camera className="h-5 w-5 text-gray-600" />
+                      )}
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/jpg,image/png,image/gif"
                         onChange={handleAvatarUpload}
                         className="hidden"
+                        disabled={uploadingAvatar}
                       />
                     </label>
                   </div>
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">Profile Picture</h3>
-                    <p className="text-sm text-gray-600">Upload a new avatar image (max 5MB)</p>
+                    <h3 className="text-xl font-semibold text-gray-900">Profile Picture</h3>
+                    <p className="text-sm text-gray-600 mb-2">Upload a new avatar image</p>
+                    <div className="text-xs text-gray-500 space-y-1">
+                      <p>• Maximum size: 5MB</p>
+                      <p>• Supported formats: JPG, PNG, GIF</p>
+                      <p>• Recommended: Square images work best</p>
+                    </div>
                   </div>
                 </div>
 
@@ -406,24 +423,49 @@ const MyProfilePage = () => {
                 </div>
 
                 {/* Role Information (Read-only) */}
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <h4 className="font-medium text-gray-900 mb-3">Account Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                    <Shield className="h-5 w-5 text-purple-600" />
+                    <span>Account Information</span>
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
                     <div>
-                      <span className="text-gray-600">Role:</span>
-                      <p className="font-medium text-gray-900">{profile.role}</p>
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <span className="text-gray-600 block mb-1">Account Role:</span>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            profile.role === 'admin' ? 'bg-red-100 text-red-800' :
+                            profile.role === 'consultant' ? 'bg-green-100 text-green-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {profile.role.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Account Created:</span>
-                      <p className="font-medium text-gray-900">
-                        {new Date(profile.created_at).toLocaleDateString()}
-                      </p>
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <span className="text-gray-600 block mb-1">Member Since:</span>
+                        <p className="font-medium text-gray-900">
+                          {new Date(profile.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Last Updated:</span>
-                      <p className="font-medium text-gray-900">
-                        {new Date(profile.updated_at).toLocaleDateString()}
-                      </p>
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <span className="text-gray-600 block mb-1">Last Updated:</span>
+                        <p className="font-medium text-gray-900">
+                          {new Date(profile.updated_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -456,12 +498,14 @@ const MyProfilePage = () => {
                 <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
                   <div className="flex items-center space-x-2 mb-2">
                     <Shield className="h-5 w-5 text-yellow-600" />
-                    <h4 className="font-medium text-yellow-900">Password Security</h4>
+                    <h4 className="font-medium text-yellow-900">Password Security Guidelines</h4>
                   </div>
-                  <p className="text-sm text-yellow-800">
-                    Choose a strong password with at least 6 characters. Include uppercase, lowercase, 
-                    numbers, and special characters for better security.
-                  </p>
+                  <div className="text-sm text-yellow-800 space-y-1">
+                    <p>• Minimum 6 characters (8+ recommended)</p>
+                    <p>• Include uppercase and lowercase letters</p>
+                    <p>• Add numbers and special characters</p>
+                    <p>• Avoid common words or personal information</p>
+                  </div>
                 </div>
 
                 <div className="space-y-4">
@@ -627,39 +671,56 @@ const MyProfilePage = () => {
 
                 {/* Notification Preferences */}
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-4">Notification Preferences</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3">
+                  <h4 className="font-semibold text-gray-900 mb-6 flex items-center space-x-2">
+                    <Bell className="h-5 w-5 text-purple-600" />
+                    <span>Notification Preferences</span>
+                  </h4>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                      <div className="flex items-center space-x-3">
+                        <Mail className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="font-medium text-gray-900">Email Notifications</p>
+                          <p className="text-sm text-gray-600">Receive important updates via email</p>
+                        </div>
+                      </div>
                       <input
                         type="checkbox"
                         id="email_notifications"
                         defaultChecked
-                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                        className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                       />
-                      <label htmlFor="email_notifications" className="text-sm text-gray-700">
-                        Email notifications for important updates
-                      </label>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    
+                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                      <div className="flex items-center space-x-3">
+                        <Bell className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="font-medium text-gray-900">Task Reminders</p>
+                          <p className="text-sm text-gray-600">Get notified about deadlines and tasks</p>
+                        </div>
+                      </div>
                       <input
                         type="checkbox"
                         id="task_reminders"
                         defaultChecked
-                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                        className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                       />
-                      <label htmlFor="task_reminders" className="text-sm text-gray-700">
-                        Task and deadline reminders
-                      </label>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    
+                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                      <div className="flex items-center space-x-3">
+                        <MessageSquare className="h-5 w-5 text-purple-600" />
+                        <div>
+                          <p className="font-medium text-gray-900">Marketing Communications</p>
+                          <p className="text-sm text-gray-600">Receive promotional emails and updates</p>
+                        </div>
+                      </div>
                       <input
                         type="checkbox"
                         id="marketing_emails"
-                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                        className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                       />
-                      <label htmlFor="marketing_emails" className="text-sm text-gray-700">
-                        Marketing and promotional emails
-                      </label>
                     </div>
                   </div>
                 </div>
