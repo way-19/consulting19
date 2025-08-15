@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X, Send, FileText, Globe, DollarSign, Clock, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useServiceRequests } from '../../hooks/useServiceRequests';
 import { supabase } from '../../lib/supabase';
 
 interface RequestCustomServiceModalProps {
@@ -16,7 +15,6 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
   onSuccess
 }) => {
   const { profile } = useAuth();
-  const { createRequest } = useServiceRequests();
   const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -77,13 +75,16 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
         consultant_id: clientData.assigned_consultant_id
       };
 
-      await createRequest(requestData);
+      const { error } = await supabase
+        .from('service_requests')
+        .insert([requestData]);
+
+      if (error) throw error;
       
       onSuccess();
       onClose();
       resetForm();
       
-      alert('Hizmet talebiniz başarıyla gönderildi! Danışmanınız en kısa sürede size dönüş yapacaktır.');
     } catch (error) {
       console.error('Error submitting service request:', error);
       alert('Hizmet talebi gönderilemedi. Lütfen tekrar deneyin.');

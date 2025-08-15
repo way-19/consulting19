@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useServiceRequests } from '../hooks/useServiceRequests';
 import MultilingualChat from '../components/MultilingualChat';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import { 
@@ -88,6 +89,7 @@ const CustomersManagement = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showMailboxModal, setShowMailboxModal] = useState(false);
   const [showServiceRequestsModal, setShowServiceRequestsModal] = useState(false);
+  const [showServiceRequestsModal, setShowServiceRequestsModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
   const [stats, setStats] = useState<ClientStats>({
@@ -100,6 +102,12 @@ const CustomersManagement = () => {
     total_revenue: 0,
     avg_satisfaction: 0
   });
+
+  // Service requests hook for selected client
+  const { requests: serviceRequests, loading: requestsLoading } = useServiceRequests(
+    undefined, // clientId - will be set when viewing specific client
+    profile?.id // consultantId
+  );
 
   useEffect(() => {
     if (profile?.id) {
@@ -1002,6 +1010,16 @@ const CustomersManagement = () => {
                   <Plus className="h-5 w-5" />
                   <span>Service Requests</span>
                 </button>
+                <button
+                  onClick={() => {
+                    setShowClientModal(false);
+                    setShowServiceRequestsModal(true);
+                  }}
+                  className="bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span>Service Requests</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1037,6 +1055,82 @@ const CustomersManagement = () => {
                   Bu müşterinin hizmet talepleri burada görünecektir.
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Service Requests Modal */}
+      {showServiceRequestsModal && selectedClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Service Requests - {selectedClient.company_name || selectedClient.profile?.full_name}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowServiceRequestsModal(false);
+                    setSelectedClient(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {requestsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+              ) : serviceRequests.filter(r => r.client_id === selectedClient.id).length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Service Requests</h3>
+                  <p className="text-gray-600">
+                    Bu müşterinin henüz özel hizmet talebi bulunmuyor.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {serviceRequests
+                    .filter(r => r.client_id === selectedClient.id)
+                    .map((request) => (
+                      <div key={request.id} className="bg-gray-50 rounded-lg p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <h4 className="font-semibold text-gray-900">{request.title}</h4>
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                request.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                request.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                                request.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {request.status.toUpperCase()}
+                              </span>
+                            </div>
+                            <p className="text-gray-600 mb-3">{request.description}</p>
+                            <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                              <div>
+                                <span className="font-medium">Tür:</span> {request.requested_service_type}
+                              </div>
+                              <div>
+                                <span className="font-medium">Öncelik:</span> {request.priority}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {new Date(request.created_at).toLocaleDateString('tr-TR')}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -2,10 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import ClientRecommendations from '../../components/client/ClientRecommendations';
-import UpcomingPayments from '../../components/client/UpcomingPayments';
-import ClientRecommendations from '../../components/client/ClientRecommendations';
-import UpcomingPayments from '../../components/client/UpcomingPayments';
 import { 
   User, 
   FileText, 
@@ -23,6 +19,15 @@ import {
   Globe,
   Building
 } from 'lucide-react';
+
+interface UpcomingInvoice {
+  id: string;
+  invoice_number: string;
+  amount: number;
+  currency: string;
+  due_date: string;
+  status: 'sent' | 'overdue';
+}
 
 interface ClientStats {
   activeProjects: number;
@@ -60,6 +65,7 @@ const ClientDashboard = () => {
   });
   const [projects, setProjects] = useState<ClientProject[]>([]);
   const [clientId, setClientId] = useState<string | null>(null);
+  const [upcomingInvoices, setUpcomingInvoices] = useState<UpcomingInvoice[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -84,6 +90,9 @@ const ClientDashboard = () => {
       }
 
       setClientId(clientData.id);
+
+      // Fetch upcoming invoices
+      await fetchUpcomingInvoices(clientData.id);
 
       // Fetch projects
       const { data: projectsData } = await supabase
@@ -132,6 +141,52 @@ const ClientDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchUpcomingInvoices = async (clientId: string) => {
+    try {
+      // Get accounting client record
+      const { data: accountingClientData } = await supabase
+        .from('accounting_clients')
+        .select('id')
+        .eq('client_id', clientId)
+        .maybeSingle();
+
+      if (!accountingClientData) return;
+
+      // Get upcoming invoices (due within next 30 days or overdue)
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+      const { data, error } = await supabase
+        .from('accounting_invoices')
+        .select('id, invoice_number, amount, currency, due_date, status')
+        .eq('client_id', accountingClientData.id)
+        .in('status', ['sent', 'overdue'])
+        .lte('due_date', thirtyDaysFromNow.toISOString())
+        .order('due_date', { ascending: true })
+        .limit(5);
+
+      if (error) throw error;
+      setUpcomingInvoices(data || []);
+    } catch (error) {
+      console.error('Error fetching upcoming invoices:', error);
+    }
+  };
+
+  const getDaysUntilDue = (dueDate: string) => {
+    const due = new Date(dueDate);
+    const now = new Date();
+    const diffTime = due.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const getUrgencyColor = (daysUntilDue: number) => {
+    if (daysUntilDue < 0) return 'border-l-red-500 bg-red-50';
+    if (daysUntilDue <= 3) return 'border-l-orange-500 bg-orange-50';
+    if (daysUntilDue <= 7) return 'border-l-yellow-500 bg-yellow-50';
+    return 'border-l-blue-500 bg-blue-50';
   };
 
   const getStatusColor = (status: string) => {
@@ -260,34 +315,6 @@ const ClientDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Active Projects */}
           <div className="lg:col-span-2">
-            {/* Recommendations Section */}
-            {clientId && (
-              <div className="mb-8">
-                <ClientRecommendations clientId={clientId} />
-              </div>
-            )}
-
-            {/* Upcoming Payments Section */}
-            {clientId && (
-              <div className="mb-8">
-                <UpcomingPayments clientId={clientId} />
-              </div>
-            )}
-
-            {/* Recommendations Section */}
-            {clientId && (
-              <div className="mb-8">
-                <ClientRecommendations clientId={clientId} />
-              </div>
-            )}
-
-            {/* Upcoming Payments Section */}
-            {clientId && (
-              <div className="mb-8">
-                <UpcomingPayments clientId={clientId} />
-              </div>
-            )}
-
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900">Your Projects</h2>
@@ -362,6 +389,65 @@ const ClientDashboard = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Upcoming Payments Warning */}
+            {upcomingInvoices.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <div className="flex items-center space-x-2">
+                    <DollarSign className="h-5 w-5 text-red-600" />
+                    <h2 className="text-lg font-semibold text-gray-900">Yaklaşan Ödemelerim</h2>
+                    <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
+                      {upcomingInvoices.length} ödeme
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="space-y-3">
+                    {upcomingInvoices.map((invoice) => {
+                      const daysUntilDue = getDaysUntilDue(invoice.due_date);
+                      
+                      return (
+                        <div
+                          key={invoice.id}
+                          className={`border-l-4 rounded-lg p-4 transition-all duration-200 hover:shadow-md ${
+                            getUrgencyColor(daysUntilDue)
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold text-gray-900">{invoice.invoice_number}</h4>
+                            <span className="font-bold text-gray-900">${invoice.amount.toLocaleString()}</span>
+                          </div>
+                          <div className="text-sm text-gray-600 mb-2">
+                            Son Ödeme: {new Date(invoice.due_date).toLocaleDateString('tr-TR')}
+                          </div>
+                          <div className={`text-sm font-medium ${
+                            daysUntilDue < 0 ? 'text-red-600' : 
+                            daysUntilDue <= 3 ? 'text-orange-600' : 'text-blue-600'
+                          }`}>
+                            {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} gün gecikti` :
+                             daysUntilDue === 0 ? 'Bugün vadesi doluyor' :
+                             daysUntilDue === 1 ? 'Yarın vadesi doluyor' :
+                             `${daysUntilDue} gün kaldı`}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="mt-4">
+                    <Link
+                      to="/client-accounting"
+                      className="w-full bg-red-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <DollarSign className="h-5 w-5" />
+                      <span>Ödemelerimi Görüntüle</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Quick Actions */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
