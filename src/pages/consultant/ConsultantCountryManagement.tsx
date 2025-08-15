@@ -1917,9 +1917,12 @@ const ConsultantCountryManagement = () => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
                     <option value="">Select category...</option>
-                    {faqCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
+                    <option value="Company Formation">Company Formation</option>
+                    <option value="Tax & Accounting">Tax & Accounting</option>
+                    <option value="Banking">Banking</option>
+                    <option value="Legal Services">Legal Services</option>
+                    <option value="Visa & Residence">Visa & Residence</option>
+                    <option value="General">General</option>
                   </select>
                 </div>
               </div>
