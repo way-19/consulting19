@@ -213,6 +213,7 @@ const ClientAccountingDashboard = () => {
         )
       `)
       .eq('client_id', clientData.id)
+      .limit(1)
       .maybeSingle();
 
     console.log('💼 Step 3: Accounting profile lookup result:', data)
