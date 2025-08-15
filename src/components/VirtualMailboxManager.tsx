@@ -952,7 +952,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   </div>
                   
                   <div
-                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                    className={\`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                       shippingOption === 'express' 
                         ? 'border-purple-500 bg-purple-50' 
                         : 'border-gray-200 hover:border-purple-300'
@@ -1085,7 +1085,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
             deliveryTime: shippingOption === 'express' ? 3 : 7
           }}
           onSuccess={handleShippingPaymentSuccess}
-          onError={(error) => alert(`Ödeme hatası: ${error}`)}
+          onError={(error) => alert(\`Ödeme hatası: ${error}`)}
         />
       )}
     </div>
