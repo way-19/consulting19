@@ -131,7 +131,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           {/* Service Type Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Service Type *
+              Hizmet Türü *
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {serviceTypes.map((type) => (
@@ -155,7 +155,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Hizmet Başlığı *
+              Service Title *
             </label>
             <input
               type="text"
@@ -163,7 +163,7 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Örn: Almanya'da şirket kurma danışmanlığı"
+              placeholder="e.g., Company formation consultation in Germany"
             />
           </div>
 
