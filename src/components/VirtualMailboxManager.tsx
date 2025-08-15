@@ -128,15 +128,23 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           query = query.eq('client_id', clientId);
         }
       } else {
-        // Client view - get client record first
-        const { data: clientData } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('profile_id', profile?.id)
-          .single();
-
-        if (clientData) {
-          query = query.eq('client_id', clientData.id);
+        // Client view - use provided clientId or get from profile
+        let targetClientId = clientId;
+        
+        if (!targetClientId) {
+          const { data: clientData } = await supabase
+            .from('clients')
+            .select('id')
+            .eq('profile_id', profile?.id)
+            .single();
+          
+          if (clientData) {
+            targetClientId = clientData.id;
+          }
+        }
+        
+        if (targetClientId) {
+          query = query.eq('client_id', targetClientId);
         }
       }
 

@@ -140,7 +140,7 @@ const ClientAccountingDashboard = () => {
       .from('clients')
       .select('id')
       .eq('profile_id', profile?.id)
-      .maybeSingle();
+      .single();
 
     console.log('📋 Step 2: Client record lookup result:', clientData)
 
@@ -168,6 +168,7 @@ const ClientAccountingDashboard = () => {
       }
       
       console.log('✅ Client record created:', newClient);
+      setClientId(newClient.id);
       
       // Now create accounting profile
       const { data: newAccountingProfile, error: accountingError } = await supabase
@@ -203,6 +204,8 @@ const ClientAccountingDashboard = () => {
       return;
     }
 
+    setClientId(clientData.id);
+
     const { data, error } = await supabase
       .from('accounting_clients')
       .select(`
@@ -213,16 +216,15 @@ const ClientAccountingDashboard = () => {
         )
       `)
       .eq('client_id', clientData.id)
-      .limit(1);
+      .single();
 
     console.log('💼 Step 3: Accounting profile lookup result:', data)
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error('❌ Error fetching accounting profile:', error.message, error.code);
-      return;
-    }
-
-    if (!data || data.length === 0) {
+      
+      if (error.code === 'PGRST116') {
+        // No accounting profile found, create one
       console.log('⚠️ No accounting profile found for client:', clientData.id)
       console.log('🔧 Creating accounting profile automatically...')
       
@@ -254,13 +256,15 @@ const ClientAccountingDashboard = () => {
         console.error('❌ Error creating accounting profile:', accountingError);
         return;
       }
+      return;
+      }
       
       console.log('✅ Accounting profile auto-created:', newAccountingProfile);
       setAccountingProfile(newAccountingProfile);
       return;
     }
 
-    setAccountingProfile(data[0]);
+    setAccountingProfile(data);
   };
 
   const fetchDocuments = async () => {
@@ -931,7 +935,7 @@ const ClientAccountingDashboard = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">My Virtual Mailbox</h3>
                   <p className="text-gray-600">Receive official documents digitally and request physical shipping when needed</p>
                 </div>
-                <VirtualMailboxManager viewMode="client" />
+                <VirtualMailboxManager viewMode="client" clientId={clientId} />
               </div>
             )}
           </div>
