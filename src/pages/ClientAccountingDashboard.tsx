@@ -432,6 +432,31 @@ const ClientAccountingDashboard = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Upcoming Payments Warning - Add this section */}
+        <div className="mb-8">
+          <UpcomingPayments />
+        </div>
+
+        {/* Custom Service Request System */}
+        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-8 border border-purple-200 mb-8">
+          <div className="text-center">
+            <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <Plus className="h-8 w-8 text-purple-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Request Custom Service</h2>
+            <p className="text-lg text-gray-600 mb-6">
+              Need a specialized service? Request a custom solution from your consultant.
+            </p>
+            <button
+              onClick={() => setShowRequestModal(true)}
+              className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center space-x-2 mx-auto"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Request Custom Service</span>
+            </button>
+          </div>
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -837,6 +862,15 @@ const ClientAccountingDashboard = () => {
           targetUserId={accountingProfile.consultant_id}
         />
       )}
+
+      {/* Custom Service Request Modal */}
+      <RequestCustomServiceModal
+        isOpen={showRequestModal}
+        onClose={() => setShowRequestModal(false)}
+        onSuccess={() => {
+          alert('Custom service request submitted successfully!');
+        }}
+      />
     </div>
   );
 };

@@ -46,10 +46,10 @@ const RequestCustomServiceModal: React.FC<RequestCustomServiceModalProps> = ({
   ];
 
   const timelines = [
-    { value: 'urgent', label: '1-3 gün (Acil)' },
-    { value: 'fast', label: '1 hafta' },
-    { value: 'normal', label: '2-4 hafta' },
-    { value: 'flexible', label: 'Esnek zaman' }
+    { value: 'urgent', label: '1-3 days (Urgent)' },
+    { value: 'fast', label: '1 week' },
+    { value: 'normal', label: '2-4 weeks' },
+    { value: 'flexible', label: 'Flexible timeline' }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {

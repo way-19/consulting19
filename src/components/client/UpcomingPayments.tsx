@@ -243,8 +243,8 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
                 <h4 className="font-medium text-yellow-900">Ödeme Hatırlatması</h4>
               </div>
               <p className="text-sm text-yellow-800">
-                Ödemelerinizi zamanında yaparak hizmet kesintisi yaşamamanızı sağlayabilirsiniz. 
-                Sorularınız için danışmanınızla iletişime geçebilirsiniz.
+                Make payments on time to avoid service interruptions. 
+                Contact your consultant if you have any questions.
               </p>
             </div>
           </div>
