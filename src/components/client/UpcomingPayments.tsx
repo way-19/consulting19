@@ -102,10 +102,10 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
   };
 
   const getUrgencyText = (daysUntilDue: number) => {
-    if (daysUntilDue < 0) return `${Math.abs(daysUntilDue)} gün gecikti`;
-    if (daysUntilDue === 0) return 'Bugün vadesi doluyor';
-    if (daysUntilDue === 1) return 'Yarın vadesi doluyor';
-    return `${daysUntilDue} gün kaldı`;
+    if (daysUntilDue < 0) return `${Math.abs(daysUntilDue)} days overdue`;
+    if (daysUntilDue === 0) return 'Due today';
+    if (daysUntilDue === 1) return 'Due tomorrow';
+    return `${daysUntilDue} days remaining`;
   };
 
   const getUrgencyIcon = (daysUntilDue: number) => {
@@ -127,14 +127,19 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
   if (upcomingInvoices.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <CheckCircle className="h-5 w-5 text-green-500" />
-          <h2 className="text-lg font-semibold text-gray-900">Yaklaşan Ödemeler</h2>
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-5 w-5 text-green-500" />
+            <h2 className="text-lg font-semibold text-gray-900">Upcoming Payments</h2>
+          </div>
+          <p className="text-sm text-gray-600 mt-1">
+            Monitor your payment schedule and avoid late fees
+          </p>
         </div>
-        <div className="text-center py-6">
+        <div className="p-6 text-center">
           <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Tüm Ödemeler Güncel</h3>
-          <p className="text-gray-600">Şu anda vadesi yaklaşan ödemeniz bulunmuyor.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">All Payments Up to Date</h3>
+          <p className="text-gray-600">You have no upcoming payment deadlines at this time.</p>
         </div>
       </div>
     );
@@ -145,19 +150,22 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <DollarSign className="h-5 w-5 text-green-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Yaklaşan Ödemeler</h2>
+            <AlertTriangle className="h-5 w-5 text-orange-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Urgent: Upcoming Payments</h2>
             <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
-              {upcomingInvoices.length} ödeme
+              {upcomingInvoices.length} payment{upcomingInvoices.length > 1 ? 's' : ''} due
             </span>
           </div>
           <Link
             to="/client-accounting"
             className="text-purple-600 hover:text-purple-700 font-medium text-sm"
           >
-            Tümünü Görüntüle →
+            View All Payments →
           </Link>
         </div>
+        <p className="text-sm text-gray-600 mt-1">
+          Important payment deadlines requiring your immediate attention
+        </p>
       </div>
 
       <div className="p-6">
@@ -178,21 +186,21 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
                       {getUrgencyIcon(daysUntilDue)}
                       <h4 className="font-semibold text-gray-900">{invoice.invoice_number}</h4>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        invoice.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                        invoice.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'
                       }`}>
-                        {invoice.status === 'overdue' ? 'VADESİ GEÇTİ' : 'ÖDENMEYİ BEKLİYOR'}
+                        {invoice.status === 'overdue' ? 'OVERDUE' : 'PAYMENT DUE'}
                       </span>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
                       <div>
-                        <span className="font-medium">Tutar:</span> ${invoice.amount.toLocaleString()} {invoice.currency}
+                        <span className="font-medium">Amount:</span> ${invoice.amount.toLocaleString()} {invoice.currency}
                       </div>
                       <div>
-                        <span className="font-medium">Son Ödeme:</span> {new Date(invoice.due_date).toLocaleDateString('tr-TR')}
+                        <span className="font-medium">Due Date:</span> {new Date(invoice.due_date).toLocaleDateString()}
                       </div>
                       <div>
-                        <span className="font-medium">Durum:</span> 
+                        <span className="font-medium">Status:</span> 
                         <span className={`ml-1 font-medium ${
                           daysUntilDue < 0 ? 'text-red-600' : 
                           daysUntilDue <= 3 ? 'text-orange-600' : 'text-blue-600'
@@ -204,7 +212,7 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
 
                     {invoice.period_start && invoice.period_end && (
                       <div className="text-xs text-gray-500 mb-3">
-                        Dönem: {new Date(invoice.period_start).toLocaleDateString('tr-TR')} - {new Date(invoice.period_end).toLocaleDateString('tr-TR')}
+                        Period: {new Date(invoice.period_start).toLocaleDateString()} - {new Date(invoice.period_end).toLocaleDateString()}
                       </div>
                     )}
                   </div>
@@ -215,7 +223,7 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
                       className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
                     >
                       <Eye className="h-4 w-4" />
-                      <span>Görüntüle</span>
+                      <span>View</span>
                     </Link>
                     <Link
                       to="/client-accounting"
@@ -226,7 +234,7 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
                       }`}
                     >
                       <CreditCard className="h-4 w-4" />
-                      <span>Öde</span>
+                      <span>Pay Now</span>
                     </Link>
                   </div>
                 </div>
@@ -239,7 +247,7 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({ clientId }) => {
           <div className="mt-6 pt-4 border-t border-gray-200">
             <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
               <div className="flex items-center space-x-2 mb-2">
-                <Bell className="h-5 w-5 text-yellow-600" />
+                  <h4 className="font-medium text-yellow-900">Payment Reminder</h4>
                 <h4 className="font-medium text-yellow-900">Ödeme Hatırlatması</h4>
               </div>
               <p className="text-sm text-yellow-800">
