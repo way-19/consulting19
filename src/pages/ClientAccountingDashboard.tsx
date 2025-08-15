@@ -147,7 +147,7 @@ const ClientAccountingDashboard = () => {
       return;
     }
 
-    const client = clientData?.[0];
+    const client = clientData && clientData.length > 0 ? clientData[0] : null;
     console.log('📋 Step 2: Client record lookup result:', client)
 
     if (!client) {
@@ -168,19 +168,20 @@ const ClientAccountingDashboard = () => {
         .select()
         .limit(1);
       
-      if (clientError || !newClient?.[0]) {
+      if (clientError || !newClient || newClient.length === 0) {
         console.error('❌ Error creating client record:', clientError);
         return;
       }
       
-      console.log('✅ Client record created:', newClient[0]);
-      setClientId(newClient[0].id);
+      const createdClient = newClient[0];
+      console.log('✅ Client record created:', createdClient);
+      setClientId(createdClient.id);
       
       // Now create accounting profile
       const { data: newAccountingProfile, error: accountingError } = await supabase
         .from('accounting_clients')
         .insert([{
-          client_id: newClient[0].id,
+          client_id: createdClient.id,
           consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
           company_name: 'Georgia Tech Solutions LLC',
           business_type: 'limited_company',
@@ -200,7 +201,7 @@ const ClientAccountingDashboard = () => {
         `)
         .limit(1);
       
-      if (accountingError || !newAccountingProfile?.[0]) {
+      if (accountingError || !newAccountingProfile || newAccountingProfile.length === 0) {
         console.error('❌ Error creating accounting profile:', accountingError);
         return;
       }
@@ -231,46 +232,46 @@ const ClientAccountingDashboard = () => {
       
       if (error.code === 'PGRST116') {
         // No accounting profile found, create one
-      console.log('⚠️ No accounting profile found for client:', client.id)
-      console.log('🔧 Creating accounting profile automatically...')
-      
-      // Auto-create accounting profile if missing
-      const { data: newAccountingProfile, error: accountingError } = await supabase
-        .from('accounting_clients')
-        .insert([{
-          client_id: client.id,
-          consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
-          company_name: 'Georgia Tech Solutions LLC',
-          business_type: 'limited_company',
-          accounting_period: 'monthly',
-          service_package: 'basic',
-          monthly_fee: 500,
-          status: 'active',
-          reminder_frequency: 7,
-          preferred_language: 'en'
-        }])
-        .select(`
-          *,
-          consultant:consultant_id (
-            full_name,
-            email
-          )
-        `)
-        .limit(1);
-      
-      if (accountingError || !newAccountingProfile?.[0]) {
-        console.error('❌ Error creating accounting profile:', accountingError);
+        console.log('⚠️ No accounting profile found for client:', client.id)
+        console.log('🔧 Creating accounting profile automatically...')
+        
+        // Auto-create accounting profile if missing
+        const { data: newAccountingProfile, error: accountingError } = await supabase
+          .from('accounting_clients')
+          .insert([{
+            client_id: client.id,
+            consultant_id: '3732cae6-3238-44b6-9c6b-2f29f0216a83',
+            company_name: 'Georgia Tech Solutions LLC',
+            business_type: 'limited_company',
+            accounting_period: 'monthly',
+            service_package: 'basic',
+            monthly_fee: 500,
+            status: 'active',
+            reminder_frequency: 7,
+            preferred_language: 'en'
+          }])
+          .select(`
+            *,
+            consultant:consultant_id (
+              full_name,
+              email
+            )
+          `)
+          .limit(1);
+        
+        if (accountingError || !newAccountingProfile || newAccountingProfile.length === 0) {
+          console.error('❌ Error creating accounting profile:', accountingError);
+          return;
+        }
+        
+        console.log('✅ Accounting profile auto-created:', newAccountingProfile[0]);
+        setAccountingProfile(newAccountingProfile[0]);
         return;
       }
       return;
-      }
-      
-      console.log('✅ Accounting profile auto-created:', newAccountingProfile[0]);
-      setAccountingProfile(newAccountingProfile[0]);
-      return;
     }
 
-    if (accountingData?.[0]) {
+    if (accountingData && accountingData.length > 0) {
       setAccountingProfile(accountingData[0]);
     }
   };
@@ -317,7 +318,7 @@ const ClientAccountingDashboard = () => {
       .eq('profile_id', profile?.id)
       .limit(1);
 
-    if (clientError || !clientData?.[0]) {
+    if (clientError || !clientData || clientData.length === 0) {
       console.error('Error fetching client for messages:', clientError);
       return;
     }
