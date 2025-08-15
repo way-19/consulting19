@@ -1010,18 +1010,18 @@ const ClientAccountingDashboard = () => {
                             className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                           >
                             <Eye className="h-4 w-4" />
-                            <span>Ön İzleme</span>
+                            <span>Preview</span>
                           </button>
                           <button className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm">
                             <Download className="h-4 w-4" />
-                            <span>İndir</span>
+                            <span>Download</span>
                           </button>
                           <button
                             onClick={() => alert('Fiziksel gönderim talebi alındı. Danışmanınız sizinle iletişime geçecek.')}
                             className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-sm"
                           >
                             <Mail className="h-4 w-4" />
-                            <span>Fiziksel Gönderim</span>
+                            <span>Physical Shipping</span>
                           </button>
                         </div>
                       </div>
