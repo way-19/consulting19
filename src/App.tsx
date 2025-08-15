@@ -4,7 +4,6 @@ import { useAuth } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
-import DiagnosticPanel from './components/DiagnosticPanel';
 
 // Public Pages
 import HomePage from './pages/HomePage';
@@ -304,7 +303,6 @@ export default function App() {
         </Routes>
       </main>
       <Footer />
-      <DiagnosticPanel />
     </>
   );
 }
