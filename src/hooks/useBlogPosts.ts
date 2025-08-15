@@ -5,10 +5,11 @@ export interface BlogPost {
   id: string;
   title: string;
   slug: string;
-  excerpt?: string;
+  content: string; // Added content
+  excerpt?: string; 
   cover_image?: string;
   published_at: string;
-  author?: { full_name?: string; email?: string } | null;
+  author?: { full_name?: string; email?: string; role?: string } | null; // Added role here
 }
 
 export function useBlogPosts(countryId?: string) {
@@ -26,7 +27,7 @@ export function useBlogPosts(countryId?: string) {
     supabase
       .from('blog_posts')
       .select(
-        'id,title,slug,excerpt,cover_image,published_at,author:author_id(full_name,email)'
+        'id,title,slug,content,excerpt,cover_image,published_at,author:author_id(full_name,email,role)' // Added 'content' and 'role'
       )
       .eq('is_published', true)
       .eq('country_id', countryId)
@@ -72,7 +73,7 @@ export const useBlogPost = (slug: string) => {
       const { data, error } = await supabase
         .from('blog_posts')
         .select(`
-          *,
+          id,title,slug,content,excerpt,author_id,category,tags,language_code,is_published,published_at,featured_image_url,seo_title,seo_description,created_at,updated_at,country_id,cover_image,
           author:author_id (
             full_name,
             email

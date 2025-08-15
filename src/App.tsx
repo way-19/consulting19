@@ -16,6 +16,7 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import BlogPage from './pages/BlogPage'; // Import BlogPage
 import AIAssistantPage from './pages/AIAssistantPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
@@ -76,7 +77,7 @@ export default function App() {
           <Route path="/countries/:countrySlug/services/:serviceSlug" element={<CountryServiceDetailPage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/services/:slug" element={<ServiceDetailPage />} />
-          <Route path="/about" element={<AboutPage />} />
+          <Route path="/blog" element={<BlogPage />} /> {/* Change route to BlogPage */}
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/ai-assistant" element={<AIAssistantPage />} />
           <Route path="/get-started" element={<AIAssistantPage />} />
