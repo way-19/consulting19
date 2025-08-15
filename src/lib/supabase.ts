@@ -391,6 +391,7 @@ export const notifyPaymentReceived = async (
     undefined,
     '/consultant/payments'
   );
+}
 
 // Audit logging helper
 export const logAdminAction = async (
