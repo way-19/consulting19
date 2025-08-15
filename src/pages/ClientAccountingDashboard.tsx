@@ -265,6 +265,13 @@ const ClientAccountingDashboard = () => {
                 <MessageSquare className="h-4 w-4" />
                 <span>Contact Advisor</span>
               </button>
+              <Link
+                to="/client/documents"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+              >
+                <Upload className="h-4 w-4" />
+                <span>Upload Documents</span>
+              </Link>
             </div>
           </div>
         </div>
