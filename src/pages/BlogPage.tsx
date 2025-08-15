@@ -1,4 +1,3 @@
-```typescript
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, User, Calendar, ArrowRight, AlertTriangle } from 'lucide-react';
@@ -106,4 +105,3 @@ const BlogPage = () => {
 };
 
 export default BlogPage;
-```
