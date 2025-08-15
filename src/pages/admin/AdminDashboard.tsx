@@ -88,17 +88,11 @@ const AdminDashboard = () => {
       setLoading(true);
 
       // Fetch all stats in parallel
-      const [
-        usersResult,
-        clientsResult,
-        countriesResult,
-        projectsResult,
-        tasksResult
-      ] = await Promise.all([
+      const [usersResult, clientsResult, countriesResult, projectsResult, tasksResult] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('clients').select('id', { count: 'exact', head: true }),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'client'),
         supabase.from('countries').select('id', { count: 'exact', head: true }),
-        supabase.from('projects').select('id, status', { count: 'exact' }),
+        supabase.from('projects').select('id, status'),
         supabase.from('tasks').select('id, status', { count: 'exact' })
       ]);
 
@@ -114,7 +108,6 @@ const AdminDashboard = () => {
       console.log('  - Clients count:', clientsResult.count, 'Error:', clientsResult.error);
       console.log('  - Countries count:', countriesResult.count, 'Error:', countriesResult.error);
       console.log('  - Projects data length:', projectsResult.data?.length, 'Error:', projectsResult.error);
-      console.log('  - Tasks data length:', tasksResult.data?.length, 'Error:', tasksResult.error);
       
       // Calculate stats
       console.log('🧮 fetchDashboardData: Calculating stats...');
@@ -139,9 +132,13 @@ const AdminDashboard = () => {
 
       // Set empty recent activity since audit_logs table doesn't exist
       setRecentActivity([]);
+
+      console.log('✅ fetchDashboardData: All data processed successfully');
     } catch (error) {
-      console.error('❌ fetchDashboardData: Error:', error);
+      console.error('❌ fetchDashboardData: Error occurred:', error);
+      console.error('Error fetching dashboard data:', error);
     } finally {
+      console.log('🏁 fetchDashboardData: Setting loading to false');
       setLoading(false);
     }
   };
