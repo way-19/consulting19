@@ -193,7 +193,7 @@ const AccountingManagement = () => {
     } finally {
       setLoading(false);
     }
-        .eq('consultant_id', profile?.id || '')
+  };
 
   const fetchClients = async () => {
     const { data, error } = await supabase
@@ -331,8 +331,6 @@ const AccountingManagement = () => {
   };
 
   const handleSaveClient = async (e: React.FormEvent) => {
-    if (!selectedClient?.id) return;
-
     e.preventDefault();
     
     if (!editingClient) return;
@@ -357,7 +355,7 @@ const AccountingManagement = () => {
       alert('Client information updated successfully!');
     } catch (error) {
       console.error('Error updating client:', error);
-        .eq('id', selectedClient.id);
+      alert('Failed to update client information');
     }
   };
 
@@ -619,21 +617,8 @@ const AccountingManagement = () => {
                       </>
                     )}
                   </select>
-                  {client.virtual_address && (
-                    <div>
-                      <span className="font-medium">Virtual Address:</span> {client.virtual_address}
-                    </div>
-                  )}
                 </div>
 
-                {client.virtual_address_next_payment_date && (
-                  <div className="mt-2 flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-purple-500" />
-                    <span className="text-sm text-purple-600 font-medium">
-                      Virtual Address Payment Due: {new Date(client.virtual_address_next_payment_date).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
                 {activeTab === 'documents' && (
                   <select
                     value={priorityFilter}
@@ -687,6 +672,21 @@ const AccountingManagement = () => {
                               <span className="font-medium">Monthly Fee:</span> ${client.monthly_fee}
                             </div>
                           </div>
+
+                          {client.virtual_address && (
+                            <div>
+                              <span className="font-medium">Virtual Address:</span> {client.virtual_address}
+                            </div>
+                          )}
+
+                          {client.virtual_address_next_payment_date && (
+                            <div className="mt-2 flex items-center space-x-2">
+                              <Calendar className="h-4 w-4 text-purple-500" />
+                              <span className="text-sm text-purple-600 font-medium">
+                                Virtual Address Payment Due: {new Date(client.virtual_address_next_payment_date).toLocaleDateString()}
+                              </span>
+                            </div>
+                          )}
 
                           {client.next_deadline && (
                             <div className="mt-2 flex items-center space-x-2">
