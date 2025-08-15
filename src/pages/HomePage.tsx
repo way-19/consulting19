@@ -1,17 +1,15 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Bot, Shield, Zap, BarChart3, MessageSquare, Users, Globe2, TrendingUp, Clock, Building, CheckCircle, Calculator, Scale, Plane, Search, CreditCard, Mail, Globe, Eye, Sparkles } from 'lucide-react';
+import { ArrowRight, Bot, Shield, Zap, BarChart3, MessageSquare, Users, Globe2, TrendingUp, Clock, Building, CheckCircle, Calculator, Scale, Plane, Search, CreditCard, Mail, Globe, Eye, Sparkles, FileText } from 'lucide-react';
 import CountryCard from '../components/ModernCountryCard';
 import ServiceCard from '../components/ServiceCard';
 import { useCountries } from '../hooks/useCountries';
-import { useServices } from '../hooks/useServices';
 import { useServices } from '../hooks/useServices';
 import { getPublicImageUrl } from '../lib/supabase';
 
 const HomePage = () => {
   const { countries, loading: countriesLoading } = useCountries(true);
-  const { services, loading: servicesLoading } = useServices(true);
   const { services, loading: servicesLoading } = useServices(true);
   
   const featuredCountries = countries.slice(0, 8);
@@ -431,11 +429,9 @@ const HomePage = () => {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
-                <Building className="h-8 w-8 text-blue-600 mx-auto" />
               </div>
-              >
-                <span>Get Started</span>
-                <ArrowRight className="h-4 w-4" />
+            </div>
+
             <div 
               className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
               style={{
@@ -476,14 +472,9 @@ const HomePage = () => {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
-            {/* Investment Advisory */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-              <div className="bg-green-100 rounded-xl p-4 mb-4 group-hover:bg-green-200 transition-colors">
-                <TrendingUp className="h-8 w-8 text-green-600 mx-auto" />
               </div>
-              >
-                <span>Get Started</span>
-                <ArrowRight className="h-4 w-4" />
+            </div>
+
             <div 
               className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
               style={{
@@ -524,14 +515,9 @@ const HomePage = () => {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
-            {/* Legal Consulting */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-              <div className="bg-purple-100 rounded-xl p-4 mb-4 group-hover:bg-purple-200 transition-colors">
-                <Scale className="h-8 w-8 text-purple-600 mx-auto" />
               </div>
-              >
-                <span>Get Started</span>
-                <ArrowRight className="h-4 w-4" />
+            </div>
+
             <div 
               className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
               style={{
@@ -572,14 +558,9 @@ const HomePage = () => {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
-            {/* Accounting Services */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-              <div className="bg-orange-100 rounded-xl p-4 mb-4 group-hover:bg-orange-200 transition-colors">
-                <Calculator className="h-8 w-8 text-orange-600 mx-auto" />
               </div>
-              >
-                <span>Get Started</span>
-                <ArrowRight className="h-4 w-4" />
+            </div>
+
             <div 
               className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
               style={{
@@ -620,14 +601,9 @@ const HomePage = () => {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
-            {/* Visa & Residence */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-              <div className="bg-teal-100 rounded-xl p-4 mb-4 group-hover:bg-teal-200 transition-colors">
-                <Plane className="h-8 w-8 text-teal-600 mx-auto" />
               </div>
-              >
-                <span>Get Started</span>
-                <ArrowRight className="h-4 w-4" />
+            </div>
+
             <div 
               className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
               style={{
@@ -668,14 +644,9 @@ const HomePage = () => {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
-            {/* Market Research */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-              <div className="bg-pink-100 rounded-xl p-4 mb-4 group-hover:bg-pink-200 transition-colors">
-                <Search className="h-8 w-8 text-pink-600 mx-auto" />
               </div>
-              >
-                <span>Get Started</span>
-                <ArrowRight className="h-4 w-4" />
+            </div>
+
             <div 
               className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
               style={{
@@ -716,14 +687,9 @@ const HomePage = () => {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
-            {/* Banking Solutions */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-              <div className="bg-indigo-100 rounded-xl p-4 mb-4 group-hover:bg-indigo-200 transition-colors">
-                <CreditCard className="h-8 w-8 text-indigo-600 mx-auto" />
               </div>
-              >
-                <span>Get Started</span>
-                <ArrowRight className="h-4 w-4" />
+            </div>
+
             <div 
               className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
               style={{
@@ -737,9 +703,36 @@ const HomePage = () => {
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
                   <FileText className="h-8 w-8 text-white" />
                 </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Ongoing Compliance</h3>
+                  <p className="text-gray-200 text-sm mb-4">
+                    Continuous compliance monitoring and regulatory updates for your business
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Regulatory monitoring</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Annual filings</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-300" />
+                      <span className="text-sm text-gray-200">Updates & alerts</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/services?category=compliance"
+                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
+                  >
+                    <span>Stay Compliant</span>
+                    <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
-            {/* Ongoing Compliance */}
+              </div>
+            </div>
+
             <div 
               className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
               style={{
@@ -781,8 +774,24 @@ const HomePage = () => {
                   </Link>
                 </div>
               </div>
-                Continuous monitoring and compliance management services.
-              </p>
+            </div>
+
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
+              style={{
+                backgroundImage: `url('https://images.pexels.com/photos/3184287/pexels-photo-3184287.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
+                  <TrendingUp className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Wealth Management</h3>
+                  <p className="text-gray-200 text-sm mb-4">
                     Comprehensive wealth preservation and growth strategies for high-net-worth individuals
                   </p>
                   <div className="space-y-2 mb-6">
@@ -807,7 +816,15 @@ const HomePage = () => {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Assistant Demo */}
       <section className="py-20 bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <Globe className="h-6 w-6 text-blue-400" />
@@ -909,50 +926,9 @@ const HomePage = () => {
                 <Sparkles className="h-4 w-4" />
                 <span>Start Your Journey</span>
               </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-            <div 
-              className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group h-80"
-              style={{
-                backgroundImage: `url('https://images.pexels.com/photos/3184287/pexels-photo-3184287.jpeg?auto=compress&cs=tinysrgb&w=800')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="relative z-10 p-6 flex flex-col h-full justify-between text-white">
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6 w-fit">
-                  <MessageSquare className="h-8 w-8 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-3">Ongoing Compliance</h3>
-                  <p className="text-gray-200 text-sm mb-4">
-                    Continuous compliance monitoring and regulatory updates for your business
-                  </p>
-                  <div className="space-y-2 mb-6">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-300" />
-                      <span className="text-sm text-gray-200">Regulatory monitoring</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-300" />
-                      <span className="text-sm text-gray-200">Annual filings</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-300" />
-                      <span className="text-sm text-gray-200">Updates & alerts</span>
-                    </div>
-                  </div>
-                  <Link
-                    to="/services?category=compliance"
-                    className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 border border-white/30"
-                  >
-                    <span>Stay Compliant</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </h2>
+              <h3 className="text-2xl font-bold mb-4">
+                AI-Powered Business Consulting
+              </h3>
 
               <div className="space-y-4 mb-8">
                 <div className="flex items-center space-x-3">
