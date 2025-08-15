@@ -305,51 +305,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       alert('Kargo bilgileri güncellenemedi');
     }
   };
-  const handleShippingSubmit = () => {
-    if (!selectedItemForShipping) return;
-    
-    const shippingCost = shippingOption === 'express' ? 25 : 15;
-    setShowShippingModal(false);
-    setShowStripeCheckout(true);
-  };
-
-  const handleShippingPaymentSuccess = async (paymentIntentId: string) => {
-    if (!selectedItemForShipping) return;
-
-    try {
-      // Update item with shipping info and payment
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({
-          shipping_option: shippingOption,
-          shipping_address: shippingAddress,
-          payment_status: 'paid',
-          status: 'sent',
-          sent_date: new Date().toISOString()
-        })
-        .eq('id', selectedItemForShipping.id);
-
-      if (error) throw error;
-      
-      setShowStripeCheckout(false);
-      setSelectedItemForShipping(null);
-      setShippingAddress({
-        full_name: '',
-        address_line_1: '',
-        address_line_2: '',
-        city: '',
-        postal_code: '',
-        country: '',
-        phone: ''
-      });
-      
-      await fetchItems();
-      alert('Kargo ödemesi başarılı! Belgeniz kargo ile gönderilecektir.');
-    } catch (error) {
-      console.error('Error updating shipping info:', error);
-      alert('Kargo bilgileri güncellenemedi');
-    }
-  };
 
   const resetForm = () => {
     setFormData({
