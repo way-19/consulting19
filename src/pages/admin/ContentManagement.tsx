@@ -418,6 +418,49 @@ const ContentManagement = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Blog Posts</p>
+                <p className="text-3xl font-bold text-gray-900">{blogPosts.length}</p>
+              </div>
+              <FileText className="h-8 w-8 text-blue-600" />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Published Posts</p>
+                <p className="text-3xl font-bold text-green-600">{blogPosts.filter(p => p.is_published).length}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total FAQs</p>
+                <p className="text-3xl font-bold text-purple-600">{faqs.length}</p>
+              </div>
+              <Tag className="h-8 w-8 text-purple-600" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active FAQs</p>
+                <p className="text-3xl font-bold text-orange-600">{faqs.filter(f => f.is_active).length}</p>
+              </div>
+              <Globe className="h-8 w-8 text-orange-600" />
+            </div>
+          </div>
+        </div>
+
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="border-b border-gray-200">
