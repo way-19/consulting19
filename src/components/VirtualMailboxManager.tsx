@@ -76,6 +76,13 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
   const [showShippingAddressModal, setShowShippingAddressModal] = useState(false);
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [currentShippingItem, setCurrentShippingItem] = useState<VirtualMailboxItem | null>(null);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [editingTrackingItem, setEditingTrackingItem] = useState<VirtualMailboxItem | null>(null);
+  const [trackingForm, setTrackingForm] = useState({
+    tracking_number: '',
+    status: 'pending' as 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded',
+    shipping_option: 'physical' as string
+  });
   
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     full_name: '',
