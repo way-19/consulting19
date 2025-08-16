@@ -14,6 +14,7 @@ import {
   Filter,
   Clock,
   User,
+  Users,
   Database,
   Lock,
   Activity,
@@ -42,7 +43,7 @@ interface AuditLog {
   user?: {
     full_name: string;
     email: string;
-    role: string;
+    legacy_role: string;
   };
 }
 
@@ -104,10 +105,10 @@ const SecurityAudit = () => {
       .from('audit_logs')
       .select(`
         *,
-        user:user_id (
+        user:profiles!user_id (
           full_name,
           email,
-          role
+          legacy_role
         )
       `)
       .order('timestamp', { ascending: false })
@@ -484,7 +485,7 @@ const SecurityAudit = () => {
                           {log.user?.full_name || log.user?.email || 'System'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {log.user?.role || 'System'}
+                          {log.user?.legacy_role || 'System'}
                         </p>
                       </div>
                       
@@ -585,7 +586,7 @@ const SecurityAudit = () => {
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">Role:</span>
-                      <p className="font-medium">{selectedLog.user?.role || 'System'}</p>
+                      <p className="font-medium">{selectedLog.user?.legacy_role || 'System'}</p>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">IP Address:</span>
