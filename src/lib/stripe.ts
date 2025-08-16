@@ -1,6 +1,6 @@
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 
-const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51QMSJJP6Qi3wZZ1TLOclz1K9XAJfECSPfwwIH1CxBiaexeN6shsDtR9PF7MyA5R1R8unGhsyxKT3t1RyYuCZ83gm00RGL54kae';
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51QMSJJP6Qi3wZZ1TLOclz1K9XAJfECSPfwwIH1CxBiaexeN6shsDtR9PF7MyA5R1R8unGhsyKKT3t1RyYuCZ83gm00RGL54kae';
 
 if (!stripePublishableKey) {
   console.warn('Stripe publishable key not found. Stripe features will be disabled.');
@@ -75,7 +75,7 @@ export const processDirectPayment = async (
         card: cardElement,
         billing_details: {
           name: metadata.customer_name || 'Customer',
-          email: metadata.customer_email
+          email: metadata.shipping_address?.email || metadata.customer_email // Use shipping email if available
         }
       }
     });
