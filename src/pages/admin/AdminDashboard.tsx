@@ -49,6 +49,28 @@ interface RecentActivity {
   status: 'success' | 'warning' | 'error';
 }
 
+interface HealthCheckResult {
+  status: 'healthy' | 'warning' | 'error' | 'checking';
+  checks: {
+    database: {
+      status: 'healthy' | 'error';
+      responseTime: number;
+      error?: string;
+    };
+    storage: {
+      status: 'healthy' | 'error';
+      responseTime: number;
+      error?: string;
+    };
+    auth: {
+      status: 'healthy' | 'error';
+      responseTime: number;
+      error?: string;
+    };
+  };
+  timestamp: string;
+}
+
 const AdminDashboard = () => {
   const { profile } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
@@ -68,6 +90,15 @@ const AdminDashboard = () => {
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [systemHealthStatus, setSystemHealthStatus] = useState<HealthCheckResult>({
+    status: 'checking',
+    checks: {
+      database: { status: 'healthy', responseTime: 0 },
+      storage: { status: 'healthy', responseTime: 0 },
+      auth: { status: 'healthy', responseTime: 0 }
+    },
+    timestamp: new Date().toISOString()
+  });
 
   useEffect(() => {
     console.log('🚀 AdminDashboard useEffect triggered');
@@ -77,10 +108,42 @@ const AdminDashboard = () => {
     if (profile?.role === 'admin') {
       console.log('✅ Admin role confirmed, calling fetchDashboardData...');
       fetchDashboardData();
+      fetchSystemHealth();
     } else {
       console.log('❌ Not admin role or no profile, skipping data fetch');
     }
   }, [profile]);
+
+  const fetchSystemHealth = async () => {
+    try {
+      setSystemHealthStatus(prev => ({ ...prev, status: 'checking' }));
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/health-check`, {
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Health check failed: ${response.status}`);
+      }
+      
+      const healthData = await response.json();
+      setSystemHealthStatus(healthData);
+    } catch (error) {
+      console.error('Health check error:', error);
+      setSystemHealthStatus({
+        status: 'error',
+        checks: {
+          database: { status: 'error', responseTime: 0, error: 'Health check failed' },
+          storage: { status: 'error', responseTime: 0, error: 'Health check failed' },
+          auth: { status: 'error', responseTime: 0, error: 'Health check failed' }
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
