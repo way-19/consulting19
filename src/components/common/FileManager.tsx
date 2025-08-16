@@ -1,468 +1,428 @@
 import React, { useState, useEffect } from 'react';
-import { Folder, File, Image, FileText, Download, Trash2, Eye, Plus, Search, Filter, Grid, List, Upload, RefreshCw } from 'lucide-react';
-import FileUpload, { UploadedFile } from './FileUpload';
-import FilePreview from './FilePreview';
-import { useFileUpload } from '../../hooks/useFileUpload';
-import { getPublicImageUrl } from '../../lib/supabase';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { CreditCard, Lock, CheckCircle, AlertTriangle, X } from 'lucide-react';
+import { processDirectPayment } from '../lib/stripe';
+import { trackBusinessEvent } from '../utils/analytics'; // Import analytics
 
-export interface FileManagerProps {
-  files: UploadedFile[];
-  onFileUpload?: (files: File[]) => Promise<void>;
-  onFileDelete?: (fileId: string) => Promise<void>;
-  onFileView?: (file: UploadedFile) => void;
-  onRefresh?: () => Promise<void>;
-  allowUpload?: boolean;
-  allowDelete?: boolean;
-  viewMode?: 'grid' | 'list';
-  bucketName?: string;
-  folder?: string;
-  className?: string;
-  title?: string;
-  emptyStateText?: string;
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+  : null;
+
+interface ShippingAddress {
+  full_name: string;
+  company_name?: string;
+  address_line_1: string;
+  address_line_2?: string;
+  city: string;
+  state_province: string;
+  postal_code: string;
+  country: string;
+  phone: string;
+  email: string;
 }
 
-const FileManager: React.FC<FileManagerProps> = ({
-  files,
-  onFileUpload,
-  onFileDelete,
-  onFileView,
-  onRefresh,
-  allowUpload = true,
-  allowDelete = true,
-  viewMode: initialViewMode = 'grid',
-  bucketName = 'documents',
-  folder = 'client_documents',
-  className = '',
-  title = 'File Manager',
-  emptyStateText = 'No files uploaded yet'
+interface CheckoutFormProps {
+  amount: number;
+  currency: string;
+  orderId: string;
+  orderDetails: {
+    serviceName: string;
+    consultantName: string;
+    deliveryTime: number;
+  };
+  onSuccess: (paymentIntentId: string) => void;
+  onError: (error: string) => void;
+  onCancel: () => void;
+  shippingAddress?: ShippingAddress;
+  onAddressChange?: (address: ShippingAddress) => void;
+  showAddressForm?: boolean;
+}
+
+const CheckoutForm: React.FC<CheckoutFormProps> = ({
+  amount,
+  currency,
+  orderId,
+  orderDetails,
+  onSuccess,
+  onError,
+  onCancel,
+  shippingAddress,
+  onAddressChange,
+  showAddressForm = false
 }) => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(initialViewMode);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { uploadMultipleFiles, uploadState, clearUploadState } = useFileUpload({
-    bucketName,
-    folder,
-    onUploadComplete: async (file, filePath) => {
-      console.log('File uploaded successfully:', file.name, filePath);
-      if (onRefresh) {
-        await onRefresh();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setProcessing(true);
+    setError(null);
+
+    const cardElement = elements.getElement(CardElement);
+
+    if (!cardElement) {
+      setError('Card element not found');
+      setProcessing(false);
+      return;
+    }
+
+    try {
+      const { paymentIntent } = await processDirectPayment(
+        stripe,
+        cardElement,
+        amount,
+        currency,
+        {
+          order_id: orderId,
+          service_name: orderDetails.serviceName,
+          consultant_name: orderDetails.consultantName,
+          customer_name: shippingAddress?.full_name || orderDetails.consultantName,
+          shipping_address: shippingAddress
+        }
+      );
+
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Track successful payment
+        trackBusinessEvent.paymentCompleted(amount, currency, orderDetails.serviceName, paymentIntent.id);
+        
+        onSuccess(paymentIntent.id);
       }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
+      setError(errorMessage);
+      onError(errorMessage);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const cardElementOptions = {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#424770',
+        '::placeholder': {
+          color: '#aab7c4',
+        },
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      },
+      invalid: {
+        color: '#9e2146',
+      },
     },
-    onUploadError: (file, error) => {
-      console.error('Upload error for', file.name, ':', error);
-    }
-  });
-
-  const fileTypes = [
-    { value: 'all', label: 'All Files' },
-    { value: 'image', label: 'Images' },
-    { value: 'document', label: 'Documents' },
-    { value: 'pdf', label: 'PDF Files' }
-  ];
-
-  const filteredFiles = files.filter(file => {
-    const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    let matchesType = true;
-    if (typeFilter !== 'all') {
-      switch (typeFilter) {
-        case 'image':
-          matchesType = file.type.startsWith('image/');
-          break;
-        case 'document':
-          matchesType = file.type.includes('word') || file.type.includes('document') || 
-                      file.name.toLowerCase().endsWith('.doc') || file.name.toLowerCase().endsWith('.docx');
-          break;
-        case 'pdf':
-          matchesType = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-          break;
-      }
-    }
-    
-    return matchesSearch && matchesType;
-  });
-
-  const handleFileUpload = async (selectedFiles: File[]) => {
-    try {
-      setLoading(true);
-      if (onFileUpload) {
-        await onFileUpload(selectedFiles);
-      } else {
-        await uploadMultipleFiles(selectedFiles);
-      }
-      setShowUploadModal(false);
-      clearUploadState();
-    } catch (error) {
-      console.error('Error uploading files:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFileDelete = async (fileId: string) => {
-    if (!confirm('Are you sure you want to delete this file?')) return;
-    
-    try {
-      setLoading(true);
-      if (onFileDelete) {
-        await onFileDelete(fileId);
-      }
-    } catch (error) {
-      console.error('Error deleting file:', error);
-      alert('Failed to delete file');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFileView = (file: UploadedFile) => {
-    if (onFileView) {
-      onFileView(file);
-    } else {
-      setSelectedFile(file);
-      setShowPreviewModal(true);
-    }
-  };
-
-  const getFileIcon = (file: UploadedFile) => {
-    if (file.type.startsWith('image/')) {
-      return <Image className="h-6 w-6 text-blue-500" />;
-    }
-    if (file.type === 'application/pdf') {
-      return <FileText className="h-6 w-6 text-red-500" />;
-    }
-    return <File className="h-6 w-6 text-gray-500" />;
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    hidePostalCode: false,
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-        <div className="flex items-center space-x-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search files..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-64"
-            />
-          </div>
-
-          {/* Type Filter */}
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            {fileTypes.map(type => (
-              <option key={type.value} value={type.value}>{type.label}</option>
-            ))}
-          </select>
-
-          {/* View Mode Toggle */}
-          <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md transition-colors ${
-                viewMode === 'grid' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Grid className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md transition-colors ${
-                viewMode === 'list' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <List className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Actions */}
-          {onRefresh && (
-            <button
-              onClick={onRefresh}
-              disabled={loading}
-              className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center space-x-2 disabled:opacity-50"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </button>
-          )}
-
-          {allowUpload && (
-            <button
-              onClick={() => setShowUploadModal(true)}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Upload</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* File Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Files</p>
-              <p className="text-2xl font-bold text-gray-900">{files.length}</p>
-            </div>
-            <File className="h-6 w-6 text-gray-600" />
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Images</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {files.filter(f => f.type.startsWith('image/')).length}
-              </p>
-            </div>
-            <Image className="h-6 w-6 text-blue-600" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Documents</p>
-              <p className="text-2xl font-bold text-green-600">
-                {files.filter(f => !f.type.startsWith('image/')).length}
-              </p>
-            </div>
-            <FileText className="h-6 w-6 text-green-600" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Size</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {formatFileSize(files.reduce((sum, f) => sum + f.size, 0))}
-              </p>
-            </div>
-            <Folder className="h-6 w-6 text-purple-600" />
-          </div>
-        </div>
-      </div>
-
-      {/* Files Display */}
-      {filteredFiles.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-          <Folder className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Files Found</h3>
-          <p className="text-gray-600 mb-6">{emptyStateText}</p>
-          {allowUpload && (
-            <button
-              onClick={() => setShowUploadModal(true)}
-              className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-            >
-              Upload First File
-            </button>
-          )}
-        </div>
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredFiles.map((file) => (
-            <div key={file.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
-              {/* File Preview */}
-              <div className="relative h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
-                {file.type.startsWith('image/') ? (
-                  <img
-                    src={file.url}
-                    alt={file.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                  />
-                ) : (
-                  <div className="text-center">
-                    {getFileIcon(file)}
-                    <p className="text-sm text-gray-600 mt-2">{file.type}</p>
-                  </div>
-                )}
-                
-                {/* Overlay Actions */}
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleFileView(file)}
-                      className="bg-white text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <a
-                      href={file.url}
-                      download={file.name}
-                      className="bg-white text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <Download className="h-4 w-4" />
-                    </a>
-                    {allowDelete && (
-                      <button
-                        onClick={() => handleFileDelete(file.id)}
-                        className="bg-white text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
+    <div className="max-w-md mx-auto">
+      {/* Shipping Address Form */}
+      {showAddressForm && shippingAddress && onAddressChange && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Address</h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.full_name}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, full_name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="John Doe"
+                />
               </div>
 
-              {/* File Info */}
-              <div className="p-4">
-                <h4 className="font-medium text-gray-900 truncate mb-1">{file.name}</h4>
-                <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span>{formatFileSize(file.size)}</span>
-                  <span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          {/* Table Header */}
-          <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
-            <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
-              <div className="col-span-1">Type</div>
-              <div className="col-span-4">Name</div>
-              <div className="col-span-2">Size</div>
-              <div className="col-span-2">Upload Date</div>
-              <div className="col-span-3">Actions</div>
-            </div>
-          </div>
-
-          {/* Table Body */}
-          <div className="divide-y divide-gray-200">
-            {filteredFiles.map((file) => (
-              <div key={file.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                <div className="grid grid-cols-12 gap-4 items-center">
-                  <div className="col-span-1">
-                    {getFileIcon(file)}
-                  </div>
-                  
-                  <div className="col-span-4">
-                    <p className="font-medium text-gray-900 truncate">{file.name}</p>
-                    <p className="text-sm text-gray-600">{file.type}</p>
-                  </div>
-                  
-                  <div className="col-span-2">
-                    <p className="text-sm text-gray-900">{formatFileSize(file.size)}</p>
-                  </div>
-                  
-                  <div className="col-span-2">
-                    <p className="text-sm text-gray-900">{new Date(file.uploadedAt).toLocaleDateString()}</p>
-                    <p className="text-xs text-gray-500">{new Date(file.uploadedAt).toLocaleTimeString()}</p>
-                  </div>
-                  
-                  <div className="col-span-3">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleFileView(file)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="View file"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <a
-                        href={file.url}
-                        download={file.name}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Download file"
-                      >
-                        <Download className="h-4 w-4" />
-                      </a>
-                      {allowDelete && (
-                        <button
-                          onClick={() => handleFileDelete(file.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete file"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Upload Modal */}
-      {showUploadModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Upload Files</h2>
-                <button
-                  onClick={() => {
-                    setShowUploadModal(false);
-                    clearUploadState();
-                  }}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
+                <input
+                  type="tel"
+                  required
+                  value={shippingAddress.phone}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, phone: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="+90 555 123 4567"
+                />
               </div>
             </div>
 
-            <div className="p-6">
-              <FileUpload
-                onFileSelect={handleFileUpload}
-                acceptedTypes={['image/*', '.pdf', '.doc', '.docx']}
-                maxFileSize={50}
-                maxFiles={10}
-                multiple={true}
-                uploadProgress={uploadState.progress}
-                dragDropText="Drag and drop your files here"
-                browseText="Choose Files"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+              <input
+                type="email"
+                required
+                value={shippingAddress.email}
+                onChange={(e) => onAddressChange({ ...shippingAddress, email: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="email@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 1 *</label>
+              <input
+                type="text"
+                required
+                value={shippingAddress.address_line_1}
+                onChange={(e) => onAddressChange({ ...shippingAddress, address_line_1: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Street, Avenue, Building No"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 2 (Optional)</label>
+              <input
+                type="text"
+                value={shippingAddress.address_line_2 || ''}
+                onChange={(e) => onAddressChange({ ...shippingAddress, address_line_2: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Floor, Apartment No"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.city}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, city: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Istanbul"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">State/Province *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.state_province}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, state_province: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Istanbul"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.postal_code}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, postal_code: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="34000"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
+              <input
+                type="text"
+                required
+                value={shippingAddress.country}
+                onChange={(e) => onAddressChange({ ...shippingAddress, country: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Turkey"
               />
             </div>
           </div>
         </div>
       )}
 
-      {/* Preview Modal */}
-      {showPreviewModal && selectedFile && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <FilePreview
-              file={selectedFile}
-              onClose={() => setShowPreviewModal(false)}
-              onDelete={allowDelete ? handleFileDelete : undefined}
-              showActions={true}
-            />
+      {/* Order Summary */}
+      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Service:</span>
+            <span className="font-medium text-gray-900">{orderDetails.serviceName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Consultant:</span>
+            <span className="font-medium text-gray-900">{orderDetails.consultantName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Delivery Time:</span>
+            <span className="font-medium text-gray-900">{orderDetails.deliveryTime} days</span>
+          </div>
+          <div className="border-t border-gray-200 pt-3">
+            <div className="flex justify-between">
+              <span className="text-lg font-semibold text-gray-900">Total:</span>
+              <span className="text-lg font-bold text-green-600">
+                ${amount.toLocaleString()} {currency}
+              </span>
+            </div>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Payment Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Card Information
+          </label>
+          <div className="border border-gray-300 rounded-lg p-4 bg-white">
+            <CardElement options={cardElementOptions} />
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0" />
+            <span className="text-sm text-red-700">{error}</span>
+          </div>
+        )}
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <Lock className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-900">Güvenli Ödeme</span>
+          </div>
+          <p className="text-xs text-blue-800">
+            Ödeme bilgileriniz şifrelenir ve güvenlidir. Ödeme işlemi için Stripe kullanıyoruz.
+          </p>
+        </div>
+
+        <div className="mb-4">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-3">Ödeme yöntemini seçin:</p>
+            <button
+              type="submit"
+              disabled={!stripe || processing}
+              className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              {processing ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Ödeme İşleniyor...</span>
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-5 w-5" />
+                  <span>Ödemeyi Tamamla</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
 
-export default FileManager;
+interface StripeCheckoutProps {
+  isOpen: boolean;
+  onClose: () => void;
+  amount: number;
+  currency: string;
+  orderId: string;
+  orderDetails: {
+    serviceName: string;
+    consultantName: string;
+    deliveryTime: number;
+  };
+  onSuccess: (paymentIntentId: string) => void;
+  onError: (error: string) => void;
+  shippingAddress?: ShippingAddress;
+  onAddressChange?: (address: ShippingAddress) => void;
+  showAddressForm?: boolean;
+}
+
+const StripeCheckout: React.FC<StripeCheckoutProps> = ({
+  isOpen,
+  onClose,
+  amount,
+  currency,
+  orderId,
+  orderDetails,
+  onSuccess,
+  onError,
+  shippingAddress,
+  onAddressChange,
+  showAddressForm
+}) => {
+  // Check if Stripe is available
+  if (!stripePromise) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <div className="text-center">
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Payment System Ready</h2>
+            <p className="text-gray-600 mb-4">
+              Using Stripe test environment with your custom integration.
+            </p>
+            <button
+              onClick={onClose}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-900">Complete Payment</h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="h-5 w-5 text-gray-500" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <Elements stripe={stripePromise}>
+            <CheckoutForm
+              amount={amount}
+              currency={currency}
+              orderId={orderId}
+              orderDetails={orderDetails}
+              onSuccess={onSuccess}
+              onError={onError}
+              onCancel={onClose}
+              shippingAddress={shippingAddress}
+              onAddressChange={onAddressChange}
+              showAddressForm={showAddressForm}
+            />
+          </Elements>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StripeCheckout;
