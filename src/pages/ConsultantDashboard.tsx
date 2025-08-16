@@ -355,16 +355,8 @@ const ConsultantDashboard = () => {
                   <div className="space-y-1">
                     <Link 
                       to="/admin-dashboard"
-                        if (adminUsers.length === 1) {
-                          setSelectedAdminId(adminUsers[0].id);
-                          setChatType('admin-consultant');
-                          setIsChatOpen(true);
-                        } else if (adminUsers.length > 1) {
-                          // Show admin selection - for now, use first admin
-                          setSelectedAdminId(adminUsers[0].id);
-                          setChatType('admin-consultant');
-                          setIsChatOpen(true);
-                        }
+                      className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
                       <Shield className="h-4 w-4" />
                       <span>Admin Dashboard</span>
                     </Link>
@@ -673,19 +665,26 @@ const ConsultantDashboard = () => {
                       </div>
                     </div>
                     <button 
-                      onClick={fetchAssignedClients}
-                        // Use first admin as default target
-                        if (adminUsers.length > 0) {
+                      onClick={() => {
+                        if (adminUsers.length === 1) {
                           setSelectedAdminId(adminUsers[0].id);
+                          setChatType('admin-consultant');
+                          setIsChatOpen(true);
+                        } else if (adminUsers.length > 1) {
+                          // Show admin selection - for now, use first admin
+                          setSelectedAdminId(adminUsers[0].id);
+                          setChatType('admin-consultant');
+                          setIsChatOpen(true);
                         }
+                      }}
                       disabled={adminUsers.length === 0}
-                      className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                      className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                    >
                       <Crown className="h-4 w-4" />
-                      disabled={adminUsers.length === 0}
                       <span>Contact Admin</span>
                       {adminUsers.length === 0 && (
-                      <Crown className="h-5 w-5" />
-                      <span>Contact Admin</span>
+                        <span className="text-xs text-gray-400">(No admins available)</span>
+                      )}
                     </button>
                   </div>
 
@@ -727,7 +726,6 @@ const ConsultantDashboard = () => {
         chatType={chatType}
         currentUserId={profile?.id || 'consultant-1'}
         currentUserRole="consultant"
-        targetUserId={chatType === 'admin-consultant' ? selectedAdminId || undefined : undefined}
       />
     </>
   );
