@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase, logAdminAction, uploadFileToStorage, getPublicImageUrl } from '../../lib/supabase';
+import { supabase, uploadFileToStorage, getPublicImageUrl } from '../../lib/supabase';
+import { logAdminAction } from '../../lib/logging';
 import SearchFilterBar from '../../components/common/SearchFilterBar';
 import useAdvancedSearch from '../../hooks/useAdvancedSearch';
 import { 
