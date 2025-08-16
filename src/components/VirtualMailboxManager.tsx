@@ -172,24 +172,18 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
       return;
     }
 
-    console.log('📋 Address form submitted, opening payment modal');
+    console.log('📋 Address form submitted');
     
     if (!currentShippingItem) {
       console.error('❌ No current shipping item found');
       return;
     }
 
-    // Check if shipping fee is zero
-    if (currentShippingItem.shipping_fee === 0) {
-      console.log('💰 Shipping fee is $0, bypassing payment and processing directly');
-      setShowShippingAddressModal(false);
-      handlePaymentSuccess('zero_amount_payment');
-    } else {
-      console.log('💳 Shipping fee is $' + currentShippingItem.shipping_fee + ', opening payment modal');
-      // Close address modal and open payment modal
-      setShowShippingAddressModal(false);
-      setShowStripeCheckout(true);
-    }
+    // Always proceed to payment step (even for $0 shipping)
+    // This ensures consistent flow and proper address collection
+    console.log('💳 Proceeding to payment step for shipping fee: $' + currentShippingItem.shipping_fee);
+    setShowShippingAddressModal(false);
+    setShowStripeCheckout(true);
   };
 
   const handlePaymentSuccess = async (paymentIntentId: string) => {
@@ -197,14 +191,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
       console.log('💳 Payment successful:', paymentIntentId);
       if (!currentShippingItem) return;
 
-      // Update item with shipping address and payment info
+      // Update item with shipping address and payment info (no tracking number yet)
       const { error } = await supabase
         .from('virtual_mailbox_items')
         .update({
           shipping_option: 'physical',
           shipping_address: shippingAddress,
-          payment_status: 'paid',
-          shipping_fee: currentShippingItem.shipping_fee
+          payment_status: 'paid'
+          // Note: tracking_number will be set manually by consultant later
         })
         .eq('id', currentShippingItem.id);
 
@@ -216,8 +210,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
         .insert([{
           user_id: currentShippingItem.consultant_id,
           type: 'physical_shipping_requested',
-          title: 'Physical Shipping Requested',
-          message: `Client has requested physical shipping for ${currentShippingItem.document_name}`,
+          title: 'Fiziksel Gönderim Talebi',
+          message: `Müşteri ${currentShippingItem.document_name} belgesi için fiziksel gönderim talep etti. Lütfen belgeyi gönderin ve takip numarasını girin.`,
           priority: 'normal',
           related_table: 'virtual_mailbox_items',
           related_id: currentShippingItem.id,
@@ -240,10 +234,10 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
       });
       
       await fetchItems();
-      alert('Physical shipping request submitted successfully! Your consultant will process the shipment.');
+      alert('Fiziksel gönderim talebi başarıyla gönderildi! Danışmanınız belgeyi gönderdikten sonra takip numarasını paylaşacaktır.');
     } catch (error) {
       console.error('Error processing shipping request:', error);
-      alert('Failed to process shipping request. Please try again.');
+      alert('Fiziksel gönderim talebi gönderilemedi. Lütfen tekrar deneyin.');
     }
   };
 
@@ -307,6 +301,86 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
       await fetchItems();
     } catch (error) {
       console.error('Error previewing document:', error);
+    }
+  };
+
+  const handleTrackingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingTrackingItem) return;
+
+    try {
+      const updates: any = {
+        status: trackingForm.status
+      };
+
+      // Only update tracking number if provided
+      if (trackingForm.tracking_number.trim()) {
+        updates.tracking_number = trackingForm.tracking_number.trim();
+      }
+
+      // Set timestamps based on status
+      if (trackingForm.status === 'sent' && !editingTrackingItem.sent_date) {
+        updates.sent_date = new Date().toISOString();
+      }
+      if (trackingForm.status === 'delivered' && !editingTrackingItem.delivered_date) {
+        updates.delivered_date = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('virtual_mailbox_items')
+        .update(updates)
+        .eq('id', editingTrackingItem.id);
+
+      if (error) throw error;
+
+      // Notify client about status update
+      const { data: clientData } = await supabase
+        .from('clients')
+        .select('profile_id')
+        .eq('id', editingTrackingItem.client_id)
+        .single();
+
+      if (clientData?.profile_id) {
+        let notificationMessage = '';
+        if (trackingForm.status === 'sent') {
+          notificationMessage = `${editingTrackingItem.document_name} belgesi gönderildi.`;
+          if (trackingForm.tracking_number.trim()) {
+            notificationMessage += ` Takip numarası: ${trackingForm.tracking_number}`;
+          }
+        } else if (trackingForm.status === 'delivered') {
+          notificationMessage = `${editingTrackingItem.document_name} belgesi teslim edildi.`;
+        }
+
+        if (notificationMessage) {
+          await supabase
+            .from('notifications')
+            .insert([{
+              user_id: clientData.profile_id,
+              type: 'document_shipped',
+              title: 'Belge Gönderim Güncellemesi',
+              message: notificationMessage,
+              priority: 'normal',
+              related_table: 'virtual_mailbox_items',
+              related_id: editingTrackingItem.id,
+              action_url: '/client/documents'
+            }]);
+        }
+      }
+
+      setShowTrackingModal(false);
+      setEditingTrackingItem(null);
+      setTrackingForm({
+        tracking_number: '',
+        status: 'pending',
+        shipping_option: 'physical'
+      });
+      
+      await fetchItems();
+      alert('Takip bilgileri başarıyla güncellendi!');
+    } catch (error) {
+      console.error('Error updating tracking information:', error);
+      alert('Takip bilgileri güncellenemedi');
     }
   };
 
@@ -453,6 +527,24 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                     </>
                   )}
 
+                  {viewMode === 'consultant' && (
+                    <button
+                      onClick={() => {
+                        setEditingTrackingItem(item);
+                        setTrackingForm({
+                          tracking_number: item.tracking_number || '',
+                          status: item.status,
+                          shipping_option: item.shipping_option || 'physical'
+                        });
+                        setShowTrackingModal(true);
+                      }}
+                      className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-colors flex items-center space-x-2"
+                    >
+                      <Truck className="h-4 w-4" />
+                      <span>Gönder & Takip</span>
+                    </button>
+                  )}
+
                   {viewMode === 'client' && item.status === 'sent' && item.payment_status === 'unpaid' && (
                     <button
                       onClick={() => handleRequestPhysicalShipping(item)}
@@ -538,12 +630,13 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
               <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                 <div className="flex items-center space-x-2 mb-2">
                   <Truck className="h-5 w-5 text-blue-600" />
-                  <h4 className="font-medium text-blue-900">Shipping Information</h4>
+                  <h4 className="font-medium text-blue-900">Gönderim Bilgileri</h4>
                 </div>
                 <div className="text-sm text-blue-800 space-y-1">
-                  <p>• Enter tracking number only when document is physically shipped</p>
-                  <p>• Update status to reflect current document state</p>
-                  <p>• Client will be notified of status changes</p>
+                  <p>• Takip numarasını sadece belgeyi fiziksel olarak gönderdiğinizde girin</p>
+                  <p>• Durumu belgenin mevcut halini yansıtacak şekilde güncelleyin</p>
+                  <p>• Müşteri durum değişikliklerinden haberdar edilecektir</p>
+                  <p>• Boş bırakırsanız takip numarası "Henüz atanmadı" olarak görünecektir</p>
                 </div>
               </div>
 
@@ -877,7 +970,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                   <div className="space-y-3">
                     <div>
                       <span className="text-sm text-gray-600">Tracking Number:</span>
-                      <p className="font-medium font-mono">{selectedItem.tracking_number || 'Not assigned'}</p>
+                      <p className="font-medium font-mono">{selectedItem.tracking_number || 'Henüz atanmadı'}</p>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">Shipping Fee:</span>
