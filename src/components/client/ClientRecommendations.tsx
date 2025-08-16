@@ -1,405 +1,382 @@
-import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { CreditCard, Lock, CheckCircle, AlertTriangle, X } from 'lucide-react';
-import { processDirectPayment } from '../lib/stripe';
-// Optional: remove this line if trackBusinessEvent doesn't exist
-import { trackBusinessEvent } from '../utils/analytics';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
+import { useClientRecommendations } from '../../hooks/useClientRecommendations';
+import { 
+  Lightbulb, 
+  Star, 
+  Clock, 
+  Eye, 
+  X, 
+  CheckCircle, 
+  ArrowRight,
+  TrendingUp,
+  Target,
+  Zap,
+  Award,
+  Building,
+  FileText,
+  DollarSign,
+  Calendar,
+  AlertTriangle,
+  RefreshCw
+} from 'lucide-react';
 
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
-  : null;
-
-interface ShippingAddress {
-  full_name: string;
-  company_name?: string;
-  address_line_1: string;
-  address_line_2?: string;
-  city: string;
-  state_province: string;
-  postal_code: string;
-  country: string;
-  phone: string;
-  email: string;
+interface ClientRecommendation {
+  id: string;
+  client_id: string;
+  recommendation_type: string;
+  title: string;
+  description?: string;
+  action_url?: string;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  is_read: boolean;
+  is_active: boolean;
+  expires_at?: string;
+  metadata: any;
+  generated_by: string;
+  generated_at: string;
 }
 
-interface CheckoutFormProps {
-  amount: number;
-  currency: string;
-  orderId: string;
-  orderDetails: {
-    serviceName: string;
-    consultantName: string;
-    deliveryTime: number;
-  };
-  onSuccess: (paymentIntentId: string) => void;
-  onError: (error: string) => void;
-  onCancel: () => void;
-  shippingAddress?: ShippingAddress;
-  onAddressChange?: (address: ShippingAddress) => void;
-  showAddressForm?: boolean;
+interface ClientRecommendationsProps {
+  clientId?: string;
 }
 
-const CheckoutForm: React.FC<CheckoutFormProps> = ({
-  amount,
-  currency,
-  orderId,
-  orderDetails,
-  onSuccess,
-  onError,
-  onCancel,
-  shippingAddress,
-  onAddressChange,
-  showAddressForm
-}) => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [processing, setProcessing] = useState(false);
+const ClientRecommendations: React.FC<ClientRecommendationsProps> = ({ clientId }) => {
+  const { profile } = useAuth();
+  const [recommendations, setRecommendations] = useState<ClientRecommendation[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!stripe || !elements) return;
-
-    setProcessing(true);
-    setError(null);
-
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) {
-      setError('Card element not found');
-      setProcessing(false);
-      return;
+  useEffect(() => {
+    if (clientId || profile?.id) {
+      fetchRecommendations();
     }
+  }, [clientId, profile]);
 
+  const fetchRecommendations = async () => {
     try {
-      const { paymentIntent } = await processDirectPayment(
-        stripe,
-        cardElement,
-        amount,
-        currency,
-        {
-          order_id: orderId,
-          service_name: orderDetails.serviceName,
-          consultant_name: orderDetails.consultantName,
-          customer_name: shippingAddress?.full_name || orderDetails.consultantName,
-          shipping_address: shippingAddress
-        }
-      );
+      setLoading(true);
+      setError(null);
 
-      if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Optional analytics tracking
-        if (typeof trackBusinessEvent?.paymentCompleted === 'function') {
-          trackBusinessEvent.paymentCompleted(amount, currency, orderDetails.serviceName, paymentIntent.id);
+      let targetClientId = clientId;
+
+      if (!targetClientId && profile?.id) {
+        // Get client ID from profile
+        const { data: clientData } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('profile_id', profile.id)
+          .single();
+
+        if (!clientData) {
+          setRecommendations([]);
+          return;
         }
-        onSuccess(paymentIntent.id);
+        targetClientId = clientData.id;
       }
+
+      if (!targetClientId) {
+        setRecommendations([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('client_recommendations')
+        .select('*')
+        .eq('client_id', targetClientId)
+        .eq('is_active', true)
+        .order('generated_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setRecommendations(data || []);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
-      setError(errorMessage);
-      onError(errorMessage);
+      console.error('Error fetching recommendations:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch recommendations');
+      setRecommendations([]);
     } finally {
-      setProcessing(false);
+      setLoading(false);
     }
   };
 
-  const cardElementOptions = {
-    style: {
-      base: {
-        fontSize: '16px',
-        color: '#424770',
-        '::placeholder': { color: '#aab7c4' },
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-      },
-      invalid: { color: '#9e2146' },
-    },
-    hidePostalCode: false,
-  } as const;
+  const markAsRead = async (recommendationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('client_recommendations')
+        .update({ is_read: true })
+        .eq('id', recommendationId);
 
-  return (
-    <div className="max-w-md mx-auto">
-      {/* Shipping Address Form */}
-      {showAddressForm && shippingAddress && onAddressChange && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Address</h3>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={shippingAddress.full_name}
-                  onChange={(e) => onAddressChange({ ...shippingAddress, full_name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="John Doe"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
-                <input
-                  type="tel"
-                  required
-                  value={shippingAddress.phone}
-                  onChange={(e) => onAddressChange({ ...shippingAddress, phone: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="+90 555 123 4567"
-                />
-              </div>
-            </div>
+      if (error) throw error;
+      
+      setRecommendations(prev => 
+        prev.map(rec => rec.id === recommendationId ? { ...rec, is_read: true } : rec)
+      );
+    } catch (err) {
+      console.error('Error marking recommendation as read:', err);
+    }
+  };
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-              <input
-                type="email"
-                required
-                value={shippingAddress.email}
-                onChange={(e) => onAddressChange({ ...shippingAddress, email: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="email@example.com"
-              />
-            </div>
+  const dismissRecommendation = async (recommendationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('client_recommendations')
+        .update({ is_active: false })
+        .eq('id', recommendationId);
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 1 *</label>
-              <input
-                type="text"
-                required
-                value={shippingAddress.address_line_1}
-                onChange={(e) => onAddressChange({ ...shippingAddress, address_line_1: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Street, Avenue, Building No"
-              />
-            </div>
+      if (error) throw error;
+      await fetchRecommendations();
+    } catch (err) {
+      console.error('Error dismissing recommendation:', err);
+    }
+  };
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 2 (Optional)</label>
-              <input
-                type="text"
-                value={shippingAddress.address_line_2 || ''}
-                onChange={(e) => onAddressChange({ ...shippingAddress, address_line_2: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Floor, Apartment No"
-              />
-            </div>
+  const getRecommendationIcon = (type: string) => {
+    switch (type) {
+      case 'service_upgrade': return <TrendingUp className="h-5 w-5 text-blue-600" />;
+      case 'document_required': return <FileText className="h-5 w-5 text-orange-600" />;
+      case 'tax_optimization': return <DollarSign className="h-5 w-5 text-green-600" />;
+      case 'compliance_update': return <Shield className="h-5 w-5 text-red-600" />;
+      case 'business_opportunity': return <Target className="h-5 w-5 text-purple-600" />;
+      case 'deadline_reminder': return <Calendar className="h-5 w-5 text-yellow-600" />;
+      default: return <Lightbulb className="h-5 w-5 text-blue-600" />;
+    }
+  };
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
-                <input
-                  type="text"
-                  required
-                  value={shippingAddress.city}
-                  onChange={(e) => onAddressChange({ ...shippingAddress, city: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Istanbul"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">State/Province *</label>
-                <input
-                  type="text"
-                  required
-                  value={shippingAddress.state_province}
-                  onChange={(e) => onAddressChange({ ...shippingAddress, state_province: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Istanbul"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code *</label>
-                <input
-                  type="text"
-                  required
-                  value={shippingAddress.postal_code}
-                  onChange={(e) => onAddressChange({ ...shippingAddress, postal_code: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="34000"
-                />
-              </div>
-            </div>
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'border-l-red-500 bg-red-50';
+      case 'high': return 'border-l-orange-500 bg-orange-50';
+      case 'normal': return 'border-l-blue-500 bg-blue-50';
+      case 'low': return 'border-l-gray-500 bg-gray-50';
+      default: return 'border-l-blue-500 bg-blue-50';
+    }
+  };
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
-              <input
-                type="text"
-                required
-                value={shippingAddress.country}
-                onChange={(e) => onAddressChange({ ...shippingAddress, country: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Turkey"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+  const getPriorityBadgeColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800';
+      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'normal': return 'bg-blue-100 text-blue-800';
+      case 'low': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
+  };
 
-      {/* Order Summary */}
-      <div className="bg-gray-50 rounded-lg p-6 mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Service:</span>
-            <span className="font-medium text-gray-900">{orderDetails.serviceName}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Consultant:</span>
-            <span className="font-medium text-gray-900">{orderDetails.consultantName}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Delivery Time:</span>
-            <span className="font-medium text-gray-900">{orderDetails.deliveryTime} days</span>
-          </div>
-          <div className="border-t border-gray-200 pt-3">
-            <div className="flex justify-between">
-              <span className="text-lg font-semibold text-gray-900">Total:</span>
-              <span className="text-lg font-bold text-green-600">
-                ${amount.toLocaleString()} {currency}
-              </span>
-            </div>
-          </div>
+  const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    
+    return date.toLocaleDateString();
+  };
+
+  const isExpiringSoon = (expiresAt?: string) => {
+    if (!expiresAt) return false;
+    const expiryDate = new Date(expiresAt);
+    const now = new Date();
+    const diffInDays = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return diffInDays <= 3;
+  };
+
+  const unreadCount = recommendations.filter(r => !r.is_read).length;
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
         </div>
       </div>
+    );
+  }
 
-      {/* Payment Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Card Information</label>
-          <div className="border border-gray-300 rounded-lg p-4 bg-white">
-            <CardElement options={cardElementOptions} />
-          </div>
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="text-center py-8">
+          <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Recommendations</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={fetchRecommendations}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2 mx-auto"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Try Again</span>
+          </button>
         </div>
+      </div>
+    );
+  }
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
-            <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0" />
-            <span className="text-sm text-red-700">{error}</span>
+  if (recommendations.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center space-x-2">
+            <Lightbulb className="h-5 w-5 text-blue-500" />
+            <h2 className="text-lg font-semibold text-gray-900">Recommendations for You</h2>
           </div>
-        )}
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <Lock className="h-4 w-4" />
-            <span className="text-sm font-medium text-blue-900">Güvenli Ödeme</span>
-          </div>
-          <p className="text-xs">
-            Ödeme bilgileriniz şifrelenir ve güvenlidir. Ödeme işlemi için Stripe kullanıyoruz.
+          <p className="text-sm text-gray-600 mt-1">
+            Personalized recommendations tailored to your business needs
           </p>
         </div>
-
-        <button
-          type="submit"
-          disabled={!stripe || processing}
-          className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-        >
-          {processing ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-              <span>Processing...</span>
-            </>
-          ) : (
-            <>
-              <CreditCard className="h-5 w-5" />
-              <span>Pay Now</span>
-            </>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={onCancel}
-          className="w-full mt-3 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-        >
-          Cancel
-        </button>
-      </form>
-    </div>
-  );
-};
-
-interface StripeCheckoutProps {
-  isOpen: boolean;
-  onClose: () => void;
-  amount: number;
-  currency: string;
-  orderId: string;
-  orderDetails: {
-    serviceName: string;
-    consultantName: string;
-    deliveryTime: number;
-  };
-  onSuccess: (paymentIntentId: string) => void;
-  onError: (error: string) => void;
-  shippingAddress?: ShippingAddress;
-  onAddressChange?: (address: ShippingAddress) => void;
-  showAddressForm?: boolean;
-}
-
-const StripeCheckout: React.FC<StripeCheckoutProps> = ({
-  isOpen,
-  onClose,
-  amount,
-  currency,
-  orderId,
-  orderDetails,
-  onSuccess,
-  onError,
-  shippingAddress,
-  onAddressChange,
-  showAddressForm
-}) => {
-  if (!isOpen) return null;
-
-  if (!stripePromise) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-          <div className="text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">Payment System Ready</h2>
-            <p className="text-sm text-gray-600 mb-3">Ödeme yöntemini seçin:</p>
-            <button
-              onClick={onClose}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-            >
-              Continue
-            </button>
-          </div>
+        <div className="p-6 text-center">
+          <Lightbulb className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Recommendations Yet</h3>
+          <p className="text-gray-600">
+            Personalized recommendations will appear here as your business process progresses.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Ödemeyi Tamamla</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <X className="h-5 w-5 text-gray-500" />
-            </button>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Lightbulb className="h-5 w-5 text-blue-500" />
+            <h2 className="text-lg font-semibold text-gray-900">Recommendations for You</h2>
+            {unreadCount > 0 && (
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                {unreadCount} new
+              </span>
+            )}
           </div>
+          <button
+            onClick={fetchRecommendations}
+            className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Refresh</span>
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mt-1">
+          Recommendations tailored to your industry and needs
+        </p>
+      </div>
+
+      <div className="p-6">
+        <div className="space-y-4">
+          {recommendations.map((recommendation) => (
+            <div
+              key={recommendation.id}
+              className={`border-l-4 rounded-lg p-4 transition-all duration-200 hover:shadow-md ${
+                getPriorityColor(recommendation.priority)
+              } ${!recommendation.is_read ? 'shadow-sm' : ''}`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-start space-x-3 flex-1">
+                  <div className="flex-shrink-0 mt-1">
+                    {getRecommendationIcon(recommendation.recommendation_type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h4 className={`font-semibold ${
+                        !recommendation.is_read ? 'text-gray-900' : 'text-gray-700'
+                      }`}>
+                        {recommendation.title}
+                      </h4>
+                      {!recommendation.is_read && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      )}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        getPriorityBadgeColor(recommendation.priority)
+                      }`}>
+                        {recommendation.priority.toUpperCase()}
+                      </span>
+                    </div>
+                    
+                    {recommendation.description && (
+                      <p className={`text-sm mb-2 ${
+                        !recommendation.is_read ? 'text-gray-700' : 'text-gray-600'
+                      }`}>
+                        {recommendation.description}
+                      </p>
+                    )}
+                    
+                    <div className="flex items-center space-x-4 text-xs text-gray-500">
+                      <span>{formatTimeAgo(recommendation.generated_at)}</span>
+                      <span>•</span>
+                      <span className="capitalize">{recommendation.recommendation_type.replace('_', ' ')}</span>
+                      {recommendation.expires_at && (
+                        <>
+                          <span>•</span>
+                          <span className={isExpiringSoon(recommendation.expires_at) ? 'text-red-600 font-medium' : ''}>
+                            Expires: {new Date(recommendation.expires_at).toLocaleDateString()}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  {recommendation.action_url && (
+                    <a
+                      href={recommendation.action_url}
+                      onClick={() => {
+                        if (!recommendation.is_read) {
+                          markAsRead(recommendation.id);
+                        }
+                      }}
+                      className="bg-purple-50 text-purple-600 px-3 py-1 rounded-lg font-medium hover:bg-purple-100 transition-colors text-sm flex items-center space-x-1"
+                    >
+                      <Eye className="h-3 w-3" />
+                      <span>View</span>
+                    </a>
+                  )}
+                  <button
+                    onClick={() => dismissRecommendation(recommendation.id)}
+                    className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                    title="Dismiss recommendation"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Expiry Warning */}
+              {recommendation.expires_at && isExpiringSoon(recommendation.expires_at) && (
+                <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-4 w-4 text-yellow-600" />
+                    <span className="text-sm text-yellow-800 font-medium">
+                      This recommendation expires in {Math.ceil((new Date(recommendation.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
-        <div className="p-6">
-          <Elements stripe={stripePromise}>
-            <CheckoutForm
-              amount={amount}
-              currency={currency}
-              orderId={orderId}
-              orderDetails={orderDetails}
-              onSuccess={onSuccess}
-              onError={onError}
-              onCancel={onClose}
-              shippingAddress={shippingAddress}
-              onAddressChange={onAddressChange}
-              showAddressForm={showAddressForm}
-            />
-          </Elements>
-        </div>
+        {/* View All Link */}
+        {recommendations.length > 0 && (
+          <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+            <button
+              onClick={() => {
+                // Navigate to full recommendations page
+                window.location.href = '/client/recommendations';
+              }}
+              className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1 mx-auto"
+            >
+              <span>View All Recommendations</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default StripeCheckout;
+export default ClientRecommendations;
