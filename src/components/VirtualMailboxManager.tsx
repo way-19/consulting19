@@ -463,16 +463,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                     </button>
                   )}
 
-                  {viewMode === 'consultant' && (
-                    <button
-                      onClick={() => handleEditTracking(item)}
-                      className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors flex items-center space-x-2"
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>Edit Tracking</span>
-                    </button>
-                  )}
-
                   <button
                     onClick={() => {
                       setSelectedItem(item);
@@ -486,6 +476,98 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Tracking Number Edit Modal - For Consultants */}
+      {showTrackingModal && editingTrackingItem && viewMode === 'consultant' && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Edit Tracking Information</h2>
+                <button
+                  onClick={() => {
+                    setShowTrackingModal(false);
+                    setEditingTrackingItem(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+              <p className="text-gray-600 mt-2">
+                Document: <strong>{editingTrackingItem.document_name}</strong>
+              </p>
+            </div>
+
+            <form onSubmit={handleTrackingSubmit} className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tracking Number
+                </label>
+                <input
+                  type="text"
+                  value={trackingForm.tracking_number}
+                  onChange={(e) => setTrackingForm(prev => ({ ...prev, tracking_number: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Enter tracking number manually"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Leave empty if no tracking number is available
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Document Status
+                </label>
+                <select
+                  value={trackingForm.status}
+                  onChange={(e) => setTrackingForm(prev => ({ ...prev, status: e.target.value as any }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="pending">Pending - Not yet processed</option>
+                  <option value="sent">Sent - Document has been shipped</option>
+                  <option value="delivered">Delivered - Document reached client</option>
+                  <option value="viewed">Viewed - Client has viewed document</option>
+                  <option value="downloaded">Downloaded - Client has downloaded</option>
+                </select>
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Truck className="h-5 w-5 text-blue-600" />
+                  <h4 className="font-medium text-blue-900">Shipping Information</h4>
+                </div>
+                <div className="text-sm text-blue-800 space-y-1">
+                  <p>• Enter tracking number only when document is physically shipped</p>
+                  <p>• Update status to reflect current document state</p>
+                  <p>• Client will be notified of status changes</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTrackingModal(false);
+                    setEditingTrackingItem(null);
+                  }}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Save className="h-5 w-5" />
+                  <span>Update Tracking</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
