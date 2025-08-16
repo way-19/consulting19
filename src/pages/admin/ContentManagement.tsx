@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase';
 import StripeCheckout from './StripeCheckout';
 import FileUpload, { UploadedFile } from './common/FileUpload';
 import { useFileUpload } from '../hooks/useFileUpload';
+import FileUpload, { UploadedFile } from './common/FileUpload';
+import { useFileUpload } from '../hooks/useFileUpload';
 import { 
   Plus, 
   FileText, 
@@ -89,12 +91,21 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     }
   });
 
+  const { uploadFile, uploadState } = useFileUpload({
+    bucketName: 'documents',
+    folder: 'virtual_mailbox',
+    onUploadComplete: (file, filePath) => {
+      console.log('Virtual mailbox file uploaded:', file.name, filePath);
+    }
+  });
+
   const [formData, setFormData] = useState({
     client_id: clientId || '',
     document_type: '',
     document_name: '',
     description: '',
     shipping_fee: 25.00,
+    file: null as File | null
     file: null as File | null
   });
 
@@ -185,8 +196,22 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         fileUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/${filePath}`;
       }
       
+      let fileUrl = '';
+      
+      // Upload file if provided
+      if (formData.file) {
+        const filePath = await uploadFile(formData.file);
+        fileUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/${filePath}`;
+      }
+      
       const itemData = {
         client_id: formData.client_id,
+        document_type: formData.document_type,
+        document_name: formData.document_name,
+        description: formData.description,
+        shipping_fee: formData.shipping_fee,
+        file_url: fileUrl,
+        file_size: formData.file?.size || null,
         document_type: formData.document_type,
         document_name: formData.document_name,
         description: formData.description,
