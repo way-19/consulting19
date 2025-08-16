@@ -3,7 +3,7 @@ import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { CreditCard, Lock, CheckCircle, AlertTriangle, X } from 'lucide-react';
 import { processDirectPayment } from '../../lib/stripe';
-import { trackBusinessEvent } from '../utils/analytics'; // Import analytics
+import { trackBusinessEvent } from '../../utils/analytics'; // Import analytics
 
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
