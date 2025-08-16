@@ -49,7 +49,7 @@ export const logAdminAction = logUserAction;
 
 // Utility function to upload files to Supabase storage
 export async function uploadFileToStorage(file: File, folder: string, bucketName: string = 'documents') {
-  const filePath = `${folder}/${file.name}`;
+  const filePath = \`${folder}/${file.name}`;
   const { error } = await supabase.storage.from(bucketName).upload(filePath, file, {
     cacheControl: '3600',
     upsert: false,
@@ -80,7 +80,7 @@ export function validateFileUpload(file: File, options: { maxSize: number; allow
   const errors: string[] = [];
 
   if (file.size > options.maxSize) {
-    errors.push(`File size exceeds ${options.maxSize / (1024 * 1024)}MB limit.`);
+    errors.push(\`File size exceeds ${options.maxSize / (1024 * 1024)}MB limit.`);
   }
 
   const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
@@ -90,7 +90,7 @@ export function validateFileUpload(file: File, options: { maxSize: number; allow
   const isExtensionAllowed = options.allowedExtensions.includes(fileExtension.substring(1));
 
   if (!isTypeAllowed && !isExtensionAllowed) {
-    errors.push(`File type or extension not supported. Allowed types: ${options.allowedTypes.join(', ')}, Allowed extensions: ${options.allowedExtensions.join(', ')}.`);
+    errors.push(\`File type or extension not supported. Allowed types: ${options.allowedTypes.join(', ')}, Allowed extensions: ${options.allowedExtensions.join(', ')}.`);
   }
 
   return {
