@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { supabase, logUserAction } from '../lib/supabase';
 import { 
   ArrowLeft,
   User,
@@ -122,6 +122,23 @@ const MyProfilePage = () => {
 
       await refreshProfile();
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      
+      // Log the profile update action
+      await logUserAction(
+        'UPDATE_PROFILE',
+        'profiles',
+        profile?.id,
+        {
+          full_name: profile?.full_name,
+          phone: profile?.phone,
+          country: profile?.country
+        },
+        {
+          full_name: profileForm.full_name,
+          phone: profileForm.phone,
+          country: profileForm.country
+        }
+      );
     } catch (error) {
       console.error('Error updating profile:', error);
       setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
@@ -174,6 +191,15 @@ const MyProfilePage = () => {
       });
 
       setMessage({ type: 'success', text: 'Password changed successfully!' });
+      
+      // Log the password change action
+      await logUserAction(
+        'CHANGE_PASSWORD',
+        'profiles',
+        profile?.id,
+        null,
+        { password_changed: true }
+      );
     } catch (error) {
       console.error('Error changing password:', error);
       setMessage({ type: 'error', text: 'Failed to change password. Please try again.' });

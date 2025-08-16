@@ -479,6 +479,7 @@ export const logUserAction = async (
 
     const ipAddress = await getClientIP();
     const userAgent = navigator.userAgent;
+    const sessionId = generateSessionId();
 
     const { error } = await supabase
       .from('audit_logs')
@@ -490,7 +491,8 @@ export const logUserAction = async (
         old_values: oldValues,
         new_values: newValues,
         ip_address: ipAddress,
-        user_agent: userAgent
+        user_agent: userAgent,
+        session_id: sessionId
       }]);
 
     if (error) {
@@ -498,6 +500,57 @@ export const logUserAction = async (
     }
   } catch (error) {
     console.error('Error in logUserAction:', error);
+  }
+};
+
+// Generate a session ID for tracking user sessions
+const generateSessionId = (): string => {
+  // Try to get existing session ID from sessionStorage
+  let sessionId = sessionStorage.getItem('consulting19_session_id');
+  
+  if (!sessionId) {
+    // Generate new session ID
+    sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    sessionStorage.setItem('consulting19_session_id', sessionId);
+  }
+  
+  return sessionId;
+};
+
+// Enhanced admin action logging with session tracking
+export const logAdminAction = async (
+  action: string,
+  targetTable?: string,
+  targetId?: string,
+  oldValues?: any,
+  newValues?: any,
+  ipAddress?: string,
+  userAgent?: string
+) => {
+  const user = await getCurrentUser();
+  if (!user) return;
+
+  // Get IP address and user agent if not provided
+  const finalIpAddress = ipAddress || await getClientIP();
+  const finalUserAgent = userAgent || navigator.userAgent;
+  const sessionId = generateSessionId();
+
+  const { error } = await supabase
+    .from('audit_logs')
+    .insert([{
+      user_id: user.id,
+      action,
+      target_table: targetTable,
+      target_id: targetId,
+      old_values: oldValues,
+      new_values: newValues,
+      ip_address: finalIpAddress,
+      user_agent: finalUserAgent,
+      session_id: sessionId
+    }]);
+
+  if (error) {
+    console.error('Error logging admin action:', error);
   }
 };
 // Image Upload and Storage Helpers
