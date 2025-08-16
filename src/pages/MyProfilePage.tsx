@@ -45,6 +45,18 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   currency,
   orderId,
   orderDetails,
+  onSuccess,
+  onError,
+  onCancel,
+  shippingAddress,
+  onAddressChange,
+  showAddressForm
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!stripe || !elements) return;
@@ -357,12 +369,12 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     );
   }
 
-                  <span>Ödeme İşleniyor...</span>
+  return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-                  <span>Ödemeyi Tamamla</span>
+            <h2 className="text-xl font-bold text-gray-900">Ödemeyi Tamamla</h2>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <X className="h-5 w-5 text-gray-500" />
             </button>
