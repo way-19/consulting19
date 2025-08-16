@@ -278,6 +278,17 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
             viewed_date: new Date().toISOString(),
             status: item.status === 'sent' ? 'viewed' : item.status
           })
+          .eq('id', item.id);
+      }
+
+      // Open file in new tab
+      window.open(item.file_url, '_blank');
+      await fetchItems();
+    } catch (error) {
+      console.error('Error previewing document:', error);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered': return 'bg-green-100 text-green-800';
