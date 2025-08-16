@@ -166,9 +166,23 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
     }
 
     console.log('📋 Address form submitted, opening payment modal');
-    // Close address modal and open payment modal
-    setShowShippingAddressModal(false);
-    setShowStripeCheckout(true);
+    
+    if (!currentShippingItem) {
+      console.error('❌ No current shipping item found');
+      return;
+    }
+
+    // Check if shipping fee is zero
+    if (currentShippingItem.shipping_fee === 0) {
+      console.log('💰 Shipping fee is $0, bypassing payment and processing directly');
+      setShowShippingAddressModal(false);
+      handlePaymentSuccess('zero_amount_payment');
+    } else {
+      console.log('💳 Shipping fee is $' + currentShippingItem.shipping_fee + ', opening payment modal');
+      // Close address modal and open payment modal
+      setShowShippingAddressModal(false);
+      setShowStripeCheckout(true);
+    }
   };
 
   const handlePaymentSuccess = async (paymentIntentId: string) => {
