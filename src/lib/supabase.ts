@@ -1,428 +1,253 @@
-import React, { useState, useEffect } from 'react';
-import { loadStripe, Stripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { CreditCard, Lock, CheckCircle, AlertTriangle, X } from 'lucide-react';
-import { processDirectPayment } from '../lib/stripe';
-import { trackBusinessEvent } from '../utils/analytics'; // Import analytics
+// src/lib/supabase.ts
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
-  : null;
+type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json }
+  | Json[];
 
-interface ShippingAddress {
-  full_name: string;
-  company_name?: string;
-  address_line_1: string;
-  address_line_2?: string;
-  city: string;
-  state_province: string;
-  postal_code: string;
-  country: string;
-  phone: string;
-  email: string;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
+export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+// -------------------- Public URL helpers --------------------
+const DEFAULT_BUCKET = 'documents';
+const isAbsoluteUrl = (s: string) => /^https?:\/\//i.test(s);
+
+/** 
+ * getPublicImageUrl('bucket', 'path') veya getPublicImageUrl('path') (DEFAULT_BUCKET)
+ */
+export function getPublicImageUrl(bucketOrPath: string, maybePath?: string): string {
+  if (maybePath !== undefined) {
+    const bucket = bucketOrPath;
+    const path = maybePath;
+    if (!path) return '';
+    if (isAbsoluteUrl(path)) return path;
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    return data.publicUrl;
+  } else {
+    const path = bucketOrPath;
+    if (!path) return '';
+    if (isAbsoluteUrl(path)) return path;
+    const { data } = supabase.storage.from(DEFAULT_BUCKET).getPublicUrl(path);
+    return data.publicUrl;
+  }
 }
 
-interface CheckoutFormProps {
-  amount: number;
-  currency: string;
-  orderId: string;
-  orderDetails: {
-    serviceName: string;
-    consultantName: string;
-    deliveryTime: number;
-  };
-  onSuccess: (paymentIntentId: string) => void;
-  onError: (error: string) => void;
-  onCancel: () => void;
-  shippingAddress?: ShippingAddress;
-  onAddressChange?: (address: ShippingAddress) => void;
-  showAddressForm?: boolean;
+export function getPublicFileUrl(bucket: string, path: string): string {
+  if (!path) return '';
+  if (isAbsoluteUrl(path)) return path;
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
 }
 
-const CheckoutForm: React.FC<CheckoutFormProps> = ({
-  amount,
-  currency,
-  orderId,
-  orderDetails,
-  onSuccess,
-  onError,
-  onCancel,
-  shippingAddress,
-  onAddressChange,
-  showAddressForm = false
-}) => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+// -------------------- Settings helpers --------------------
+/**
+ * Tablo varsayımı: 'settings' (columns: key text primary key, value jsonb, updated_at timestamptz)
+ * Şemanız farklıysa tablo adını/kolonları kendi ihtiyacınıza göre değiştirin.
+ */
+export async function getSetting<T = Json>(key: string): Promise<T | null> {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', key)
+    .maybeSingle();
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!stripe || !elements) {
-      return;
-    }
+  if (error) {
+    console.warn('getSetting error', error);
+    return null;
+  }
+  return (data?.value as T) ?? null;
+}
 
-    setProcessing(true);
-    setError(null);
+export async function updateSetting(key: string, value: Json): Promise<boolean> {
+  const row = { key, value, updated_at: new Date().toISOString() };
+  const { error } = await supabase.from('settings').upsert(row, { onConflict: 'key' });
+  if (error) {
+    console.warn('updateSetting error', error);
+    return false;
+  }
+  return true;
+}
 
-    const cardElement = elements.getElement(CardElement);
-
-    if (!cardElement) {
-      setError('Card element not found');
-      setProcessing(false);
-      return;
-    }
-
-    try {
-      const { paymentIntent } = await processDirectPayment(
-        stripe,
-        cardElement,
-        amount,
-        currency,
-        {
-          order_id: orderId,
-          service_name: orderDetails.serviceName,
-          consultant_name: orderDetails.consultantName,
-          customer_name: shippingAddress?.full_name || orderDetails.consultantName,
-          shipping_address: shippingAddress
-        }
-      );
-
-      if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Track successful payment
-        trackBusinessEvent.paymentCompleted(amount, currency, orderDetails.serviceName, paymentIntent.id);
-        
-        onSuccess(paymentIntent.id);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
-      setError(errorMessage);
-      onError(errorMessage);
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const cardElementOptions = {
-    style: {
-      base: {
-        fontSize: '16px',
-        color: '#424770',
-        '::placeholder': {
-          color: '#aab7c4',
-        },
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-      },
-      invalid: {
-        color: '#9e2146',
-      },
-    },
-    hidePostalCode: false,
-  };
-
-  return (
-    <div className="max-w-md mx-auto">
-      {/* Shipping Address Form */}
-      {showAddressForm && shippingAddress && onAddressChange && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Address</h3>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={shippingAddress.full_name}
-                  onChange={(e) => onAddressChange({ ...shippingAddress, full_name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="John Doe"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
-                <input
-                  type="tel"
-                  required
-                  value={shippingAddress.phone}
-                  onChange={(e) => onAddressChange({ ...shippingAddress, phone: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="+90 555 123 4567"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-              <input
-                type="email"
-                required
-                value={shippingAddress.email}
-                onChange={(e) => onAddressChange({ ...shippingAddress, email: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="email@example.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 1 *</label>
-              <input
-                type="text"
-                required
-                value={shippingAddress.address_line_1}
-                onChange={(e) => onAddressChange({ ...shippingAddress, address_line_1: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Street, Avenue, Building No"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 2 (Optional)</label>
-              <input
-                type="text"
-                value={shippingAddress.address_line_2 || ''}
-                onChange={(e) => onAddressChange({ ...shippingAddress, address_line_2: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Floor, Apartment No"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
-                <input
-                  type="text"
-                  required
-                  value={shippingAddress.city}
-                  onChange={(e) => onAddressChange({ ...shippingAddress, city: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Istanbul"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">State/Province *</label>
-                <input
-                  type="text"
-                  required
-                  value={shippingAddress.state_province}
-                  onChange={(e) => onAddressChange({ ...shippingAddress, state_province: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Istanbul"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code *</label>
-                <input
-                  type="text"
-                  required
-                  value={shippingAddress.postal_code}
-                  onChange={(e) => onAddressChange({ ...shippingAddress, postal_code: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="34000"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
-              <input
-                type="text"
-                required
-                value={shippingAddress.country}
-                onChange={(e) => onAddressChange({ ...shippingAddress, country: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Turkey"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Order Summary */}
-      <div className="bg-gray-50 rounded-lg p-6 mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Service:</span>
-            <span className="font-medium text-gray-900">{orderDetails.serviceName}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Consultant:</span>
-            <span className="font-medium text-gray-900">{orderDetails.consultantName}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Delivery Time:</span>
-            <span className="font-medium text-gray-900">{orderDetails.deliveryTime} days</span>
-          </div>
-          <div className="border-t border-gray-200 pt-3">
-            <div className="flex justify-between">
-              <span className="text-lg font-semibold text-gray-900">Total:</span>
-              <span className="text-lg font-bold text-green-600">
-                ${amount.toLocaleString()} {currency}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Payment Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Card Information
-          </label>
-          <div className="border border-gray-300 rounded-lg p-4 bg-white">
-            <CardElement options={cardElementOptions} />
-          </div>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
-            <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0" />
-            <span className="text-sm text-red-700">{error}</span>
-          </div>
-        )}
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <Lock className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-900">Güvenli Ödeme</span>
-          </div>
-          <p className="text-xs text-blue-800">
-            Ödeme bilgileriniz şifrelenir ve güvenlidir. Ödeme işlemi için Stripe kullanıyoruz.
-          </p>
-        </div>
-
-        <div className="mb-4">
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-3">Ödeme yöntemini seçin:</p>
-            <button
-              type="submit"
-              disabled={!stripe || processing}
-              className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-            >
-              {processing ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Ödeme İşleniyor...</span>
-                </>
-              ) : (
-                <>
-                  <CreditCard className="h-5 w-5" />
-                  <span>Ödemeyi Tamamla</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
-  );
+// -------------------- Logging helpers --------------------
+export type LogPayload = {
+  userId?: string | null;
+  action: string;
+  context?: string;
+  meta?: Record<string, any>;
 };
 
-interface StripeCheckoutProps {
-  isOpen: boolean;
-  onClose: () => void;
-  amount: number;
-  currency: string;
-  orderId: string;
-  orderDetails: {
-    serviceName: string;
-    consultantName: string;
-    deliveryTime: number;
-  };
-  onSuccess: (paymentIntentId: string) => void;
-  onError: (error: string) => void;
-  shippingAddress?: ShippingAddress;
-  onAddressChange?: (address: ShippingAddress) => void;
-  showAddressForm?: boolean;
+export async function logUserAction(payload: LogPayload): Promise<void> {
+  try {
+    // Örnek DB yazımı (tabloyu kendinize göre düzenleyin):
+    // await supabase.from('user_actions').insert([{ ...payload, created_at: new Date().toISOString() }]);
+    console.info('[logUserAction]', payload);
+  } catch (e) {
+    console.warn('logUserAction failed', e);
+  }
 }
 
-const StripeCheckout: React.FC<StripeCheckoutProps> = ({
-  isOpen,
-  onClose,
-  amount,
-  currency,
-  orderId,
-  orderDetails,
-  onSuccess,
-  onError,
-  shippingAddress,
-  onAddressChange,
-  showAddressForm
-}) => {
-  // Check if Stripe is available
-  if (!stripePromise) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-          <div className="text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Payment System Ready</h2>
-            <p className="text-gray-600 mb-4">
-              Using Stripe test environment with your custom integration.
-            </p>
-            <button
-              onClick={onClose}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+export async function logAdminAction(payload: LogPayload): Promise<void> {
+  try {
+    // Örnek DB yazımı (tabloyu kendinize göre düzenleyin):
+    // await supabase.from('admin_actions').insert([{ ...payload, created_at: new Date().toISOString() }]);
+    console.info('[logAdminAction]', payload);
+  } catch (e) {
+    console.warn('logAdminAction failed', e);
+  }
+}
+
+// -------------------- File upload helpers --------------------
+export interface FileValidationOptions {
+  maxSize: number; // in bytes
+  allowedTypes?: string[];
+  allowedExtensions?: string[];
+}
+
+export interface FileValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+export function validateFileUpload(file: File, options: FileValidationOptions): FileValidationResult {
+  const errors: string[] = [];
+
+  // Check file size
+  if (file.size > options.maxSize) {
+    errors.push(`File size exceeds limit of ${options.maxSize / (1024 * 1024)}MB.`);
   }
 
-  if (!isOpen) return null;
+  // Check file type
+  if (options.allowedTypes && options.allowedTypes.length > 0) {
+    const isTypeAllowed = options.allowedTypes.some(type => {
+      if (type.includes('*')) {
+        const baseType = type.split('/')[0];
+        return file.type.startsWith(baseType);
+      }
+      return file.type === type;
+    });
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Complete Payment</h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X className="h-5 w-5 text-gray-500" />
-            </button>
-          </div>
-        </div>
+    if (!isTypeAllowed) {
+      errors.push(`File type ${file.type} is not allowed.`);
+    }
+  }
 
-        <div className="p-6">
-          <Elements stripe={stripePromise}>
-            <CheckoutForm
-              amount={amount}
-              currency={currency}
-              orderId={orderId}
-              orderDetails={orderDetails}
-              onSuccess={onSuccess}
-              onError={onError}
-              onCancel={onClose}
-              shippingAddress={shippingAddress}
-              onAddressChange={onAddressChange}
-              showAddressForm={showAddressForm}
-            />
-          </Elements>
-        </div>
-      </div>
-    </div>
-  );
-};
+  // Check file extension
+  if (options.allowedExtensions && options.allowedExtensions.length > 0) {
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    if (!fileExtension || !options.allowedExtensions.includes(fileExtension)) {
+      errors.push(`File extension .${fileExtension} is not allowed.`);
+    }
+  }
 
-export default StripeCheckout;
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+export async function uploadFileToStorage(
+  file: File,
+  folder: string = 'uploads',
+  bucket: string = 'documents'
+): Promise<string> {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+  const filePath = `${folder}/${fileName}`;
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(filePath, file);
+
+  if (error) {
+    throw new Error(`Upload failed: ${error.message}`);
+  }
+
+  return filePath;
+}
+
+export async function deleteFileFromStorage(
+  filePath: string,
+  bucket: string = 'documents'
+): Promise<void> {
+  const { error } = await supabase.storage
+    .from(bucket)
+    .remove([filePath]);
+
+  if (error) {
+    throw new Error(`Delete failed: ${error.message}`);
+  }
+}
+
+// -------------------- Type definitions --------------------
+export interface Profile {
+  id: string;
+  email: string;
+  role: 'admin' | 'consultant' | 'client';
+  legacy_role: 'admin' | 'consultant' | 'client';
+  full_name?: string;
+  country?: string;
+  phone?: string;
+  avatar_url?: string;
+  language_preference?: string;
+  timezone?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  auth_user_id?: string;
+}
+
+export interface Country {
+  id: string;
+  name: string;
+  slug: string;
+  flag_emoji?: string;
+  description?: string;
+  image_url?: string;
+  primary_language: string;
+  supported_languages: string[];
+  highlights: string[];
+  tags: string[];
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Project {
+  id: string;
+  client_id: string;
+  consultant_id: string;
+  name: string;
+  description?: string;
+  status: 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  start_date?: string;
+  end_date?: string;
+  estimated_hours?: number;
+  actual_hours: number;
+  budget?: number;
+  progress: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Task {
+  id: string;
+  client_id: string;
+  consultant_id: string;
+  title: string;
+  description?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'overdue';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  due_date?: string;
+  estimated_hours?: number;
+  actual_hours: number;
+  created_at: string;
+  updated_at: string;
+}
