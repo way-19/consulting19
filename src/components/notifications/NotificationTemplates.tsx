@@ -8,6 +8,7 @@ import {
   Calendar, 
   MessageSquare,
   User,
+  Users,
   Building,
   Globe,
   Mail,
