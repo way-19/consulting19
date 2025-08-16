@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, uploadFileToStorage } from '../lib/supabase';
 import FileUpload, { UploadedFile } from './common/FileUpload';
+import FileUpload, { UploadedFile } from './common/FileUpload';
 import StripeCheckout from './StripeCheckout';
 import { 
   Mail, 
@@ -76,7 +77,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<VirtualMailboxItem | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showUploadSection, setShowUploadSection] = useState(false);
+  const [showUploadSection, setShowUploadSection] = useState(true); // Default to true for testing
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
@@ -242,7 +243,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
       return;
     }
 
-    if (!clientId && profile?.role !== 'consultant') {
+    if (!clientId) {
       alert('Cannot upload documents: No client selected');
       return;
     }
@@ -265,9 +266,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
         const { error } = await supabase
           .from('virtual_mailbox_items')
           .insert([{
-            client_id: clientId || (profile?.role === 'client' ? 
-              (await supabase.from('clients').select('id').eq('profile_id', profile.id).single()).data?.id : 
-              null),
+            client_id: clientId,
             consultant_id: profile?.id,
             document_type: file.type,
             document_name: file.name,
@@ -287,7 +286,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
       // Reset upload state
       setSelectedFiles([]);
       setUploadProgress({});
-      setShowUploadSection(false);
       
       // Refresh mailbox items
       await fetchMailboxItems();
@@ -368,10 +366,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                 {profile?.role === 'consultant' && (
                   <button
                     onClick={() => setShowUploadSection(!showUploadSection)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                      showUploadSection 
+                        ? 'bg-red-600 text-white hover:bg-red-700' 
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                    }`}
                   >
                     <Upload className="h-4 w-4" />
-                    <span>Upload Documents</span>
+                    <span>{showUploadSection ? 'Hide Upload' : 'Upload Documents'}</span>
                   </button>
                 )}
                 <button
@@ -387,7 +389,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
           {/* Content */}
           <div className="p-6 max-h-[70vh] overflow-y-auto">
             {/* Document Upload Section (Consultant Only) */}
-            {profile?.role === 'consultant' && showUploadSection && (
+            {profile?.role === 'consultant' && showUploadSection && clientId && (
               <div className="bg-green-50 rounded-xl p-6 border border-green-200 mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
