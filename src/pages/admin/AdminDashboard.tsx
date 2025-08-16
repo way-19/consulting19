@@ -239,6 +239,13 @@ const AdminDashboard = () => {
                 <RefreshCw className="h-5 w-5" />
                 <span>Refresh Data</span>
               </button>
+              <button
+                onClick={fetchSystemHealth}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <Activity className="h-5 w-5" />
+                <span>Check Health</span>
+              </button>
             </div>
           </div>
         </div>
