@@ -908,16 +908,16 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Status & Payment</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-gray-600">Status:</span>
-                      <span className={\`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
-                        {selectedItem.status.toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
+               <div>
+  <h3 className="text-lg font-semibold text-gray-900 mb-4">Status & Payment</h3>
+  <div className="space-y-3">
+    <div>
+      <span className="text-sm text-gray-600">Status:</span>
+      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
+        {selectedItem.status.toUpperCase()}
+      </span>
+    </div>
+    <div>
                       <span className="text-sm text-gray-600">Shipping Fee:</span>
                       <p className="font-medium">${selectedItem.shipping_fee}</p>
                     </div>
