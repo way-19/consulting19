@@ -100,6 +100,7 @@ const AdminDashboard = () => {
       const consultantsResult = await supabase
         .from('profiles')
         .select('id', { count: 'exact', head: true })
+        .eq('legacy_role', 'consultant');
 
       console.log('📊 fetchDashboardData: Query results:');
       console.log('  - Users count:', usersResult.count, 'Error:', usersResult.error);

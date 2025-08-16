@@ -61,6 +61,7 @@ const CountryManagement = () => {
   const [editingCountry, setEditingCountry] = useState<CountryWithStats | null>(null);
   const [selectedCountryForAssignment, setSelectedCountryForAssignment] = useState<CountryWithStats | null>(null);
   const [availableConsultants, setAvailableConsultants] = useState<any[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [countryForm, setCountryForm] = useState({
     name: '',
@@ -170,8 +171,7 @@ const CountryManagement = () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, country')
-      .eq('legacy_role', 'consultant')
-      .eq('is_active', true);
+      .eq('legacy_role', 'consultant');
 
     console.log('👥 fetchConsultants: Supabase query result:', { data: data?.length, error });
     
@@ -209,8 +209,7 @@ const CountryManagement = () => {
     const { data: allConsultants, error: consultantsError } = await supabase
       .from('profiles')
       .select('id, full_name, email, country')
-      .eq('role', 'consultant')
-      .eq('is_active', true);
+      .eq('legacy_role', 'consultant');
 
     if (consultantsError) throw consultantsError;
 
@@ -372,6 +371,7 @@ const CountryManagement = () => {
       tags: [''],
       is_active: true
     });
+    setSelectedFile(null);
     setEditingCountry(null);
     setShowCountryModal(false);
   };
