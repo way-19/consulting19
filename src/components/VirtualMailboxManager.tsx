@@ -2,40 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import StripeCheckout from './StripeCheckout';
-import FileUpload, { UploadedFile } from './common/FileUpload';
-import { useFileUpload } from '../hooks/useFileUpload';
 import { 
-  Plus, 
-  FileText, 
-  Send, 
-  Eye, 
-  Download, 
-  Upload, 
   Package, 
-  Clock, 
-  CheckCircle, 
-  DollarSign,
-  Search,
-  Filter,
+  Download, 
+  Eye, 
+  Truck, 
+  MapPin, 
+  DollarSign, 
+  Calendar,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
   X,
-  Save,
-  Trash2,
-  Mail,
-  Truck,
   CreditCard,
-  AlertCircle
+  User,
+  Phone,
+  Mail,
+  Building,
+  Globe,
+  Save
 } from 'lucide-react';
 
 interface VirtualMailboxItem {
   id: string;
   client_id: string;
+  consultant_id: string;
   document_type: string;
   document_name: string;
   description?: string;
   file_url?: string;
   file_size?: number;
   status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
-  tracking_number: string;
+  tracking_number?: string;
   shipping_fee: number;
   payment_status: 'unpaid' | 'paid' | 'waived';
   sent_date?: string;
@@ -43,374 +41,252 @@ interface VirtualMailboxItem {
   viewed_date?: string;
   downloaded_date?: string;
   created_at: string;
-  client?: {
-    company_name: string;
-    profile?: {
-      full_name: string;
-      email: string;
-    };
-  };
+  updated_at: string;
+  shipping_option?: string;
+  shipping_address?: any;
+}
+
+interface ShippingAddress {
+  full_name: string;
+  company_name?: string;
+  address_line_1: string;
+  address_line_2?: string;
+  city: string;
+  state_province: string;
+  postal_code: string;
+  country: string;
+  phone: string;
+  email: string;
 }
 
 interface VirtualMailboxManagerProps {
   clientId?: string;
-  viewMode: 'consultant' | 'client';
+  viewMode: 'client' | 'consultant';
 }
 
-const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId, viewMode }) => {
+const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ 
+  clientId, 
+  viewMode 
+}) => {
   const { profile } = useAuth();
   const [items, setItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [paymentFilter, setPaymentFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<VirtualMailboxItem | null>(null);
   const [showItemDetail, setShowItemDetail] = useState(false);
-  const [showShippingModal, setShowShippingModal] = useState(false);
-  const [selectedItemForShipping, setSelectedItemForShipping] = useState<VirtualMailboxItem | null>(null);
-  const [shippingOption, setShippingOption] = useState<'normal' | 'express'>('normal');
-  const [shippingAddress, setShippingAddress] = useState({
+  const [showShippingAddressModal, setShowShippingAddressModal] = useState(false);
+  const [showStripeCheckout, setShowStripeCheckout] = useState(false);
+  const [currentShippingItem, setCurrentShippingItem] = useState<VirtualMailboxItem | null>(null);
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     full_name: '',
+    company_name: '',
     address_line_1: '',
     address_line_2: '',
     city: '',
+    state_province: '',
     postal_code: '',
     country: '',
-    phone: ''
+    phone: '',
+    email: ''
   });
-  const [showStripeCheckout, setShowStripeCheckout] = useState(false);
-
-  const { uploadFile, uploadState } = useFileUpload({
-    bucketName: 'documents',
-    folder: 'virtual_mailbox',
-    onUploadComplete: (file, filePath) => {
-      console.log('Virtual mailbox file uploaded:', file.name, filePath);
-    }
-  });
-
-  const [formData, setFormData] = useState({
-    client_id: clientId || '',
-    document_type: '',
-    document_name: '',
-    description: '',
-    shipping_fee: 25.00,
-    file: null as File | null
-  });
-
-  const documentTypes = [
-    'Company Registration Certificate',
-    'Tax Registration Document',
-    'Bank Account Information',
-    'Corporate Seal',
-    'Shareholder Agreement',
-    'Board Resolution',
-    'Business License',
-    'VAT Certificate',
-    'Legal Address Certificate',
-    'Director Appointment Letter',
-    'Share Certificate',
-    'Company Bylaws',
-    'Other Official Document'
-  ];
 
   useEffect(() => {
-    fetchItems();
+    if (clientId || profile?.id) {
+      fetchItems();
+    }
   }, [clientId, profile]);
 
   const fetchItems = async () => {
     try {
+      setLoading(true);
+      
       let query = supabase
         .from('virtual_mailbox_items')
-        .select(`
-          *,
-          client:client_id (
-            company_name,
-            profile:profile_id (
-              full_name,
-              email
-            )
-          )
-        `);
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (viewMode === 'consultant') {
+      if (viewMode === 'client') {
+        const targetClientId = clientId || await getClientIdFromProfile();
+        if (targetClientId) {
+          query = query.eq('client_id', targetClientId);
+        }
+      } else if (viewMode === 'consultant') {
         query = query.eq('consultant_id', profile?.id);
-        if (clientId) {
-          query = query.eq('client_id', clientId);
-        }
-      } else {
-        // Client view - always use provided clientId
-        if (clientId) {
-          query = query.eq('client_id', clientId);
-        } else {
-          // Fallback: get client ID from profile
-          const { data: clientData, error: clientError } = await supabase
-            .from('clients')
-            .select('id')
-            .eq('profile_id', profile?.id)
-            .limit(1);
-          
-          if (clientError || !clientData?.[0]) {
-            console.error('Error fetching client ID for mailbox:', clientError);
-            setItems([]);
-            setLoading(false);
-            return;
-          }
-          
-          query = query.eq('client_id', clientData[0].id);
-        }
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data, error } = await query;
 
       if (error) throw error;
       setItems(data || []);
     } catch (error) {
-      console.error('Error fetching mailbox items:', error);
-      setItems([]);
+      console.error('Error fetching virtual mailbox items:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const getClientIdFromProfile = async () => {
+    if (!profile?.id) return null;
     
-    try {
-      let fileUrl = '';
-      
-      // Upload file if provided
-      if (formData.file) {
-        const filePath = await uploadFile(formData.file);
-        fileUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/${filePath}`;
-      }
-      
-      const itemData = {
-        client_id: formData.client_id,
-        document_type: formData.document_type,
-        document_name: formData.document_name,
-        description: formData.description,
-        shipping_fee: formData.shipping_fee,
-        file_url: fileUrl,
-        file_size: formData.file?.size || null,
-        consultant_id: profile?.id,
-        status: 'pending'
-      };
-
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .insert([itemData]);
-
-      if (error) throw error;
-
-      await fetchItems();
-      resetForm();
-      alert('Document added to virtual mailbox successfully!');
-    } catch (error) {
-      console.error('Error adding document:', error);
-      alert('Failed to add document');
-    }
+    const { data } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('profile_id', profile.id)
+      .single();
+    
+    return data?.id || null;
   };
 
-  const updateStatus = async (itemId: string, newStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({ status: newStatus })
-        .eq('id', itemId);
-
-      if (error) throw error;
-      await fetchItems();
-    } catch (error) {
-      console.error('Error updating status:', error);
-    }
-  };
-
-  const updatePaymentStatus = async (itemId: string, newPaymentStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({ payment_status: newPaymentStatus })
-        .eq('id', itemId);
-
-      if (error) throw error;
-      await fetchItems();
-    } catch (error) {
-      console.error('Error updating payment status:', error);
-    }
-  };
-
-  const handleViewDocument = async (item: VirtualMailboxItem) => {
-    try {
-      // Update viewed_date
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({ 
-          viewed_date: new Date().toISOString(),
-          status: 'viewed'
-        })
-        .eq('id', item.id);
-
-      if (error) throw error;
-      
-      // Open document in new tab
-      if (item.file_url) {
-        window.open(item.file_url, '_blank');
-      }
-      
-      await fetchItems();
-    } catch (error) {
-      console.error('Error updating view status:', error);
-    }
-  };
-
-  const handleDownloadDocument = async (item: VirtualMailboxItem) => {
-    try {
-      // Update downloaded_date
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({ 
-          downloaded_date: new Date().toISOString(),
-          status: 'downloaded'
-        })
-        .eq('id', item.id);
-
-      if (error) throw error;
-      
-      // Trigger download
-      if (item.file_url) {
-        const link = document.createElement('a');
-        link.href = item.file_url;
-        link.download = item.document_name;
-        link.click();
-      }
-      
-      await fetchItems();
-    } catch (error) {
-      console.error('Error updating download status:', error);
-    }
-  };
-
-  const handleRequestShipping = (item: VirtualMailboxItem) => {
-    setSelectedItemForShipping(item);
-    // Set shipping address with default values from profile if available
+  const handleRequestPhysicalShipping = (item: VirtualMailboxItem) => {
+    setCurrentShippingItem(item);
     setShippingAddress(prev => ({
       ...prev,
-      full_name: item.client?.profile?.full_name || '',
-      // Keep other fields as they are for user to fill
+      full_name: profile?.full_name || '',
+      email: profile?.email || ''
     }));
-    setShowShippingModal(true);
+    setShowShippingAddressModal(true);
   };
 
-  const handleShippingSubmit = async () => {
-    if (!selectedItemForShipping) return;
+  const handleShippingAddressSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Validate shipping address
-    if (!shippingAddress.full_name || !shippingAddress.address_line_1 || !shippingAddress.city || !shippingAddress.country) {
-      alert('Please fill in all required shipping address fields');
+    // Validate required fields
+    const requiredFields = ['full_name', 'address_line_1', 'city', 'state_province', 'postal_code', 'country', 'phone', 'email'];
+    const missingFields = requiredFields.filter(field => !shippingAddress[field as keyof ShippingAddress]);
+    
+    if (missingFields.length > 0) {
+      alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
       return;
     }
 
-    try {
-      // First update the item with shipping info and set payment as unpaid
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({
-          shipping_option: shippingOption,
-          shipping_address: shippingAddress,
-          shipping_fee: shippingOption === 'express' ? 25 : 15,
-          payment_status: 'unpaid',
-          status: 'pending' // Keep as pending until payment is made
-        })
-        .eq('id', selectedItemForShipping.id);
-
-      if (error) throw error;
-
-      // Now show payment modal
-      setShowShippingModal(false);
-      setShowStripeCheckout(true);
-    } catch (error) {
-      console.error('Error updating shipping info:', error);
-      alert('Failed to save shipping information');
-    }
+    // Close address modal and open payment modal
+    setShowShippingAddressModal(false);
+    setShowStripeCheckout(true);
   };
 
-  const handleShippingPaymentSuccess = async (paymentIntentId: string) => {
-    if (!selectedItemForShipping) return;
-
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
     try {
-      // Update payment status and send to consultant
+      if (!currentShippingItem) return;
+
+      // Update item with shipping address and payment info
       const { error } = await supabase
         .from('virtual_mailbox_items')
         .update({
+          shipping_option: 'physical',
+          shipping_address: shippingAddress,
           payment_status: 'paid',
-          status: 'pending' // This will create a request for consultant to process
+          shipping_fee: currentShippingItem.shipping_fee
         })
-        .eq('id', selectedItemForShipping.id);
+        .eq('id', currentShippingItem.id);
 
       if (error) throw error;
 
-      // Notify consultant about the shipping request
-      const { data: consultantData } = await supabase
-        .from('virtual_mailbox_items')
-        .select('consultant_id')
-        .eq('id', selectedItemForShipping.id)
-        .single();
+      // Notify consultant about shipping request
+      await supabase
+        .from('notifications')
+        .insert([{
+          user_id: currentShippingItem.consultant_id,
+          type: 'physical_shipping_requested',
+          title: 'Physical Shipping Requested',
+          message: `Client has requested physical shipping for ${currentShippingItem.document_name}`,
+          priority: 'normal',
+          related_table: 'virtual_mailbox_items',
+          related_id: currentShippingItem.id,
+          action_url: '/consultant/documents'
+        }]);
 
-      if (consultantData?.consultant_id) {
-        await supabase
-          .from('notifications')
-          .insert([{
-            user_id: consultantData.consultant_id,
-            type: 'shipping_request',
-            title: 'Physical Shipping Request',
-            message: `Client has paid for physical shipping of ${selectedItemForShipping.document_name}`,
-            priority: 'normal',
-            related_table: 'virtual_mailbox_items',
-            related_id: selectedItemForShipping.id,
-            action_url: '/consultant/documents'
-          }]);
-      }
-      
       setShowStripeCheckout(false);
-      setSelectedItemForShipping(null);
+      setCurrentShippingItem(null);
       setShippingAddress({
         full_name: '',
+        company_name: '',
         address_line_1: '',
         address_line_2: '',
         city: '',
+        state_province: '',
         postal_code: '',
         country: '',
-        phone: ''
+        phone: '',
+        email: ''
       });
       
       await fetchItems();
-      alert('Payment successful! Your shipping request has been sent to your consultant.');
+      alert('Physical shipping request submitted successfully! Your consultant will process the shipment.');
     } catch (error) {
-      console.error('Error updating shipping info:', error);
-      alert('Failed to update shipping information');
+      console.error('Error processing shipping request:', error);
+      alert('Failed to process shipping request. Please try again.');
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      client_id: clientId || '',
-      document_type: '',
-      document_name: '',
-      description: '',
-      shipping_fee: 25.00,
-      file: null as File | null
-    });
-    setShowAddForm(false);
+  const handlePaymentError = (error: string) => {
+    console.error('Payment error:', error);
+    alert('Payment failed: ' + error);
+  };
+
+  const handleDownload = async (item: VirtualMailboxItem) => {
+    if (!item.file_url) return;
+
+    try {
+      // Update viewed/downloaded status
+      const updates: any = {};
+      if (!item.viewed_date) {
+        updates.viewed_date = new Date().toISOString();
+      }
+      if (!item.downloaded_date) {
+        updates.downloaded_date = new Date().toISOString();
+      }
+      if (item.status === 'sent' || item.status === 'delivered') {
+        updates.status = 'downloaded';
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await supabase
+          .from('virtual_mailbox_items')
+          .update(updates)
+          .eq('id', item.id);
+      }
+
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = item.file_url;
+      link.download = item.document_name;
+      link.click();
+
+      await fetchItems();
+    } catch (error) {
+      console.error('Error downloading document:', error);
+    }
+  };
+
+  const handlePreview = async (item: VirtualMailboxItem) => {
+    if (!item.file_url) return;
+
+    try {
+      // Update viewed status
+      if (!item.viewed_date) {
+        await supabase
+          .from('virtual_mailbox_items')
+          .update({
+            viewed_date: new Date().toISOString(),
+            status: item.status === 'sent' ? 'viewed' : item.status
+          })
+          .eq('id', item.id);
+      }
+
+      // Open in new tab
+      window.open(item.file_url, '_blank');
+      await fetchItems();
+    } catch (error) {
+      console.error('Error previewing document:', error);
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'downloaded': return 'bg-green-100 text-green-800';
-      case 'viewed': return 'bg-blue-100 text-blue-800';
-      case 'delivered': return 'bg-purple-100 text-purple-800';
-      case 'sent': return 'bg-yellow-100 text-yellow-800';
-      case 'pending': return 'bg-gray-100 text-gray-800';
+      case 'delivered': return 'bg-green-100 text-green-800';
+      case 'sent': return 'bg-blue-100 text-blue-800';
+      case 'viewed': return 'bg-purple-100 text-purple-800';
+      case 'downloaded': return 'bg-indigo-100 text-indigo-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -426,30 +302,22 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'downloaded': return <Download className="h-4 w-4" />;
-      case 'viewed': return <Eye className="h-4 w-4" />;
-      case 'delivered': return <Package className="h-4 w-4" />;
+      case 'delivered': return <CheckCircle className="h-4 w-4" />;
       case 'sent': return <Truck className="h-4 w-4" />;
+      case 'viewed': return <Eye className="h-4 w-4" />;
+      case 'downloaded': return <Download className="h-4 w-4" />;
       case 'pending': return <Clock className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
+      default: return <Package className="h-4 w-4" />;
     }
   };
 
-  const filteredItems = items.filter(item => {
-    const matchesSearch = 
-      item.document_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.document_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tracking_number.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-    const matchesPayment = paymentFilter === 'all' || item.payment_status === paymentFilter;
-    
-    return matchesSearch && matchesStatus && matchesPayment;
-  });
-
-  const pendingItems = items.filter(i => i.status === 'pending').length;
-  const unpaidItems = items.filter(i => i.payment_status === 'unpaid').length;
-  const totalRevenue = items.filter(i => i.payment_status === 'paid').reduce((sum, i) => sum + i.shipping_fee, 0);
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   if (loading) {
     return (
@@ -461,150 +329,48 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
   return (
     <div className="space-y-6">
-      {/* Stats for consultant view */}
-      {viewMode === 'consultant' && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Documents</p>
-                <p className="text-2xl font-bold text-gray-900">{items.length}</p>
-              </div>
-              <FileText className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">{pendingItems}</p>
-              </div>
-              <Clock className="h-6 w-6 text-yellow-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Unpaid</p>
-                <p className="text-2xl font-bold text-red-600">{unpaidItems}</p>
-              </div>
-              <CreditCard className="h-6 w-6 text-red-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Revenue</p>
-                <p className="text-2xl font-bold text-green-600">${totalRevenue}</p>
-              </div>
-              <DollarSign className="h-6 w-6 text-green-600" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">
-            {viewMode === 'consultant' ? 'Virtual Mailbox Management' : 'My Virtual Mailbox'}
-          </h2>
+          <h3 className="text-lg font-semibold text-gray-900">My Virtual Mailbox</h3>
+          <p className="text-gray-600">Receive official documents digitally and request physical shipping when needed</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Package className="h-5 w-5 text-purple-600" />
+          <span className="text-sm text-gray-600">{items.length} items</span>
+        </div>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Yet</h3>
           <p className="text-gray-600">
-            {viewMode === 'consultant' 
-              ? 'Send official documents to clients via virtual mailbox'
-              : 'Receive and download your official documents'
+            {viewMode === 'client' 
+              ? 'Your consultant will send documents to your virtual mailbox as they become available.'
+              : 'No documents have been sent to clients yet.'
             }
           </p>
         </div>
-        {viewMode === 'consultant' && (
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Add Document</span>
-          </button>
-        )}
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search documents..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="sent">Sent</option>
-              <option value="delivered">Delivered</option>
-              <option value="viewed">Viewed</option>
-              <option value="downloaded">Downloaded</option>
-            </select>
-
-            {viewMode === 'consultant' && (
-              <select
-                value={paymentFilter}
-                onChange={(e) => setPaymentFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">All Payments</option>
-                <option value="unpaid">Unpaid</option>
-                <option value="paid">Paid</option>
-                <option value="waived">Waived</option>
-              </select>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Documents List */}
-      <div className="space-y-4">
-        {filteredItems.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-            <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {viewMode === 'consultant' ? 'No Documents Sent' : 'No Documents Received'}
-            </h3>
-            <p className="text-gray-600">
-              {viewMode === 'consultant' 
-                ? 'Start sending documents to your clients via virtual mailbox.'
-                : 'You haven\'t received any documents yet.'
-              }
-            </p>
-          </div>
-        ) : (
-          filteredItems.map((item) => (
-            <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+      ) : (
+        <div className="space-y-4">
+          {items.map((item) => (
+            <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-4 mb-3">
+                  <div className="flex items-center space-x-3 mb-3">
                     <div className="bg-purple-100 rounded-lg p-2">
-                      {getStatusIcon(item.status)}
+                      <Package className="h-5 w-5 text-purple-600" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{item.document_name}</h3>
+                      <h4 className="font-semibold text-gray-900">{item.document_name}</h4>
                       <p className="text-sm text-gray-600">{item.document_type}</p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
-                      {item.status.toUpperCase()}
-                    </span>
+                    <div className="flex items-center space-x-1">
+                      {getStatusIcon(item.status)}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                        {item.status.toUpperCase()}
+                      </span>
+                    </div>
                   </div>
 
                   {item.description && (
@@ -613,120 +379,58 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
                     <div>
-                      <span className="font-medium">Tracking:</span> {item.tracking_number}
+                      <span className="font-medium">Tracking:</span> {item.tracking_number || 'N/A'}
                     </div>
                     <div>
                       <span className="font-medium">Shipping Fee:</span> ${item.shipping_fee}
                     </div>
                     <div>
                       <span className="font-medium">Payment:</span>
-                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(item.payment_status)}`}>
+                      <span className={`ml-1 px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(item.payment_status)}`}>
                         {item.payment_status.toUpperCase()}
                       </span>
                     </div>
                     <div>
-                      <span className="font-medium">Size:</span> {item.file_size ? `${(item.file_size / 1024).toFixed(1)} KB` : 'N/A'}
+                      <span className="font-medium">Size:</span> {item.file_size ? formatFileSize(item.file_size) : 'N/A'}
                     </div>
                   </div>
 
-                  {/* Timeline */}
-                  <div className="flex items-center space-x-4 text-xs text-gray-500">
-                    {item.sent_date && (
-                      <div className="flex items-center space-x-1">
-                        <Send className="h-3 w-3" />
-                        <span>Sent: {new Date(item.sent_date).toLocaleDateString()}</span>
-                      </div>
-                    )}
-                    {item.delivered_date && (
-                      <div className="flex items-center space-x-1">
-                        <Package className="h-3 w-3" />
-                        <span>Delivered: {new Date(item.delivered_date).toLocaleDateString()}</span>
-                      </div>
-                    )}
-                    {item.viewed_date && (
-                      <div className="flex items-center space-x-1">
-                        <Eye className="h-3 w-3" />
-                        <span>Viewed: {new Date(item.viewed_date).toLocaleDateString()}</span>
-                      </div>
-                    )}
-                  </div>
+                  {item.sent_date && (
+                    <div className="text-xs text-gray-500">
+                      Sent: {new Date(item.sent_date).toLocaleDateString()}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  {viewMode === 'consultant' ? (
+                  {item.file_url && (
                     <>
-                      {item.status === 'pending' && (
-                        <button
-                          onClick={() => updateStatus(item.id, 'sent')}
-                          className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
-                        >
-                          <Send className="h-4 w-4" />
-                          <span>Send</span>
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handlePreview(item)}
+                        className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>Preview</span>
+                      </button>
                       
-                      {item.payment_status === 'unpaid' && (
-                        <button
-                          onClick={() => updatePaymentStatus(item.id, 'waived')}
-                          className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors"
-                        >
-                          Waive Fee
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleDownload(item)}
+                        className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center space-x-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span>Download</span>
+                      </button>
                     </>
-                  ) : (
-                    <>
-                      {item.payment_status === 'unpaid' && item.status === 'sent' && (
-                        <button
-                          onClick={() => handleRequestShipping(item)}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
-                        >
-                          <CreditCard className="h-4 w-4" />
-                          <span>Physical Shipping</span>
-                        </button>
-                      )}
-                      
-                      {item.payment_status === 'paid' && item.file_url && (
-                        <button
-                          onClick={() => handleViewDocument(item)}
-                          className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span>View</span>
-                        </button>
-                      )}
-                      
-                      {item.payment_status === 'paid' && !item.viewed_date && (
-                        <button
-                          onClick={() => handleViewDocument(item)}
-                          className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span>View</span>
-                        </button>
-                      )}
-                      
-                      {item.payment_status === 'unpaid' && item.status === 'pending' && (
-                        <button
-                          onClick={() => handleRequestShipping(item)}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                        >
-                          <Truck className="h-4 w-4" />
-                          <span>Physical Shipping</span>
-                        </button>
-                      )}
-                      
-                      {item.payment_status === 'paid' && item.status === 'sent' && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                          <div className="flex items-center space-x-2">
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                            <span className="text-sm text-green-800 font-medium">
-                              Shipping request sent to consultant. Document will be shipped soon.
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </>
+                  )}
+
+                  {viewMode === 'client' && item.status === 'sent' && item.payment_status === 'unpaid' && (
+                    <button
+                      onClick={() => handleRequestPhysicalShipping(item)}
+                      className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-colors flex items-center space-x-2"
+                    >
+                      <Truck className="h-4 w-4" />
+                      <span>Physical Shipping</span>
+                    </button>
                   )}
 
                   <button
@@ -741,113 +445,228 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                 </div>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Add Document Form Modal */}
-      {showAddForm && viewMode === 'consultant' && (
+      {/* Shipping Address Modal */}
+      {showShippingAddressModal && currentShippingItem && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Add Document to Virtual Mailbox</h2>
+                <h2 className="text-xl font-bold text-gray-900">Shipping Address</h2>
                 <button
-                  onClick={resetForm}
+                  onClick={() => {
+                    setShowShippingAddressModal(false);
+                    setCurrentShippingItem(null);
+                  }}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
+              <p className="text-gray-600 mt-2">
+                Please provide your shipping address for: <strong>{currentShippingItem.document_name}</strong>
+              </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Client Selection */}
-              {!clientId && (
+            <form onSubmit={handleShippingAddressSubmit} className="p-6 space-y-6">
+              {/* Personal Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Client *
+                    Full Name *
                   </label>
-                  <select
-                    required
-                    value={formData.client_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, client_id: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="">Choose a client...</option>
-                    {/* This would be populated with actual clients */}
-                  </select>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      required
+                      value={shippingAddress.full_name}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, full_name: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="John Doe"
+                    />
+                  </div>
                 </div>
-              )}
 
-              {/* Document Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Document Type *
-                </label>
-                <select
-                  required
-                  value={formData.document_type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, document_type: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="">Select document type...</option>
-                  {documentTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Company Name (Optional)
+                  </label>
+                  <div className="relative">
+                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={shippingAddress.company_name}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, company_name: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Your Company LLC"
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Document Name */}
+              {/* Contact Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address *
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="email"
+                      required
+                      value={shippingAddress.email}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number *
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="tel"
+                      required
+                      value={shippingAddress.phone}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, phone: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="+1 (555) 123-4567"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Address Information */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Document Name *
+                  Address Line 1 *
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    required
+                    value={shippingAddress.address_line_1}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_1: e.target.value }))}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="123 Main Street"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Address Line 2 (Optional)
                 </label>
                 <input
                   type="text"
-                  required
-                  value={formData.document_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, document_name: e.target.value }))}
+                  value={shippingAddress.address_line_2}
+                  onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_2: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="e.g., Georgia Tech Solutions LLC - Registration Certificate"
+                  placeholder="Apartment, suite, etc."
                 />
               </div>
 
-              {/* Description */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={shippingAddress.city}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="New York"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    State/Province *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={shippingAddress.state_province}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, state_province: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="NY"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Postal Code *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={shippingAddress.postal_code}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="10001"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
+                  Country *
                 </label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Additional notes about this document..."
-                />
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <select
+                    required
+                    value={shippingAddress.country}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, country: e.target.value }))}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="">Select Country</option>
+                    <option value="US">United States</option>
+                    <option value="CA">Canada</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="TR">Turkey</option>
+                    <option value="GE">Georgia</option>
+                    <option value="EE">Estonia</option>
+                    <option value="AE">UAE</option>
+                    <option value="MT">Malta</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Shipping Fee */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Virtual Shipping Fee (USD)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.shipping_fee}
-                  onChange={(e) => setFormData(prev => ({ ...prev, shipping_fee: parseFloat(e.target.value) || 0 }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-                <p className="text-xs text-gray-500 mt-1">Standard virtual shipping fee is $25.00</p>
+              {/* Shipping Cost Info */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <DollarSign className="h-5 w-5 text-blue-600" />
+                  <h4 className="font-medium text-blue-900">Shipping Cost</h4>
+                </div>
+                <div className="text-sm text-blue-800">
+                  <p>Document: <strong>{currentShippingItem.document_name}</strong></p>
+                  <p>Shipping Fee: <strong>${currentShippingItem.shipping_fee}</strong></p>
+                  <p>Estimated Delivery: <strong>5-10 business days</strong></p>
+                </div>
               </div>
 
-              {/* Actions */}
               <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={resetForm}
+                  onClick={() => {
+                    setShowShippingAddressModal(false);
+                    setCurrentShippingItem(null);
+                  }}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
                   Cancel
@@ -856,13 +675,34 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   type="submit"
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
                 >
-                  <Save className="h-5 w-5" />
-                  <span>Add to Mailbox</span>
+                  <CreditCard className="h-5 w-5" />
+                  <span>Continue to Payment</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
+      )}
+
+      {/* Stripe Checkout Modal */}
+      {showStripeCheckout && currentShippingItem && (
+        <StripeCheckout
+          isOpen={showStripeCheckout}
+          onClose={() => {
+            setShowStripeCheckout(false);
+            setCurrentShippingItem(null);
+          }}
+          amount={currentShippingItem.shipping_fee}
+          currency="USD"
+          orderId={currentShippingItem.id}
+          orderDetails={{
+            serviceName: `Physical Shipping - ${currentShippingItem.document_name}`,
+            consultantName: 'Consulting19 Shipping',
+            deliveryTime: 7
+          }}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
+        />
       )}
 
       {/* Item Detail Modal */}
@@ -888,7 +728,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Information</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-gray-600">Document Name:</span>
+                      <span className="text-sm text-gray-600">Name:</span>
                       <p className="font-medium">{selectedItem.document_name}</p>
                     </div>
                     <div>
@@ -896,30 +736,10 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       <p className="font-medium">{selectedItem.document_type}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Tracking Number:</span>
-                      <p className="font-medium font-mono">{selectedItem.tracking_number}</p>
-                    </div>
-                    {selectedItem.description && (
-                      <div>
-                        <span className="text-sm text-gray-600">Description:</span>
-                        <p className="font-medium">{selectedItem.description}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-               <div>
-  <h3 className="text-lg font-semibold text-gray-900 mb-4">Status & Payment</h3>
-  <div className="space-y-3">
-    <div>
-      <span className="text-sm text-gray-600">Status:</span>
-      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
-        {selectedItem.status.toUpperCase()}
-      </span>
-    </div>
-    <div>
-                      <span className="text-sm text-gray-600">Shipping Fee:</span>
-                      <p className="font-medium">${selectedItem.shipping_fee}</p>
+                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
+                        {selectedItem.status.toUpperCase()}
+                      </span>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">Payment Status:</span>
@@ -929,46 +749,101 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                     </div>
                   </div>
                 </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600">Tracking Number:</span>
+                      <p className="font-medium font-mono">{selectedItem.tracking_number || 'Not assigned'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Shipping Fee:</span>
+                      <p className="font-medium">${selectedItem.shipping_fee}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">File Size:</span>
+                      <p className="font-medium">{selectedItem.file_size ? formatFileSize(selectedItem.file_size) : 'Unknown'}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {/* Description */}
+              {selectedItem.description && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Description</h3>
+                  <p className="text-gray-700 bg-gray-50 rounded-lg p-4">{selectedItem.description}</p>
+                </div>
+              )}
+
+              {/* Shipping Address */}
+              {selectedItem.shipping_address && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="space-y-1 text-sm">
+                      <p className="font-medium">{selectedItem.shipping_address.full_name}</p>
+                      {selectedItem.shipping_address.company_name && (
+                        <p>{selectedItem.shipping_address.company_name}</p>
+                      )}
+                      <p>{selectedItem.shipping_address.address_line_1}</p>
+                      {selectedItem.shipping_address.address_line_2 && (
+                        <p>{selectedItem.shipping_address.address_line_2}</p>
+                      )}
+                      <p>
+                        {selectedItem.shipping_address.city}, {selectedItem.shipping_address.state_province} {selectedItem.shipping_address.postal_code}
+                      </p>
+                      <p>{selectedItem.shipping_address.country}</p>
+                      <p className="text-gray-600 mt-2">
+                        Phone: {selectedItem.shipping_address.phone}
+                      </p>
+                      <p className="text-gray-600">
+                        Email: {selectedItem.shipping_address.email}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Timeline */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Timeline</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <Clock className="h-5 w-5 text-gray-500" />
+                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                    <Calendar className="h-5 w-5 text-blue-600" />
                     <div>
-                      <p className="font-medium text-gray-900">Document Created</p>
-                      <p className="text-sm text-gray-600">{new Date(selectedItem.created_at).toLocaleString()}</p>
+                      <p className="font-medium text-blue-900">Document Created</p>
+                      <p className="text-sm text-blue-700">{new Date(selectedItem.created_at).toLocaleString()}</p>
                     </div>
                   </div>
                   
                   {selectedItem.sent_date && (
-                    <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                      <Send className="h-5 w-5 text-blue-600" />
+                    <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                      <Truck className="h-5 w-5 text-green-600" />
                       <div>
-                        <p className="font-medium text-blue-900">Document Sent</p>
-                        <p className="text-sm text-blue-700">{new Date(selectedItem.sent_date).toLocaleString()}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedItem.delivered_date && (
-                    <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                      <Package className="h-5 w-5 text-purple-600" />
-                      <div>
-                        <p className="font-medium text-purple-900">Document Delivered</p>
-                        <p className="text-sm text-purple-700">{new Date(selectedItem.delivered_date).toLocaleString()}</p>
+                        <p className="font-medium text-green-900">Document Sent</p>
+                        <p className="text-sm text-green-700">{new Date(selectedItem.sent_date).toLocaleString()}</p>
                       </div>
                     </div>
                   )}
                   
                   {selectedItem.viewed_date && (
-                    <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                      <Eye className="h-5 w-5 text-green-600" />
+                    <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                      <Eye className="h-5 w-5 text-purple-600" />
                       <div>
-                        <p className="font-medium text-green-900">Document Viewed</p>
-                        <p className="text-sm text-green-700">{new Date(selectedItem.viewed_date).toLocaleString()}</p>
+                        <p className="font-medium text-purple-900">Document Viewed</p>
+                        <p className="text-sm text-purple-700">{new Date(selectedItem.viewed_date).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.downloaded_date && (
+                    <div className="flex items-center space-x-3 p-3 bg-indigo-50 rounded-lg">
+                      <Download className="h-5 w-5 text-indigo-600" />
+                      <div>
+                        <p className="font-medium text-indigo-900">Document Downloaded</p>
+                        <p className="text-sm text-indigo-700">{new Date(selectedItem.downloaded_date).toLocaleString()}</p>
                       </div>
                     </div>
                   )}
@@ -976,258 +851,43 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               </div>
 
               {/* Actions */}
-              {viewMode === 'client' && selectedItem.payment_status === 'unpaid' && selectedItem.status === 'sent' && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-yellow-900">Payment Required</h4>
-                      <p className="text-sm text-yellow-700 mt-1">
-                        Please pay the virtual shipping fee of ${selectedItem.shipping_fee} to access your document.
-                      </p>
-                      <button
-                        onClick={() => updatePaymentStatus(selectedItem.id, 'paid')}
-                        className="mt-3 bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 transition-colors flex items-center space-x-2"
-                      >
-                        <CreditCard className="h-4 w-4" />
-                        <span>Pay Now - ${selectedItem.shipping_fee}</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Payment Required for Shipping */}
-              {viewMode === 'client' && selectedItem.payment_status === 'unpaid' && selectedItem.status === 'sent' && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <Truck className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-blue-900">Shipping Available</h4>
-                      <p className="text-sm text-blue-700 mt-1">
-                        This document is ready for physical shipping. Click "Physical Shipping" to pay shipping fee and request delivery.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Document Ready After Payment */}
-              {viewMode === 'client' && selectedItem.payment_status === 'paid' && selectedItem.status === 'pending' && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-green-900">Shipping Request Sent</h4>
-                      <p className="text-sm text-green-700 mt-1">
-                        Your payment has been processed and shipping request has been sent to your consultant.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Document Shipped by Consultant */}
-              {viewMode === 'client' && selectedItem.payment_status === 'paid' && selectedItem.status === 'sent' && (
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <Truck className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-purple-900">Document Shipped</h4>
-                      <p className="text-sm text-purple-700 mt-1">
-                        Your document has been shipped by your consultant. Track your package with tracking number: {selectedItem.tracking_number}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Shipping Options Modal */}
-      {showShippingModal && selectedItemForShipping && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Shipping Options</h2>
-                <button
-                  onClick={() => setShowShippingModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Document Info */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-2">{selectedItemForShipping.document_name}</h4>
-                <p className="text-sm text-gray-600">{selectedItemForShipping.document_type}</p>
-              </div>
-
-              {/* Shipping Options */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Shipping Option
-                </label>
-                <div className="space-y-3">
-                  <div
-                    className={"border-2 rounded-lg p-4 cursor-pointer transition-all " + (
-                      shippingOption === 'normal' 
-                        ? 'border-purple-500 bg-purple-50' 
-                        : 'border-gray-200 hover:border-purple-300'
-                    )}
-                    onClick={() => setShippingOption('normal')}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Standard Shipping</h4>
-                        <p className="text-sm text-gray-600">5-7 business days</p>
-                      </div>
-                      <div className="text-lg font-bold text-gray-900">$15</div>
-                    </div>
-                  </div>
-                  
-                  <div
-                    className={"border-2 rounded-lg p-4 cursor-pointer transition-all " + (
-                      shippingOption === 'express' 
-                        ? 'border-purple-500 bg-purple-50' 
-                        : 'border-gray-200 hover:border-purple-300'
-                    )}
-                    onClick={() => setShippingOption('express')}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Express Shipping</h4>
-                        <p className="text-sm text-gray-600">2-3 business days</p>
-                      </div>
-                      <div className="text-lg font-bold text-gray-900">$25</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Shipping Address */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Shipping Address
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Full Name"
-                      value={shippingAddress.full_name}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, full_name: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="tel"
-                      placeholder="Phone Number"
-                      value={shippingAddress.phone}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <input
-                      type="text"
-                      placeholder="Address Line 1"
-                      value={shippingAddress.address_line_1}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_1: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <input
-                      type="text"
-                      placeholder="Address Line 2 (Optional)"
-                      value={shippingAddress.address_line_2}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_2: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="City"
-                      value={shippingAddress.city}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Postal Code"
-                      value={shippingAddress.postal_code}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <input
-                      type="text"
-                      placeholder="Country"
-                      value={shippingAddress.country}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, country: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
               <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setShowShippingModal(false)}
-                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleShippingSubmit}
-                  disabled={!shippingAddress.full_name || !shippingAddress.address_line_1 || !shippingAddress.city || !shippingAddress.country}
-                  className="flex-1 bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
-                >
-                  <CreditCard className="h-5 w-5" />
-                  <span>Pay Shipping Fee (${shippingOption === 'express' ? '25' : '15'})</span>
-                </button>
+                {selectedItem.file_url && (
+                  <>
+                    <button
+                      onClick={() => handlePreview(selectedItem)}
+                      className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                    >
+                      <Eye className="h-5 w-5" />
+                      <span>Preview</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleDownload(selectedItem)}
+                      className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                    >
+                      <Download className="h-5 w-5" />
+                      <span>Download</span>
+                    </button>
+                  </>
+                )}
+
+                {viewMode === 'client' && selectedItem.status === 'sent' && selectedItem.payment_status === 'unpaid' && (
+                  <button
+                    onClick={() => {
+                      setShowItemDetail(false);
+                      handleRequestPhysicalShipping(selectedItem);
+                    }}
+                    className="bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                  >
+                    <Truck className="h-5 w-5" />
+                    <span>Request Physical Shipping</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </div>
-      )}
-
-      {/* Stripe Checkout for Shipping */}
-      {showStripeCheckout && selectedItemForShipping && (
-        <StripeCheckout
-          isOpen={showStripeCheckout}
-          onClose={() => setShowStripeCheckout(false)}
-          amount={shippingOption === 'express' ? 25 : 15}
-          currency="USD"
-          orderId={selectedItemForShipping.id}
-          orderDetails={{
-            serviceName: `${shippingOption === 'express' ? 'Express' : 'Standard'} Shipping - ${selectedItemForShipping.document_name}`,
-            consultantName: 'Virtual Mailbox',
-            deliveryTime: shippingOption === 'express' ? 3 : 7
-          }}
-          onSuccess={handleShippingPaymentSuccess}
-          onError={(error) => alert('Payment error: ' + error)}
-        />
       )}
     </div>
   );
