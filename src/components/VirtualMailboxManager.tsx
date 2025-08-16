@@ -137,6 +137,22 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
     return data?.id || null;
   };
 
+  const handleRequestPhysicalShipping = (item: VirtualMailboxItem) => {
+    console.log('🚚 Physical shipping requested for:', item.document_name);
+    setCurrentShippingItem(item);
+    
+    // Pre-fill address with profile information if available
+    setShippingAddress(prev => ({
+      ...prev,
+      full_name: profile?.full_name || '',
+      email: profile?.email || '',
+      phone: profile?.phone || ''
+    }));
+    
+    console.log('📋 Opening shipping address modal');
+    setShowShippingAddressModal(true);
+  };
+
   const handleShippingAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -262,17 +278,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
             viewed_date: new Date().toISOString(),
             status: item.status === 'sent' ? 'viewed' : item.status
           })
-          .eq('id', item.id);
-      }
-
-      // Open in new tab
-      window.open(item.file_url, '_blank');
-      await fetchItems();
-    } catch (error) {
-      console.error('Error previewing document:', error);
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered': return 'bg-green-100 text-green-800';
