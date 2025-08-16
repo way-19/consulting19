@@ -670,10 +670,6 @@ const ConsultantDashboard = () => {
                     >
                       Refresh Data
                     </button>
-                  </div>
-
-                  {/* Contact Admin Button */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <button 
                       onClick={() => {
                         // Use first admin as default target
@@ -684,13 +680,13 @@ const ConsultantDashboard = () => {
                         setIsChatOpen(true);
                       }}
                       disabled={adminUsers.length === 0}
-                      className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="mt-2 w-full bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                     >
-                      <Crown className="h-5 w-5" />
+                      <Crown className="h-4 w-4" />
                       <span>Contact Admin</span>
                     </button>
                     {adminUsers.length === 0 && (
-                      <p className="text-xs text-gray-500 mt-2 text-center">No admin users available</p>
+                      <p className="text-xs text-red-600 mt-1">No admin users available</p>
                     )}
                   </div>
 
@@ -732,6 +728,7 @@ const ConsultantDashboard = () => {
         chatType={chatType}
         currentUserId={profile?.id || 'consultant-1'}
         currentUserRole="consultant"
+        targetUserId={chatType === 'admin-consultant' ? selectedAdminId || undefined : undefined}
       />
     </>
   );
