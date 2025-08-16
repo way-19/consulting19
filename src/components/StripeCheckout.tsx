@@ -27,6 +27,23 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   currency,
   orderId,
   orderDetails,
+  onSuccess,
+  onError,
+  onCancel
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState<any>(null);
+
+  const onAddressChange = (address: any) => {
+    setShippingAddress(address);
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!stripe || !elements) {
       return;
@@ -59,7 +76,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
       if (paymentIntent && paymentIntent.status === 'succeeded') {
         // Track successful payment
-        trackBusinessEvent.paymentCompleted(amount, currency, orderDetails.serviceName, paymentIntent.id);
+        // trackBusinessEvent.paymentCompleted(amount, currency, orderDetails.serviceName, paymentIntent.id);
         
         onSuccess(paymentIntent.id);
       }
@@ -271,8 +288,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Cancel
-          customer_name: shippingAddress?.full_name || orderDetails.consultantName,
-          shipping_address: shippingAddress
+          </button>
         </div>
       </form>
     </div>
