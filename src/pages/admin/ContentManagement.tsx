@@ -1,19 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
-import StripeCheckout from '../../components/StripeCheckout';
-import FileUpload, { UploadedFile } from '../../components/common/FileUpload';
-import { useFileUpload } from '../../hooks/useFileUpload';
-import {
-  Plus,
-  FileText,
-  Send,
-  Eye,
-  Download,
-  Upload,
-  Package,
-  Clock,
-  CheckCircle,
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+import StripeCheckout from './StripeCheckout';
+import FileUpload, { UploadedFile } from './common/FileUpload';
+import { useFileUpload } from '../hooks/useFileUpload';
+import FileUpload, { UploadedFile } from './common/FileUpload';
+import { useFileUpload } from '../hooks/useFileUpload';
+import { 
+  Plus, 
+  FileText, 
+  Send, 
+  Eye, 
+  Download, 
+  Upload, 
+  Package, 
+  Clock, 
+  CheckCircle, 
   DollarSign,
   Search,
   Filter,
@@ -214,8 +216,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         document_name: formData.document_name,
         description: formData.description,
         shipping_fee: formData.shipping_fee,
-        file_url: fileUrl,
-        file_size: formData.file?.size || null,
         consultant_id: profile?.id,
         status: 'pending'
       };
