@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase, Country, logAdminAction, uploadFileToStorage, getPublicImageUrl } from '../../lib/supabase';
+import SearchFilterBar from '../../components/common/SearchFilterBar';
+import useAdvancedSearch from '../../hooks/useAdvancedSearch';
 import { 
   ArrowLeft, 
-  Search, 
-  Filter, 
   Globe, 
   Plus,
   Eye, 
@@ -53,8 +53,6 @@ const CountryManagement = () => {
   const [consultants, setConsultants] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<ConsultantAssignment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedCountry, setSelectedCountry] = useState<CountryWithStats | null>(null);
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
@@ -74,6 +72,47 @@ const CountryManagement = () => {
     highlights: [''],
     tags: [''],
     is_active: true
+  });
+
+  // Advanced search configuration
+  const searchConfig = {
+    searchFields: ['name', 'slug', 'description'] as (keyof CountryWithStats)[],
+    filterFields: [
+      {
+        key: 'is_active' as keyof CountryWithStats,
+        type: 'select' as const,
+        options: [
+          { value: 'all', label: 'All Status' },
+          { value: true, label: 'Active' },
+          { value: false, label: 'Inactive' }
+        ]
+      }
+    ],
+    sortFields: [
+      { key: 'name' as keyof CountryWithStats, label: 'Country Name', defaultOrder: 'asc' as const },
+      { key: 'sort_order' as keyof CountryWithStats, label: 'Sort Order', defaultOrder: 'asc' as const },
+      { key: 'created_at' as keyof CountryWithStats, label: 'Date Added', defaultOrder: 'desc' as const }
+    ]
+  };
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    filters,
+    setFilter,
+    clearFilters,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
+    filteredData: filteredCountries,
+    totalCount,
+    filteredCount
+  } = useAdvancedSearch({
+    data: countries,
+    config: searchConfig,
+    initialSortBy: 'sort_order',
+    initialFilters: { is_active: 'all' }
   });
 
   useEffect(() => {
@@ -504,39 +543,33 @@ const CountryManagement = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search countries..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredCountries.length} of {countries.length} countries
-          </div>
-        </div>
+        <SearchFilterBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search countries by name, slug, or description..."
+          filters={[
+            {
+              key: 'is_active',
+              label: 'Status',
+              value: filters.is_active || 'all',
+              options: searchConfig.filterFields[0].options!,
+              onChange: (value) => setFilter('is_active', value),
+              icon: Globe
+            }
+          ]}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          sortOptions={searchConfig.sortFields.map(field => ({
+            value: field.key as string,
+            label: field.label
+          }))}
+          onSortChange={setSortBy}
+          onSortOrderChange={setSortOrder}
+          totalCount={totalCount}
+          filteredCount={filteredCount}
+          onClearFilters={clearFilters}
+          className="mb-8"
+        />
 
         {/* Countries Grid */}
         {filteredCountries.length === 0 ? (

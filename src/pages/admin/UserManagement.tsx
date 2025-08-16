@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase, Profile, logAdminAction } from '../../lib/supabase';
+import SearchFilterBar, { FilterOption } from '../../components/common/SearchFilterBar';
+import useAdvancedSearch from '../../hooks/useAdvancedSearch';
 import { 
   ArrowLeft, 
-  Search, 
-  Filter, 
   Users, 
   Plus,
   Eye, 
@@ -39,9 +39,6 @@ const UserManagement = () => {
   const { profile } = useAuth();
   const [users, setUsers] = useState<UserWithStats[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<UserWithStats | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -63,6 +60,60 @@ const UserManagement = () => {
     legacy_role: 'client' as 'admin' | 'consultant' | 'client',
     country: '',
     phone: ''
+  });
+
+  // Advanced search and filter configuration
+  const searchConfig = {
+    searchFields: ['full_name', 'email', 'phone'] as (keyof UserWithStats)[],
+    filterFields: [
+      {
+        key: 'legacy_role' as keyof UserWithStats,
+        type: 'select' as const,
+        options: [
+          { value: 'all', label: 'All Roles' },
+          { value: 'admin', label: 'Admin' },
+          { value: 'consultant', label: 'Consultant' },
+          { value: 'client', label: 'Client' }
+        ]
+      },
+      {
+        key: 'is_active' as keyof UserWithStats,
+        type: 'select' as const,
+        options: [
+          { value: 'all', label: 'All Status' },
+          { value: true, label: 'Active' },
+          { value: false, label: 'Inactive' }
+        ]
+      }
+    ],
+    sortFields: [
+      { key: 'created_at' as keyof UserWithStats, label: 'Date Created', defaultOrder: 'desc' as const },
+      { key: 'full_name' as keyof UserWithStats, label: 'Name', defaultOrder: 'asc' as const },
+      { key: 'email' as keyof UserWithStats, label: 'Email', defaultOrder: 'asc' as const },
+      { key: 'last_login_at' as keyof UserWithStats, label: 'Last Login', defaultOrder: 'desc' as const }
+    ]
+  };
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    filters,
+    setFilter,
+    clearFilters,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
+    filteredData: filteredUsers,
+    totalCount,
+    filteredCount,
+    hasActiveFilters
+  } = useAdvancedSearch({
+    data: users,
+    config: searchConfig,
+    initialSortBy: 'created_at',
+    initialSortOrder: 'desc',
+    initialFilters: { legacy_role: 'all', is_active: 'all' }
   });
 
   useEffect(() => {
@@ -431,63 +482,41 @@ const UserManagement = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Name, email, phone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">All Roles</option>
-                <option value="admin">Admin</option>
-                <option value="consultant">Consultant</option>
-                <option value="client">Client</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              Showing {filteredUsers.length} of {users.length} users
-            </div>
-            <button
-              onClick={() => {/* Export functionality */}}
-              className="text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center space-x-1"
-            >
-              <Download className="h-4 w-4" />
-              <span>Export CSV</span>
-            </button>
-          </div>
-        </div>
+        <SearchFilterBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search users by name, email, or phone..."
+          filters={[
+            {
+              key: 'legacy_role',
+              label: 'Role',
+              value: filters.legacy_role || 'all',
+              options: searchConfig.filterFields[0].options!,
+              onChange: (value) => setFilter('legacy_role', value),
+              icon: Users
+            },
+            {
+              key: 'is_active',
+              label: 'Status',
+              value: filters.is_active || 'all',
+              options: searchConfig.filterFields[1].options!,
+              onChange: (value) => setFilter('is_active', value)
+            }
+          ]}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          sortOptions={searchConfig.sortFields.map(field => ({
+            value: field.key as string,
+            label: field.label
+          }))}
+          onSortChange={setSortBy}
+          onSortOrderChange={setSortOrder}
+          totalCount={totalCount}
+          filteredCount={filteredCount}
+          onClearFilters={clearFilters}
+          onExport={() => {/* Export functionality */}}
+          className="mb-8"
+        />
 
         {/* Users Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
