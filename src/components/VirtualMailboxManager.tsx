@@ -293,34 +293,84 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
   const handleRequestShipping = (item: VirtualMailboxItem) => {
     setSelectedItemForShipping(item);
+    // Set shipping address with default values from profile if available
+    setShippingAddress(prev => ({
+      ...prev,
+      full_name: item.client?.profile?.full_name || '',
+      // Keep other fields as they are for user to fill
+    }));
     setShowShippingModal(true);
   };
 
-  const handleShippingSubmit = () => {
+  const handleShippingSubmit = async () => {
     if (!selectedItemForShipping) return;
     
-    const shippingCost = shippingOption === 'express' ? 25 : 15;
-    setShowShippingModal(false);
-    setShowStripeCheckout(true);
+    // Validate shipping address
+    if (!shippingAddress.full_name || !shippingAddress.address_line_1 || !shippingAddress.city || !shippingAddress.country) {
+      alert('Please fill in all required shipping address fields');
+      return;
+    }
+
+    try {
+      // First update the item with shipping info and set payment as unpaid
+      const { error } = await supabase
+        .from('virtual_mailbox_items')
+        .update({
+          shipping_option: shippingOption,
+          shipping_address: shippingAddress,
+          shipping_fee: shippingOption === 'express' ? 25 : 15,
+          payment_status: 'unpaid',
+          status: 'pending' // Keep as pending until payment is made
+        })
+        .eq('id', selectedItemForShipping.id);
+
+      if (error) throw error;
+
+      // Now show payment modal
+      setShowShippingModal(false);
+      setShowStripeCheckout(true);
+    } catch (error) {
+      console.error('Error updating shipping info:', error);
+      alert('Failed to save shipping information');
+    }
   };
 
   const handleShippingPaymentSuccess = async (paymentIntentId: string) => {
     if (!selectedItemForShipping) return;
 
     try {
-      // Update item with shipping info and payment
+      // Update payment status and send to consultant
       const { error } = await supabase
         .from('virtual_mailbox_items')
         .update({
-          shipping_option: shippingOption,
-          shipping_address: shippingAddress,
           payment_status: 'paid',
-          status: 'sent',
-          sent_date: new Date().toISOString()
+          status: 'pending' // This will create a request for consultant to process
         })
         .eq('id', selectedItemForShipping.id);
 
       if (error) throw error;
+
+      // Notify consultant about the shipping request
+      const { data: consultantData } = await supabase
+        .from('virtual_mailbox_items')
+        .select('consultant_id')
+        .eq('id', selectedItemForShipping.id)
+        .single();
+
+      if (consultantData?.consultant_id) {
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: consultantData.consultant_id,
+            type: 'shipping_request',
+            title: 'Physical Shipping Request',
+            message: `Client has paid for physical shipping of ${selectedItemForShipping.document_name}`,
+            priority: 'normal',
+            related_table: 'virtual_mailbox_items',
+            related_id: selectedItemForShipping.id,
+            action_url: '/consultant/documents'
+          }]);
+      }
       
       setShowStripeCheckout(false);
       setSelectedItemForShipping(null);
@@ -335,7 +385,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       });
       
       await fetchItems();
-      alert('Shipping payment successful! Your document will be shipped.');
+      alert('Payment successful! Your shipping request has been sent to your consultant.');
     } catch (error) {
       console.error('Error updating shipping info:', error);
       alert('Failed to update shipping information');
@@ -628,11 +678,11 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                     <>
                       {item.payment_status === 'unpaid' && item.status === 'sent' && (
                         <button
-                          onClick={() => updatePaymentStatus(item.id, 'paid')}
+                          onClick={() => handleRequestShipping(item)}
                           className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
                         >
                           <CreditCard className="h-4 w-4" />
-                          <span>Pay ${item.shipping_fee}</span>
+                          <span>Physical Shipping</span>
                         </button>
                       )}
                       
@@ -656,22 +706,22 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                         </button>
                       )}
                       
-                      {item.payment_status === 'unpaid' && item.status === 'sent' && (
+                      {item.payment_status === 'unpaid' && item.status === 'pending' && (
                         <button
                           onClick={() => handleRequestShipping(item)}
-                          className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
                         >
                           <Truck className="h-4 w-4" />
-                          <span>Request Shipping</span>
+                          <span>Physical Shipping</span>
                         </button>
                       )}
                       
-                      {item.payment_status === 'paid' && item.status === 'pending' && (
+                      {item.payment_status === 'paid' && item.status === 'sent' && (
                         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                           <div className="flex items-center space-x-2">
                             <CheckCircle className="h-4 w-4 text-green-600" />
                             <span className="text-sm text-green-800 font-medium">
-                              Payment received. Document will be sent shortly.
+                              Shipping request sent to consultant. Document will be shipped soon.
                             </span>
                           </div>
                         </div>
@@ -948,14 +998,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               )}
               
               {/* Payment Required for Shipping */}
-              {viewMode === 'client' && selectedItem.payment_status === 'unpaid' && selectedItem.status === 'pending' && (
+              {viewMode === 'client' && selectedItem.payment_status === 'unpaid' && selectedItem.status === 'sent' && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-start space-x-3">
                     <Truck className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <h4 className="font-medium text-blue-900">Shipping Available</h4>
                       <p className="text-sm text-blue-700 mt-1">
-                        This document is ready for shipping. Pay the shipping fee to request delivery.
+                        This document is ready for physical shipping. Click "Physical Shipping" to pay shipping fee and request delivery.
                       </p>
                     </div>
                   </div>
@@ -963,14 +1013,29 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               )}
               
               {/* Document Ready After Payment */}
-              {viewMode === 'client' && selectedItem.payment_status === 'paid' && selectedItem.status === 'sent' && (
+              {viewMode === 'client' && selectedItem.payment_status === 'paid' && selectedItem.status === 'pending' && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-start space-x-3">
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <h4 className="font-medium text-green-900">Document Ready</h4>
+                      <h4 className="font-medium text-green-900">Shipping Request Sent</h4>
                       <p className="text-sm text-green-700 mt-1">
-                        Your payment has been processed and the document is ready for download.
+                        Your payment has been processed and shipping request has been sent to your consultant.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Document Shipped by Consultant */}
+              {viewMode === 'client' && selectedItem.payment_status === 'paid' && selectedItem.status === 'sent' && (
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <Truck className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-purple-900">Document Shipped</h4>
+                      <p className="text-sm text-purple-700 mt-1">
+                        Your document has been shipped by your consultant. Track your package with tracking number: {selectedItem.tracking_number}
                       </p>
                     </div>
                   </div>
@@ -1135,11 +1200,11 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                 </button>
                 <button
                   onClick={handleShippingSubmit}
-                  disabled={!shippingAddress.full_name || !shippingAddress.address_line_1 || !shippingAddress.city}
+                  disabled={!shippingAddress.full_name || !shippingAddress.address_line_1 || !shippingAddress.city || !shippingAddress.country}
                   className="flex-1 bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                 >
                   <CreditCard className="h-5 w-5" />
-                  <span>Pay Now (${shippingOption === 'express' ? '25' : '15'})</span>
+                  <span>Pay Shipping Fee (${shippingOption === 'express' ? '25' : '15'})</span>
                 </button>
               </div>
             </div>
