@@ -239,13 +239,6 @@ const AdminDashboard = () => {
                 <RefreshCw className="h-5 w-5" />
                 <span>Refresh Data</span>
               </button>
-              <button
-                onClick={fetchSystemHealth}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
-              >
-                <Activity className="h-5 w-5" />
-                <span>Check Health</span>
-              </button>
             </div>
           </div>
         </div>
@@ -410,9 +403,14 @@ const AdminDashboard = () => {
                     <Database className="h-4 w-4 text-gray-600" />
                     <span className="text-sm text-gray-700">Database</span>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getHealthColor(stats.systemHealth.database)}`}>
-                    {getHealthIcon(stats.systemHealth.database)}
-                    <span>{stats.systemHealth.database}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${
+                    systemHealthStatus.checks?.database.status === 'healthy' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'
+                  }`}>
+                    {systemHealthStatus.checks?.database.status === 'healthy' ? 
+                      <CheckCircle className="h-3 w-3" /> : 
+                      <AlertTriangle className="h-3 w-3" />
+                    }
+                    <span>{systemHealthStatus.checks?.database.status || 'checking'}</span>
                   </span>
                 </div>
 
@@ -437,8 +435,55 @@ const AdminDashboard = () => {
                     <span>{stats.systemHealth.performance}</span>
                   </span>
                 </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Activity className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm text-gray-700">Overall Status</span>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${
+                    systemHealthStatus.status === 'healthy' ? 'text-green-600 bg-green-100' :
+                    systemHealthStatus.status === 'warning' ? 'text-yellow-600 bg-yellow-100' :
+                    systemHealthStatus.status === 'error' ? 'text-red-600 bg-red-100' :
+                    'text-gray-600 bg-gray-100'
+                  }`}>
+                    {systemHealthStatus.status === 'checking' ? (
+                      <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-600"></div>
+                    ) : systemHealthStatus.status === 'healthy' ? (
+                      <CheckCircle className="h-3 w-3" />
+                    ) : (
+                      <AlertTriangle className="h-3 w-3" />
+                    )}
+                    <span>{systemHealthStatus.status}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Real-time Health Button */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={fetchSystemHealth}
+                  disabled={systemHealthStatus.status === 'checking'}
+                  className="w-full bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  {systemHealthStatus.status === 'checking' ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      <span>Checking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Activity className="h-4 w-4" />
+                      <span>Run Health Check</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="lg:col-span-2">
 
             {/* Quick Stats */}
             <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl text-white p-6">
