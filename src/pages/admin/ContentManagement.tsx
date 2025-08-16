@@ -202,8 +202,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       if (formData.file) {
         const filePath = await uploadFile(formData.file);
         fileUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/${filePath}`;
-      }
-      
       const itemData = {
         client_id: formData.client_id,
         document_type: formData.document_type,
@@ -211,11 +209,9 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         description: formData.description,
         shipping_fee: formData.shipping_fee,
         file_url: fileUrl,
+        file_size: formData.file?.size ?? null,
+        file_url: fileUrl,
         file_size: formData.file?.size || null,
-        document_type: formData.document_type,
-        document_name: formData.document_name,
-        description: formData.description,
-        shipping_fee: formData.shipping_fee,
         consultant_id: profile?.id,
         status: 'pending'
       };
