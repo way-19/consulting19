@@ -95,3 +95,38 @@ export const deleteFileFromStorage = async (
     return { error };
   }
 };
+
+// Settings management functions
+export const getSetting = async (key: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('key', key)
+      .single();
+
+    if (error) throw error;
+    return data?.value;
+  } catch (error) {
+    console.error('Error getting setting:', error);
+    return null;
+  }
+};
+
+export const updateSetting = async (key: string, value: any) => {
+  try {
+    const { error } = await supabase
+      .from('settings')
+      .upsert({
+        key,
+        value,
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error updating setting:', error);
+    throw error;
+  }
+};
