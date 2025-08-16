@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useNotifications } from '../hooks/useNotifications';
 import MultilingualChat from '../components/MultilingualChat';
 import AssignedClientsList from '../components/consultant/dashboard/AssignedClientsList';
 import { Users, TrendingUp, Clock, CheckCircle, Calendar, FileText, MessageSquare, Settings, Star, Award, Target, Zap, Calculator, CreditCard, Globe, Globe2, BarChart3, Shield, User, Bell } from 'lucide-react';
@@ -24,6 +25,7 @@ interface AssignedClient {
 
 const ConsultantDashboard = () => {
   const { profile } = useAuth();
+  const { unreadCount } = useNotifications();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatType, setChatType] = useState<'admin-consultant' | 'consultant-client'>('admin-consultant');
   const [assignedClients, setAssignedClients] = useState<AssignedClient[]>([]);
