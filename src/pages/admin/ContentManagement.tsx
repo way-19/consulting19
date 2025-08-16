@@ -1,31 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';          // path'in doğru olduğundan emin ol (admin altındaysan ../ yerine ../../ olabilir)
 import { supabase } from '../lib/supabase';
-import StripeCheckout from './StripeCheckout';
-import FileUpload, { UploadedFile } from './common/FileUpload';
-import { useFileUpload } from '../hooks/useFileUpload';
-import FileUpload, { UploadedFile } from './common/FileUpload';
-import { useFileUpload } from '../hooks/useFileUpload';
-import { 
-  Plus, 
-  FileText, 
-  Send, 
-  Eye, 
-  Download, 
-  Upload, 
-  Package, 
-  Clock, 
-  CheckCircle, 
+import StripeCheckout from './StripeCheckout';              // path'i projene göre kontrol et
+import { useFileUpload } from '../hooks/useFileUpload';     // duplicate importları kaldırdık
+import {
+  Plus,
+  FileText,
+  Send,
+  Eye,
+  Download,
+  Package,
+  Clock,
+  CheckCircle,
   DollarSign,
   Search,
   Filter,
   X,
   Save,
-  Trash2,
   Mail,
   Truck,
   CreditCard,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 
 interface VirtualMailboxItem {
@@ -61,14 +56,18 @@ interface VirtualMailboxManagerProps {
 
 const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId, viewMode }) => {
   const { profile } = useAuth();
+
   const [items, setItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
+
   const [selectedItem, setSelectedItem] = useState<VirtualMailboxItem | null>(null);
   const [showItemDetail, setShowItemDetail] = useState(false);
+
   const [showShippingModal, setShowShippingModal] = useState(false);
   const [selectedItemForShipping, setSelectedItemForShipping] = useState<VirtualMailboxItem | null>(null);
   const [shippingOption, setShippingOption] = useState<'normal' | 'express'>('normal');
@@ -79,35 +78,38 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     city: '',
     postal_code: '',
     country: '',
-    phone: ''
+    phone: '',
   });
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
 
-  const { uploadFile, uploadState } = useFileUpload({
+  const { uploadFile /* , uploadState */ } = useFileUpload({
     bucketName: 'documents',
     folder: 'virtual_mailbox',
     onUploadComplete: (file, filePath) => {
       console.log('Virtual mailbox file uploaded:', file.name, filePath);
-    }
+    },
   });
 
-  const { uploadFile, uploadState } = useFileUpload({
-    bucketName: 'documents',
-    folder: 'virtual_mailbox',
-    onUploadComplete: (file, filePath) => {
-      console.log('Virtual mailbox file uploaded:', file.name, filePath);
-    }
-  });
-
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    client_id: string;
+    document_type: string;
+    document_name: string;
+    description: string;
+    shipping_fee: number;
+    file: File | null;
+  }>({
     client_id: clientId || '',
     document_type: '',
     document_name: '',
     description: '',
-    shipping_fee: 25.00,
-    file: null as File | null
-    file: null as File | null
+    shipping_fee: 25.0,
+    file: null,
   });
+
+  useEffect(() => {
+    // clientId prop değişirse forma yansıt
+    setFormData((prev) => ({ ...prev, client_id: clientId || '' }));
+  }, [clientId]);
 
   const documentTypes = [
     'Company Registration Certificate',
@@ -122,18 +124,22 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     'Director Appointment Letter',
     'Share Certificate',
     'Company Bylaws',
-    'Other Official Document'
+    'Other Official Document',
   ];
 
   useEffect(() => {
     fetchItems();
-  }, [clientId, profile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientId, profile?.id, viewMode]);
 
   const fetchItems = async () => {
     try {
+      setLoading(true);
+
       let query = supabase
         .from('virtual_mailbox_items')
-        .select(`
+        .select(
+          `
           *,
           client:client_id (
             company_name,
@@ -142,32 +148,29 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               email
             )
           )
-        `);
+        `
+        );
 
       if (viewMode === 'consultant') {
         query = query.eq('consultant_id', profile?.id);
-        if (clientId) {
-          query = query.eq('client_id', clientId);
-        }
+        if (clientId) query = query.eq('client_id', clientId);
       } else {
-        // Client view - always use provided clientId
         if (clientId) {
           query = query.eq('client_id', clientId);
         } else {
-          // Fallback: get client ID from profile
           const { data: clientData, error: clientError } = await supabase
             .from('clients')
             .select('id')
             .eq('profile_id', profile?.id)
             .limit(1);
-          
+
           if (clientError || !clientData?.[0]) {
             console.error('Error fetching client ID for mailbox:', clientError);
             setItems([]);
             setLoading(false);
             return;
           }
-          
+
           query = query.eq('client_id', clientData[0].id);
         }
       }
@@ -176,8 +179,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
       if (error) throw error;
       setItems(data || []);
-    } catch (error) {
-      console.error('Error fetching mailbox items:', error);
+    } catch (err) {
+      console.error('Error fetching mailbox items:', err);
       setItems([]);
     } finally {
       setLoading(false);
@@ -186,133 +189,110 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
+      // dosya upload
       let fileUrl = '';
-      
-      // Upload file if provided
       if (formData.file) {
         const filePath = await uploadFile(formData.file);
         fileUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/${filePath}`;
       }
-      
-      let fileUrl = '';
-      
-      // Upload file if provided
-      if (formData.file) {
-        const filePath = await uploadFile(formData.file);
-        fileUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/${filePath}`;
-      }
-      
+
+      // basit tracking no üret
+      const tracking_number = `VM${new Date()
+        .toISOString()
+        .replace(/[-:.TZ]/g, '')}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
       const itemData = {
-        client_id: formData.client_id,
+        client_id: formData.client_id || clientId || '',
+        consultant_id: profile?.id || null,
         document_type: formData.document_type,
         document_name: formData.document_name,
-        description: formData.description,
+        description: formData.description || null,
         shipping_fee: formData.shipping_fee,
-        file_url: fileUrl,
-        file_size: formData.file?.size || null,
-        document_type: formData.document_type,
-        document_name: formData.document_name,
-        description: formData.description,
-        shipping_fee: formData.shipping_fee,
-        file_url: fileUrl,
-        file_size: formData.file?.size || null,
-        consultant_id: profile?.id,
-        status: 'pending'
+        file_url: fileUrl || null,
+        file_size: formData.file?.size ?? null,
+        tracking_number,
+        status: 'pending' as const,
+        payment_status: 'unpaid' as const,
       };
 
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .insert([itemData]);
-
+      const { error } = await supabase.from('virtual_mailbox_items').insert([itemData]);
       if (error) throw error;
 
       await fetchItems();
       resetForm();
       alert('Document added to virtual mailbox successfully!');
-    } catch (error) {
-      console.error('Error adding document:', error);
+    } catch (err) {
+      console.error('Error adding document:', err);
       alert('Failed to add document');
     }
   };
 
-  const updateStatus = async (itemId: string, newStatus: string) => {
+  const updateStatus = async (itemId: string, newStatus: VirtualMailboxItem['status']) => {
     try {
-      const { error } = await supabase
-        .from('virtual_mailbox_items')
-        .update({ status: newStatus })
-        .eq('id', itemId);
-
+      const { error } = await supabase.from('virtual_mailbox_items').update({ status: newStatus }).eq('id', itemId);
       if (error) throw error;
       await fetchItems();
-    } catch (error) {
-      console.error('Error updating status:', error);
+    } catch (err) {
+      console.error('Error updating status:', err);
     }
   };
 
-  const updatePaymentStatus = async (itemId: string, newPaymentStatus: string) => {
+  const updatePaymentStatus = async (itemId: string, newPaymentStatus: VirtualMailboxItem['payment_status']) => {
     try {
       const { error } = await supabase
         .from('virtual_mailbox_items')
         .update({ payment_status: newPaymentStatus })
         .eq('id', itemId);
-
       if (error) throw error;
       await fetchItems();
-    } catch (error) {
-      console.error('Error updating payment status:', error);
+    } catch (err) {
+      console.error('Error updating payment status:', err);
     }
   };
 
   const handleViewDocument = async (item: VirtualMailboxItem) => {
     try {
-      // Update viewed_date
       const { error } = await supabase
         .from('virtual_mailbox_items')
-        .update({ 
+        .update({
           viewed_date: new Date().toISOString(),
-          status: 'viewed'
+          status: 'viewed',
         })
         .eq('id', item.id);
 
       if (error) throw error;
-      
-      // Open document in new tab
-      if (item.file_url) {
-        window.open(item.file_url, '_blank');
-      }
-      
+
+      if (item.file_url) window.open(item.file_url, '_blank');
+
       await fetchItems();
-    } catch (error) {
-      console.error('Error updating view status:', error);
+    } catch (err) {
+      console.error('Error updating view status:', err);
     }
   };
 
   const handleDownloadDocument = async (item: VirtualMailboxItem) => {
     try {
-      // Update downloaded_date
       const { error } = await supabase
         .from('virtual_mailbox_items')
-        .update({ 
+        .update({
           downloaded_date: new Date().toISOString(),
-          status: 'downloaded'
+          status: 'downloaded',
         })
         .eq('id', item.id);
 
       if (error) throw error;
-      
-      // Trigger download
+
       if (item.file_url) {
         const link = document.createElement('a');
         link.href = item.file_url;
         link.download = item.document_name;
         link.click();
       }
-      
+
       await fetchItems();
-    } catch (error) {
-      console.error('Error updating download status:', error);
+    } catch (err) {
+      console.error('Error updating download status:', err);
     }
   };
 
@@ -323,17 +303,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
   const handleShippingSubmit = () => {
     if (!selectedItemForShipping) return;
-    
-    const shippingCost = shippingOption === 'express' ? 25 : 15;
     setShowShippingModal(false);
     setShowStripeCheckout(true);
   };
 
-  const handleShippingPaymentSuccess = async (paymentIntentId: string) => {
+  const handleShippingPaymentSuccess = async (_paymentIntentId: string) => {
     if (!selectedItemForShipping) return;
 
     try {
-      // Update item with shipping info and payment
       const { error } = await supabase
         .from('virtual_mailbox_items')
         .update({
@@ -341,12 +318,12 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           shipping_address: shippingAddress,
           payment_status: 'paid',
           status: 'sent',
-          sent_date: new Date().toISOString()
+          sent_date: new Date().toISOString(),
         })
         .eq('id', selectedItemForShipping.id);
 
       if (error) throw error;
-      
+
       setShowStripeCheckout(false);
       setSelectedItemForShipping(null);
       setShippingAddress({
@@ -356,13 +333,13 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         city: '',
         postal_code: '',
         country: '',
-        phone: ''
+        phone: '',
       });
-      
+
       await fetchItems();
       alert('Shipping payment successful! Your document will be shipped.');
-    } catch (error) {
-      console.error('Error updating shipping info:', error);
+    } catch (err) {
+      console.error('Error updating shipping info:', err);
       alert('Failed to update shipping information');
     }
   };
@@ -373,63 +350,78 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       document_type: '',
       document_name: '',
       description: '',
-      shipping_fee: 25.00,
-      file: null as File | null
+      shipping_fee: 25.0,
+      file: null,
     });
     setShowAddForm(false);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: VirtualMailboxItem['status']) => {
     switch (status) {
-      case 'downloaded': return 'bg-green-100 text-green-800';
-      case 'viewed': return 'bg-blue-100 text-blue-800';
-      case 'delivered': return 'bg-purple-100 text-purple-800';
-      case 'sent': return 'bg-yellow-100 text-yellow-800';
-      case 'pending': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'downloaded':
+        return 'bg-green-100 text-green-800';
+      case 'viewed':
+        return 'bg-blue-100 text-blue-800';
+      case 'delivered':
+        return 'bg-purple-100 text-purple-800';
+      case 'sent':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'pending':
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getPaymentStatusColor = (status: string) => {
+  const getPaymentStatusColor = (status: VirtualMailboxItem['payment_status']) => {
     switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800';
-      case 'waived': return 'bg-blue-100 text-blue-800';
-      case 'unpaid': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'paid':
+        return 'bg-green-100 text-green-800';
+      case 'waived':
+        return 'bg-blue-100 text-blue-800';
+      case 'unpaid':
+      default:
+        return 'bg-red-100 text-red-800';
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: VirtualMailboxItem['status']) => {
     switch (status) {
-      case 'downloaded': return <Download className="h-4 w-4" />;
-      case 'viewed': return <Eye className="h-4 w-4" />;
-      case 'delivered': return <Package className="h-4 w-4" />;
-      case 'sent': return <Truck className="h-4 w-4" />;
-      case 'pending': return <Clock className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
+      case 'downloaded':
+        return <Download className="h-4 w-4" />;
+      case 'viewed':
+        return <Eye className="h-4 w-4" />;
+      case 'delivered':
+        return <Package className="h-4 w-4" />;
+      case 'sent':
+        return <Truck className="h-4 w-4" />;
+      case 'pending':
+      default:
+        return <FileText className="h-4 w-4" />;
     }
   };
 
-  const filteredItems = items.filter(item => {
-    const matchesSearch = 
+  const filteredItems = items.filter((item) => {
+    const matchesSearch =
       item.document_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.document_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.tracking_number.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
     const matchesPayment = paymentFilter === 'all' || item.payment_status === paymentFilter;
-    
+
     return matchesSearch && matchesStatus && matchesPayment;
   });
 
-  const pendingItems = items.filter(i => i.status === 'pending').length;
-  const unpaidItems = items.filter(i => i.payment_status === 'unpaid').length;
-  const totalRevenue = items.filter(i => i.payment_status === 'paid').reduce((sum, i) => sum + i.shipping_fee, 0);
+  const pendingItems = items.filter((i) => i.status === 'pending').length;
+  const unpaidItems = items.filter((i) => i.payment_status === 'unpaid').length;
+  const totalRevenue = items
+    .filter((i) => i.payment_status === 'paid')
+    .reduce((sum, i) => sum + (i.shipping_fee || 0), 0);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
       </div>
     );
   }
@@ -448,7 +440,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               <FileText className="h-6 w-6 text-blue-600" />
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -488,10 +480,9 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
             {viewMode === 'consultant' ? 'Virtual Mailbox Management' : 'My Virtual Mailbox'}
           </h2>
           <p className="text-gray-600">
-            {viewMode === 'consultant' 
+            {viewMode === 'consultant'
               ? 'Send official documents to clients via virtual mailbox'
-              : 'Receive and download your official documents'
-            }
+              : 'Receive and download your official documents'}
           </p>
         </div>
         {viewMode === 'consultant' && (
@@ -509,7 +500,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search documents..."
@@ -558,10 +549,9 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               {viewMode === 'consultant' ? 'No Documents Sent' : 'No Documents Received'}
             </h3>
             <p className="text-gray-600">
-              {viewMode === 'consultant' 
+              {viewMode === 'consultant'
                 ? 'Start sending documents to your clients via virtual mailbox.'
-                : 'You haven\'t received any documents yet.'
-              }
+                : "You haven't received any documents yet."}
             </p>
           </div>
         ) : (
@@ -570,9 +560,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-4 mb-3">
-                    <div className="bg-purple-100 rounded-lg p-2">
-                      {getStatusIcon(item.status)}
-                    </div>
+                    <div className="bg-purple-100 rounded-lg p-2">{getStatusIcon(item.status)}</div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">{item.document_name}</h3>
                       <p className="text-sm text-gray-600">{item.document_type}</p>
@@ -582,9 +570,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                     </span>
                   </div>
 
-                  {item.description && (
-                    <p className="text-gray-700 mb-3">{item.description}</p>
-                  )}
+                  {item.description && <p className="text-gray-700 mb-3">{item.description}</p>}
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
                     <div>
@@ -600,7 +586,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       </span>
                     </div>
                     <div>
-                      <span className="font-medium">Size:</span> {item.file_size ? `${(item.file_size / 1024).toFixed(1)} KB` : 'N/A'}
+                      <span className="font-medium">Size:</span>{' '}
+                      {item.file_size ? `${(item.file_size / 1024).toFixed(1)} KB` : 'N/A'}
                     </div>
                   </div>
 
@@ -639,7 +626,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                           <span>Send</span>
                         </button>
                       )}
-                      
+
                       {item.payment_status === 'unpaid' && (
                         <button
                           onClick={() => updatePaymentStatus(item.id, 'waived')}
@@ -660,7 +647,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                           <span>Pay ${item.shipping_fee}</span>
                         </button>
                       )}
-                      
+
                       {item.payment_status === 'paid' && item.file_url && (
                         <button
                           onClick={() => handleViewDocument(item)}
@@ -670,17 +657,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                           <span>View</span>
                         </button>
                       )}
-                      
-                      {item.payment_status === 'paid' && !item.viewed_date && (
-                        <button
-                          onClick={() => handleViewDocument(item)}
-                          className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span>View</span>
-                        </button>
-                      )}
-                      
+
                       {item.payment_status === 'unpaid' && item.status === 'sent' && (
                         <button
                           onClick={() => handleRequestShipping(item)}
@@ -690,7 +667,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                           <span>Request Shipping</span>
                         </button>
                       )}
-                      
+
                       {item.payment_status === 'paid' && item.status === 'pending' && (
                         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                           <div className="flex items-center space-x-2">
@@ -722,103 +699,98 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
       {/* Add Document Form Modal */}
       {showAddForm && viewMode === 'consultant' && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">Add Document to Virtual Mailbox</h2>
-                <button
-                  onClick={resetForm}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
+                <button onClick={resetForm} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                   <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Client Selection */}
               {!clientId && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Client *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Client *</label>
                   <select
                     required
                     value={formData.client_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, client_id: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, client_id: e.target.value }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
                     <option value="">Choose a client...</option>
-                    {/* This would be populated with actual clients */}
+                    {/* TODO: gerçek client listesi ile doldur */}
                   </select>
                 </div>
               )}
 
-              {/* Document Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Document Type *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Document Type *</label>
                 <select
                   required
                   value={formData.document_type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, document_type: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, document_type: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
                   <option value="">Select document type...</option>
                   {documentTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
                   ))}
                 </select>
               </div>
 
-              {/* Document Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Document Name *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Document Name *</label>
                 <input
                   type="text"
                   required
                   value={formData.document_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, document_name: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, document_name: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="e.g., Georgia Tech Solutions LLC - Registration Certificate"
                 />
               </div>
 
-              {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
                   rows={3}
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Additional notes about this document..."
                 />
               </div>
 
-              {/* Shipping Fee */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Virtual Shipping Fee (USD)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Virtual Shipping Fee (USD)</label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
                   value={formData.shipping_fee}
-                  onChange={(e) => setFormData(prev => ({ ...prev, shipping_fee: parseFloat(e.target.value) || 0 }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, shipping_fee: parseFloat(e.target.value) || 0 }))
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 <p className="text-xs text-gray-500 mt-1">Standard virtual shipping fee is $25.00</p>
               </div>
 
-              {/* Actions */}
+              {/* Basit file input (FileUpload bileşenini kullanmıyorsan) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">File</label>
+                <input
+                  type="file"
+                  onChange={(e) => setFormData((prev) => ({ ...prev, file: e.target.files?.[0] ?? null }))}
+                  className="w-full"
+                />
+              </div>
+
               <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
                 <button
                   type="button"
@@ -842,22 +814,18 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
       {/* Item Detail Modal */}
       {showItemDetail && selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">Document Details</h2>
-                <button
-                  onClick={() => setShowItemDetail(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
+                <button onClick={() => setShowItemDetail(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                   <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Document Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Information</h3>
@@ -898,7 +866,11 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">Payment Status:</span>
-                      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(selectedItem.payment_status)}`}>
+                      <span
+                        className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                          selectedItem.payment_status
+                        )}`}
+                      >
                         {selectedItem.payment_status.toUpperCase()}
                       </span>
                     </div>
@@ -917,7 +889,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       <p className="text-sm text-gray-600">{new Date(selectedItem.created_at).toLocaleString()}</p>
                     </div>
                   </div>
-                  
+
                   {selectedItem.sent_date && (
                     <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                       <Send className="h-5 w-5 text-blue-600" />
@@ -927,7 +899,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       </div>
                     </div>
                   )}
-                  
+
                   {selectedItem.delivered_date && (
                     <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
                       <Package className="h-5 w-5 text-purple-600" />
@@ -937,7 +909,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       </div>
                     </div>
                   )}
-                  
+
                   {selectedItem.viewed_date && (
                     <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
                       <Eye className="h-5 w-5 text-green-600" />
@@ -971,8 +943,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   </div>
                 </div>
               )}
-              
-              {/* Payment Required for Shipping */}
+
               {viewMode === 'client' && selectedItem.payment_status === 'unpaid' && selectedItem.status === 'pending' && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-start space-x-3">
@@ -986,8 +957,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                   </div>
                 </div>
               )}
-              
-              {/* Document Ready After Payment */}
+
               {viewMode === 'client' && selectedItem.payment_status === 'paid' && selectedItem.status === 'sent' && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-start space-x-3">
@@ -1008,39 +978,31 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
       {/* Shipping Options Modal */}
       {showShippingModal && selectedItemForShipping && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">Shipping Options</h2>
-                <button
-                  onClick={() => setShowShippingModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
+                <button onClick={() => setShowShippingModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                   <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Document Info */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="font-medium text-gray-900 mb-2">{selectedItemForShipping.document_name}</h4>
                 <p className="text-sm text-gray-600">{selectedItemForShipping.document_type}</p>
               </div>
 
-              {/* Shipping Options */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Shipping Option
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Shipping Option</label>
                 <div className="space-y-3">
                   <div
-                    className={"border-2 rounded-lg p-4 cursor-pointer transition-all " + (
-                      shippingOption === 'normal' 
-                        ? 'border-purple-500 bg-purple-50' 
-                        : 'border-gray-200 hover:border-purple-300'
-                    )}
+                    className={
+                      'border-2 rounded-lg p-4 cursor-pointer transition-all ' +
+                      (shippingOption === 'normal' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300')
+                    }
                     onClick={() => setShippingOption('normal')}
                   >
                     <div className="flex items-center justify-between">
@@ -1051,13 +1013,12 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       <div className="text-lg font-bold text-gray-900">$15</div>
                     </div>
                   </div>
-                  
+
                   <div
-                    className={"border-2 rounded-lg p-4 cursor-pointer transition-all " + (
-                      shippingOption === 'express' 
-                        ? 'border-purple-500 bg-purple-50' 
-                        : 'border-gray-200 hover:border-purple-300'
-                    )}
+                    className={
+                      'border-2 rounded-lg p-4 cursor-pointer transition-all ' +
+                      (shippingOption === 'express' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300')
+                    }
                     onClick={() => setShippingOption('express')}
                   >
                     <div className="flex items-center justify-between">
@@ -1073,16 +1034,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
               {/* Shipping Address */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Shipping Address
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Shipping Address</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <input
                       type="text"
                       placeholder="Full Name"
                       value={shippingAddress.full_name}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, full_name: e.target.value }))}
+                      onChange={(e) => setShippingAddress((prev) => ({ ...prev, full_name: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       required
                     />
@@ -1092,7 +1051,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       type="tel"
                       placeholder="Phone Number"
                       value={shippingAddress.phone}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, phone: e.target.value }))}
+                      onChange={(e) => setShippingAddress((prev) => ({ ...prev, phone: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       required
                     />
@@ -1102,7 +1061,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       type="text"
                       placeholder="Address Line 1"
                       value={shippingAddress.address_line_1}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_1: e.target.value }))}
+                      onChange={(e) => setShippingAddress((prev) => ({ ...prev, address_line_1: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       required
                     />
@@ -1112,7 +1071,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       type="text"
                       placeholder="Address Line 2 (Optional)"
                       value={shippingAddress.address_line_2}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_2: e.target.value }))}
+                      onChange={(e) => setShippingAddress((prev) => ({ ...prev, address_line_2: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
                   </div>
@@ -1121,7 +1080,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       type="text"
                       placeholder="City"
                       value={shippingAddress.city}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
+                      onChange={(e) => setShippingAddress((prev) => ({ ...prev, city: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       required
                     />
@@ -1131,7 +1090,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       type="text"
                       placeholder="Postal Code"
                       value={shippingAddress.postal_code}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                      onChange={(e) => setShippingAddress((prev) => ({ ...prev, postal_code: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       required
                     />
@@ -1141,7 +1100,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       type="text"
                       placeholder="Country"
                       value={shippingAddress.country}
-                      onChange={(e) => setShippingAddress(prev => ({ ...prev, country: e.target.value }))}
+                      onChange={(e) => setShippingAddress((prev) => ({ ...prev, country: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       required
                     />
@@ -1149,7 +1108,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
                 <button
                   type="button"
@@ -1183,7 +1141,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
           orderDetails={{
             serviceName: `${shippingOption === 'express' ? 'Express' : 'Standard'} Shipping - ${selectedItemForShipping.document_name}`,
             consultantName: 'Virtual Mailbox',
-            deliveryTime: shippingOption === 'express' ? 3 : 7
+            deliveryTime: shippingOption === 'express' ? 3 : 7,
           }}
           onSuccess={handleShippingPaymentSuccess}
           onError={(error) => alert('Payment error: ' + error)}
