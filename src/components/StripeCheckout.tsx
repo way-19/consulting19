@@ -83,54 +83,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     }
   };
 
-  // Alternative: Redirect to Stripe Checkout
-  const handleRedirectCheckout = async () => {
-    if (!stripe) return;
-
-    try {
-      setProcessing(true);
-      setError(null);
-
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: Math.round(amount * 100),
-          currency: currency.toLowerCase(),
-          metadata: {
-            order_id: orderId,
-            service_name: orderDetails.serviceName,
-            consultant_name: orderDetails.consultantName
-          },
-          success_url: `${window.location.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${window.location.origin}/payment-cancelled`
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session');
-      }
-
-      const { sessionId } = await response.json();
-      
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: sessionId
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
-      setError(errorMessage);
-      onError(errorMessage);
-    } finally {
-      setProcessing(false);
-    }
-  };
-
   const cardElementOptions = {
     style: {
       base: {
@@ -208,34 +160,23 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         <div className="mb-4">
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-3">Choose payment method:</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="submit"
-                disabled={!stripe || processing}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-              >
-                {processing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Processing...</span>
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="h-4 w-4" />
-                    <span>Pay Here</span>
-                  </>
-                )}
-              </button>
-              
-              <button
-                type="button"
-                onClick={handleRedirectCheckout}
-                disabled={!stripe || processing}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-              >
-                <span>Stripe Checkout</span>
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={!stripe || processing}
+              className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              {processing ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Processing Payment...</span>
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-5 w-5" />
+                  <span>Complete Payment</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
