@@ -1,210 +1,393 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import type { User } from '@supabase/supabase-js';
-import { supabase, logUserAction } from '../lib/supabase';
+import React, { useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { CreditCard, Lock, CheckCircle, AlertTriangle, X } from 'lucide-react';
+import { processDirectPayment } from '../lib/stripe';
+// Optional: remove this line if trackBusinessEvent doesn't exist
+import { trackBusinessEvent } from '../utils/analytics';
 
-export type Role = 'admin' | 'consultant' | 'client';
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+  : null;
 
-export interface Profile {
-  id: string;           // auth.users.id ile aynı
+interface ShippingAddress {
+  full_name: string;
+  company_name?: string;
+  address_line_1: string;
+  address_line_2?: string;
+  city: string;
+  state_province: string;
+  postal_code: string;
+  country: string;
+  phone: string;
   email: string;
-  role: Role;
-  full_name?: string;
-  country?: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
-interface AuthContextType {
-  user: User | null;
-  profile: Profile | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+interface CheckoutFormProps {
+  amount: number;
+  currency: string;
+  orderId: string;
+  orderDetails: {
+    serviceName: string;
+    consultantName: string;
+    deliveryTime: number;
+  };
+  onSuccess: (paymentIntentId: string) => void;
+  onError: (error: string) => void;
+  onCancel: () => void;
+  shippingAddress?: ShippingAddress;
+  onAddressChange?: (address: ShippingAddress) => void;
+  showAddressForm?: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const CheckoutForm: React.FC<CheckoutFormProps> = ({
+  amount,
+  currency,
+  orderId,
+  orderDetails,
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!stripe || !elements) return;
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+    setProcessing(true);
+    setError(null);
 
-  // StrictMode'da effect'in iki kez tetiklenmesini güvenle engelle
-  const initRef = useRef(false);
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      setError('Card element not found');
+      setProcessing(false);
+      return;
+    }
 
-  const fetchProfile = async (uid: string): Promise<Profile | null> => {
-    console.log('🔍 Fetching profile for user:', uid);
-    
     try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, email, legacy_role, full_name, country, created_at, updated_at')
-      .eq('id', uid)              // profiles.id = auth.users.id
-      .maybeSingle();
-
-    if (error) {
-      console.error('❌ Profile fetch error:', error);
-      setProfile(null);
-      return null;
-    }
-    if (!data) {
-      console.warn('ℹ️ Profile not found for user:', uid);
-      setProfile(null);
-      return null;
-    }
-      
-      console.log('✅ Profile fetched successfully:', data.email, data.legacy_role);
-    // Map legacy_role to role for consistency with interface
-    const profileData = { ...data, role: data.legacy_role } as Profile;
-    setProfile(profileData);
-    return profileData;
-    } catch (error) {
-      console.error('💥 Error in fetchProfile:', error);
-      setProfile(null);
-      return null;
-    }
-  };
-
-  const signIn = async (email: string, password: string): Promise<void> => {
-    console.log('🔐 Attempting sign in for:', email);
-    setLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        console.error('❌ Sign in error:', error);
-        setLoading(false);
-        
-        // Log failed login attempt
-        await logUserAction(
-          'LOGIN_FAILED',
-          'auth',
-          null,
-          null,
-          { email, error: error.message }
-        );
-        
-        throw error;
-      }
-      console.log('✅ Sign in successful');
-      
-      // Log successful login
-      await logUserAction(
-        'LOGIN_SUCCESS',
-        'auth',
-        null,
-        null,
-        { email }
+      const { paymentIntent } = await processDirectPayment(
+        stripe,
+        cardElement,
+        amount,
+        currency,
+        {
+          order_id: orderId,
+          service_name: orderDetails.serviceName,
+          consultant_name: orderDetails.consultantName,
+          customer_name: shippingAddress?.full_name || orderDetails.consultantName,
+          shipping_address: shippingAddress
+        }
       );
-      
-      // onAuthStateChange tetiklenecek
-    } catch (error) {
-      setLoading(false);
-      throw error;
-    }
-    // onAuthStateChange tetiklenecek
-  };
 
-  useEffect(() => {
-    if (initRef.current || initialized) return;     // ikinci çalışmayı engelle
-    initRef.current = true;
-
-    const init = async () => {
-      console.log('🚀 Initializing auth...');
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('❌ Session error:', error);
-          setLoading(false);
-          setInitialized(true);
-          return;
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Optional analytics tracking
+        if (typeof trackBusinessEvent?.paymentCompleted === 'function') {
+          trackBusinessEvent.paymentCompleted(amount, currency, orderDetails.serviceName, paymentIntent.id);
         }
-        
-        const current = session?.user ?? null;
-        console.log('👤 Current user:', current ? current.email : 'None');
-        
-        setUser(current);
-        if (current) {
-          await fetchProfile(current.id);
-        }
-      } catch (error) {
-        console.error('💥 Auth initialization error:', error);
-      } finally {
-        setLoading(false);
-        setInitialized(true);
+        onSuccess(paymentIntent.id);
       }
-    };
-
-    init();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_evt, session) => {
-        console.log('🔄 Auth state changed:', _evt, session?.user?.email || 'No user');
-        
-        const next = session?.user ?? null;
-        setUser(next);
-        if (next) {
-          await fetchProfile(next.id);
-        } else {
-          setProfile(null);
-        }
-        
-        if (initialized) {
-          setLoading(false);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [initialized]);
-
-  const signOut = async (): Promise<void> => {
-    console.log('🚪 Signing out...');
-    setLoading(true);
-    
-    // Log logout action
-    if (user) {
-      await logUserAction(
-        'LOGOUT',
-        'auth',
-        user.id,
-        null,
-        { email: user.email }
-      );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
+      setError(errorMessage);
+      onError(errorMessage);
+    } finally {
+      setProcessing(false);
     }
-    
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error('Error signing out:', error);
-    setUser(null);
-    setProfile(null);
-    setLoading(false);
-    console.log('✅ Signed out successfully');
   };
 
-  const refreshProfile = async (): Promise<void> => {
-    if (user) await fetchProfile(user.id);
-  };
+  const cardElementOptions = {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#424770',
+        '::placeholder': { color: '#aab7c4' },
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      },
+      invalid: { color: '#9e2146' },
+    },
+    hidePostalCode: false,
+  } as const;
 
-  const value = useMemo(
-    () => ({ user, profile, loading, signIn, signOut, refreshProfile }),
-    [user, profile, loading]
+  return (
+    <div className="max-w-md mx-auto">
+      {/* Shipping Address Form */}
+      {showAddressForm && shippingAddress && onAddressChange && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Address</h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.full_name}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, full_name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="John Doe"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
+                <input
+                  type="tel"
+                  required
+                  value={shippingAddress.phone}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, phone: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="+90 555 123 4567"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+              <input
+                type="email"
+                required
+                value={shippingAddress.email}
+                onChange={(e) => onAddressChange({ ...shippingAddress, email: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="email@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 1 *</label>
+              <input
+                type="text"
+                required
+                value={shippingAddress.address_line_1}
+                onChange={(e) => onAddressChange({ ...shippingAddress, address_line_1: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Street, Avenue, Building No"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 2 (Optional)</label>
+              <input
+                type="text"
+                value={shippingAddress.address_line_2 || ''}
+                onChange={(e) => onAddressChange({ ...shippingAddress, address_line_2: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Floor, Apartment No"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.city}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, city: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Istanbul"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">State/Province *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.state_province}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, state_province: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Istanbul"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.postal_code}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, postal_code: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="34000"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
+              <input
+                type="text"
+                required
+                value={shippingAddress.country}
+                onChange={(e) => onAddressChange({ ...shippingAddress, country: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Turkey"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Summary */}
+      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Service:</span>
+            <span className="font-medium text-gray-900">{orderDetails.serviceName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Consultant:</span>
+            <span className="font-medium text-gray-900">{orderDetails.consultantName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Delivery Time:</span>
+            <span className="font-medium text-gray-900">{orderDetails.deliveryTime} days</span>
+          </div>
+          <div className="border-t border-gray-200 pt-3">
+            <div className="flex justify-between">
+              <span className="text-lg font-semibold text-gray-900">Total:</span>
+              <span className="text-lg font-bold text-green-600">
+                ${amount.toLocaleString()} {currency}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Card Information</label>
+          <div className="border border-gray-300 rounded-lg p-4 bg-white">
+            <CardElement options={cardElementOptions} />
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0" />
+            <span className="text-sm text-red-700">{error}</span>
+          </div>
+        )}
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <Lock className="h-4 w-4" />
+            <span className="text-sm font-medium text-blue-900">Güvenli Ödeme</span>
+          </div>
+          <p className="text-xs">
+            Ödeme bilgileriniz şifrelenir ve güvenlidir. Ödeme işlemi için Stripe kullanıyoruz.
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          disabled={!stripe || processing}
+          className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+        >
+          {processing ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <CreditCard className="h-5 w-5" />
+              <span>Pay Now</span>
+            </>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={onCancel}
+          className="w-full mt-3 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+      </form>
+    </div>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = (): AuthContextType => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
-  return ctx;
+interface StripeCheckoutProps {
+  isOpen: boolean;
+  onClose: () => void;
+  amount: number;
+  currency: string;
+  orderId: string;
+  orderDetails: {
+    serviceName: string;
+    consultantName: string;
+    deliveryTime: number;
+  };
+  onSuccess: (paymentIntentId: string) => void;
+  onError: (error: string) => void;
+  shippingAddress?: ShippingAddress;
+  onAddressChange?: (address: ShippingAddress) => void;
+  showAddressForm?: boolean;
+}
+
+const StripeCheckout: React.FC<StripeCheckoutProps> = ({
+  isOpen,
+  onClose,
+  amount,
+  currency,
+  orderId,
+  orderDetails,
+  onSuccess,
+  onError,
+  shippingAddress,
+  onAddressChange,
+  showAddressForm
+}) => {
+  if (!isOpen) return null;
+
+  if (!stripePromise) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <div className="text-center">
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Payment System Ready</h2>
+            <p className="text-sm text-gray-600 mb-3">Ödeme yöntemini seçin:</p>
+            <button
+              onClick={onClose}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+                  <span>Ödeme İşleniyor...</span>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+                  <span>Ödemeyi Tamamla</span>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <X className="h-5 w-5 text-gray-500" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <Elements stripe={stripePromise}>
+            <CheckoutForm
+              amount={amount}
+              currency={currency}
+              orderId={orderId}
+              orderDetails={orderDetails}
+              onSuccess={onSuccess}
+              onError={onError}
+              onCancel={onClose}
+              shippingAddress={shippingAddress}
+              onAddressChange={onAddressChange}
+              showAddressForm={showAddressForm}
+            />
+          </Elements>
+        </div>
+      </div>
+    </div>
+  );
 };
+
+export default StripeCheckout;
