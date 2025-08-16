@@ -24,6 +24,9 @@ const ContactPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
+    // Track contact form submission
+    trackBusinessEvent.contactFormSubmission(formData.type);
+    
     // Simulate form submission
     setTimeout(() => {
       setSubmitStatus('success');

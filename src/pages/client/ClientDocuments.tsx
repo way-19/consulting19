@@ -280,6 +280,9 @@ const ClientDocuments = () => {
       
       console.log('✅ File uploaded successfully to path:', filePath);
       
+      // Track document upload
+      trackBusinessEvent.documentUpload(uploadForm.type, uploadForm.file.size);
+      
       // Get public URL for the uploaded file
       const fileUrl = getPublicImageUrl(filePath, 'documents');
       const fileSize = uploadForm.file.size;

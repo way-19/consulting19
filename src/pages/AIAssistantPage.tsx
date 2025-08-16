@@ -73,6 +73,8 @@ const AIAssistantPage = () => {
   }, []);
 
   const handleSendMessage = async (content: string) => {
+    const startTime = Date.now();
+    
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -87,6 +89,11 @@ const AIAssistantPage = () => {
     // Simulate AI response
     setTimeout(() => {
       const aiResponse = generateAIResponse(content);
+      const responseTime = Date.now() - startTime;
+      
+      // Track AI interaction
+      trackBusinessEvent.aiAssistantInteraction(content, responseTime);
+      
       setMessages(prev => [...prev, aiResponse]);
       setIsTyping(false);
     }, 1500);

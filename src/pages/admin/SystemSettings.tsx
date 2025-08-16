@@ -598,6 +598,47 @@ const SystemSettings = () => {
                       </div>
                     </div>
 
+                    {/* Google Analytics Integration */}
+                    <div className="bg-gray-50 rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <BarChart3 className="h-6 w-6 text-blue-600" />
+                          <div>
+                            <h4 className="font-medium text-gray-900">Google Analytics 4</h4>
+                            <p className="text-sm text-gray-600">For website traffic and user behavior analytics</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            import.meta.env.VITE_GA_MEASUREMENT_ID ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {import.meta.env.VITE_GA_MEASUREMENT_ID ? 'Active' : 'Pending'}
+                          </span>
+                          <button
+                            onClick={() => handleTestIntegration('Google Analytics')}
+                            className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+                          >
+                            Test
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Measurement ID
+                        </label>
+                        <input
+                          type="text"
+                          value={integrationForm.ga_measurement_id}
+                          onChange={(e) => setIntegrationForm(prev => ({ ...prev, ga_measurement_id: e.target.value }))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          placeholder="G-XXXXXXXXXX"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Current: {import.meta.env.VITE_GA_MEASUREMENT_ID || 'Not configured'}
+                        </p>
+                      </div>
+                    </div>
+
                     {/* Email Service Integration */}
                     <div className="bg-gray-50 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">

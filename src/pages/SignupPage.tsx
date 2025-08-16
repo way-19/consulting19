@@ -342,6 +342,9 @@ const SignupPage = () => {
           if (profileError) {
             console.error('❌ Profile update error:', profileError.message)
           }
+          
+          // Track user registration
+          trackBusinessEvent.userRegistration('email', formData.role);
         }
         navigate('/login', {
           state: {

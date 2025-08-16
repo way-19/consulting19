@@ -628,8 +628,36 @@ const SecurityAudit = () => {
               {selectedLog.user_agent && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Browser Information</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-700 font-mono">{selectedLog.user_agent}</p>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-700">Browser:</span>
+                        <p className="text-gray-600">
+                          {selectedLog.user_agent.includes('Chrome') ? '🌐 Google Chrome' :
+                           selectedLog.user_agent.includes('Firefox') ? '🦊 Mozilla Firefox' :
+                           selectedLog.user_agent.includes('Safari') ? '🧭 Safari' :
+                           selectedLog.user_agent.includes('Edge') ? '🔷 Microsoft Edge' : '💻 Unknown Browser'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Platform:</span>
+                        <p className="text-gray-600">
+                          {selectedLog.user_agent.includes('Windows') ? '🪟 Windows' :
+                           selectedLog.user_agent.includes('Mac') ? '🍎 macOS' :
+                           selectedLog.user_agent.includes('Linux') ? '🐧 Linux' :
+                           selectedLog.user_agent.includes('Android') ? '🤖 Android' :
+                           selectedLog.user_agent.includes('iOS') ? '📱 iOS' : '💻 Unknown OS'}
+                        </p>
+                      </div>
+                    </div>
+                    <details className="mt-3">
+                      <summary className="text-sm font-medium text-gray-700 cursor-pointer hover:text-purple-600">
+                        Full User Agent String
+                      </summary>
+                      <p className="text-xs text-gray-600 font-mono mt-2 p-2 bg-white rounded border break-all">
+                        {selectedLog.user_agent}
+                      </p>
+                    </details>
                   </div>
                 </div>
               )}

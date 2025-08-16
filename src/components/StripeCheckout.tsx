@@ -69,6 +69,9 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       );
 
       if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Track successful payment
+        trackBusinessEvent.paymentCompleted(amount, currency, orderDetails.serviceName, paymentIntent.id);
+        
         onSuccess(paymentIntent.id);
       }
     } catch (err) {
