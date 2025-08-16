@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import { useServiceRequests } from '../hooks/useServiceRequests';
 import MultilingualChat from '../components/MultilingualChat';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
@@ -28,8 +27,7 @@ import {
   FileText,
   Settings,
   RefreshCw,
-  DollarSign,
-  Package
+  Download,
   Upload,
   MoreVertical,
   UserPlus,
@@ -89,8 +87,6 @@ const CustomersManagement = () => {
   const [selectedClient, setSelectedClient] = useState<AssignedClient | null>(null);
   const [showClientModal, setShowClientModal] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [showVirtualMailbox, setShowVirtualMailbox] = useState(false);
-  const [selectedClientForMailbox, setSelectedClientForMailbox] = useState<AssignedClient | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'requests'>('overview');
   
   // Service requests hook
@@ -766,17 +762,6 @@ const CustomersManagement = () => {
                           Previous
                         </button>
                         
-                        <button
-                          onClick={() => {
-                            setSelectedClientForMailbox(client);
-                            setShowVirtualMailbox(true);
-                          }}
-                          className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors flex items-center space-x-2"
-                        >
-                          <Package className="h-4 w-4" />
-                          <span>Virtual Mailbox</span>
-                        </button>
-                        
                         <div className="flex items-center space-x-1">
                           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                             const page = i + 1;
@@ -1235,16 +1220,6 @@ const CustomersManagement = () => {
           </div>
         </div>
       )}
-
-      {/* Virtual Mailbox Modal */}
-      <VirtualMailboxManager
-        isOpen={showVirtualMailbox}
-        onClose={() => {
-          setShowVirtualMailbox(false);
-          setSelectedClientForMailbox(null);
-        }}
-        clientId={selectedClientForMailbox?.id}
-      />
     </>
   );
 };
