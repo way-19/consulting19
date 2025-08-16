@@ -644,9 +644,68 @@ const AdminDashboard = () => {
                 </Link>
               </div>
             </div>
+
+            {/* Consultant Communication */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Consultant Communication</h3>
+              
+              <div className="space-y-3">
+                {consultants.length === 0 ? (
+                  <p className="text-gray-600 text-sm">No consultants available</p>
+                ) : (
+                  consultants.slice(0, 5).map((consultant) => (
+                    <button
+                      key={consultant.id}
+                      onClick={() => {
+                        setSelectedConsultantId(consultant.id);
+                        setIsChatOpen(true);
+                      }}
+                      className="w-full flex items-center space-x-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {consultant.full_name?.[0]?.toUpperCase() || consultant.email[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">
+                          {consultant.full_name || consultant.email}
+                        </p>
+                        <p className="text-sm text-gray-600">{consultant.country} Specialist</p>
+                      </div>
+                      <MessageSquare className="h-4 w-4 text-gray-400" />
+                    </button>
+                  ))
+                )}
+              </div>
+              
+              {consultants.length > 5 && (
+                <div className="mt-3 text-center">
+                  <Link
+                    to="/admin/users"
+                    className="text-purple-600 hover:text-purple-700 font-medium text-sm"
+                  >
+                    View All Consultants →
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Multilingual Chat Modal */}
+      {isChatOpen && selectedConsultantId && (
+        <MultilingualChat
+          isOpen={isChatOpen}
+          onClose={() => {
+            setIsChatOpen(false);
+            setSelectedConsultantId(null);
+          }}
+          chatType="admin-consultant"
+          currentUserId={profile?.id || ''}
+          currentUserRole="admin"
+          targetUserId={selectedConsultantId}
+        />
+      )}
     </div>
   );
 };

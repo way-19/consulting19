@@ -317,7 +317,11 @@ const MyProfilePage = () => {
               {[
                 { key: 'profile', label: 'Profile Information', icon: User },
                 { key: 'password', label: 'Change Password', icon: Lock },
-                { key: 'preferences', label: 'Preferences', icon: Settings }
+                { key: 'preferences', label: 'Preferences', icon: Settings },
+                ...(profile.role === 'consultant' ? [
+                  { key: 'documents', label: 'Documents', icon: FileText },
+                  { key: 'banking', label: 'Banking', icon: CreditCard }
+                ] : [])
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -333,6 +337,262 @@ const MyProfilePage = () => {
                 </button>
               ))}
             </nav>
+
+            {activeTab === 'documents' && profile.legacy_role === 'consultant' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Management</h3>
+                  <p className="text-gray-600 mb-6">
+                    Upload and manage your professional documents including contracts, tax certificates, and identification.
+                  </p>
+                </div>
+
+                {/* Document Upload */}
+                <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                  <h4 className="font-semibold text-blue-900 mb-4">Upload New Documents</h4>
+                  
+                  <FileUpload
+                    onFileSelect={handleFileSelect}
+                    acceptedTypes={['application/pdf', '.pdf', '.doc', '.docx', 'image/*']}
+                    maxFileSize={50}
+                    maxFiles={10}
+                    multiple={true}
+                    showPreview={true}
+                    dragDropText="Drag and drop documents here, or click to browse"
+                    browseText="Select Documents"
+                    className="mb-4"
+                  />
+
+                  {selectedFiles.length > 0 && (
+                    <div className="flex items-center space-x-4 pt-4 border-t border-blue-200">
+                      <button
+                        onClick={() => setSelectedFiles([])}
+                        className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                      >
+                        Clear Files
+                      </button>
+                      <button
+                        onClick={handleUploadDocuments}
+                        disabled={uploadingFiles}
+                        className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+                      >
+                        {uploadingFiles ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4" />
+                            <span>Upload {selectedFiles.length} Document(s)</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Existing Documents */}
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4">Your Documents</h4>
+                  {consultantDocuments.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600">No documents uploaded yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {consultantDocuments.map((doc) => (
+                        <div key={doc.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <FileText className="h-6 w-6 text-blue-500" />
+                            <div>
+                              <p className="font-medium text-gray-900">{doc.file_name}</p>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                <span>Type: {doc.document_type}</span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  doc.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                  doc.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                  doc.status === 'expired' ? 'bg-gray-100 text-gray-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {doc.status.toUpperCase()}
+                                </span>
+                                <span>Uploaded: {new Date(doc.uploaded_at).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <a
+                              href={doc.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-1"
+                            >
+                              <Download className="h-3 w-3" />
+                              <span>View</span>
+                            </a>
+                            <button
+                              onClick={() => handleDeleteDocument(doc.id)}
+                              className="bg-red-50 text-red-600 px-3 py-1 rounded-lg font-medium hover:bg-red-100 transition-colors"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'banking' && profile.legacy_role === 'consultant' && (
+              <form onSubmit={handleBankDetailsSubmit} className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Banking Information</h3>
+                  <p className="text-gray-600 mb-6">
+                    Provide your banking details for commission payments. This information is securely encrypted and only accessible to administrators.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bank Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={bankForm.bank_name}
+                      onChange={(e) => setBankForm(prev => ({ ...prev, bank_name: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Bank of Georgia"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Account Holder Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={bankForm.account_holder_name}
+                      onChange={(e) => setBankForm(prev => ({ ...prev, account_holder_name: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Full name as on bank account"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Account Number *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={bankForm.account_number}
+                      onChange={(e) => setBankForm(prev => ({ ...prev, account_number: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Account number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      IBAN
+                    </label>
+                    <input
+                      type="text"
+                      value={bankForm.iban}
+                      onChange={(e) => setBankForm(prev => ({ ...prev, iban: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="International Bank Account Number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      SWIFT Code
+                    </label>
+                    <input
+                      type="text"
+                      value={bankForm.swift_code}
+                      onChange={(e) => setBankForm(prev => ({ ...prev, swift_code: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Bank SWIFT/BIC code"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Currency *
+                    </label>
+                    <select
+                      required
+                      value={bankForm.currency}
+                      onChange={(e) => setBankForm(prev => ({ ...prev, currency: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value="USD">USD - US Dollar</option>
+                      <option value="EUR">EUR - Euro</option>
+                      <option value="GEL">GEL - Georgian Lari</option>
+                      <option value="TRY">TRY - Turkish Lira</option>
+                      <option value="GBP">GBP - British Pound</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Additional Notes
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={bankForm.notes}
+                    onChange={(e) => setBankForm(prev => ({ ...prev, notes: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Any additional banking information or special instructions..."
+                  />
+                </div>
+
+                {/* Security Notice */}
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Shield className="h-5 w-5 text-green-600" />
+                    <h4 className="font-medium text-green-900">Security & Privacy</h4>
+                  </div>
+                  <div className="text-sm text-green-800 space-y-1">
+                    <p>• All banking information is encrypted and stored securely</p>
+                    <p>• Only authorized administrators can access this information</p>
+                    <p>• Information is used solely for commission payments</p>
+                    <p>• You can update or delete this information at any time</p>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <div className="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-5 w-5" />
+                        <span>Save Banking Details</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
 
           <div className="p-6">

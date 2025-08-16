@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 import { useNotifications } from '../hooks/useNotifications';
 import MultilingualChat from '../components/MultilingualChat';
 import AssignedClientsList from '../components/consultant/dashboard/AssignedClientsList';
-import { Users, TrendingUp, Clock, CheckCircle, Calendar, FileText, MessageSquare, Settings, Star, Award, Target, Zap, Calculator, CreditCard, Globe, Globe2, BarChart3, Shield, User, Bell } from 'lucide-react';
+import { Users, TrendingUp, Clock, CheckCircle, Calendar, FileText, MessageSquare, Settings, Star, Award, Target, Zap, Calculator, CreditCard, Globe, Globe2, BarChart3, Shield, User, Bell, Crown } from 'lucide-react';
 
 interface AssignedClient {
   id: string;
@@ -28,14 +28,33 @@ const ConsultantDashboard = () => {
   const { unreadCount } = useNotifications();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatType, setChatType] = useState<'admin-consultant' | 'consultant-client'>('admin-consultant');
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [selectedAdminId, setSelectedAdminId] = useState<string | null>(null);
   const [assignedClients, setAssignedClients] = useState<AssignedClient[]>([]);
   const [loadingClients, setLoadingClients] = useState(true);
 
   useEffect(() => {
     if (profile?.id) {
       fetchAssignedClients();
+      fetchAdminUsers();
     }
   }, [profile]);
+
+  const fetchAdminUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .eq('legacy_role', 'admin')
+        .eq('is_active', true)
+        .order('full_name', { ascending: true });
+
+      if (error) throw error;
+      setAdminUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
+    }
+  };
 
   const fetchAssignedClients = async () => {
     try {
@@ -336,8 +355,16 @@ const ConsultantDashboard = () => {
                   <div className="space-y-1">
                     <Link 
                       to="/admin-dashboard"
-                      className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
-                    >
+                        if (adminUsers.length === 1) {
+                          setSelectedAdminId(adminUsers[0].id);
+                          setChatType('admin-consultant');
+                          setIsChatOpen(true);
+                        } else if (adminUsers.length > 1) {
+                          // Show admin selection - for now, use first admin
+                          setSelectedAdminId(adminUsers[0].id);
+                          setChatType('admin-consultant');
+                          setIsChatOpen(true);
+                        }
                       <Shield className="h-4 w-4" />
                       <span>Admin Dashboard</span>
                     </Link>
@@ -355,6 +382,22 @@ const ConsultantDashboard = () => {
                     <FileText className="h-4 w-4" />
                     <span>Country & Services</span>
                   </Link>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Communication</h4>
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => {
+                      setChatType('admin-consultant');
+                      setIsChatOpen(true);
+                    }}
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors w-full text-left"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    <span>Admin Chat</span>
+                  </button>
                 </div>
               </div>
 
@@ -631,9 +674,18 @@ const ConsultantDashboard = () => {
                     </div>
                     <button 
                       onClick={fetchAssignedClients}
+                        // Use first admin as default target
+                        if (adminUsers.length > 0) {
+                          setSelectedAdminId(adminUsers[0].id);
+                        }
+                      disabled={adminUsers.length === 0}
                       className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                    >
-                      Refresh Data
+                      <Crown className="h-4 w-4" />
+                      disabled={adminUsers.length === 0}
+                      <span>Contact Admin</span>
+                      {adminUsers.length === 0 && (
+                      <Crown className="h-5 w-5" />
+                      <span>Contact Admin</span>
                     </button>
                   </div>
 
@@ -675,6 +727,7 @@ const ConsultantDashboard = () => {
         chatType={chatType}
         currentUserId={profile?.id || 'consultant-1'}
         currentUserRole="consultant"
+        targetUserId={chatType === 'admin-consultant' ? selectedAdminId || undefined : undefined}
       />
     </>
   );

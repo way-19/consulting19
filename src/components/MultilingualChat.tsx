@@ -100,6 +100,78 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
 
   // Mock messages for demo
   useEffect(() => {
+    if (isOpen) {
+      fetchMessages();
+    }
+  }, [isOpen, chatType, currentUserId, targetUserId]);
+
+  const fetchMessages = async () => {
+    if (!targetUserId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('accounting_messages')
+        .select(`
+          id,
+          sender_id,
+          recipient_id,
+          message,
+          original_language,
+          translated_message,
+          target_language,
+          created_at,
+          is_read,
+          sender:sender_id (full_name, legacy_role),
+          recipient:recipient_id (full_name, legacy_role)
+        `)
+        .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},recipient_id.eq.${currentUserId})`)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      const formattedMessages: Message[] = (data || []).map(msg => ({
+        id: msg.id,
+        senderId: msg.sender_id,
+        senderRole: msg.sender?.legacy_role || 'client',
+        senderName: msg.sender?.full_name,
+        originalText: msg.message,
+        originalLanguage: msg.original_language || 'en',
+        translatedText: msg.translated_message,
+        targetLanguage: msg.target_language,
+        timestamp: new Date(msg.created_at),
+        isTranslated: !!msg.translated_message,
+        status: msg.is_read ? 'read' : 'delivered'
+      }));
+
+      setMessages(formattedMessages);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const sendMessageToDatabase = async (messageText: string) => {
+    if (!targetUserId) return;
+
+    try {
+      const { error } = await supabase
+        .from('accounting_messages')
+        .insert([{
+          sender_id: currentUserId,
+          recipient_id: targetUserId,
+          message: messageText,
+          original_language: selectedLanguage,
+          category: 'general',
+          is_read: false
+        }]);
+
+      if (error) throw error;
+      await fetchMessages();
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
+
+  useEffect(() => {
     if (isOpen && messages.length === 0) {
       let mockMessages: Message[] = [];
       
@@ -198,6 +270,9 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
     setMessages(prev => [...prev, originalMessage]);
     setNewMessage('');
 
+    // Gerçek mesajı veritabanına gönder
+    await sendMessageToDatabase(newMessage);
+
     // Simulate message sending delay
     setTimeout(() => {
       setMessages(prev => prev.map(msg => 
@@ -236,7 +311,7 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
   const getChatTitle = () => {
     switch (chatType) {
       case 'admin-consultant':
-        return 'Admin Chat';
+        return currentUserRole === 'admin' ? 'Consultant Chat' : 'Admin Chat';
       case 'consultant-client':
         return 'Client Messages';
       default:
@@ -247,7 +322,9 @@ const MultilingualChat: React.FC<MultilingualChatProps> = ({
   const getRecipientInfo = () => {
     switch (chatType) {
       case 'admin-consultant':
-        return { name: 'System Admin', role: 'Administrator', avatar: '👑' };
+        return currentUserRole === 'admin' 
+          ? { name: 'Consultant', role: 'Business Consultant', avatar: '👨‍💼' }
+          : { name: 'System Admin', role: 'Administrator', avatar: '👑' };
       case 'consultant-client':
         return { name: 'Tech Startup LLC', role: 'Client', avatar: '👤' };
       default:

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase, Profile } from '../../lib/supabase';
+import { supabase, Profile, ConsultantDocument, ConsultantBankDetails } from '../../lib/supabase';
 import { logAdminAction } from '../../lib/logging';
 import SearchFilterBar, { FilterOption } from '../../components/common/SearchFilterBar';
 import useAdvancedSearch from '../../hooks/useAdvancedSearch';
@@ -26,7 +26,10 @@ import {
   CheckCircle,
   Key,
   Copy,
-  Send
+  Send,
+  FileText,
+  CreditCard,
+  Building
 } from 'lucide-react';
 
 interface UserWithStats extends Profile {
@@ -339,6 +342,39 @@ const UserManagement = () => {
     } finally {
       setResettingPassword(false);
     }
+  };
+
+  const fetchConsultantDetails = async (consultantId: string) => {
+    try {
+      // Fetch consultant documents
+      const { data: documents, error: docsError } = await supabase
+        .from('consultant_documents')
+        .select('*')
+        .eq('consultant_id', consultantId)
+        .order('created_at', { ascending: false });
+
+      if (docsError) throw docsError;
+      setConsultantDocuments(documents || []);
+
+      // Fetch consultant bank details
+      const { data: bankDetails, error: bankError } = await supabase
+        .from('consultant_bank_details')
+        .select('*')
+        .eq('consultant_id', consultantId)
+        .maybeSingle();
+
+      if (bankError && bankError.code !== 'PGRST116') throw bankError;
+      setConsultantBankDetails(bankDetails);
+
+    } catch (error) {
+      console.error('Error fetching consultant details:', error);
+    }
+  };
+
+  const handleViewConsultantDetails = async (consultant: UserWithStats) => {
+    setSelectedConsultantId(consultant.id);
+    await fetchConsultantDetails(consultant.id);
+    setShowConsultantDetails(true);
   };
 
   const copyToClipboard = async (text: string) => {
@@ -873,6 +909,15 @@ const UserManagement = () => {
                       <span className="text-sm text-gray-600">Timezone:</span>
                       <p className="font-medium">{selectedUser.timezone}</p>
                     </div>
+                    {user.legacy_role === 'consultant' && (
+                      <button
+                        onClick={() => handleViewConsultantDetails(user)}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        title="View Consultant Details"
+                      >
+                        <Building className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1127,6 +1172,166 @@ const UserManagement = () => {
                   )}
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Consultant Details Modal */}
+      {showConsultantDetails && selectedConsultantId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Consultant Details</h2>
+                <button
+                  onClick={() => {
+                    setShowConsultantDetails(false);
+                    setSelectedConsultantId(null);
+                    setConsultantDocuments([]);
+                    setConsultantBankDetails(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-8">
+              {/* Documents Section */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  <span>Documents</span>
+                </h3>
+                
+                {consultantDocuments.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600">No documents uploaded</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {consultantDocuments.map((doc) => (
+                      <div key={doc.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <FileText className="h-6 w-6 text-blue-500" />
+                            <div>
+                              <p className="font-medium text-gray-900">{doc.file_name}</p>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                <span>Type: {doc.document_type}</span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  doc.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                  doc.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                  doc.status === 'expired' ? 'bg-gray-100 text-gray-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {doc.status.toUpperCase()}
+                                </span>
+                                <span>Uploaded: {new Date(doc.uploaded_at).toLocaleDateString()}</span>
+                                {doc.file_size && (
+                                  <span>Size: {(doc.file_size / 1024 / 1024).toFixed(2)} MB</span>
+                                )}
+                              </div>
+                              {doc.expiry_date && (
+                                <p className="text-xs text-gray-500">
+                                  Expires: {new Date(doc.expiry_date).toLocaleDateString()}
+                                </p>
+                              )}
+                              {doc.notes && (
+                                <p className="text-xs text-gray-600 mt-1">Notes: {doc.notes}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <a
+                              href={doc.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-blue-50 text-blue-600 px-3 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-1"
+                            >
+                              <Download className="h-4 w-4" />
+                              <span>View</span>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Banking Information Section */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                  <CreditCard className="h-5 w-5 text-green-600" />
+                  <span>Banking Information</span>
+                </h3>
+                
+                {!consultantBankDetails ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <CreditCard className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600">No banking information provided</p>
+                  </div>
+                ) : (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="font-medium text-green-900 mb-3">Bank Details</h4>
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <span className="text-green-700 font-medium">Bank Name:</span>
+                            <p className="text-green-800">{consultantBankDetails.bank_name}</p>
+                          </div>
+                          <div>
+                            <span className="text-green-700 font-medium">Account Holder:</span>
+                            <p className="text-green-800">{consultantBankDetails.account_holder_name}</p>
+                          </div>
+                          <div>
+                            <span className="text-green-700 font-medium">Currency:</span>
+                            <p className="text-green-800">{consultantBankDetails.currency}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-green-900 mb-3">Account Information</h4>
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <span className="text-green-700 font-medium">Account Number:</span>
+                            <p className="text-green-800 font-mono">***{consultantBankDetails.account_number.slice(-4)}</p>
+                          </div>
+                          {consultantBankDetails.iban && (
+                            <div>
+                              <span className="text-green-700 font-medium">IBAN:</span>
+                              <p className="text-green-800 font-mono">***{consultantBankDetails.iban.slice(-4)}</p>
+                            </div>
+                          )}
+                          {consultantBankDetails.swift_code && (
+                            <div>
+                              <span className="text-green-700 font-medium">SWIFT:</span>
+                              <p className="text-green-800">{consultantBankDetails.swift_code}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {consultantBankDetails.notes && (
+                      <div className="mt-4 pt-4 border-t border-green-200">
+                        <span className="text-green-700 font-medium">Notes:</span>
+                        <p className="text-green-800 text-sm mt-1">{consultantBankDetails.notes}</p>
+                      </div>
+                    )}
+                    
+                    <div className="mt-4 pt-4 border-t border-green-200 text-xs text-green-600">
+                      Last updated: {new Date(consultantBankDetails.updated_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
