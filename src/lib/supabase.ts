@@ -517,42 +517,6 @@ const generateSessionId = (): string => {
   return sessionId;
 };
 
-// Enhanced admin action logging with session tracking
-export const logAdminAction = async (
-  action: string,
-  targetTable?: string,
-  targetId?: string,
-  oldValues?: any,
-  newValues?: any,
-  ipAddress?: string,
-  userAgent?: string
-) => {
-  const user = await getCurrentUser();
-  if (!user) return;
-
-  // Get IP address and user agent if not provided
-  const finalIpAddress = ipAddress || await getClientIP();
-  const finalUserAgent = userAgent || navigator.userAgent;
-  const sessionId = generateSessionId();
-
-  const { error } = await supabase
-    .from('audit_logs')
-    .insert([{
-      user_id: user.id,
-      action,
-      target_table: targetTable,
-      target_id: targetId,
-      old_values: oldValues,
-      new_values: newValues,
-      ip_address: finalIpAddress,
-      user_agent: finalUserAgent,
-      session_id: sessionId
-    }]);
-
-  if (error) {
-    console.error('Error logging admin action:', error);
-  }
-};
 // Image Upload and Storage Helpers
 export const uploadFileToStorage = async (file: File, folder: string, bucketName: string = 'public_images') => {
   try {
