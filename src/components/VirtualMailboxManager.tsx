@@ -27,18 +27,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   currency,
   orderId,
   orderDetails,
-  onSuccess,
-  onError,
-  onCancel
-}) => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
 
     if (!stripe || !elements) {
       return;
