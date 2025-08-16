@@ -138,17 +138,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
   };
 
   const handleRequestPhysicalShipping = (item: VirtualMailboxItem) => {
-    console.log('🚚 Physical shipping requested for:', item.document_name);
-    setCurrentShippingItem(item);
-    setShippingAddress(prev => ({
-      ...prev,
-      full_name: profile?.full_name || '',
-      email: profile?.email || ''
-    }));
-    setShowShippingAddressModal(true);
-  };
-
-  const handleRequestPhysicalShipping = (item: VirtualMailboxItem) => {
     setCurrentShippingItem(item);
     setShippingAddress(prev => ({
       ...prev,
