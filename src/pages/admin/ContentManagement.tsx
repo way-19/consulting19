@@ -1,697 +1,700 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase, logAdminAction, uploadFileToStorage, getPublicImageUrl } from '../../lib/supabase';
-import TranslationManager from '../../components/admin/TranslationManager';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+import StripeCheckout from './StripeCheckout';
+import FileUpload, { UploadedFile } from './common/FileUpload';
+import { useFileUpload } from '../hooks/useFileUpload';
 import { 
-  ArrowLeft, 
-  Search, 
-  Filter, 
+  Plus, 
   FileText, 
-  Plus,
+  Send, 
   Eye, 
-  Edit,
-  Trash2,
-  Globe,
-  Languages,
-  RefreshCw,
-  Save,
+  Download, 
+  Upload, 
+  Package, 
+  Clock, 
+  CheckCircle, 
+  DollarSign,
+  Search,
+  Filter,
   X,
-  CheckCircle,
-  AlertTriangle,
-  Calendar,
-  User,
-  Tag,
-  Image,
-  Link as LinkIcon,
-  Hash,
-  Type,
-  AlignLeft
+  Save,
+  Trash2,
+  Mail,
+  Truck,
+  CreditCard,
+  AlertCircle
 } from 'lucide-react';
 
-interface BlogPost {
+interface VirtualMailboxItem {
   id: string;
-  title: string;
-  slug: string;
-  content: string;
-  excerpt?: string;
-  author_id?: string;
-  category?: string;
-  tags: string[];
-  language_code: string;
-  is_published: boolean;
-  published_at?: string;
-  featured_image_url?: string;
-  seo_title?: string;
-  seo_description?: string;
+  client_id: string;
+  document_type: string;
+  document_name: string;
+  description?: string;
+  file_url?: string;
+  file_size?: number;
+  status: 'pending' | 'sent' | 'delivered' | 'viewed' | 'downloaded';
+  tracking_number: string;
+  shipping_fee: number;
+  payment_status: 'unpaid' | 'paid' | 'waived';
+  sent_date?: string;
+  delivered_date?: string;
+  viewed_date?: string;
+  downloaded_date?: string;
   created_at: string;
-  updated_at: string;
-  author?: {
-    full_name: string;
-    email: string;
+  client?: {
+    company_name: string;
+    profile?: {
+      full_name: string;
+      email: string;
+    };
   };
 }
 
-interface FAQ {
-  id: string;
-  question: string;
-  answer: string;
-  category?: string;
-  language_code: string;
-  sort_order: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+interface VirtualMailboxManagerProps {
+  clientId?: string;
+  viewMode: 'consultant' | 'client';
 }
 
-const ContentManagement = () => {
+const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId, viewMode }) => {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<'blog' | 'faq' | 'translations'>('blog');
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [items, setItems] = useState<VirtualMailboxItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [languageFilter, setLanguageFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [showPostModal, setShowPostModal] = useState(false);
-  const [showFaqModal, setShowFaqModal] = useState(false);
-  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
-  const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [paymentFilter, setPaymentFilter] = useState('all');
+  const [selectedItem, setSelectedItem] = useState<VirtualMailboxItem | null>(null);
+  const [showItemDetail, setShowItemDetail] = useState(false);
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [selectedItemForShipping, setSelectedItemForShipping] = useState<VirtualMailboxItem | null>(null);
+  const [shippingOption, setShippingOption] = useState<'normal' | 'express'>('normal');
+  const [shippingAddress, setShippingAddress] = useState({
+    full_name: '',
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
+    postal_code: '',
+    country: '',
+    phone: ''
+  });
+  const [showStripeCheckout, setShowStripeCheckout] = useState(false);
 
-  const [postForm, setPostForm] = useState({
-    title: '',
-    slug: '',
-    content: '',
-    excerpt: '',
-    category: '',
-    tags: [''],
-    language_code: 'en',
-    is_published: false,
-    featured_image_url: '',
-    seo_title: '',
-    seo_description: ''
+  const { uploadFile, uploadState } = useFileUpload({
+    bucketName: 'documents',
+    folder: 'virtual_mailbox',
+    onUploadComplete: (file, filePath) => {
+      console.log('Virtual mailbox file uploaded:', file.name, filePath);
+    }
   });
 
-  const [faqForm, setFaqForm] = useState({
-    question: '',
-    answer: '',
-    category: '',
-    language_code: 'en',
-    sort_order: 0,
-    is_active: true
+  const [formData, setFormData] = useState({
+    client_id: clientId || '',
+    document_type: '',
+    document_name: '',
+    description: '',
+    shipping_fee: 25.00,
+    file: null as File | null
   });
 
-  const supportedLanguages = [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'tr', name: 'Turkish', flag: '🇹🇷' },
-    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-    { code: 'fr', name: 'French', flag: '🇫🇷' },
-    { code: 'de', name: 'German', flag: '🇩🇪' },
-  ];
-
-  const blogCategories = [
-    'Market Updates',
-    'Legal Changes',
-    'Tax Updates',
-    'Business Insights',
-    'Country Spotlights',
-    'Success Stories',
-    'Industry News',
-    'Regulatory Updates'
-  ];
-
-  const faqCategories = [
-    'Company Formation',
-    'Banking',
-    'Tax & Accounting',
-    'Legal Services',
-    'Visa & Residence',
-    'General',
-    'Technical Support'
+  const documentTypes = [
+    'Company Registration Certificate',
+    'Tax Registration Document',
+    'Bank Account Information',
+    'Corporate Seal',
+    'Shareholder Agreement',
+    'Board Resolution',
+    'Business License',
+    'VAT Certificate',
+    'Legal Address Certificate',
+    'Director Appointment Letter',
+    'Share Certificate',
+    'Company Bylaws',
+    'Other Official Document'
   ];
 
   useEffect(() => {
-    if (profile?.role === 'admin') {
-      fetchData();
-    }
-  }, [profile]);
+    fetchItems();
+  }, [clientId, profile]);
 
-  const fetchData = async () => {
+  const fetchItems = async () => {
     try {
-      setLoading(true);
-      await Promise.all([
-        fetchBlogPosts(),
-        fetchFAQs()
-      ]);
+      let query = supabase
+        .from('virtual_mailbox_items')
+        .select(`
+          *,
+          client:client_id (
+            company_name,
+            profile:profile_id (
+              full_name,
+              email
+            )
+          )
+        `);
+
+      if (viewMode === 'consultant') {
+        query = query.eq('consultant_id', profile?.id);
+        if (clientId) {
+          query = query.eq('client_id', clientId);
+        }
+      } else {
+        // Client view - always use provided clientId
+        if (clientId) {
+          query = query.eq('client_id', clientId);
+        } else {
+          // Fallback: get client ID from profile
+          const { data: clientData, error: clientError } = await supabase
+            .from('clients')
+            .select('id')
+            .eq('profile_id', profile?.id)
+            .limit(1);
+          
+          if (clientError || !clientData?.[0]) {
+            console.error('Error fetching client ID for mailbox:', clientError);
+            setItems([]);
+            setLoading(false);
+            return;
+          }
+          
+          query = query.eq('client_id', clientData[0].id);
+        }
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setItems(data || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching mailbox items:', error);
+      setItems([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchBlogPosts = async () => {
-    const { data, error } = await supabase
-      .from('blog_posts')
-      .select(`
-        *,
-        author:author_id (
-          full_name,
-          email
-        )
-      `)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    setBlogPosts(data || []);
-  };
-
-  const fetchFAQs = async () => {
-    const { data, error } = await supabase
-      .from('faqs')
-      .select('*')
-      .order('sort_order', { ascending: true });
-
-    if (error) throw error;
-    setFaqs(data || []);
-  };
-
-  const handleSubmitPost = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const postData = {
-        ...postForm,
-        author_id: profile?.id,
-        tags: postForm.tags.filter(tag => tag.trim() !== ''),
-        published_at: postForm.is_published ? new Date().toISOString() : null
+      let fileUrl = '';
+      
+      // Upload file if provided
+      if (formData.file) {
+        const filePath = await uploadFile(formData.file);
+        fileUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/${filePath}`;
+      }
+      
+      const itemData = {
+        client_id: formData.client_id,
+        document_type: formData.document_type,
+        document_name: formData.document_name,
+        description: formData.description,
+        shipping_fee: formData.shipping_fee,
+        file_url: fileUrl,
+        file_size: formData.file?.size || null,
+        consultant_id: profile?.id,
+        status: 'pending'
       };
 
-      if (editingPost) {
-        const { error } = await supabase
-          .from('blog_posts')
-          .update(postData)
-          .eq('id', editingPost.id);
-        
-        if (error) throw error;
-        await logAdminAction('UPDATE_BLOG_POST', 'blog_posts', editingPost.id, editingPost, postData);
-      } else {
-        const { error } = await supabase
-          .from('blog_posts')
-          .insert([postData]);
-        
-        if (error) throw error;
-        await logAdminAction('CREATE_BLOG_POST', 'blog_posts', null, null, postData);
-      }
-
-      await fetchBlogPosts();
-      resetPostForm();
-      alert('Blog post saved successfully!');
-    } catch (error) {
-      console.error('Error saving blog post:', error);
-      alert('Failed to save blog post');
-    }
-  };
-
-  const handleSubmitFaq = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      if (editingFaq) {
-        const { error } = await supabase
-          .from('faqs')
-          .update(faqForm)
-          .eq('id', editingFaq.id);
-        
-        if (error) throw error;
-        await logAdminAction('UPDATE_FAQ', 'faqs', editingFaq.id, editingFaq, faqForm);
-      } else {
-        const { error } = await supabase
-          .from('faqs')
-          .insert([faqForm]);
-        
-        if (error) throw error;
-        await logAdminAction('CREATE_FAQ', 'faqs', null, null, faqForm);
-      }
-
-      await fetchFAQs();
-      resetFaqForm();
-      alert('FAQ saved successfully!');
-    } catch (error) {
-      console.error('Error saving FAQ:', error);
-      alert('Failed to save FAQ');
-    }
-  };
-
-  const handleDeletePost = async (postId: string) => {
-    if (!confirm('Are you sure you want to delete this blog post?')) return;
-
-    try {
-      const postToDelete = blogPosts.find(p => p.id === postId);
-      
       const { error } = await supabase
-        .from('blog_posts')
-        .delete()
-        .eq('id', postId);
+        .from('virtual_mailbox_items')
+        .insert([itemData]);
+
+      if (error) throw error;
+
+      await fetchItems();
+      resetForm();
+      alert('Document added to virtual mailbox successfully!');
+    } catch (error) {
+      console.error('Error adding document:', error);
+      alert('Failed to add document');
+    }
+  };
+
+  const updateStatus = async (itemId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('virtual_mailbox_items')
+        .update({ status: newStatus })
+        .eq('id', itemId);
+
+      if (error) throw error;
+      await fetchItems();
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
+  const updatePaymentStatus = async (itemId: string, newPaymentStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('virtual_mailbox_items')
+        .update({ payment_status: newPaymentStatus })
+        .eq('id', itemId);
+
+      if (error) throw error;
+      await fetchItems();
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+    }
+  };
+
+  const handleViewDocument = async (item: VirtualMailboxItem) => {
+    try {
+      // Update viewed_date
+      const { error } = await supabase
+        .from('virtual_mailbox_items')
+        .update({ 
+          viewed_date: new Date().toISOString(),
+          status: 'viewed'
+        })
+        .eq('id', item.id);
 
       if (error) throw error;
       
-      await logAdminAction('DELETE_BLOG_POST', 'blog_posts', postId, postToDelete, null);
-      await fetchBlogPosts();
-      alert('Blog post deleted successfully!');
+      // Open document in new tab
+      if (item.file_url) {
+        window.open(item.file_url, '_blank');
+      }
+      
+      await fetchItems();
     } catch (error) {
-      console.error('Error deleting blog post:', error);
-      alert('Failed to delete blog post');
+      console.error('Error updating view status:', error);
     }
   };
 
-  const handleDeleteFaq = async (faqId: string) => {
-    if (!confirm('Are you sure you want to delete this FAQ?')) return;
-
+  const handleDownloadDocument = async (item: VirtualMailboxItem) => {
     try {
-      const faqToDelete = faqs.find(f => f.id === faqId);
-      
+      // Update downloaded_date
       const { error } = await supabase
-        .from('faqs')
-        .delete()
-        .eq('id', faqId);
+        .from('virtual_mailbox_items')
+        .update({ 
+          downloaded_date: new Date().toISOString(),
+          status: 'downloaded'
+        })
+        .eq('id', item.id);
 
       if (error) throw error;
       
-      await logAdminAction('DELETE_FAQ', 'faqs', faqId, faqToDelete, null);
-      await fetchFAQs();
-      alert('FAQ deleted successfully!');
+      // Trigger download
+      if (item.file_url) {
+        const link = document.createElement('a');
+        link.href = item.file_url;
+        link.download = item.document_name;
+        link.click();
+      }
+      
+      await fetchItems();
     } catch (error) {
-      console.error('Error deleting FAQ:', error);
-      alert('Failed to delete FAQ');
+      console.error('Error updating download status:', error);
     }
   };
 
-  const handleEditPost = (post: BlogPost) => {
-    setEditingPost(post);
-    setPostForm({
-      title: post.title,
-      slug: post.slug,
-      content: post.content,
-      excerpt: post.excerpt || '',
-      category: post.category || '',
-      tags: post.tags.length > 0 ? post.tags : [''],
-      language_code: post.language_code,
-      is_published: post.is_published,
-      featured_image_url: post.featured_image_url || '',
-      seo_title: post.seo_title || '',
-      seo_description: post.seo_description || ''
+  const handleRequestShipping = (item: VirtualMailboxItem) => {
+    setSelectedItemForShipping(item);
+    setShowShippingModal(true);
+  };
+
+  const handleShippingSubmit = () => {
+    if (!selectedItemForShipping) return;
+    
+    const shippingCost = shippingOption === 'express' ? 25 : 15;
+    setShowShippingModal(false);
+    setShowStripeCheckout(true);
+  };
+
+  const handleShippingPaymentSuccess = async (paymentIntentId: string) => {
+    if (!selectedItemForShipping) return;
+
+    try {
+      // Update item with shipping info and payment
+      const { error } = await supabase
+        .from('virtual_mailbox_items')
+        .update({
+          shipping_option: shippingOption,
+          shipping_address: shippingAddress,
+          payment_status: 'paid',
+          status: 'sent',
+          sent_date: new Date().toISOString()
+        })
+        .eq('id', selectedItemForShipping.id);
+
+      if (error) throw error;
+      
+      setShowStripeCheckout(false);
+      setSelectedItemForShipping(null);
+      setShippingAddress({
+        full_name: '',
+        address_line_1: '',
+        address_line_2: '',
+        city: '',
+        postal_code: '',
+        country: '',
+        phone: ''
+      });
+      
+      await fetchItems();
+      alert('Shipping payment successful! Your document will be shipped.');
+    } catch (error) {
+      console.error('Error updating shipping info:', error);
+      alert('Failed to update shipping information');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      client_id: clientId || '',
+      document_type: '',
+      document_name: '',
+      description: '',
+      shipping_fee: 25.00
     });
-    setShowPostModal(true);
+    setSelectedPostImageFile(null);
+    setShowAddForm(false);
   };
 
-  const handleEditFaq = (faq: FAQ) => {
-    setEditingFaq(faq);
-    setFaqForm({
-      question: faq.question,
-      answer: faq.answer,
-      category: faq.category || '',
-      language_code: faq.language_code,
-      sort_order: faq.sort_order,
-      is_active: faq.is_active
-    });
-    setShowFaqModal(true);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'downloaded': return 'bg-green-100 text-green-800';
+      case 'viewed': return 'bg-blue-100 text-blue-800';
+      case 'delivered': return 'bg-purple-100 text-purple-800';
+      case 'sent': return 'bg-yellow-100 text-yellow-800';
+      case 'pending': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const resetPostForm = () => {
-    setPostForm({
-      title: '',
-      slug: '',
-      content: '',
-      excerpt: '',
-      category: '',
-      tags: [''],
-      language_code: 'en',
-      is_published: false,
-      featured_image_url: '',
-      seo_title: '',
-      seo_description: ''
-    });
-    setEditingPost(null);
-    setShowPostModal(false);
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case 'paid': return 'bg-green-100 text-green-800';
+      case 'waived': return 'bg-blue-100 text-blue-800';
+      case 'unpaid': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const resetFaqForm = () => {
-    setFaqForm({
-      question: '',
-      answer: '',
-      category: '',
-      language_code: 'en',
-      sort_order: 0,
-      is_active: true
-    });
-    setEditingFaq(null);
-    setShowFaqModal(false);
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'downloaded': return <Download className="h-4 w-4" />;
+      case 'viewed': return <Eye className="h-4 w-4" />;
+      case 'delivered': return <Package className="h-4 w-4" />;
+      case 'sent': return <Truck className="h-4 w-4" />;
+      case 'pending': return <Clock className="h-4 w-4" />;
+      default: return <FileText className="h-4 w-4" />;
+    }
   };
 
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
-  };
-
-  const addTag = () => {
-    setPostForm(prev => ({
-      ...prev,
-      tags: [...prev.tags, '']
-    }));
-  };
-
-  const updateTag = (index: number, value: string) => {
-    setPostForm(prev => ({
-      ...prev,
-      tags: prev.tags.map((tag, i) => i === index ? value : tag)
-    }));
-  };
-
-  const removeTag = (index: number) => {
-    setPostForm(prev => ({
-      ...prev,
-      tags: prev.tags.filter((_, i) => i !== index)
-    }));
-  };
-
-  const filteredBlogPosts = blogPosts.filter(post => {
+  const filteredItems = items.filter(item => {
     const matchesSearch = 
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase());
+      item.document_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.document_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.tracking_number.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesLanguage = languageFilter === 'all' || post.language_code === languageFilter;
-    const matchesCategory = categoryFilter === 'all' || post.category === categoryFilter;
+    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+    const matchesPayment = paymentFilter === 'all' || item.payment_status === paymentFilter;
     
-    return matchesSearch && matchesLanguage && matchesCategory;
+    return matchesSearch && matchesStatus && matchesPayment;
   });
 
-  const filteredFaqs = faqs.filter(faq => {
-    const matchesSearch = 
-      faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesLanguage = languageFilter === 'all' || faq.language_code === languageFilter;
-    const matchesCategory = categoryFilter === 'all' || faq.category === categoryFilter;
-    
-    return matchesSearch && matchesLanguage && matchesCategory;
-  });
+  const pendingItems = items.filter(i => i.status === 'pending').length;
+  const unpaidItems = items.filter(i => i.payment_status === 'unpaid').length;
+  const totalRevenue = items.filter(i => i.payment_status === 'paid').reduce((sum, i) => sum + i.shipping_fee, 0);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="mb-4">
-            <Link 
-              to="/admin-dashboard"
-              className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Admin Dashboard
-            </Link>
+    <div className="space-y-6">
+      {/* Stats for consultant view */}
+      {viewMode === 'consultant' && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Documents</p>
+                <p className="text-2xl font-bold text-gray-900">{items.length}</p>
+              </div>
+              <FileText className="h-6 w-6 text-blue-600" />
+            </div>
           </div>
           
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Content Management</h1>
-              <p className="text-gray-600 mt-1">Manage blog posts, FAQs, and translations</p>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-2xl font-bold text-yellow-600">{pendingItems}</p>
+              </div>
+              <Clock className="h-6 w-6 text-yellow-600" />
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={fetchData}
-                className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
-              >
-                <RefreshCw className="h-5 w-5" />
-                <span>Refresh</span>
-              </button>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Unpaid</p>
+                <p className="text-2xl font-bold text-red-600">{unpaidItems}</p>
+              </div>
+              <CreditCard className="h-6 w-6 text-red-600" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Revenue</p>
+                <p className="text-2xl font-bold text-green-600">${totalRevenue}</p>
+              </div>
+              <DollarSign className="h-6 w-6 text-green-600" />
             </div>
           </div>
         </div>
+      )}
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">
+            {viewMode === 'consultant' ? 'Virtual Mailbox Management' : 'My Virtual Mailbox'}
+          </h2>
+          <p className="text-gray-600">
+            {viewMode === 'consultant' 
+              ? 'Send official documents to clients via virtual mailbox'
+              : 'Receive and download your official documents'
+            }
+          </p>
+        </div>
+        {viewMode === 'consultant' && (
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
+          >
+            <Plus className="h-5 w-5" />
+            <span>Add Document</span>
+          </button>
+        )}
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              {[
-                { key: 'blog', label: 'Blog Posts', icon: FileText, count: blogPosts.length },
-                { key: 'faq', label: 'FAQs', icon: CheckCircle, count: faqs.length },
-                { key: 'translations', label: 'Translations', icon: Languages, count: 0 }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as any)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                    activeTab === tab.key
-                      ? 'border-purple-500 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <tab.icon className="h-4 w-4" />
-                  <span>{tab.label}</span>
-                  {tab.count > 0 && (
-                    <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search documents..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
           </div>
 
-          <div className="p-6">
-            {activeTab === 'translations' ? (
-              <TranslationManager />
-            ) : (
-              <>
-                {/* Filters */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder={`Search ${activeTab === 'blog' ? 'posts' : 'FAQs'}...`}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
+          <div className="flex items-center space-x-4">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="sent">Sent</option>
+              <option value="delivered">Delivered</option>
+              <option value="viewed">Viewed</option>
+              <option value="downloaded">Downloaded</option>
+            </select>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
-                    <select
-                      value={languageFilter}
-                      onChange={(e) => setLanguageFilter(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="all">All Languages</option>
-                      {supportedLanguages.map(lang => (
-                        <option key={lang.code} value={lang.code}>
-                          {lang.flag} {lang.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                    <select
-                      value={categoryFilter}
-                      onChange={(e) => setCategoryFilter(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="all">All Categories</option>
-                      {(activeTab === 'blog' ? blogCategories : faqCategories).map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => activeTab === 'blog' ? setShowPostModal(true) : setShowFaqModal(true)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Add {activeTab === 'blog' ? 'Post' : 'FAQ'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Content List */}
-                {activeTab === 'blog' ? (
-                  <div className="space-y-4">
-                    {filteredBlogPosts.length === 0 ? (
-                      <div className="text-center py-12">
-                        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Blog Posts</h3>
-                        <p className="text-gray-600 mb-6">Create your first blog post to get started.</p>
-                        <button
-                          onClick={() => setShowPostModal(true)}
-                          className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                        >
-                          Create First Post
-                        </button>
-                      </div>
-                    ) : (
-                      filteredBlogPosts.map((post) => (
-                        <div key={post.id} className="bg-gray-50 rounded-lg p-6">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
-                                <h3 className="text-lg font-semibold text-gray-900">{post.title}</h3>
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                  post.is_published ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {post.is_published ? 'PUBLISHED' : 'DRAFT'}
-                                </span>
-                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                                  {supportedLanguages.find(l => l.code === post.language_code)?.flag} {post.language_code.toUpperCase()}
-                                </span>
-                              </div>
-                              
-                              {post.excerpt && (
-                                <p className="text-gray-600 mb-3">{post.excerpt}</p>
-                              )}
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                                <div>
-                                  <span className="font-medium">Author:</span> {post.author?.full_name || 'Unknown'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Category:</span> {post.category || 'Uncategorized'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Created:</span> {new Date(post.created_at).toLocaleDateString()}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Tags:</span> {post.tags.join(', ') || 'None'}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center space-x-2">
-                              <button
-                                onClick={() => handleEditPost(post)}
-                                className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
-                              >
-                                <Edit className="h-4 w-4" />
-                                <span>Edit</span>
-                              </button>
-                              <button
-                                onClick={() => handleDeletePost(post.id)}
-                                className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredFaqs.length === 0 ? (
-                      <div className="text-center py-12">
-                        <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No FAQs</h3>
-                        <p className="text-gray-600 mb-6">Create your first FAQ to get started.</p>
-                        <button
-                          onClick={() => setShowFaqModal(true)}
-                          className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                        >
-                          Create First FAQ
-                        </button>
-                      </div>
-                    ) : (
-                      filteredFaqs.map((faq) => (
-                        <div key={faq.id} className="bg-gray-50 rounded-lg p-6">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
-                                <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                  faq.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {faq.is_active ? 'ACTIVE' : 'INACTIVE'}
-                                </span>
-                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                                  {supportedLanguages.find(l => l.code === faq.language_code)?.flag} {faq.language_code.toUpperCase()}
-                                </span>
-                              </div>
-                              
-                              <p className="text-gray-600 mb-3 line-clamp-2">{faq.answer}</p>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                                <div>
-                                  <span className="font-medium">Category:</span> {faq.category || 'General'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Sort Order:</span> {faq.sort_order}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Updated:</span> {new Date(faq.updated_at).toLocaleDateString()}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center space-x-2">
-                              <button
-                                onClick={() => handleEditFaq(faq)}
-                                className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
-                              >
-                                <Edit className="h-4 w-4" />
-                                <span>Edit</span>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteFaq(faq.id)}
-                                className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </>
+            {viewMode === 'consultant' && (
+              <select
+                value={paymentFilter}
+                onChange={(e) => setPaymentFilter(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="all">All Payments</option>
+                <option value="unpaid">Unpaid</option>
+                <option value="paid">Paid</option>
+                <option value="waived">Waived</option>
+              </select>
             )}
           </div>
         </div>
       </div>
 
-      {/* Blog Post Modal */}
-      {showPostModal && (
+      {/* Documents List */}
+      <div className="space-y-4">
+        {filteredItems.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+            <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {viewMode === 'consultant' ? 'No Documents Sent' : 'No Documents Received'}
+            </h3>
+            <p className="text-gray-600">
+              {viewMode === 'consultant' 
+                ? 'Start sending documents to your clients via virtual mailbox.'
+                : 'You haven\'t received any documents yet.'
+              }
+            </p>
+          </div>
+        ) : (
+          filteredItems.map((item) => (
+            <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-4 mb-3">
+                    <div className="bg-purple-100 rounded-lg p-2">
+                      {getStatusIcon(item.status)}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{item.document_name}</h3>
+                      <p className="text-sm text-gray-600">{item.document_type}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                      {item.status.toUpperCase()}
+                    </span>
+                  </div>
+
+                  {item.description && (
+                    <p className="text-gray-700 mb-3">{item.description}</p>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
+                    <div>
+                      <span className="font-medium">Tracking:</span> {item.tracking_number}
+                    </div>
+                    <div>
+                      <span className="font-medium">Shipping Fee:</span> ${item.shipping_fee}
+                    </div>
+                    <div>
+                      <span className="font-medium">Payment:</span>
+                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(item.payment_status)}`}>
+                        {item.payment_status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Size:</span> {item.file_size ? `${(item.file_size / 1024).toFixed(1)} KB` : 'N/A'}
+                    </div>
+                  </div>
+
+                  {/* Timeline */}
+                  <div className="flex items-center space-x-4 text-xs text-gray-500">
+                    {item.sent_date && (
+                      <div className="flex items-center space-x-1">
+                        <Send className="h-3 w-3" />
+                        <span>Sent: {new Date(item.sent_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                    {item.delivered_date && (
+                      <div className="flex items-center space-x-1">
+                        <Package className="h-3 w-3" />
+                        <span>Delivered: {new Date(item.delivered_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                    {item.viewed_date && (
+                      <div className="flex items-center space-x-1">
+                        <Eye className="h-3 w-3" />
+                        <span>Viewed: {new Date(item.viewed_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  {viewMode === 'consultant' ? (
+                    <>
+                      {item.status === 'pending' && (
+                        <button
+                          onClick={() => updateStatus(item.id, 'sent')}
+                          className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
+                        >
+                          <Send className="h-4 w-4" />
+                          <span>Send</span>
+                        </button>
+                      )}
+                      
+                      {item.payment_status === 'unpaid' && (
+                        <button
+                          onClick={() => updatePaymentStatus(item.id, 'waived')}
+                          className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors"
+                        >
+                          Waive Fee
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {item.payment_status === 'unpaid' && item.status === 'sent' && (
+                        <button
+                          onClick={() => updatePaymentStatus(item.id, 'paid')}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                        >
+                          <CreditCard className="h-4 w-4" />
+                          <span>Pay ${item.shipping_fee}</span>
+                        </button>
+                      )}
+                      
+                      {item.payment_status === 'paid' && item.file_url && (
+                        <button
+                          onClick={() => {
+                            handleDownloadDocument(item);
+                          }}
+                          className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>Download</span>
+                        </button>
+                      )}
+                      
+                      {item.payment_status === 'paid' && !item.viewed_date && (
+                        <button
+                          onClick={() => handleViewDocument(item)}
+                          className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span>View</span>
+                        </button>
+                      )}
+                      
+                      {item.payment_status === 'unpaid' && item.status === 'sent' && (
+                        <button
+                          onClick={() => handleRequestShipping(item)}
+                          className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                        >
+                          <Truck className="h-4 w-4" />
+                          <span>Request Shipping</span>
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setShowItemDetail(true);
+                    }}
+                    className="bg-gray-50 text-gray-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Add Document Form Modal */}
+      {showAddForm && viewMode === 'consultant' && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">
-                  {editingPost ? 'Edit Blog Post' : 'Create New Blog Post'}
-                </h2>
+                <h2 className="text-xl font-bold text-gray-900">Add Document to Virtual Mailbox</h2>
                 <button
-                  onClick={resetPostForm}
+                  onClick={resetForm}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="h-5 w-5 text-gray-500" />
@@ -699,231 +702,93 @@ const ContentManagement = () => {
               </div>
             </div>
 
-            <form onSubmit={handleSubmitPost} className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* Client Selection */}
+              {!clientId && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={postForm.title}
-                    onChange={(e) => {
-                      setPostForm(prev => ({ 
-                        ...prev, 
-                        title: e.target.value,
-                        slug: prev.slug || generateSlug(e.target.value)
-                      }));
-                    }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Blog post title"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    URL Slug *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={postForm.slug}
-                    onChange={(e) => setPostForm(prev => ({ ...prev, slug: generateSlug(e.target.value) }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="url-slug"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Language
+                    Select Client *
                   </label>
                   <select
-                    value={postForm.language_code}
-                    onChange={(e) => setPostForm(prev => ({ ...prev, language_code: e.target.value }))}
+                    required
+                    value={formData.client_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, client_id: e.target.value }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    {supportedLanguages.map(lang => (
-                      <option key={lang.code} value={lang.code}>
-                        {lang.flag} {lang.name}
-                      </option>
-                    ))}
+                    <option value="">Choose a client...</option>
+                    {/* This would be populated with actual clients */}
                   </select>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={postForm.category}
-                    onChange={(e) => setPostForm(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="">Select category...</option>
-                    {blogCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
+              {/* Document Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Excerpt
+                  Document Type *
                 </label>
-                <textarea
-                  rows={2}
-                  value={postForm.excerpt}
-                  onChange={(e) => setPostForm(prev => ({ ...prev, excerpt: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Brief description of the post..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Content *
-                </label>
-                <textarea
+                <select
                   required
-                  rows={8}
-                  value={postForm.content}
-                  onChange={(e) => setPostForm(prev => ({ ...prev, content: e.target.value }))}
+                  value={formData.document_type}
+                  onChange={(e) => setFormData(prev => ({ ...prev, document_type: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Write your blog post content here..."
+                >
+                  <option value="">Select document type...</option>
+                  {documentTypes.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Document Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Document Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.document_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, document_name: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="e.g., Georgia Tech Solutions LLC - Registration Certificate"
                 />
               </div>
 
-              {/* Tags */}
+              {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tags
-                </label>
-                <div className="space-y-2">
-                  {postForm.tags.map((tag, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={tag}
-                        onChange={(e) => updateTag(index, e.target.value)}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Tag name"
-                      />
-                      {postForm.tags.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeTag(index)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={addTag}
-                    className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center space-x-1"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Add Tag</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* SEO Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    SEO Title
-                  </label>
-                  <input
-                    type="text"
-                    value={postForm.seo_title}
-                    onChange={(e) => setPostForm(prev => ({ ...prev, seo_title: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="SEO optimized title"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Featured Image
-                  </label>
-                  <input
-                    type="file"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        const file = e.target.files[0];
-                        console.log('ContentManagement: Attempting to upload featured image with size:', file.size, 'bytes');
-                        console.log('ContentManagement: 50MB limit in bytes:', 50 * 1024 * 1024);
-                        
-                        // Check file size (50MB limit)
-                        if (file.size > 50 * 1024 * 1024) {
-                          console.log('ContentManagement: File size exceeds 50MB limit. Rejecting upload.');
-                          alert('Image size must be less than 50MB. Please compress your image and try again.');
-                          e.target.value = '';
-                          return;
-                        }
-                        console.log('ContentManagement: File passed size check, setting selected file...');
-                        setSelectedPostImageFile(file);
-                      } else {
-                        setSelectedPostImageFile(null);
-                      }
-                    }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    accept="image/*"
-                  />
-                  {selectedPostImageFile && (
-                    <p className="mt-2 text-sm text-gray-600">Selected file: {selectedPostImageFile.name}</p>
-                  )}
-                  {postForm.featured_image_url && !selectedPostImageFile && (
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-600 mb-1">Current image:</p>
-                      <img 
-                        src={getPublicImageUrl(postForm.featured_image_url)} 
-                        alt="Current Featured" 
-                        className="w-32 h-20 object-cover rounded-lg border border-gray-200" 
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  SEO Description
+                  Description
                 </label>
                 <textarea
-                  rows={2}
-                  value={postForm.seo_description}
-                  onChange={(e) => setPostForm(prev => ({ ...prev, seo_description: e.target.value }))}
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="SEO meta description..."
+                  placeholder="Additional notes about this document..."
                 />
               </div>
 
-              {/* Publish Status */}
-              <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  id="is_published"
-                  checked={postForm.is_published}
-                  onChange={(e) => setPostForm(prev => ({ ...prev, is_published: e.target.checked }))}
-                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                />
-                <label htmlFor="is_published" className="text-sm font-medium text-gray-700">
-                  Publish immediately
+              {/* Shipping Fee */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Virtual Shipping Fee (USD)
                 </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.shipping_fee}
+                  onChange={(e) => setFormData(prev => ({ ...prev, shipping_fee: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">Standard virtual shipping fee is $25.00</p>
               </div>
 
               {/* Actions */}
               <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={resetPostForm}
+                  onClick={resetForm}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
                   Cancel
@@ -933,7 +798,7 @@ const ContentManagement = () => {
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
                 >
                   <Save className="h-5 w-5" />
-                  <span>{editingPost ? 'Update' : 'Create'} Post</span>
+                  <span>Add to Mailbox</span>
                 </button>
               </div>
             </form>
@@ -941,17 +806,15 @@ const ContentManagement = () => {
         </div>
       )}
 
-      {/* FAQ Modal */}
-      {showFaqModal && (
+      {/* Item Detail Modal */}
+      {showItemDetail && selectedItem && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">
-                  {editingFaq ? 'Edit FAQ' : 'Create New FAQ'}
-                </h2>
+                <h2 className="text-xl font-bold text-gray-900">Document Details</h2>
                 <button
-                  onClick={resetFaqForm}
+                  onClick={() => setShowItemDetail(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="h-5 w-5 text-gray-500" />
@@ -959,96 +822,266 @@ const ContentManagement = () => {
               </div>
             </div>
 
-            <form onSubmit={handleSubmitFaq} className="p-6 space-y-6">
+            <div className="p-6 space-y-6">
+              {/* Document Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Language
-                  </label>
-                  <select
-                    value={faqForm.language_code}
-                    onChange={(e) => setFaqForm(prev => ({ ...prev, language_code: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    {supportedLanguages.map(lang => (
-                      <option key={lang.code} value={lang.code}>
-                        {lang.flag} {lang.name}
-                      </option>
-                    ))}
-                  </select>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600">Document Name:</span>
+                      <p className="font-medium">{selectedItem.document_name}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Type:</span>
+                      <p className="font-medium">{selectedItem.document_type}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Tracking Number:</span>
+                      <p className="font-medium font-mono">{selectedItem.tracking_number}</p>
+                    </div>
+                    {selectedItem.description && (
+                      <div>
+                        <span className="text-sm text-gray-600">Description:</span>
+                        <p className="font-medium">{selectedItem.description}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={faqForm.category}
-                    onChange={(e) => setFaqForm(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Status & Payment</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedItem.status)}`}>
+                        {selectedItem.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Shipping Fee:</span>
+                      <p className="font-medium">${selectedItem.shipping_fee}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Payment Status:</span>
+                      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(selectedItem.payment_status)}`}>
+                        {selectedItem.payment_status.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Timeline</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <Clock className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="font-medium text-gray-900">Document Created</p>
+                      <p className="text-sm text-gray-600">{new Date(selectedItem.created_at).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  
+                  {selectedItem.sent_date && (
+                    <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                      <Send className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="font-medium text-blue-900">Document Sent</p>
+                        <p className="text-sm text-blue-700">{new Date(selectedItem.sent_date).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.delivered_date && (
+                    <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                      <Package className="h-5 w-5 text-purple-600" />
+                      <div>
+                        <p className="font-medium text-purple-900">Document Delivered</p>
+                        <p className="text-sm text-purple-700">{new Date(selectedItem.delivered_date).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.viewed_date && (
+                    <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                      <Eye className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="font-medium text-green-900">Document Viewed</p>
+                        <p className="text-sm text-green-700">{new Date(selectedItem.viewed_date).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              {viewMode === 'client' && selectedItem.payment_status === 'unpaid' && selectedItem.status === 'sent' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-yellow-900">Payment Required</h4>
+                      <p className="text-sm text-yellow-700 mt-1">
+                        Please pay the virtual shipping fee of ${selectedItem.shipping_fee} to access your document.
+                      </p>
+                      <button
+                        onClick={() => updatePaymentStatus(selectedItem.id, 'paid')}
+                        className="mt-3 bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 transition-colors flex items-center space-x-2"
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        <span>Pay Now - ${selectedItem.shipping_fee}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shipping Options Modal */}
+      {showShippingModal && selectedItemForShipping && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Shipping Options</h2>
+                <button
+                  onClick={() => setShowShippingModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Document Info */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-2">{selectedItemForShipping.document_name}</h4>
+                <p className="text-sm text-gray-600">{selectedItemForShipping.document_type}</p>
+              </div>
+
+              {/* Shipping Options */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Shipping Option
+                </label>
+                <div className="space-y-3">
+                  <div
+                    className={"border-2 rounded-lg p-4 cursor-pointer transition-all " + (
+                      shippingOption === 'normal' 
+                        ? 'border-purple-500 bg-purple-50' 
+                        : 'border-gray-200 hover:border-purple-300'
+                    )}
+                    onClick={() => setShippingOption('normal')}
                   >
-                    <option value="">Select category...</option>
-                    {faqCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Standard Shipping</h4>
+                        <p className="text-sm text-gray-600">5-7 business days</p>
+                      </div>
+                      <div className="text-lg font-bold text-gray-900">$15</div>
+                    </div>
+                  </div>
+                  
+                  <div
+                    className={"border-2 rounded-lg p-4 cursor-pointer transition-all " + (
+                      shippingOption === 'express' 
+                        ? 'border-purple-500 bg-purple-50' 
+                        : 'border-gray-200 hover:border-purple-300'
+                    )}
+                    onClick={() => setShippingOption('express')}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Express Shipping</h4>
+                        <p className="text-sm text-gray-600">2-3 business days</p>
+                      </div>
+                      <div className="text-lg font-bold text-gray-900">$25</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              {/* Shipping Address */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Question *
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Shipping Address
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={faqForm.question}
-                  onChange={(e) => setFaqForm(prev => ({ ...prev, question: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Frequently asked question..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Answer *
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  value={faqForm.answer}
-                  onChange={(e) => setFaqForm(prev => ({ ...prev, answer: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Detailed answer to the question..."
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sort Order
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={faqForm.sort_order}
-                    onChange={(e) => setFaqForm(prev => ({ ...prev, sort_order: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="0"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-3 pt-6">
-                  <input
-                    type="checkbox"
-                    id="faq_is_active"
-                    checked={faqForm.is_active}
-                    onChange={(e) => setFaqForm(prev => ({ ...prev, is_active: e.target.checked }))}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="faq_is_active" className="text-sm font-medium text-gray-700">
-                    FAQ is active and visible
-                  </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Full Name"
+                      value={shippingAddress.full_name}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, full_name: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="tel"
+                      placeholder="Phone Number"
+                      value={shippingAddress.phone}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, phone: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <input
+                      type="text"
+                      placeholder="Address Line 1"
+                      value={shippingAddress.address_line_1}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_1: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <input
+                      type="text"
+                      placeholder="Address Line 2 (Optional)"
+                      value={shippingAddress.address_line_2}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_2: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="City"
+                      value={shippingAddress.city}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Postal Code"
+                      value={shippingAddress.postal_code}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <input
+                      type="text"
+                      placeholder="Country"
+                      value={shippingAddress.country}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, country: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1056,25 +1089,48 @@ const ContentManagement = () => {
               <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={resetFaqForm}
+                  onClick={() => setShowShippingModal(false)}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                  onClick={handleShippingSubmit}
+                  disabled={!shippingAddress.full_name || !shippingAddress.address_line_1 || !shippingAddress.city}
+                  className="flex-1 bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                 >
-                  <Save className="h-5 w-5" />
-                  <span>{editingFaq ? 'Update' : 'Create'} FAQ</span>
+                  <CreditCard className="h-5 w-5" />
+                  <span>Pay Now (${shippingOption === 'express' ? '25' : '15'})</span>
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Stripe Checkout for Shipping */}
+      {showStripeCheckout && selectedItemForShipping && (
+        <StripeCheckout
+          isOpen={showStripeCheckout}
+          onClose={() => setShowStripeCheckout(false)}
+          amount={shippingOption === 'express' ? 25 : 15}
+          currency="USD"
+          orderId={selectedItemForShipping.id}
+          orderDetails={{
+            serviceName: `${shippingOption === 'express' ? 'Express' : 'Standard'} Shipping - ${selectedItemForShipping.document_name}`,
+            consultantName: 'Virtual Mailbox',
+            deliveryTime: shippingOption === 'express' ? 3 : 7
+          }}
+          onSuccess={handleShippingPaymentSuccess}
+          onError={(error) => alert('Payment error: ' + error)}
+        />
       )}
     </div>
   );
 };
 
-export default ContentManagement;
+
+
+
+
+export default VirtualMailboxManager
