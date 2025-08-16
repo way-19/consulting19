@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import { useServiceRequests } from '../hooks/useServiceRequests';
 import MultilingualChat from '../components/MultilingualChat';
+import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import { 
   ArrowLeft, 
   Search, 
