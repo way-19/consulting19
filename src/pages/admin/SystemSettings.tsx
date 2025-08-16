@@ -18,7 +18,8 @@ import {
   Mail,
   MessageSquare,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  BarChart3
 } from 'lucide-react';
 
 interface SystemSetting {
