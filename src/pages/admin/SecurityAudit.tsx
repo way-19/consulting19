@@ -153,9 +153,9 @@ const SecurityAudit = () => {
   const exportAuditLogs = async () => {
     try {
       const csv = [
-        'Timestamp,User,Action,Table,Target ID,IP Address',
+        'Timestamp,User,Action,Table,Target ID,IP Address,User Agent,Session ID',
         ...auditLogs.map(log => 
-          `"${log.timestamp}","${log.user?.email || 'System'}","${log.action}","${log.target_table || ''}","${log.target_id || ''}","${log.ip_address || ''}"`
+          `"${log.timestamp}","${log.user?.email || 'System'}","${log.action}","${log.target_table || ''}","${log.target_id || ''}","${log.ip_address || ''}","${log.user_agent || ''}","${log.session_id || ''}"`
         )
       ].join('\n');
 
@@ -213,6 +213,16 @@ const SecurityAudit = () => {
     return matchesSearch && matchesAction && matchesUser;
   });
 
+  // Get unique users for filter dropdown
+  const uniqueUsers = Array.from(
+    new Set(auditLogs.map(log => log.user_id).filter(Boolean))
+  ).map(userId => {
+    const log = auditLogs.find(l => l.user_id === userId);
+    return {
+      id: userId,
+      name: log?.user?.full_name || log?.user?.email || 'Unknown User'
+    };
+  });
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -542,7 +552,11 @@ const SecurityAudit = () => {
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   ✕
-                </button>
+                  {uniqueUsers.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
               </div>
             </div>
 
@@ -568,8 +582,9 @@ const SecurityAudit = () => {
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">Timestamp:</span>
-                      <p className="font-medium">{new Date(selectedLog.timestamp).toLocaleString()}</p>
-                    </div>
+                    <div className="col-span-1">IP Address</div>
+                    <div className="col-span-2">Browser</div>
+                    <div className="col-span-1">Details</div>
                   </div>
                 </div>
 
@@ -630,11 +645,25 @@ const SecurityAudit = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="font-medium text-gray-700">Browser:</span>
-                        <p className="text-gray-600">
-                          {selectedLog.user_agent.includes('Chrome') ? '🌐 Google Chrome' :
+                        <div className="col-span-1">
+                          <p className="text-xs text-gray-600 font-mono">{log.ip_address?.slice(0, 12) || 'Unknown'}</p>
                            selectedLog.user_agent.includes('Firefox') ? '🦊 Mozilla Firefox' :
                            selectedLog.user_agent.includes('Safari') ? '🧭 Safari' :
-                           selectedLog.user_agent.includes('Edge') ? '🔷 Microsoft Edge' : '💻 Unknown Browser'}
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-600">
+                            {log.user_agent ? (
+                              log.user_agent.includes('Chrome') ? '🌐 Chrome' :
+                              log.user_agent.includes('Firefox') ? '🦊 Firefox' :
+                              log.user_agent.includes('Safari') ? '🧭 Safari' :
+                              log.user_agent.includes('Edge') ? '🔷 Edge' : '💻 Browser'
+                            ) : 'Unknown'}
+                          </p>
+                          {log.session_id && (
+                            <p className="text-xs text-gray-500 font-mono">{log.session_id.slice(0, 12)}...</p>
+                          )}
+                        </div>
+                        
+                        <div className="col-span-1">
                         </p>
                       </div>
                       <div>
@@ -655,6 +684,12 @@ const SecurityAudit = () => {
                       <p className="text-xs text-gray-600 font-mono mt-2 p-2 bg-white rounded border break-all">
                         {selectedLog.user_agent}
                       </p>
+                      {selectedLog.session_id && (
+                        <div>
+                          <span className="text-sm text-gray-600">Session ID:</span>
+                          <p className="font-medium font-mono text-sm">{selectedLog.session_id}</p>
+                        </div>
+                      )}
                     </details>
                   </div>
                 </div>

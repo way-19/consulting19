@@ -7,7 +7,7 @@ import React, {
   useState,
 } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase, logUserAction } from '../lib/supabase';
 
 export type Role = 'admin' | 'consultant' | 'client';
 
@@ -83,9 +83,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('❌ Sign in error:', error);
         setLoading(false);
+        
+        // Log failed login attempt
+        await logUserAction(
+          'LOGIN_FAILED',
+          'auth',
+          null,
+          null,
+          { email, error: error.message }
+        );
+        
         throw error;
       }
       console.log('✅ Sign in successful');
+      
+      // Log successful login
+      await logUserAction(
+        'LOGIN_SUCCESS',
+        'auth',
+        null,
+        null,
+        { email }
+      );
+      
       // onAuthStateChange tetiklenecek
     } catch (error) {
       setLoading(false);
@@ -151,6 +171,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async (): Promise<void> => {
     console.log('🚪 Signing out...');
     setLoading(true);
+    
+    // Log logout action
+    if (user) {
+      await logUserAction(
+        'LOGOUT',
+        'auth',
+        user.id,
+        null,
+        { email: user.email }
+      );
+    }
+    
     const { error } = await supabase.auth.signOut();
     if (error) console.error('Error signing out:', error);
     setUser(null);
