@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase, logAdminAction, uploadFileToStorage, getPublicImageUrl } from '../../lib/supabase';
+import SearchFilterBar from '../../components/common/SearchFilterBar';
+import useAdvancedSearch from '../../hooks/useAdvancedSearch';
 import { 
   ArrowLeft, 
-  Search, 
-  Filter, 
   Settings, 
   Plus,
   Eye, 
@@ -69,10 +69,6 @@ const ServiceManagement = () => {
   const [consultants, setConsultants] = useState<any[]>([]);
   const [countries, setCountries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [consultantFilter, setConsultantFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [editingService, setEditingService] = useState<CustomService | null>(null);
   const [selectedService, setSelectedService] = useState<CustomService | null>(null);
@@ -111,6 +107,67 @@ const ServiceManagement = () => {
     { value: 'banking', label: 'Banking' },
     { value: 'tax', label: 'Tax Services' }
   ];
+
+  // Advanced search configuration
+  const searchConfig = {
+    searchFields: ['title', 'description'] as (keyof CustomService)[],
+    filterFields: [
+      {
+        key: 'category' as keyof CustomService,
+        type: 'select' as const,
+        options: [
+          { value: 'all', label: 'All Categories' },
+          ...categories.map(cat => ({ value: cat.value, label: cat.label }))
+        ]
+      },
+      {
+        key: 'consultant_id' as keyof CustomService,
+        type: 'select' as const,
+        options: [
+          { value: 'all', label: 'All Consultants' },
+          ...consultants.map(consultant => ({
+            value: consultant.id,
+            label: consultant.full_name
+          }))
+        ]
+      },
+      {
+        key: 'is_active' as keyof CustomService,
+        type: 'select' as const,
+        options: [
+          { value: 'all', label: 'All Status' },
+          { value: true, label: 'Active' },
+          { value: false, label: 'Inactive' }
+        ]
+      }
+    ],
+    sortFields: [
+      { key: 'created_at' as keyof CustomService, label: 'Date Created', defaultOrder: 'desc' as const },
+      { key: 'title' as keyof CustomService, label: 'Service Title', defaultOrder: 'asc' as const },
+      { key: 'price' as keyof CustomService, label: 'Price', defaultOrder: 'desc' as const },
+      { key: 'orders_count' as keyof CustomService, label: 'Orders', defaultOrder: 'desc' as const }
+    ]
+  };
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    filters,
+    setFilter,
+    clearFilters,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
+    filteredData: filteredServices,
+    totalCount,
+    filteredCount
+  } = useAdvancedSearch({
+    data: services,
+    config: searchConfig,
+    initialSortBy: 'created_at',
+    initialFilters: { category: 'all', consultant_id: 'all', is_active: 'all' }
+  });
 
   useEffect(() => {
     if (profile?.role === 'admin') {
@@ -475,70 +532,48 @@ const ServiceManagement = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Services</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Title, description, consultant..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat.value} value={cat.value}>{cat.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Consultant</label>
-              <select
-                value={consultantFilter}
-                onChange={(e) => setConsultantFilter(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">All Consultants</option>
-                {consultants.map(consultant => (
-                  <option key={consultant.id} value={consultant.id}>
-                    {consultant.full_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-
-            <div className="text-sm text-gray-600">
-              Showing {filteredServices.length} of {services.length} services
-            </div>
-          </div>
-        </div>
+        <SearchFilterBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search services by title, description, or consultant..."
+          filters={[
+            {
+              key: 'category',
+              label: 'Category',
+              value: filters.category || 'all',
+              options: searchConfig.filterFields[0].options!,
+              onChange: (value) => setFilter('category', value),
+              icon: Settings
+            },
+            {
+              key: 'consultant_id',
+              label: 'Consultant',
+              value: filters.consultant_id || 'all',
+              options: searchConfig.filterFields[1].options!,
+              onChange: (value) => setFilter('consultant_id', value),
+              icon: Users
+            },
+            {
+              key: 'is_active',
+              label: 'Status',
+              value: filters.is_active || 'all',
+              options: searchConfig.filterFields[2].options!,
+              onChange: (value) => setFilter('is_active', value)
+            }
+          ]}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          sortOptions={searchConfig.sortFields.map(field => ({
+            value: field.key as string,
+            label: field.label
+          }))}
+          onSortChange={setSortBy}
+          onSortOrderChange={setSortOrder}
+          totalCount={totalCount}
+          filteredCount={filteredCount}
+          onClearFilters={clearFilters}
+          className="mb-8"
+        />
 
         {/* Services List */}
         {filteredServices.length === 0 ? (

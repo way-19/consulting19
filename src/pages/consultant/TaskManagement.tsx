@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import SearchFilterBar from '../../components/common/SearchFilterBar';
+import useAdvancedSearch from '../../hooks/useAdvancedSearch';
 import { 
   ArrowLeft, 
-  Search, 
-  Filter, 
   CheckCircle, 
   Plus,
   Eye, 
@@ -66,9 +66,6 @@ const TaskManagement = () => {
   const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskWithDetails | null>(null);
   const [activeTimer, setActiveTimer] = useState<string | null>(null);
@@ -85,6 +82,61 @@ const TaskManagement = () => {
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     due_date: '',
     estimated_hours: 0
+  });
+
+  // Advanced search configuration
+  const searchConfig = {
+    searchFields: ['title', 'description'] as (keyof TaskWithDetails)[],
+    filterFields: [
+      {
+        key: 'status' as keyof TaskWithDetails,
+        type: 'select' as const,
+        options: [
+          { value: 'all', label: 'All Status' },
+          { value: 'pending', label: 'Pending' },
+          { value: 'in_progress', label: 'In Progress' },
+          { value: 'completed', label: 'Completed' },
+          { value: 'overdue', label: 'Overdue' }
+        ]
+      },
+      {
+        key: 'priority' as keyof TaskWithDetails,
+        type: 'select' as const,
+        options: [
+          { value: 'all', label: 'All Priority' },
+          { value: 'urgent', label: 'Urgent' },
+          { value: 'high', label: 'High' },
+          { value: 'medium', label: 'Medium' },
+          { value: 'low', label: 'Low' }
+        ]
+      }
+    ],
+    sortFields: [
+      { key: 'created_at' as keyof TaskWithDetails, label: 'Date Created', defaultOrder: 'desc' as const },
+      { key: 'due_date' as keyof TaskWithDetails, label: 'Due Date', defaultOrder: 'asc' as const },
+      { key: 'priority' as keyof TaskWithDetails, label: 'Priority', defaultOrder: 'desc' as const },
+      { key: 'title' as keyof TaskWithDetails, label: 'Task Title', defaultOrder: 'asc' as const }
+    ]
+  };
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    filters,
+    setFilter,
+    clearFilters,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
+    filteredData: filteredTasks,
+    totalCount,
+    filteredCount
+  } = useAdvancedSearch({
+    data: tasks,
+    config: searchConfig,
+    initialSortBy: 'created_at',
+    initialFilters: { status: 'all', priority: 'all' }
   });
 
   // Timer effect
@@ -488,57 +540,41 @@ const TaskManagement = () => {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Görev Ara</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Başlık, açıklama, müşteri..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">Tüm Durumlar</option>
-                <option value="pending">Beklemede</option>
-                <option value="in_progress">Devam Ediyor</option>
-                <option value="completed">Tamamlandı</option>
-                <option value="overdue">Gecikti</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Öncelik</label>
-              <select
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">Tüm Öncelikler</option>
-                <option value="urgent">Acil</option>
-                <option value="high">Yüksek</option>
-                <option value="medium">Orta</option>
-                <option value="low">Düşük</option>
-              </select>
-            </div>
-
-            <div className="text-sm text-gray-600">
-              {tasks.length} görevden {filteredTasks.length} tanesi gösteriliyor
-            </div>
-          </div>
-        </div>
+        <SearchFilterBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Görev başlığı, açıklama veya müşteri ara..."
+          filters={[
+            {
+              key: 'status',
+              label: 'Durum',
+              value: filters.status || 'all',
+              options: searchConfig.filterFields[0].options!,
+              onChange: (value) => setFilter('status', value),
+              icon: CheckCircle
+            },
+            {
+              key: 'priority',
+              label: 'Öncelik',
+              value: filters.priority || 'all',
+              options: searchConfig.filterFields[1].options!,
+              onChange: (value) => setFilter('priority', value),
+              icon: AlertTriangle
+            }
+          ]}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          sortOptions={searchConfig.sortFields.map(field => ({
+            value: field.key as string,
+            label: field.label
+          }))}
+          onSortChange={setSortBy}
+          onSortOrderChange={setSortOrder}
+          totalCount={totalCount}
+          filteredCount={filteredCount}
+          onClearFilters={clearFilters}
+          className="mb-8"
+        />
 
         {/* Tasks List */}
         {filteredTasks.length === 0 ? (

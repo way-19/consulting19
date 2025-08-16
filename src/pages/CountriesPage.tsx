@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Globe, Languages } from 'lucide-react';
 import ModernCountryCard from '../components/ModernCountryCard';
 import { useCountries, Country } from '../hooks/useCountries';
+import SearchFilterBar from '../components/common/SearchFilterBar';
+import useAdvancedSearch from '../hooks/useAdvancedSearch';
 
 const CountriesPage = () => {
   const { countries, loading, error } = useCountries(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('all');
-  const [selectedLanguage, setSelectedLanguage] = useState('all');
 
   const regions = {
     'all': 'All Regions',
@@ -28,19 +27,59 @@ const CountriesPage = () => {
     return 'asia';
   };
 
-  const filteredCountries = countries.filter(country => {
-    const matchesSearch = country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         country.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRegion = selectedRegion === 'all' || getRegion(country) === selectedRegion;
-    const matchesLanguage = selectedLanguage === 'all' || 
-                           country.supported_languages?.includes(selectedLanguage);
-    
-    return matchesSearch && matchesRegion && matchesLanguage;
-  });
-
   const availableLanguages = Array.from(
     new Set(countries.flatMap(country => country.supported_languages || []).filter(Boolean))
   );
+
+  // Advanced search configuration
+  const searchConfig = {
+    searchFields: ['name', 'description'] as (keyof Country)[],
+    filterFields: [
+      {
+        key: 'region' as keyof Country,
+        type: 'select' as const,
+        options: Object.entries(regions).map(([value, label]) => ({ value, label }))
+      },
+      {
+        key: 'supported_languages' as keyof Country,
+        type: 'select' as const,
+        options: [
+          { value: 'all', label: 'All Languages' },
+          ...availableLanguages.map(lang => ({ value: lang, label: lang.toUpperCase() }))
+        ]
+      }
+    ],
+    sortFields: [
+      { key: 'name' as keyof Country, label: 'Country Name', defaultOrder: 'asc' as const },
+      { key: 'sort_order' as keyof Country, label: 'Sort Order', defaultOrder: 'asc' as const }
+    ]
+  };
+
+  // Add region to countries for filtering
+  const countriesWithRegion = countries.map(country => ({
+    ...country,
+    region: getRegion(country)
+  }));
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    filters,
+    setFilter,
+    clearFilters,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
+    filteredData: filteredCountries,
+    totalCount,
+    filteredCount
+  } = useAdvancedSearch({
+    data: countriesWithRegion,
+    config: searchConfig,
+    initialSortBy: 'sort_order',
+    initialFilters: { region: 'all', supported_languages: 'all' }
+  });
 
   if (loading) {
     return (
@@ -90,54 +129,42 @@ const CountriesPage = () => {
       </section>
 
       {/* Filters */}
-      <section className="py-8 bg-white border-b border-gray-200">
+      <section className="py-8 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search countries..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Filters */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <select
-                  value={selectedRegion}
-                  onChange={(e) => setSelectedRegion(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  {Object.entries(regions).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">All Languages</option>
-                {availableLanguages.filter(Boolean).map(lang => (
-                  <option key={lang} value={lang}>
-                    {lang.toUpperCase()}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredCountries.length} of {countries.length} countries
-          </div>
+          <SearchFilterBar
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchPlaceholder="Search countries by name or description..."
+            filters={[
+              {
+                key: 'region',
+                label: 'Region',
+                value: filters.region || 'all',
+                options: searchConfig.filterFields[0].options!,
+                onChange: (value) => setFilter('region', value),
+                icon: Globe
+              },
+              {
+                key: 'supported_languages',
+                label: 'Language',
+                value: filters.supported_languages || 'all',
+                options: searchConfig.filterFields[1].options!,
+                onChange: (value) => setFilter('supported_languages', value),
+                icon: Languages
+              }
+            ]}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            sortOptions={searchConfig.sortFields.map(field => ({
+              value: field.key as string,
+              label: field.label
+            }))}
+            onSortChange={setSortBy}
+            onSortOrderChange={setSortOrder}
+            totalCount={totalCount}
+            filteredCount={filteredCount}
+            onClearFilters={clearFilters}
+          />
         </div>
       </section>
 

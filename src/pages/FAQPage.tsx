@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, ChevronDown, HelpCircle, MessageSquare, Globe, CheckCircle } from 'lucide-react';
+import { ChevronDown, HelpCircle, MessageSquare, Globe, CheckCircle, Tag } from 'lucide-react';
 import { useFAQs, useFAQCategories } from '../hooks/useFAQs';
+import SearchFilterBar from '../components/common/SearchFilterBar';
+import useAdvancedSearch from '../hooks/useAdvancedSearch';
 
 const FAQPage = () => {
   const { faqs, loading, error } = useFAQs({ 
@@ -10,18 +12,46 @@ const FAQPage = () => {
   });
   const { categories } = useFAQCategories();
   
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [openFAQ, setOpenFAQ] = useState<string | null>(null);
 
-  const filteredFAQs = faqs.filter(faq => {
-    const matchesSearch = 
-      faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
+  // Advanced search configuration
+  const searchConfig = {
+    searchFields: ['question', 'answer'] as (keyof any)[],
+    filterFields: [
+      {
+        key: 'category' as keyof any,
+        type: 'select' as const,
+        options: [
+          { value: 'all', label: 'All Categories' },
+          ...categories.map(cat => ({ value: cat, label: cat }))
+        ]
+      }
+    ],
+    sortFields: [
+      { key: 'sort_order' as keyof any, label: 'Sort Order', defaultOrder: 'asc' as const },
+      { key: 'question' as keyof any, label: 'Question', defaultOrder: 'asc' as const },
+      { key: 'updated_at' as keyof any, label: 'Last Updated', defaultOrder: 'desc' as const }
+    ]
+  };
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    filters,
+    setFilter,
+    clearFilters,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
+    filteredData: filteredFAQs,
+    totalCount,
+    filteredCount
+  } = useAdvancedSearch({
+    data: faqs,
+    config: searchConfig,
+    initialSortBy: 'sort_order',
+    initialFilters: { category: 'all' }
   });
 
   const toggleFAQ = (faqId: string) => {
@@ -106,44 +136,35 @@ const FAQPage = () => {
       </section>
 
       {/* Search and Filters */}
-      <section className="py-8 bg-white border-b border-gray-200">
+      <section className="py-8 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search questions or answers..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Category Filter */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="all">All Categories</option>
-                  {categories.map(category => (
-                    <option key={category} value={category}>
-                      {getCategoryIcon(category)} {category}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 text-sm text-gray-600">
-            {filteredFAQs.length} questions showing
-          </div>
+          <SearchFilterBar
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchPlaceholder="Search questions or answers..."
+            filters={[
+              {
+                key: 'category',
+                label: 'Category',
+                value: filters.category || 'all',
+                options: searchConfig.filterFields[0].options!,
+                onChange: (value) => setFilter('category', value),
+                icon: Tag
+              }
+            ]}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            sortOptions={searchConfig.sortFields.map(field => ({
+              value: field.key as string,
+              label: field.label
+            }))}
+            onSortChange={setSortBy}
+            onSortOrderChange={setSortOrder}
+            totalCount={totalCount}
+            filteredCount={filteredCount}
+            onClearFilters={clearFilters}
+            compact={true}
+          />
         </div>
       </section>
 

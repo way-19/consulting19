@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, ArrowRight } from 'lucide-react';
+import { ArrowRight, Settings, DollarSign } from 'lucide-react';
 import ServiceCard from '../components/ServiceCard';
 import { useServices, useServiceCategories } from '../hooks/useServices';
+import SearchFilterBar from '../components/common/SearchFilterBar';
+import useAdvancedSearch from '../hooks/useAdvancedSearch';
 
 const ServicesPage = () => {
   const { services, loading, error } = useServices(true);
   const { categories: serviceCategories } = useServiceCategories();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [priceRange, setPriceRange] = useState('all');
 
   const priceRanges = {
     'all': 'All Prices',
@@ -18,17 +17,56 @@ const ServicesPage = () => {
     'over-2000': 'Over $2,000'
   };
 
-  const filteredServices = services.filter(service => {
-    const matchesSearch = service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         service.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory;
-    
-    let matchesPrice = true;
-    if (priceRange === 'under-1000') matchesPrice = service.price < 1000;
-    else if (priceRange === '1000-2000') matchesPrice = service.price >= 1000 && service.price <= 2000;
-    else if (priceRange === 'over-2000') matchesPrice = service.price > 2000;
-    
-    return matchesSearch && matchesCategory && matchesPrice;
+  // Advanced search configuration
+  const searchConfig = {
+    searchFields: ['title', 'description'] as (keyof any)[],
+    filterFields: [
+      {
+        key: 'category' as keyof any,
+        type: 'select' as const,
+        options: [
+          { value: 'all', label: 'All Categories' },
+          ...serviceCategories.map(cat => ({ value: cat, label: cat }))
+        ]
+      },
+      {
+        key: 'price_range' as keyof any,
+        type: 'select' as const,
+        options: Object.entries(priceRanges).map(([value, label]) => ({ value, label }))
+      }
+    ],
+    sortFields: [
+      { key: 'title' as keyof any, label: 'Service Title', defaultOrder: 'asc' as const },
+      { key: 'price' as keyof any, label: 'Price', defaultOrder: 'asc' as const },
+      { key: 'delivery_time_days' as keyof any, label: 'Delivery Time', defaultOrder: 'asc' as const }
+    ]
+  };
+
+  // Add price range to services for filtering
+  const servicesWithPriceRange = services.map(service => ({
+    ...service,
+    price_range: service.price < 1000 ? 'under-1000' :
+                service.price <= 2000 ? '1000-2000' : 'over-2000'
+  }));
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    filters,
+    setFilter,
+    clearFilters,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
+    filteredData: filteredServices,
+    totalCount,
+    filteredCount
+  } = useAdvancedSearch({
+    data: servicesWithPriceRange,
+    config: searchConfig,
+    initialSortBy: 'title',
+    initialFilters: { category: 'all', price_range: 'all' }
   });
 
   if (loading) {
@@ -79,52 +117,42 @@ const ServicesPage = () => {
       </section>
 
       {/* Filters */}
-      <section className="py-8 bg-white border-b border-gray-200">
+      <section className="py-8 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search services..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Filters */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="all">All Categories</option>
-                  {serviceCategories.map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-              </div>
-
-              <select
-                value={priceRange}
-                onChange={(e) => setPriceRange(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                {Object.entries(priceRanges).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredServices.length} of {services.length} services
-          </div>
+          <SearchFilterBar
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchPlaceholder="Search services by title or description..."
+            filters={[
+              {
+                key: 'category',
+                label: 'Category',
+                value: filters.category || 'all',
+                options: searchConfig.filterFields[0].options!,
+                onChange: (value) => setFilter('category', value),
+                icon: Settings
+              },
+              {
+                key: 'price_range',
+                label: 'Price Range',
+                value: filters.price_range || 'all',
+                options: searchConfig.filterFields[1].options!,
+                onChange: (value) => setFilter('price_range', value),
+                icon: DollarSign
+              }
+            ]}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            sortOptions={searchConfig.sortFields.map(field => ({
+              value: field.key as string,
+              label: field.label
+            }))}
+            onSortChange={setSortBy}
+            onSortOrderChange={setSortOrder}
+            totalCount={totalCount}
+            filteredCount={filteredCount}
+            onClearFilters={clearFilters}
+          />
         </div>
       </section>
 
