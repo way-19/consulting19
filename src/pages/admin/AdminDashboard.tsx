@@ -21,7 +21,8 @@ import {
   Eye,
   Edit,
   Plus,
-  User
+  User,
+  Bell
 } from 'lucide-react';
 
 interface DashboardStats {
