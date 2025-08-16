@@ -61,7 +61,7 @@ export function validateFileUpload(file: File, options: { maxSize: number; allow
 
   // Check file size
   if (file.size > options.maxSize) {
-    errors.push(`File size exceeds limit of ${options.maxSize / (1024 * 1024)}MB.`);
+    errors.push(\`File size exceeds limit of ${options.maxSize / (1024 * 1024)}MB.`);
   }
 
   // Check file type
@@ -78,7 +78,7 @@ export function validateFileUpload(file: File, options: { maxSize: number; allow
   const isExtensionAllowed = options.allowedExtensions.includes(fileExtension.substring(1)); // Remove leading dot
 
   if (!isTypeAllowed && !isExtensionAllowed) {
-    errors.push(`File type or extension is not allowed. Allowed types: ${options.allowedTypes.join(', ')}, Allowed extensions: ${options.allowedExtensions.join(', ')}.`);
+    errors.push(\`File type or extension is not allowed. Allowed types: ${options.allowedTypes.join(', ')}, Allowed extensions: ${options.allowedExtensions.join(', ')}.`);
   }
 
   return {
@@ -89,7 +89,7 @@ export function validateFileUpload(file: File, options: { maxSize: number; allow
 
 // Utility function for uploading files to Supabase Storage
 export async function uploadFileToStorage(file: File, folder: string, bucketName: string = 'public_images'): Promise<string> {
-  const filePath = `${folder}/${Date.now()}-${file.name}`;
+  const filePath = \`${folder}/${Date.now()}-${file.name}`;
   
   try {
     const { data, error } = await supabase.storage
