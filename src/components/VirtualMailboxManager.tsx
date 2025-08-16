@@ -463,6 +463,16 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                     </button>
                   )}
 
+                  {viewMode === 'consultant' && (
+                    <button
+                      onClick={() => handleEditTracking(item)}
+                      className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors flex items-center space-x-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Edit Tracking</span>
+                    </button>
+                  )}
+
                   <button
                     onClick={() => {
                       setSelectedItem(item);
