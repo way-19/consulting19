@@ -105,7 +105,7 @@ const SecurityAudit = () => {
       .from('audit_logs')
       .select(`
         *,
-        user:profiles!user_id (
+        user:user_id (
           full_name,
           email,
           legacy_role
