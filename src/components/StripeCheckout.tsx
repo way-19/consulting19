@@ -27,18 +27,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   currency,
   orderId,
   orderDetails,
-  onSuccess,
-  onError,
-  onCancel
-}) => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
 
     if (!stripe || !elements) {
       return;
@@ -103,6 +91,101 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
   return (
     <div className="max-w-md mx-auto">
+      {/* Shipping Address Form */}
+      {showAddressForm && shippingAddress && onAddressChange && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Teslimat Adresi</h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ad Soyad *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.full_name}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, full_name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="John Doe"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Telefon *</label>
+                <input
+                  type="tel"
+                  required
+                  value={shippingAddress.phone}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, phone: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="+90 555 123 4567"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Adres *</label>
+              <input
+                type="text"
+                required
+                value={shippingAddress.address_line_1}
+                onChange={(e) => onAddressChange({ ...shippingAddress, address_line_1: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Sokak, Cadde, Apartman No"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Şehir *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.city}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, city: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="İstanbul"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">İl *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.state_province}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, state_province: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="İstanbul"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Posta Kodu *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.postal_code}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, postal_code: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="34000"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Ülke *</label>
+              <input
+                type="text"
+                required
+                value={shippingAddress.country}
+                onChange={(e) => onAddressChange({ ...shippingAddress, country: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Turkey"
+              />
+            </div>
+          </div>
+        </div>
+      )}
       {/* Order Summary */}
       <div className="bg-gray-50 rounded-lg p-6 mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
@@ -188,7 +271,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Cancel
-          </button>
+          customer_name: shippingAddress?.full_name || orderDetails.consultantName,
+          shipping_address: shippingAddress
         </div>
       </form>
     </div>

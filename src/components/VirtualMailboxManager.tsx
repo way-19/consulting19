@@ -20,6 +20,9 @@ interface CheckoutFormProps {
   onSuccess: (paymentIntentId: string) => void;
   onError: (error: string) => void;
   onCancel: () => void;
+  shippingAddress?: any;
+  onAddressChange?: (address: any) => void;
+  showAddressForm?: boolean;
 }
 
 const CheckoutForm: React.FC<CheckoutFormProps> = ({
@@ -29,7 +32,10 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   orderDetails,
   onSuccess,
   onError,
-  onCancel
+  onCancel,
+  shippingAddress,
+  onAddressChange,
+  showAddressForm
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -38,6 +44,17 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    // Validate shipping address if required
+    if (showAddressForm && shippingAddress) {
+      const requiredFields = ['full_name', 'address_line_1', 'city', 'state_province', 'postal_code', 'country', 'phone', 'email'];
+      const missingFields = requiredFields.filter(field => !shippingAddress[field]);
+      
+      if (missingFields.length > 0) {
+        setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+    }
 
     if (!stripe || !elements) {
       return;
@@ -70,7 +87,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
       if (paymentIntent && paymentIntent.status === 'succeeded') {
         // Track successful payment
-        // trackBusinessEvent.paymentCompleted(amount, currency, orderDetails.serviceName, paymentIntent.id);
+        trackBusinessEvent.paymentCompleted(amount, currency, orderDetails.serviceName, paymentIntent.id);
         
         onSuccess(paymentIntent.id);
       }
@@ -207,6 +224,9 @@ interface StripeCheckoutProps {
   };
   onSuccess: (paymentIntentId: string) => void;
   onError: (error: string) => void;
+  shippingAddress?: any;
+  onAddressChange?: (address: any) => void;
+  showAddressForm?: boolean;
 }
 
 const StripeCheckout: React.FC<StripeCheckoutProps> = ({
@@ -217,7 +237,10 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   orderId,
   orderDetails,
   onSuccess,
-  onError
+  onError,
+  shippingAddress,
+  onAddressChange,
+  showAddressForm
 }) => {
   // Check if Stripe is available
   if (!stripePromise) {
@@ -269,6 +292,9 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
               onSuccess={onSuccess}
               onError={onError}
               onCancel={onClose}
+              shippingAddress={shippingAddress}
+              onAddressChange={onAddressChange}
+              showAddressForm={showAddressForm}
             />
           </Elements>
         </div>
