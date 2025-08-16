@@ -1,782 +1,393 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase, logUserAction } from '../lib/supabase';
-import { 
-  ArrowLeft,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Globe,
-  Lock,
-  Save,
-  Eye,
-  EyeOff,
-  Camera,
-  CheckCircle,
-  AlertTriangle,
-  RefreshCw,
-  Shield,
-  Key,
-  Edit,
-  Upload,
-  Settings,
-  Bell,
-  MessageSquare
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { CreditCard, Lock, CheckCircle, AlertTriangle, X } from 'lucide-react';
+import { processDirectPayment } from '../lib/stripe';
+// Optional: remove this line if trackBusinessEvent doesn't exist
+import { trackBusinessEvent } from '../utils/analytics';
 
-interface ProfileFormData {
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+  : null;
+
+interface ShippingAddress {
   full_name: string;
-  phone: string;
+  company_name?: string;
+  address_line_1: string;
+  address_line_2?: string;
+  city: string;
+  state_province: string;
+  postal_code: string;
   country: string;
-  language_preference: string;
-  timezone: string;
-  avatar_url: string;
+  phone: string;
+  email: string;
 }
 
-interface PasswordFormData {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
+interface CheckoutFormProps {
+  amount: number;
+  currency: string;
+  orderId: string;
+  orderDetails: {
+    serviceName: string;
+    consultantName: string;
+    deliveryTime: number;
+  };
+  onSuccess: (paymentIntentId: string) => void;
+  onError: (error: string) => void;
+  onCancel: () => void;
+  shippingAddress?: ShippingAddress;
+  onAddressChange?: (address: ShippingAddress) => void;
+  showAddressForm?: boolean;
 }
 
-const MyProfilePage = () => {
-  const { profile, refreshProfile } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences'>('profile');
+const CheckoutForm: React.FC<CheckoutFormProps> = ({
+  amount,
+  currency,
+  orderId,
+  orderDetails,
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!stripe || !elements) return;
 
-  const [profileForm, setProfileForm] = useState<ProfileFormData>({
-    full_name: '',
-    phone: '',
-    country: '',
-    language_preference: 'en',
-    timezone: 'UTC',
-    avatar_url: ''
-  });
+    setProcessing(true);
+    setError(null);
 
-  const [passwordForm, setPasswordForm] = useState<PasswordFormData>({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-
-  const countries = [
-    'Georgia', 'USA', 'Estonia', 'UAE', 'Malta', 'Switzerland', 'Portugal', 
-    'Spain', 'Turkey', 'Germany', 'Other'
-  ];
-
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'tr', name: 'Türkçe' },
-    { code: 'es', name: 'Español (Spanish)' },
-    { code: 'fr', name: 'Français (French)' },
-    { code: 'de', name: 'Deutsch (German)' },
-  ];
-
-  const timezones = [
-    'UTC', 'Europe/London', 'Europe/Berlin', 'Europe/Istanbul', 'Asia/Tbilisi',
-    'America/New_York', 'America/Los_Angeles', 'Asia/Dubai', 'Asia/Shanghai'
-  ];
-
-  useEffect(() => {
-    if (profile) {
-      setProfileForm({
-        full_name: profile.full_name || '',
-        phone: profile.phone || '',
-        country: profile.country || '',
-        language_preference: profile.language_preference || 'en',
-        timezone: profile.timezone || 'UTC',
-        avatar_url: profile.avatar_url || ''
-      });
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      setError('Card element not found');
+      setProcessing(false);
+      return;
     }
-  }, [profile]);
-
-  const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage(null);
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: profileForm.full_name,
-          phone: profileForm.phone,
-          country: profileForm.country,
-          language_preference: profileForm.language_preference,
-          timezone: profileForm.timezone,
-          avatar_url: profileForm.avatar_url,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', profile?.id);
-
-      if (error) throw error;
-
-      await refreshProfile();
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
-      
-      // Log the profile update action
-      await logUserAction(
-        'UPDATE_PROFILE',
-        'profiles',
-        profile?.id,
+      const { paymentIntent } = await processDirectPayment(
+        stripe,
+        cardElement,
+        amount,
+        currency,
         {
-          full_name: profile?.full_name,
-          phone: profile?.phone,
-          country: profile?.country
-        },
-        {
-          full_name: profileForm.full_name,
-          phone: profileForm.phone,
-          country: profileForm.country
+          order_id: orderId,
+          service_name: orderDetails.serviceName,
+          consultant_name: orderDetails.consultantName,
+          customer_name: shippingAddress?.full_name || orderDetails.consultantName,
+          shipping_address: shippingAddress
         }
       );
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
-    } finally {
-      setSaving(false);
-    }
-  };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setChangingPassword(true);
-    setMessage(null);
-
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setMessage({ type: 'error', text: 'New passwords do not match.' });
-      setChangingPassword(false);
-      return;
-    }
-
-    if (passwordForm.newPassword.length < 6) {
-      setMessage({ type: 'error', text: 'Password must be at least 6 characters long.' });
-      setChangingPassword(false);
-      return;
-    }
-
-    try {
-      // First verify current password by attempting to sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: profile?.email || '',
-        password: passwordForm.currentPassword
-      });
-
-      if (signInError) {
-        setMessage({ type: 'error', text: 'Current password is incorrect.' });
-        setChangingPassword(false);
-        return;
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Optional analytics tracking
+        if (typeof trackBusinessEvent?.paymentCompleted === 'function') {
+          trackBusinessEvent.paymentCompleted(amount, currency, orderDetails.serviceName, paymentIntent.id);
+        }
+        onSuccess(paymentIntent.id);
       }
-
-      // Update password
-      const { error } = await supabase.auth.updateUser({
-        password: passwordForm.newPassword
-      });
-
-      if (error) throw error;
-
-      setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-
-      setMessage({ type: 'success', text: 'Password changed successfully!' });
-      
-      // Log the password change action
-      await logUserAction(
-        'CHANGE_PASSWORD',
-        'profiles',
-        profile?.id,
-        null,
-        { password_changed: true }
-      );
-    } catch (error) {
-      console.error('Error changing password:', error);
-      setMessage({ type: 'error', text: 'Failed to change password. Please try again.' });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
+      setError(errorMessage);
+      onError(errorMessage);
     } finally {
-      setChangingPassword(false);
+      setProcessing(false);
     }
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Check file size (5MB limit for avatars)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    
-    if (file.size > maxSize) {
-      setMessage({ type: 'error', text: 'Avatar image must be less than 5MB. Please compress your image.' });
-      return;
-    }
-
-    // Check file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-    if (!allowedTypes.includes(file.type)) {
-      setMessage({ type: 'error', text: 'Please upload a valid image file (JPG, PNG, or GIF).' });
-      return;
-    }
-
-    try {
-      setUploadingAvatar(true);
-      setMessage(null);
-      
-      // In a real implementation, you would upload to Supabase Storage
-      // For demo purposes, we'll simulate the upload
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate upload delay
-      
-      const mockAvatarUrl = `https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150`;
-      
-      setProfileForm(prev => ({ ...prev, avatar_url: mockAvatarUrl }));
-      setMessage({ type: 'success', text: 'Avatar uploaded successfully! Don\'t forget to save your changes.' });
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      setMessage({ type: 'error', text: 'Failed to upload avatar. Please try again.' });
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
+  const cardElementOptions = {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#424770',
+        '::placeholder': { color: '#aab7c4' },
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      },
+      invalid: { color: '#9e2146' },
+    },
+    hidePostalCode: false,
+  } as const;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="mb-4">
-            <Link 
-              to={
-                profile.role === 'admin' ? '/admin-dashboard' :
-                profile.role === 'consultant' ? '/consultant-dashboard' :
-                '/client-dashboard'
-              }
-              className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Link>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-              <p className="text-gray-600 mt-1">Manage your account settings and preferences</p>
+    <div className="max-w-md mx-auto">
+      {/* Shipping Address Form */}
+      {showAddressForm && shippingAddress && onAddressChange && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Address</h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.full_name}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, full_name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="John Doe"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
+                <input
+                  type="tel"
+                  required
+                  value={shippingAddress.phone}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, phone: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="+90 555 123 4567"
+                />
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                profile.role === 'admin' ? 'bg-red-100 text-red-800' :
-                profile.role === 'consultant' ? 'bg-green-100 text-green-800' :
-                'bg-blue-100 text-blue-800'
-              }`}>
-                {profile.role.toUpperCase()}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+              <input
+                type="email"
+                required
+                value={shippingAddress.email}
+                onChange={(e) => onAddressChange({ ...shippingAddress, email: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="email@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 1 *</label>
+              <input
+                type="text"
+                required
+                value={shippingAddress.address_line_1}
+                onChange={(e) => onAddressChange({ ...shippingAddress, address_line_1: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Street, Avenue, Building No"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 2 (Optional)</label>
+              <input
+                type="text"
+                value={shippingAddress.address_line_2 || ''}
+                onChange={(e) => onAddressChange({ ...shippingAddress, address_line_2: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Floor, Apartment No"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.city}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, city: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Istanbul"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">State/Province *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.state_province}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, state_province: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Istanbul"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingAddress.postal_code}
+                  onChange={(e) => onAddressChange({ ...shippingAddress, postal_code: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="34000"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
+              <input
+                type="text"
+                required
+                value={shippingAddress.country}
+                onChange={(e) => onAddressChange({ ...shippingAddress, country: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Turkey"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Summary */}
+      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Service:</span>
+            <span className="font-medium text-gray-900">{orderDetails.serviceName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Consultant:</span>
+            <span className="font-medium text-gray-900">{orderDetails.consultantName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Delivery Time:</span>
+            <span className="font-medium text-gray-900">{orderDetails.deliveryTime} days</span>
+          </div>
+          <div className="border-t border-gray-200 pt-3">
+            <div className="flex justify-between">
+              <span className="text-lg font-semibold text-gray-900">Total:</span>
+              <span className="text-lg font-bold text-green-600">
+                ${amount.toLocaleString()} {currency}
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Message Display */}
-        {message && (
-          <div className={`mb-6 p-4 rounded-lg border flex items-center space-x-2 ${
-            message.type === 'success' 
-              ? 'bg-green-50 border-green-200 text-green-800' 
-              : 'bg-red-50 border-red-200 text-red-800'
-          }`}>
-            {message.type === 'success' ? (
-              <CheckCircle className="h-5 w-5 flex-shrink-0" />
-            ) : (
-              <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-            )}
-            <span>{message.text}</span>
+      {/* Payment Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Card Information</label>
+          <div className="border border-gray-300 rounded-lg p-4 bg-white">
+            <CardElement options={cardElementOptions} />
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0" />
+            <span className="text-sm text-red-700">{error}</span>
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              {[
-                { key: 'profile', label: 'Profile Information', icon: User },
-                { key: 'password', label: 'Change Password', icon: Lock },
-                { key: 'preferences', label: 'Preferences', icon: Settings }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as any)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                    activeTab === tab.key
-                      ? 'border-purple-500 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <tab.icon className="h-4 w-4" />
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </nav>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <Lock className="h-4 w-4" />
+            <span className="text-sm font-medium text-blue-900">Güvenli Ödeme</span>
           </div>
+          <p className="text-xs">
+            Ödeme bilgileriniz şifrelenir ve güvenlidir. Ödeme işlemi için Stripe kullanıyoruz.
+          </p>
+        </div>
 
-          <div className="p-6">
-            {activeTab === 'profile' && (
-              <form onSubmit={handleProfileSubmit} className="space-y-6">
-                {/* Avatar Section */}
-                <div className="flex items-center space-x-6">
-                  <div className="relative">
-                    <div className="w-32 h-32 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg border-4 border-white">
-                      {profileForm.avatar_url ? (
-                        <img 
-                          src={profileForm.avatar_url} 
-                          alt="Avatar" 
-                          className="w-32 h-32 rounded-full object-cover"
-                        />
-                      ) : (
-                        (profileForm.full_name || profile.email)[0].toUpperCase()
-                      )}
-                    </div>
-                    <label className="absolute bottom-0 right-0 bg-white rounded-full p-3 shadow-lg border-2 border-gray-200 cursor-pointer hover:bg-gray-50 transition-all duration-200 transform hover:scale-110">
-                      {uploadingAvatar ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
-                      ) : (
-                        <Camera className="h-5 w-5 text-gray-600" />
-                      )}
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/jpg,image/png,image/gif"
-                        onChange={handleAvatarUpload}
-                        className="hidden"
-                        disabled={uploadingAvatar}
-                      />
-                    </label>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900">Profile Picture</h3>
-                    <p className="text-sm text-gray-600 mb-2">Upload a new avatar image</p>
-                    <div className="text-xs text-gray-500 space-y-1">
-                      <p>• Maximum size: 5MB</p>
-                      <p>• Supported formats: JPG, PNG, GIF</p>
-                      <p>• Recommended: Square images work best</p>
-                    </div>
-                  </div>
-                </div>
+        <button
+          type="submit"
+          disabled={!stripe || processing}
+          className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+        >
+          {processing ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <CreditCard className="h-5 w-5" />
+              <span>Pay Now</span>
+            </>
+          )}
+        </button>
 
-                {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        type="text"
-                        value={profileForm.full_name}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, full_name: e.target.value }))}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Enter your full name"
-                      />
-                    </div>
-                  </div>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="w-full mt-3 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+      </form>
+    </div>
+  );
+};
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        type="email"
-                        value={profile.email}
-                        disabled
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
-                  </div>
+interface StripeCheckoutProps {
+  isOpen: boolean;
+  onClose: () => void;
+  amount: number;
+  currency: string;
+  orderId: string;
+  orderDetails: {
+    serviceName: string;
+    consultantName: string;
+    deliveryTime: number;
+  };
+  onSuccess: (paymentIntentId: string) => void;
+  onError: (error: string) => void;
+  shippingAddress?: ShippingAddress;
+  onAddressChange?: (address: ShippingAddress) => void;
+  showAddressForm?: boolean;
+}
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        type="tel"
-                        value={profileForm.phone}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="+1 (555) 123-4567"
-                      />
-                    </div>
-                  </div>
+const StripeCheckout: React.FC<StripeCheckoutProps> = ({
+  isOpen,
+  onClose,
+  amount,
+  currency,
+  orderId,
+  orderDetails,
+  onSuccess,
+  onError,
+  shippingAddress,
+  onAddressChange,
+  showAddressForm
+}) => {
+  if (!isOpen) return null;
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Country
-                    </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <select
-                        value={profileForm.country}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, country: e.target.value }))}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
-                      >
-                        <option value="">Select your country</option>
-                        {countries.map(country => (
-                          <option key={country} value={country}>{country}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Role Information (Read-only) */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
-                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-                    <Shield className="h-5 w-5 text-purple-600" />
-                    <span>Account Information</span>
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-                    <div>
-                      <div className="bg-white rounded-lg p-3 shadow-sm">
-                        <span className="text-gray-600 block mb-1">Account Role:</span>
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            profile.role === 'admin' ? 'bg-red-100 text-red-800' :
-                            profile.role === 'consultant' ? 'bg-green-100 text-green-800' :
-                            'bg-blue-100 text-blue-800'
-                          }`}>
-                            {profile.role.toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="bg-white rounded-lg p-3 shadow-sm">
-                        <span className="text-gray-600 block mb-1">Member Since:</span>
-                        <p className="font-medium text-gray-900">
-                          {new Date(profile.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="bg-white rounded-lg p-3 shadow-sm">
-                        <span className="text-gray-600 block mb-1">Last Updated:</span>
-                        <p className="font-medium text-gray-900">
-                          {new Date(profile.updated_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Save Button */}
-                <div className="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {saving ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-5 w-5" />
-                        <span>Save Changes</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {activeTab === 'password' && (
-              <form onSubmit={handlePasswordSubmit} className="space-y-6">
-                <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Shield className="h-5 w-5 text-yellow-600" />
-                    <h4 className="font-medium text-yellow-900">Password Security Guidelines</h4>
-                  </div>
-                  <div className="text-sm text-yellow-800 space-y-1">
-                    <p>• Minimum 6 characters (8+ recommended)</p>
-                    <p>• Include uppercase and lowercase letters</p>
-                    <p>• Add numbers and special characters</p>
-                    <p>• Avoid common words or personal information</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Current Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        type={showCurrentPassword ? 'text' : 'password'}
-                        required
-                        value={passwordForm.currentPassword}
-                        onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                        className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Enter your current password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      New Password
-                    </label>
-                    <div className="relative">
-                      <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        type={showNewPassword ? 'text' : 'password'}
-                        required
-                        value={passwordForm.newPassword}
-                        onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                        className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Enter your new password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Confirm New Password
-                    </label>
-                    <div className="relative">
-                      <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        required
-                        value={passwordForm.confirmPassword}
-                        onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                        className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Confirm your new password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Password Strength Indicator */}
-                {passwordForm.newPassword && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Password Strength</h4>
-                    <div className="space-y-2">
-                      <div className={`flex items-center space-x-2 ${
-                        passwordForm.newPassword.length >= 6 ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        <CheckCircle className="h-4 w-4" />
-                        <span className="text-sm">At least 6 characters</span>
-                      </div>
-                      <div className={`flex items-center space-x-2 ${
-                        /[A-Z]/.test(passwordForm.newPassword) ? 'text-green-600' : 'text-gray-400'
-                      }`}>
-                        <CheckCircle className="h-4 w-4" />
-                        <span className="text-sm">Contains uppercase letter</span>
-                      </div>
-                      <div className={`flex items-center space-x-2 ${
-                        /[0-9]/.test(passwordForm.newPassword) ? 'text-green-600' : 'text-gray-400'
-                      }`}>
-                        <CheckCircle className="h-4 w-4" />
-                        <span className="text-sm">Contains number</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Save Button */}
-                <div className="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
-                  <button
-                    type="submit"
-                    disabled={changingPassword}
-                    className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {changingPassword ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        <span>Changing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="h-5 w-5" />
-                        <span>Change Password</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {activeTab === 'preferences' && (
-              <form onSubmit={handleProfileSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Preferred Language
-                    </label>
-                    <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <select
-                        value={profileForm.language_preference}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, language_preference: e.target.value }))}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
-                      >
-                        {languages.map(lang => (
-                          <option key={lang.code} value={lang.code}>{lang.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Timezone
-                    </label>
-                    <select
-                      value={profileForm.timezone}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, timezone: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      {timezones.map(tz => (
-                        <option key={tz} value={tz}>{tz}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Notification Preferences */}
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-6 flex items-center space-x-2">
-                    <Bell className="h-5 w-5 text-purple-600" />
-                    <span>Notification Preferences</span>
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-                      <div className="flex items-center space-x-3">
-                        <Mail className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="font-medium text-gray-900">Email Notifications</p>
-                          <p className="text-sm text-gray-600">Receive important updates via email</p>
-                        </div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        id="email_notifications"
-                        defaultChecked
-                        className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-                      <div className="flex items-center space-x-3">
-                        <Bell className="h-5 w-5 text-green-600" />
-                        <div>
-                          <p className="font-medium text-gray-900">Task Reminders</p>
-                          <p className="text-sm text-gray-600">Get notified about deadlines and tasks</p>
-                        </div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        id="task_reminders"
-                        defaultChecked
-                        className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-                      <div className="flex items-center space-x-3">
-                        <MessageSquare className="h-5 w-5 text-purple-600" />
-                        <div>
-                          <p className="font-medium text-gray-900">Marketing Communications</p>
-                          <p className="text-sm text-gray-600">Receive promotional emails and updates</p>
-                        </div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        id="marketing_emails"
-                        className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Save Button */}
-                <div className="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {saving ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-5 w-5" />
-                        <span>Save Preferences</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
+  if (!stripePromise) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <div className="text-center">
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Payment System Ready</h2>
+            <p className="text-sm text-gray-600 mb-3">Ödeme yöntemini seçin:</p>
+            <button
+              onClick={onClose}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+            >
+              Continue
+            </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+                  <span>Ödeme İşleniyor...</span>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+                  <span>Ödemeyi Tamamla</span>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <X className="h-5 w-5 text-gray-500" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <Elements stripe={stripePromise}>
+            <CheckoutForm
+              amount={amount}
+              currency={currency}
+              orderId={orderId}
+              orderDetails={orderDetails}
+              onSuccess={onSuccess}
+              onError={onError}
+              onCancel={onClose}
+              shippingAddress={shippingAddress}
+              onAddressChange={onAddressChange}
+              showAddressForm={showAddressForm}
+            />
+          </Elements>
         </div>
       </div>
     </div>
   );
 };
 
-export default MyProfilePage;
+export default StripeCheckout;
