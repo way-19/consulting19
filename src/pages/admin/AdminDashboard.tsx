@@ -458,7 +458,15 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             {/* System Health */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">System Health</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">System Health</h3>
+                <Link
+                  to="/admin/health"
+                  className="text-purple-600 hover:text-purple-700 font-medium text-sm"
+                >
+                  View Details →
+                </Link>
+              </div>
               
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -522,25 +530,18 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Real-time Health Button */}
+              {/* Quick Health Summary */}
               <div className="mt-4 pt-4 border-t border-gray-200">
-                <button
-                  onClick={fetchSystemHealth}
-                  disabled={systemHealthStatus.status === 'checking'}
-                  className="w-full bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
-                >
-                  {systemHealthStatus.status === 'checking' ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                      <span>Checking...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Activity className="h-4 w-4" />
-                      <span>Run Health Check</span>
-                    </>
-                  )}
-                </button>
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-2">Overall Status</p>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    systemHealthStatus.status === 'healthy' ? 'bg-green-100 text-green-800' :
+                    systemHealthStatus.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {systemHealthStatus.status === 'checking' ? 'Checking...' : systemHealthStatus.status}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -574,7 +575,7 @@ const AdminDashboard = () => {
 
             {/* Quick Links */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Links</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Admin Quick Links</h3>
               
               <div className="space-y-3">
                 <Link
@@ -583,6 +584,13 @@ const AdminDashboard = () => {
                 >
                   <Users className="h-4 w-4" />
                   <span className="text-sm">Manage Users</span>
+                </Link>
+                <Link
+                  to="/admin/health"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  <Activity className="h-4 w-4" />
+                  <span className="text-sm">System Health</span>
                 </Link>
                 <Link
                   to="/admin/countries"
@@ -618,6 +626,13 @@ const AdminDashboard = () => {
                 >
                   <Shield className="h-4 w-4" />
                   <span className="text-sm">Security Audit</span>
+                </Link>
+                <Link
+                  to="/notifications"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  <Bell className="h-4 w-4" />
+                  <span className="text-sm">Notification Center</span>
                 </Link>
                 <Link
                   to="/my-profile"

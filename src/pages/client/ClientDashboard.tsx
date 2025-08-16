@@ -438,6 +438,16 @@ const ClientDashboard = () => {
                   <span>Additional Services</span>
                 </Link>
               </div>
+              
+              <div className="space-y-2">
+                <Link
+                  to="/notifications"
+                  className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Bell className="h-4 w-4" />
+                  <span>Notification Center</span>
+                </Link>
+              </div>
             </div>
 
             {/* Recent Activity */}

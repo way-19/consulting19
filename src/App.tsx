@@ -25,6 +25,7 @@ import FAQPage from './pages/FAQPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentCancelledPage from './pages/PaymentCancelledPage';
 import PartnershipProgramPage from './pages/PartnershipProgramPage';
+import NotificationCenter from './pages/NotificationCenter';
 
 // Protected Pages - Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -107,6 +108,16 @@ export default function App() {
           <Route path="/partnership-program" element={<PartnershipProgramPage />} />
           <Route path="/payment-success" element={<PaymentSuccessPage />} />
           <Route path="/payment-cancelled" element={<PaymentCancelledPage />} />
+          
+          {/* Notification Center - Available to all authenticated users */}
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "consultant", "client"]}>
+                <NotificationCenter />
+              </ProtectedRoute>
+            }
+          />
           
           {/* Auth Routes */}
           <Route path="/login" element={<LoginPage />} />

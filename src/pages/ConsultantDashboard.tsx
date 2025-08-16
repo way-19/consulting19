@@ -375,6 +375,24 @@ const ConsultantDashboard = () => {
                   </Link>
                 </div>
               </div>
+              
+              <div className="mb-4">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Notifications</h4>
+                <div className="space-y-1">
+                  <Link 
+                    to="/notifications"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Bell className="h-4 w-4" />
+                    <span>Notification Center</span>
+                    {unreadCount > 0 && (
+                      <span className="bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                </div>
+              </div>
 
             </nav>
 

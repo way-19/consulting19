@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, CheckCircle, AlertTriangle, MessageSquare, FileText, Calendar, Eye, Upload } from 'lucide-react';
+import { Bell, X, CheckCircle, AlertTriangle, MessageSquare, FileText, Calendar, Eye, Upload, Settings, Archive } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from '../contexts/LanguageContext';
+import { formatNotificationContent } from './notifications/NotificationTemplates';
 
 interface Notification {
   id: string;
@@ -17,6 +18,9 @@ interface Notification {
   action_url?: string;
   expires_at?: string;
   created_at: string;
+  data?: any;
+  read_at?: string;
+  dismissed_at?: string;
 }
 
 interface NotificationDropdownProps {
@@ -30,6 +34,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showQuickActions, setShowQuickActions] = useState(false);
 
   useEffect(() => {
     if (isOpen && profile?.id) {
@@ -45,6 +50,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
         .from('notifications')
         .select('*')
         .eq('user_id', profile?.id)
+        .is('dismissed_at', null)
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -63,7 +69,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ 
+          is_read: true,
+          read_at: new Date().toISOString()
+        })
         .eq('id', notificationId);
 
       if (error) throw error;
@@ -81,7 +90,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ 
+          is_read: true,
+          read_at: new Date().toISOString()
+        })
         .eq('user_id', profile?.id)
         .eq('is_read', false);
 
@@ -91,6 +103,27 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
       setUnreadCount(0);
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const dismissNotification = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ 
+          dismissed_at: new Date().toISOString()
+        })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+      
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      setUnreadCount(prev => {
+        const notification = notifications.find(n => n.id === notificationId);
+        return notification && !notification.is_read ? Math.max(0, prev - 1) : prev;
+      });
+    } catch (error) {
+      console.error('Error dismissing notification:', error);
     }
   };
 
@@ -145,6 +178,16 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
     return date.toLocaleDateString('tr-TR');
   };
 
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
+    
+    if (notification.action_url) {
+      window.location.href = notification.action_url;
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -157,8 +200,22 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">{t('notifications.title')}</h3>
             <div className="flex items-center space-x-2">
+              <h3 className="text-lg font-semibold text-gray-900">{t('notifications.title')}</h3>
+              {unreadCount > 0 && (
+                <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowQuickActions(!showQuickActions)}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Quick Actions"
+              >
+                <Settings className="h-4 w-4 text-gray-500" />
+              </button>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
@@ -182,6 +239,49 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
           )}
         </div>
 
+        {/* Quick Actions */}
+        {showQuickActions && (
+          <div className="p-3 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={markAllAsRead}
+                className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors flex items-center space-x-1"
+              >
+                <CheckCircle className="h-3 w-3" />
+                <span>Mark All Read</span>
+              </button>
+              <button
+                onClick={() => {
+                  // Navigate to notification center
+                  window.location.href = '/notifications';
+                }}
+                className="bg-purple-50 text-purple-600 px-3 py-1 rounded-lg text-xs font-medium hover:bg-purple-100 transition-colors flex items-center space-x-1"
+              >
+                <Eye className="h-3 w-3" />
+                <span>View All</span>
+              </button>
+              <button
+                onClick={() => {
+                  // Clean up old notifications
+                  const oldNotifications = notifications.filter(n => {
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    return n.is_read && new Date(n.created_at) < weekAgo;
+                  });
+                  
+                  if (oldNotifications.length > 0) {
+                    Promise.all(oldNotifications.map(n => dismissNotification(n.id)));
+                  }
+                }}
+                className="bg-gray-50 text-gray-600 px-3 py-1 rounded-lg text-xs font-medium hover:bg-gray-100 transition-colors flex items-center space-x-1"
+              >
+                <Archive className="h-3 w-3" />
+                <span>Clean Up</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Notifications List */}
         <div className="max-h-80 overflow-y-auto">
           {loading ? (
@@ -201,31 +301,55 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
                   className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer border-l-4 ${
                     !notification.is_read ? getPriorityColor(notification.priority) : 'border-l-gray-200 bg-white'
                   }`}
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => handleNotificationClick(notification)}
                 >
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 mt-1">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className={`text-sm font-medium ${
-                          !notification.is_read ? 'text-gray-900' : 'text-gray-700'
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-3 flex-1">
+                      <div className="flex-shrink-0 mt-1">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h4 className={`text-sm font-medium ${
+                            !notification.is_read ? 'text-gray-900' : 'text-gray-700'
+                          }`}>
+                            {notification.title}
+                          </h4>
+                          {!notification.is_read && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                          )}
+                        </div>
+                        <p className={`text-sm mt-1 ${
+                          !notification.is_read ? 'text-gray-700' : 'text-gray-600'
                         }`}>
-                          {notification.title}
-                        </h4>
-                        {!notification.is_read && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          {formatTimeAgo(notification.created_at)}
+                        </p>
+                        {notification.read_at && (
+                          <p className="text-xs text-green-600 mt-1">
+                            Read: {formatTimeAgo(notification.read_at)}
+                          </p>
                         )}
                       </div>
-                      <p className={`text-sm mt-1 ${
-                        !notification.is_read ? 'text-gray-700' : 'text-gray-600'
-                      }`}>
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {formatTimeAgo(notification.created_at)}
-                      </p>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      {notification.action_url && (
+                        <div className="bg-purple-100 rounded-full p-1">
+                          <Eye className="h-3 w-3 text-purple-600" />
+                        </div>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          dismissNotification(notification.id);
+                        }}
+                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                        title="Dismiss notification"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -237,9 +361,19 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
         {/* Footer */}
         {notifications.length > 0 && (
           <div className="p-3 border-t border-gray-200 bg-gray-50">
-            <button className="w-full text-center text-sm text-purple-600 hover:text-purple-700 font-medium">
-              {t('notifications.viewAll')}
-            </button>
+            <div className="flex items-center justify-between">
+              <button 
+                onClick={() => window.location.href = '/notifications'}
+                className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+              >
+                {t('notifications.viewAll')}
+              </button>
+              <div className="flex items-center space-x-2 text-xs text-gray-500">
+                <span>{notifications.length} total</span>
+                <span>•</span>
+                <span>{unreadCount} unread</span>
+              </div>
+            </div>
           </div>
         )}
       </div>

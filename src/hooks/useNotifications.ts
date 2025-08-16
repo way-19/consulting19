@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { getNotificationTemplate, formatNotificationContent, getNotificationPriorityScore } from '../components/notifications/NotificationTemplates';
 
 interface Notification {
   id: string;
@@ -15,6 +16,21 @@ interface Notification {
   action_url?: string;
   expires_at?: string;
   created_at: string;
+  data?: any;
+  read_at?: string;
+  dismissed_at?: string;
+}
+
+interface NotificationPreferences {
+  email_enabled: boolean;
+  push_enabled: boolean;
+  frequency: 'all' | 'important' | 'minimal';
+  quiet_hours: {
+    enabled: boolean;
+    start: number;
+    end: number;
+  };
+  disabled_types: string[];
 }
 
 export const useNotifications = () => {
@@ -23,6 +39,13 @@ export const useNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [preferences, setPreferences] = useState<NotificationPreferences>({
+    email_enabled: true,
+    push_enabled: true,
+    frequency: 'all',
+    quiet_hours: { enabled: false, start: 22, end: 8 },
+    disabled_types: []
+  });
 
   useEffect(() => {
     if (profile?.id) {
@@ -45,11 +68,37 @@ export const useNotifications = () => {
         )
         .subscribe();
 
+      // Fetch user preferences
+      fetchNotificationPreferences();
+
       return () => {
         subscription.unsubscribe();
       };
     }
   }, [profile]);
+
+  const fetchNotificationPreferences = async () => {
+    if (!profile?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_notification_preferences')
+        .select('*')
+        .eq('user_id', profile.id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') { // Ignore "not found" errors
+        console.error('Error fetching notification preferences:', error);
+        return;
+      }
+
+      if (data) {
+        setPreferences(data.preferences || preferences);
+      }
+    } catch (error) {
+      console.error('Error fetching notification preferences:', error);
+    }
+  };
 
   const fetchNotifications = async () => {
     if (!profile?.id) return;
@@ -67,7 +116,14 @@ export const useNotifications = () => {
 
       if (error) throw error;
 
-      setNotifications(data || []);
+      // Sort notifications by priority and date
+      const sortedNotifications = (data || []).sort((a, b) => {
+        const priorityDiff = getNotificationPriorityScore(b.priority) - getNotificationPriorityScore(a.priority);
+        if (priorityDiff !== 0) return priorityDiff;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+
+      setNotifications(sortedNotifications);
       setUnreadCount(data?.filter(n => !n.is_read).length || 0);
     } catch (err) {
       console.error('Error fetching notifications:', err);
@@ -81,7 +137,10 @@ export const useNotifications = () => {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ 
+          is_read: true,
+          read_at: new Date().toISOString()
+        })
         .eq('id', notificationId);
 
       if (error) throw error;
@@ -99,7 +158,10 @@ export const useNotifications = () => {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ 
+          is_read: true,
+          read_at: new Date().toISOString()
+        })
         .eq('user_id', profile?.id)
         .eq('is_read', false);
 
@@ -109,6 +171,63 @@ export const useNotifications = () => {
       setUnreadCount(0);
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const dismissNotification = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ 
+          dismissed_at: new Date().toISOString()
+        })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    } catch (error) {
+      console.error('Error dismissing notification:', error);
+    }
+  };
+
+  const bulkMarkAsRead = async (notificationIds: string[]) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ 
+          is_read: true,
+          read_at: new Date().toISOString()
+        })
+        .in('id', notificationIds);
+
+      if (error) throw error;
+
+      setNotifications(prev => 
+        prev.map(n => notificationIds.includes(n.id) ? { ...n, is_read: true } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - notificationIds.length));
+    } catch (error) {
+      console.error('Error bulk marking notifications as read:', error);
+    }
+  };
+
+  const updateNotificationPreferences = async (newPreferences: Partial<NotificationPreferences>) => {
+    try {
+      const updatedPreferences = { ...preferences, ...newPreferences };
+      
+      const { error } = await supabase
+        .from('user_notification_preferences')
+        .upsert({
+          user_id: profile?.id,
+          preferences: updatedPreferences
+        });
+
+      if (error) throw error;
+      setPreferences(updatedPreferences);
+    } catch (error) {
+      console.error('Error updating notification preferences:', error);
+      throw error;
     }
   };
 
@@ -134,7 +253,8 @@ export const useNotifications = () => {
           related_table: relatedTable,
           related_id: relatedId,
           action_url: actionUrl,
-          is_read: false
+          is_read: false,
+          data: null
         }]);
 
       if (error) throw error;
@@ -143,14 +263,113 @@ export const useNotifications = () => {
     }
   };
 
+  const createEnhancedNotification = async (
+    userId: string,
+    type: string,
+    data: any,
+    sendEmail: boolean = false
+  ) => {
+    try {
+      const template = getNotificationTemplate(type);
+      if (!template) {
+        console.error('Unknown notification type:', type);
+        return;
+      }
+
+      const content = formatNotificationContent(type, data);
+      if (!content) return;
+
+      // Create notification in database
+      const { error } = await supabase
+        .from('notifications')
+        .insert([{
+          user_id: userId,
+          type,
+          title: content.title,
+          message: content.message,
+          priority: content.priority,
+          action_url: content.actionUrl,
+          data,
+          is_read: false
+        }]);
+
+      if (error) throw error;
+
+      // Send email if enabled and template exists
+      if (sendEmail && template.emailTemplate && preferences.email_enabled) {
+        await sendEmailNotification(userId, type, data);
+      }
+    } catch (error) {
+      console.error('Error creating enhanced notification:', error);
+    }
+  };
+
+  const sendEmailNotification = async (userId: string, type: string, data: any) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email-notification`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          notification_type: type,
+          data
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email notification');
+      }
+    } catch (error) {
+      console.error('Error sending email notification:', error);
+    }
+  };
+
+  const getNotificationsByType = (type: string) => {
+    return notifications.filter(n => n.type === type);
+  };
+
+  const getUnreadNotificationsByPriority = (priority: string) => {
+    return notifications.filter(n => !n.is_read && n.priority === priority);
+  };
+
+  const cleanupOldNotifications = async (daysOld: number = 30) => {
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', profile?.id)
+        .eq('is_read', true)
+        .lt('created_at', cutoffDate.toISOString());
+
+      if (error) throw error;
+      await fetchNotifications();
+    } catch (error) {
+      console.error('Error cleaning up old notifications:', error);
+    }
+  };
+
   return {
     notifications,
     unreadCount,
     loading,
     error,
+    preferences,
     markAsRead,
     markAllAsRead,
+    dismissNotification,
+    bulkMarkAsRead,
     createNotification,
+    createEnhancedNotification,
+    updateNotificationPreferences,
+    getNotificationsByType,
+    getUnreadNotificationsByPriority,
+    cleanupOldNotifications,
     refreshNotifications: fetchNotifications
   };
 };

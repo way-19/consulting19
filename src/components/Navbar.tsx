@@ -462,13 +462,16 @@ const Navbar = () => {
                 <div className="relative">
                   <button
                     onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                    className="relative p-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-all duration-200 transform hover:scale-110"
+                    className="relative p-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-all duration-200 transform hover:scale-110 group"
                   >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-pulse shadow-lg">
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-pulse shadow-lg group-hover:scale-110 transition-transform">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
+                    )}
+                    {unreadCount === 0 && (
+                      <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"></span>
                     )}
                   </button>
                   
