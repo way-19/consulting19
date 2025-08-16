@@ -39,6 +39,19 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    // Handle zero-amount payments (free shipping)
+    if (amount === 0) {
+      setProcessing(true);
+      
+      // Simulate processing delay for better UX
+      setTimeout(() => {
+        setProcessing(false);
+        onSuccess('zero_amount_payment');
+      }, 1000);
+      
+      return;
+    }
+
     if (!stripe || !elements) {
       return;
     }
