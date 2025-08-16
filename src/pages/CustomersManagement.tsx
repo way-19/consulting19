@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import VirtualMailboxManager from '../components/VirtualMailboxManager';
 import { useServiceRequests } from '../hooks/useServiceRequests';
 import MultilingualChat from '../components/MultilingualChat';
 import VirtualMailboxManager from '../components/VirtualMailboxManager';
@@ -27,7 +28,8 @@ import {
   FileText,
   Settings,
   RefreshCw,
-  Download,
+  DollarSign,
+  Package
   Upload,
   MoreVertical,
   UserPlus,
@@ -87,6 +89,8 @@ const CustomersManagement = () => {
   const [selectedClient, setSelectedClient] = useState<AssignedClient | null>(null);
   const [showClientModal, setShowClientModal] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showVirtualMailbox, setShowVirtualMailbox] = useState(false);
+  const [selectedClientForMailbox, setSelectedClientForMailbox] = useState<AssignedClient | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'requests'>('overview');
   
   // Service requests hook
@@ -760,6 +764,17 @@ const CustomersManagement = () => {
                           className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Previous
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setSelectedClientForMailbox(client);
+                            setShowVirtualMailbox(true);
+                          }}
+                          className="bg-purple-50 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-100 transition-colors flex items-center space-x-2"
+                        >
+                          <Package className="h-4 w-4" />
+                          <span>Virtual Mailbox</span>
                         </button>
                         
                         <div className="flex items-center space-x-1">
