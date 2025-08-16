@@ -665,27 +665,33 @@ const ConsultantDashboard = () => {
                       </div>
                     </div>
                     <button 
+                      onClick={fetchAssignedClients}
+                      className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      Refresh Data
+                    </button>
+                  </div>
+
+                  {/* Contact Admin Button */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <button 
                       onClick={() => {
-                        if (adminUsers.length === 1) {
+                        // Use first admin as default target
+                        if (adminUsers.length > 0) {
                           setSelectedAdminId(adminUsers[0].id);
-                          setChatType('admin-consultant');
-                          setIsChatOpen(true);
-                        } else if (adminUsers.length > 1) {
-                          // Show admin selection - for now, use first admin
-                          setSelectedAdminId(adminUsers[0].id);
-                          setChatType('admin-consultant');
-                          setIsChatOpen(true);
                         }
+                        setChatType('admin-consultant');
+                        setIsChatOpen(true);
                       }}
                       disabled={adminUsers.length === 0}
-                      className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                      className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                      <Crown className="h-4 w-4" />
+                      <Crown className="h-5 w-5" />
                       <span>Contact Admin</span>
-                      {adminUsers.length === 0 && (
-                        <span className="text-xs text-gray-400">(No admins available)</span>
-                      )}
                     </button>
+                    {adminUsers.length === 0 && (
+                      <p className="text-xs text-gray-500 mt-2 text-center">No admin users available</p>
+                    )}
                   </div>
 
                   {/* Performance Summary */}
