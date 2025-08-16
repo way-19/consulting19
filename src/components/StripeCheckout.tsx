@@ -39,18 +39,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    // Handle zero-amount payments (free shipping)
-    if (amount === 0) {
-      setProcessing(true);
-      
-      // Simulate processing delay for better UX
-      setTimeout(() => {
-        setProcessing(false);
-        onSuccess('zero_amount_payment');
-      }, 1000);
-      
-      return;
-    }
 
     if (!stripe || !elements) {
       return;
@@ -163,16 +151,16 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center space-x-2 mb-2">
             <Lock className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-900">Secure Payment</span>
+            <span className="text-sm font-medium text-blue-900">Güvenli Ödeme</span>
           </div>
           <p className="text-xs text-blue-800">
-            Your payment information is encrypted and secure. We use Stripe for payment processing.
+            Ödeme bilgileriniz şifrelenir ve güvenlidir. Ödeme işlemi için Stripe kullanıyoruz.
           </p>
         </div>
 
         <div className="mb-4">
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-3">Choose payment method:</p>
+            <p className="text-sm text-gray-600 mb-3">Ödeme yöntemini seçin:</p>
             <button
               type="submit"
               disabled={!stripe || processing}
@@ -181,12 +169,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
               {processing ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Processing Payment...</span>
+                  <span>Ödeme İşleniyor...</span>
                 </>
               ) : (
                 <>
                   <CreditCard className="h-5 w-5" />
-                  <span>Complete Payment</span>
+                  <span>Ödemeyi Tamamla</span>
                 </>
               )}
             </button>
