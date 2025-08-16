@@ -323,9 +323,9 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+            className="w-full bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-400 transition-colors"
           >
-            Cancel
+            İptal
           </button>
         </div>
       </form>
@@ -333,95 +333,22 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   );
 };
 
-interface StripeCheckoutProps {
-  isOpen: boolean;
-  onClose: () => void;
-  amount: number;
-  currency: string;
-  orderId: string;
-  orderDetails: {
-    serviceName: string;
-    consultantName: string;
-    deliveryTime: number;
-  };
-  onSuccess: (paymentIntentId: string) => void;
-  onError: (error: string) => void;
-  shippingAddress?: ShippingAddress;
-  onAddressChange?: (address: ShippingAddress) => void;
-  showAddressForm?: boolean;
-}
-
-const StripeCheckout: React.FC<StripeCheckoutProps> = ({
-  isOpen,
-  onClose,
-  amount,
-  currency,
-  orderId,
-  orderDetails,
-  onSuccess,
-  onError,
-  shippingAddress,
-  onAddressChange,
-  showAddressForm
-}) => {
-  // Check if Stripe is available
+const StripeCheckout: React.FC<CheckoutFormProps> = (props) => {
   if (!stripePromise) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-          <div className="text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Payment System Ready</h2>
-            <p className="text-gray-600 mb-4">
-              Using Stripe test environment with your custom integration.
-            </p>
-            <button
-              onClick={onClose}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-            >
-              Continue
-            </button>
-          </div>
+      <div className="max-w-md mx-auto p-6 bg-red-50 border border-red-200 rounded-lg">
+        <div className="flex items-center space-x-2">
+          <AlertTriangle className="h-5 w-5 text-red-500" />
+          <span className="text-red-700">Stripe configuration is missing</span>
         </div>
       </div>
     );
   }
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Complete Payment</h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X className="h-5 w-5 text-gray-500" />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6">
-          <Elements stripe={stripePromise}>
-            <CheckoutForm
-              amount={amount}
-              currency={currency}
-              orderId={orderId}
-              orderDetails={orderDetails}
-              onSuccess={onSuccess}
-              onError={onError}
-              onCancel={onClose}
-              shippingAddress={shippingAddress}
-              onAddressChange={onAddressChange}
-              showAddressForm={showAddressForm}
-            />
-          </Elements>
-        </div>
-      </div>
-    </div>
+    <Elements stripe={stripePromise}>
+      <CheckoutForm {...props} />
+    </Elements>
   );
 };
 
