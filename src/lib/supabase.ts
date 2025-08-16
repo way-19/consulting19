@@ -48,23 +48,6 @@ export async function uploadFileToStorage(
   return { path: storagePath, publicUrl: getPublicUrl(bucket, storagePath) };
 }
 
-/** Hafif log fonksiyonları (tablo yoksa no-op olacak şekilde güvenli) */
-export async function logUserAction(action: string, meta: Record<string, any> = {}) {
-  try {
-    await supabase.from('user_activity').insert([{ action, meta }]);
-  } catch (e) {
-    console.warn('[logUserAction] failed:', e);
-  }
-}
-
-export async function logAdminAction(action: string, meta: Record<string, any> = {}) {
-  try {
-    await supabase.from('admin_activity').insert([{ action, meta }]);
-  } catch (e) {
-    console.warn('[logAdminAction] failed:', e);
-  }
-}
-
 /** Ayar yazma örneği (yoksa sessizce uyarır) */
 export async function updateSetting(key: string, value: any) {
   try {

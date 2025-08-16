@@ -7,7 +7,8 @@ import React, {
   useState,
 } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { supabase, logUserAction } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { logUserAction } from '../lib/logging';
 
 export type Role = 'admin' | 'consultant' | 'client';
 
