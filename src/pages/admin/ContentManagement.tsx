@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase';
 import StripeCheckout from './StripeCheckout';
 import FileUpload, { UploadedFile } from './common/FileUpload';
 import { useFileUpload } from '../hooks/useFileUpload';
+import FileUpload, { UploadedFile } from './common/FileUpload';
+import { useFileUpload } from '../hooks/useFileUpload';
 import { 
   Plus, 
   FileText, 
@@ -89,12 +91,21 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     }
   });
 
+  const { uploadFile, uploadState } = useFileUpload({
+    bucketName: 'documents',
+    folder: 'virtual_mailbox',
+    onUploadComplete: (file, filePath) => {
+      console.log('Virtual mailbox file uploaded:', file.name, filePath);
+    }
+  });
+
   const [formData, setFormData] = useState({
     client_id: clientId || '',
     document_type: '',
     document_name: '',
     description: '',
     shipping_fee: 25.00,
+    file: null as File | null
     file: null as File | null
   });
 
@@ -185,8 +196,22 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         fileUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/${filePath}`;
       }
       
+      let fileUrl = '';
+      
+      // Upload file if provided
+      if (formData.file) {
+        const filePath = await uploadFile(formData.file);
+        fileUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/${filePath}`;
+      }
+      
       const itemData = {
         client_id: formData.client_id,
+        document_type: formData.document_type,
+        document_name: formData.document_name,
+        description: formData.description,
+        shipping_fee: formData.shipping_fee,
+        file_url: fileUrl,
+        file_size: formData.file?.size || null,
         document_type: formData.document_type,
         document_name: formData.document_name,
         description: formData.description,
@@ -350,7 +375,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       description: '',
       shipping_fee: 25.00
     });
-    setSelectedPostImageFile(null);
     setShowAddForm(false);
   };
 
@@ -638,16 +662,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       
                       {item.payment_status === 'paid' && item.file_url && (
                         <button
-                          onClick={() => {
-                            handleDownloadDocument(item);
-                          }}
-                          className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          <span>Download</span>
-                        </button>
-                      )}
-                      
                       {item.payment_status === 'paid' && !item.viewed_date && (
                         <button
                           onClick={() => handleViewDocument(item)}
@@ -666,6 +680,17 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                           <Truck className="h-4 w-4" />
                           <span>Request Shipping</span>
                         </button>
+                      )}
+                      
+                      {item.payment_status === 'paid' && item.status === 'pending' && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <div className="flex items-center space-x-2">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span className="text-sm text-green-800 font-medium">
+                              Payment received. Document will be sent shortly.
+                            </span>
+                          </div>
+                        </div>
                       )}
                     </>
                   )}
@@ -933,6 +958,36 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                         <CreditCard className="h-4 w-4" />
                         <span>Pay Now - ${selectedItem.shipping_fee}</span>
                       </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Payment Required for Shipping */}
+              {viewMode === 'client' && selectedItem.payment_status === 'unpaid' && selectedItem.status === 'pending' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <Truck className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-blue-900">Shipping Available</h4>
+                      <p className="text-sm text-blue-700 mt-1">
+                        This document is ready for shipping. Pay the shipping fee to request delivery.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Document Ready After Payment */}
+              {viewMode === 'client' && selectedItem.payment_status === 'paid' && selectedItem.status === 'sent' && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-green-900">Document Ready</h4>
+                      <p className="text-sm text-green-700 mt-1">
+                        Your payment has been processed and the document is ready for download.
+                      </p>
                     </div>
                   </div>
                 </div>
