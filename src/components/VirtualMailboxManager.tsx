@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, uploadFileToStorage } from '../lib/supabase';
 import FileUpload, { UploadedFile } from './common/FileUpload';
-import FileUpload, { UploadedFile } from './common/FileUpload';
 import StripeCheckout from './StripeCheckout';
 import { 
   Mail, 
