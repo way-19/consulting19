@@ -90,7 +90,7 @@ const AdminDashboard = () => {
       // Fetch all stats in parallel
       const [usersResult, clientsResult, countriesResult, projectsResult, tasksResult] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'client'),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('legacy_role', 'client'),
         supabase.from('countries').select('id', { count: 'exact', head: true }),
         supabase.from('projects').select('id, status'),
         supabase.from('tasks').select('id, status', { count: 'exact' })
@@ -100,7 +100,6 @@ const AdminDashboard = () => {
       const consultantsResult = await supabase
         .from('profiles')
         .select('id', { count: 'exact', head: true })
-        .eq('role', 'consultant');
 
       console.log('📊 fetchDashboardData: Query results:');
       console.log('  - Users count:', usersResult.count, 'Error:', usersResult.error);

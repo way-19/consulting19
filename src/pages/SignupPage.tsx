@@ -333,7 +333,7 @@ const SignupPage = () => {
           const { error: profileError } = await supabase
             .from('profiles')
             .update({
-              role: formData.role,
+              legacy_role: formData.role,
               full_name: formData.fullName,
               country: formData.role === 'consultant' ? formData.country : undefined,
             })

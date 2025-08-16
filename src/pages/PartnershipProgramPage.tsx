@@ -48,7 +48,6 @@ const PartnershipProgramPage = () => {
       const { data: admins, error: adminError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('role', 'admin');
 
       if (adminError) console.error('Error fetching admins for notification:', adminError);
 

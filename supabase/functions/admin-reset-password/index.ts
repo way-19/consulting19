@@ -48,11 +48,11 @@ serve(async (req) => {
     // Check if user is admin
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('role')
+      .select('legacy_role')
       .eq('id', user.id)
       .single()
 
-    if (!profile || profile.role !== 'admin') {
+    if (!profile || profile.legacy_role !== 'admin') {
       throw new Error('Insufficient permissions')
     }
 

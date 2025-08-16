@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email, role, full_name, country, created_at, updated_at')
+      .select('id, email, legacy_role, full_name, country, created_at, updated_at')
       .eq('id', uid)              // profiles.id = auth.users.id
       .maybeSingle();
 
@@ -63,8 +63,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
       
       console.log('✅ Profile fetched successfully:', data.email, data.legacy_role);
-    setProfile(data as Profile);
-    return data as Profile;
+    // Map legacy_role to role for consistency with interface
+    const profileData = { ...data, role: data.legacy_role } as Profile;
+    setProfile(profileData);
+    return profileData;
     } catch (error) {
       console.error('💥 Error in fetchProfile:', error);
       setProfile(null);

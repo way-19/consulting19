@@ -179,7 +179,7 @@ const ServiceManagement = () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, country')
-      .eq('role', 'consultant')
+      .eq('legacy_role', 'consultant')
       .eq('is_active', true)
       .order('full_name', { ascending: true });
 
