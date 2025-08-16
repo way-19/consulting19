@@ -97,6 +97,18 @@ serve(async (req) => {
 async function handlePaymentSuccess(supabase: any, paymentIntent: Stripe.PaymentIntent) {
   try {
     const orderId = paymentIntent.metadata?.order_id
+    const shippingAddress = paymentIntent.shipping?.address ? {
+      full_name: paymentIntent.shipping.name,
+      address_line_1: paymentIntent.shipping.address.line1,
+      address_line_2: paymentIntent.shipping.address.line2,
+      city: paymentIntent.shipping.address.city,
+      state_province: paymentIntent.shipping.address.state,
+      postal_code: paymentIntent.shipping.address.postal_code,
+      country: paymentIntent.shipping.address.country,
+      phone: paymentIntent.shipping.phone,
+      email: paymentIntent.receipt_email // Use receipt email from PI
+    } : paymentIntent.metadata?.shipping_address ? JSON.parse(paymentIntent.metadata.shipping_address) : null;
+
 
     if (!orderId) {
       console.error('No order_id in payment intent metadata')
@@ -105,10 +117,11 @@ async function handlePaymentSuccess(supabase: any, paymentIntent: Stripe.Payment
 
     // Update service order status
     const { error: orderError } = await supabase
-      .from('service_orders')
+      .from('virtual_mailbox_items') // Correct table name
       .update({
-        status: 'paid',
-        stripe_payment_intent_id: paymentIntent.id
+        status: 'pending', // Set to pending for consultant to ship
+        payment_status: 'paid',
+        shipping_address: shippingAddress // Save shipping address
       })
       .eq('id', orderId)
 
@@ -117,22 +130,8 @@ async function handlePaymentSuccess(supabase: any, paymentIntent: Stripe.Payment
       return
     }
 
-    // Create payment record
-    const { error: paymentError } = await supabase
-      .from('service_payments')
-      .insert([{
-        order_id: orderId,
-        stripe_payment_intent_id: paymentIntent.id,
-        stripe_charge_id: paymentIntent.latest_charge,
-        amount: paymentIntent.amount / 100, // Convert from cents
-        currency: paymentIntent.currency.toUpperCase(),
-        status: 'succeeded',
-        payment_method: paymentIntent.payment_method_types[0] || 'card'
-      }])
-
-    if (paymentError) {
-      console.error('Error creating payment record:', paymentError)
-    }
+    // Create payment record (if you have a dedicated payments table for mailbox items)
+    // For now, we'll assume payment status is handled directly in virtual_mailbox_items
 
     console.log(`Payment succeeded for order ${orderId}`)
   } catch (error) {
@@ -151,31 +150,15 @@ async function handlePaymentFailure(supabase: any, paymentIntent: Stripe.Payment
 
     // Update service order status
     const { error: orderError } = await supabase
-      .from('service_orders')
+      .from('virtual_mailbox_items') // Correct table name
       .update({
         status: 'pending', // Keep as pending for retry
-        stripe_payment_intent_id: paymentIntent.id
+        payment_status: 'unpaid',
       })
       .eq('id', orderId)
 
     if (orderError) {
       console.error('Error updating service order:', orderError)
-    }
-
-    // Create failed payment record
-    const { error: paymentError } = await supabase
-      .from('service_payments')
-      .insert([{
-        order_id: orderId,
-        stripe_payment_intent_id: paymentIntent.id,
-        amount: paymentIntent.amount / 100,
-        currency: paymentIntent.currency.toUpperCase(),
-        status: 'failed',
-        payment_method: paymentIntent.payment_method_types[0] || 'card'
-      }])
-
-    if (paymentError) {
-      console.error('Error creating failed payment record:', paymentError)
     }
 
     console.log(`Payment failed for order ${orderId}`)
