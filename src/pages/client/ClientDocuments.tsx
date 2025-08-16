@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase, uploadFileToStorage, getPublicImageUrl } from '../../lib/supabase';
+import { supabase, uploadFileToStorage, getPublicImageUrl, deleteFileFromStorage } from '../../lib/supabase';
 import VirtualMailboxManager from '../../components/VirtualMailboxManager';
+import FileUpload, { UploadedFile } from '../../components/common/FileUpload';
+import FileManager from '../../components/common/FileManager';
+import { useFileUpload } from '../../hooks/useFileUpload';
 import { 
   ArrowLeft, 
   Upload, 
@@ -85,6 +88,19 @@ const ClientDocuments = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<DocumentRequest | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+
+  const { uploadFile, uploadState, clearUploadState } = useFileUpload({
+    bucketName: 'documents',
+    folder: 'client_documents',
+    onUploadComplete: async (file, filePath) => {
+      console.log('✅ File uploaded successfully:', file.name, filePath);
+      await fetchData();
+    },
+    onUploadError: (file, error) => {
+      console.error('❌ Upload error for', file.name, ':', error);
+      alert(`Upload failed for ${file.name}: ${error}`);
+    }
+  });
 
   const [uploadForm, setUploadForm] = useState({
     name: '',
@@ -274,16 +290,8 @@ const ClientDocuments = () => {
     try {
       setUploadingFile(true);
 
-      // Upload file to Supabase Storage
-      console.log('📤 Starting file upload:', uploadForm.file.name, 'Size:', uploadForm.file.size);
-      
-      const filePath = await uploadFileToStorage(
-        uploadForm.file, 
-        'client_documents', 
-        'documents'
-      );
-      
-      console.log('✅ File uploaded successfully to path:', filePath);
+      // Upload file using the enhanced upload system
+      const filePath = await uploadFile(uploadForm.file);
       
       // Track document upload
       trackBusinessEvent.documentUpload(uploadForm.type, uploadForm.file.size);
@@ -292,7 +300,7 @@ const ClientDocuments = () => {
       const fileUrl = getPublicImageUrl(filePath, 'documents');
       const fileSize = uploadForm.file.size;
       
-      console.log('🔗 File public URL:', fileUrl);
+      console.log('🔗 File accessible at:', fileUrl);
 
       if (selectedRequest) {
         // Update existing request
@@ -313,7 +321,6 @@ const ClientDocuments = () => {
           .single();
 
         if (clientData) {
-          console.log('📄 Creating document record for request:', selectedRequest.id);
           await supabase
             .from('documents')
             .insert([{
@@ -330,7 +337,6 @@ const ClientDocuments = () => {
 
         // Notify consultant
         if (selectedRequest.consultant_id) {
-          console.log('🔔 Sending notification to consultant:', selectedRequest.consultant_id);
           await supabase
             .from('notifications')
             .insert([{
@@ -353,7 +359,6 @@ const ClientDocuments = () => {
 
         if (!clientData) throw new Error('Client record not found');
 
-        console.log('📄 Creating new document record');
         const { error } = await supabase
           .from('documents')
           .insert([{
@@ -371,7 +376,6 @@ const ClientDocuments = () => {
 
         // Notify assigned consultant
         if (clientData.assigned_consultant_id) {
-          console.log('🔔 Sending notification to assigned consultant:', clientData.assigned_consultant_id);
           await supabase
             .from('notifications')
             .insert([{
@@ -388,6 +392,7 @@ const ClientDocuments = () => {
 
       await fetchData();
       resetUploadForm();
+      clearUploadState();
       alert('Document uploaded successfully!');
     } catch (error) {
       console.error('Error uploading document:', error);
@@ -410,6 +415,62 @@ const ClientDocuments = () => {
     }
   };
 
+  const handleFileUpload = async (files: File[]) => {
+    if (files.length === 0) return;
+    
+    const file = files[0]; // Take first file for single upload
+    setUploadForm(prev => ({ ...prev, file }));
+    
+    // Auto-fill form if possible
+    if (!uploadForm.name) {
+      setUploadForm(prev => ({ ...prev, name: file.name.split('.')[0] }));
+    }
+  };
+
+  const handleFileDelete = async (documentId: string) => {
+    try {
+      const document = documents.find(d => d.id === documentId);
+      if (!document) return;
+
+      // Delete from storage if file_url exists
+      if (document.file_url) {
+        try {
+          // Extract file path from URL
+          const url = new URL(document.file_url);
+          const pathParts = url.pathname.split('/');
+          const filePath = pathParts.slice(-2).join('/'); // Get last two parts (folder/filename)
+          await deleteFileFromStorage(filePath, 'documents');
+        } catch (storageError) {
+          console.warn('Could not delete file from storage:', storageError);
+          // Continue with database deletion even if storage deletion fails
+        }
+      }
+
+      // Delete from database
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', documentId);
+
+      if (error) throw error;
+      
+      await fetchData();
+      alert('Document deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      alert('Failed to delete document');
+    }
+  };
+
+  // Convert documents to UploadedFile format for FileManager
+  const uploadedFiles: UploadedFile[] = documents.map(doc => ({
+    id: doc.id,
+    name: doc.name,
+    url: doc.file_url || '',
+    size: doc.file_size || 0,
+    type: doc.type || 'application/octet-stream',
+    uploadedAt: doc.uploaded_at
+  }));
   const resetUploadForm = () => {
     setUploadForm({
       name: '',
@@ -655,108 +716,68 @@ const ClientDocuments = () => {
         </div>
 
         {/* My Documents */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">My Uploaded Documents</h2>
-          </div>
-          
-          <div className="p-6">
-            {documents.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Uploaded</h3>
-                <p className="text-gray-600 mb-6">Upload your first document to get started.</p>
-                <button
-                  onClick={() => setShowUploadModal(true)}
-                  className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                >
-                  Upload First Document
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {documents.map((document) => {
-                  const categoryInfo = getCategoryInfo(document.category);
+        <FileManager
+          files={uploadedFiles}
+          onFileUpload={async (files) => {
+            // Handle multiple file upload
+            for (const file of files) {
+              try {
+                const filePath = await uploadFile(file);
+                
+                // Create document record
+                const { data: clientData } = await supabase
+                  .from('clients')
+                  .select('id, assigned_consultant_id')
+                  .eq('profile_id', profile?.id)
+                  .single();
+
+                if (clientData) {
+                  const fileUrl = getPublicImageUrl(filePath, 'documents');
                   
-                  return (
-                    <div key={document.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-4 mb-3">
-                            <div className={`${categoryInfo.color} rounded-lg p-3`}>
-                              <categoryInfo.icon className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900">{document.name}</h3>
-                              <p className="text-sm text-gray-600">{document.type}</p>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              {getStatusIcon(document.status)}
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
-                                {document.status === 'pending' ? 'PENDING REVIEW' :
-                                 document.status === 'approved' ? 'APPROVED' :
-                                 document.status === 'rejected' ? 'REJECTED' :
-                                 document.status === 'needs_revision' ? 'NEEDS REVISION' :
-                                 document.status.toUpperCase()}
-                              </span>
-                            </div>
-                          </div>
+                  await supabase
+                    .from('documents')
+                    .insert([{
+                      client_id: clientData.id,
+                      name: file.name,
+                      type: file.type,
+                      category: 'other',
+                      status: 'pending',
+                      file_url: fileUrl,
+                      file_size: file.size,
+                      uploaded_at: new Date().toISOString()
+                    }]);
 
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
-                            <div className="flex items-center space-x-1">
-                              <Calendar className="h-4 w-4" />
-                              <span>Uploaded: {new Date(document.uploaded_at).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Paperclip className="h-4 w-4" />
-                              <span>Size: {document.file_size ? formatFileSize(document.file_size) : 'Unknown'}</span>
-                            </div>
-                            {document.reviewed_at && (
-                              <div className="flex items-center space-x-1">
-                                <Shield className="h-4 w-4" />
-                                <span>Reviewed: {new Date(document.reviewed_at).toLocaleDateString()}</span>
-                              </div>
-                            )}
-                            <div className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${categoryInfo.color}`}>
-                              {categoryInfo.label}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          {document.file_url && (
-                            <button
-                              onClick={() => window.open(document.file_url, '_blank')}
-                              className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span>View</span>
-                            </button>
-                          )}
-
-                          {document.file_url && (
-                            <button
-                              onClick={() => {
-                                const link = document.createElement('a');
-                                link.href = document.file_url!;
-                                link.download = document.name;
-                                link.click();
-                              }}
-                              className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center space-x-2"
-                            >
-                              <Download className="h-4 w-4" />
-                              <span>Download</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
+                  // Notify consultant
+                  if (clientData.assigned_consultant_id) {
+                    await supabase
+                      .from('notifications')
+                      .insert([{
+                        user_id: clientData.assigned_consultant_id,
+                        type: 'document_uploaded',
+                        title: 'New Document Uploaded',
+                        message: `${file.name} has been uploaded by client`,
+                        priority: 'normal',
+                        related_table: 'documents',
+                        action_url: '/consultant/documents'
+                      }]);
+                  }
+                }
+              } catch (error) {
+                console.error('Error uploading file:', file.name, error);
+              }
+            }
+            await fetchData();
+          }}
+          onFileDelete={handleFileDelete}
+          onRefresh={fetchData}
+          allowUpload={true}
+          allowDelete={true}
+          bucketName="documents"
+          folder="client_documents"
+          title="My Uploaded Documents"
+          emptyStateText="Upload your first document to get started"
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+        />
       </div>
 
       {/* Virtual Mailbox Section */}
@@ -889,16 +910,17 @@ const ClientDocuments = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select File *
                 </label>
-                <input
-                  type="file"
-                  required
-                  onChange={(e) => setUploadForm(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                <FileUpload
+                  onFileSelect={handleFileUpload}
+                  acceptedTypes={['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png']}
+                  maxFileSize={50}
+                  maxFiles={1}
+                  multiple={false}
+                  showPreview={true}
+                  dragDropText="Drop your document here or click to browse"
+                  browseText="Choose Document"
+                  uploadProgress={uploadState.progress}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 50MB)
-                </p>
               </div>
 
               <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
@@ -922,10 +944,10 @@ const ClientDocuments = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={uploadingFile}
+                  disabled={uploadingFile || !uploadForm.file}
                   className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                 >
-                  {uploadingFile ? (
+                  {uploadingFile || uploadState.uploading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       <span>Uploading...</span>

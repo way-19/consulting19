@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase, uploadFileToStorage, getPublicImageUrl } from '../../lib/supabase';
+import { supabase, uploadFileToStorage, getPublicImageUrl, deleteFileFromStorage } from '../../lib/supabase';
 import VirtualMailboxManager from '../../components/VirtualMailboxManager';
+import FileManager from '../../components/common/FileManager';
+import { UploadedFile } from '../../components/common/FileUpload';
 import { 
   ArrowLeft, 
   Search, 
@@ -274,6 +276,48 @@ const DocumentManagement = () => {
     }
   };
 
+  const handleDocumentDelete = async (documentId: string) => {
+    try {
+      const document = documents.find(d => d.id === documentId);
+      if (!document) return;
+
+      // Delete from storage if file_url exists
+      if (document.file_url) {
+        try {
+          const url = new URL(document.file_url);
+          const pathParts = url.pathname.split('/');
+          const filePath = pathParts.slice(-2).join('/');
+          await deleteFileFromStorage(filePath, 'documents');
+        } catch (storageError) {
+          console.warn('Could not delete file from storage:', storageError);
+        }
+      }
+
+      // Delete from database
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', documentId);
+
+      if (error) throw error;
+      
+      await fetchDocuments();
+      alert('Document deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      alert('Failed to delete document');
+    }
+  };
+
+  // Convert documents to UploadedFile format for FileManager
+  const uploadedFiles: UploadedFile[] = documents.map(doc => ({
+    id: doc.id,
+    name: doc.name,
+    url: doc.file_url || '',
+    size: doc.file_size || 0,
+    type: doc.type || 'application/octet-stream',
+    uploadedAt: doc.uploaded_at
+  }));
   const resetForm = () => {
     setRequestForm({
       client_id: '',
@@ -716,6 +760,17 @@ const DocumentManagement = () => {
                     )}
                   </div>
                 )}
+                
+                <button
+                  onClick={() => {
+                    handleDocumentDelete(selectedDocument.id);
+                    setShowDocumentDetail(false);
+                  }}
+                  className="bg-red-50 text-red-600 px-6 py-3 rounded-lg font-medium hover:bg-red-100 transition-colors flex items-center space-x-2"
+                >
+                  <Trash2 className="h-5 w-5" />
+                  <span>Delete Document</span>
+                </button>
               </>
             )}
           </div>
@@ -878,111 +933,24 @@ const DocumentManagement = () => {
                 <h2 className="text-xl font-bold text-gray-900">Document Details</h2>
                 <button
                   onClick={() => setShowDocumentDetail(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Document Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Document Information</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-gray-600">Name:</span>
-                      <p className="font-medium">{selectedDocument.name}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Type:</span>
-                      <p className="font-medium">{selectedDocument.type}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Category:</span>
-                      <p className="font-medium">{getCategoryInfo(selectedDocument.category).label}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Status:</span>
-                      <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedDocument.status)}`}>
-                        {selectedDocument.status.toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Client Information</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-gray-600">Client:</span>
-                      <p className="font-medium">{selectedDocument.client?.company_name || selectedDocument.client?.profile?.full_name}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Email:</span>
-                      <p className="font-medium">{selectedDocument.client?.profile?.email}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Uploaded:</span>
-                      <p className="font-medium">{new Date(selectedDocument.uploaded_at).toLocaleString()}</p>
-                    </div>
-                    {selectedDocument.file_size && (
-                      <div>
-                        <span className="text-sm text-gray-600">File Size:</span>
-                        <p className="font-medium">{formatFileSize(selectedDocument.file_size)}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes */}
-              {selectedDocument.notes && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Review Notes</h3>
-                  <p className="text-gray-700 bg-gray-50 rounded-lg p-4">{selectedDocument.notes}</p>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
-                {selectedDocument.file_url && (
-                  <button
-                    onClick={() => window.open(selectedDocument.file_url, '_blank')}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                  >
-                    <Eye className="h-5 w-5" />
-                    <span>View Document</span>
-                  </button>
-                )}
-                
-                {selectedDocument.status === 'pending' && (
-                  <>
-                    <button
-                      onClick={() => {
-                        handleUpdateDocumentStatus(selectedDocument.id, 'approved');
-                        setShowDocumentDetail(false);
-                      }}
-                      className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
-                    >
-                      <CheckCircle className="h-5 w-5" />
-                      <span>Approve</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        handleUpdateDocumentStatus(selectedDocument.id, 'rejected');
-                        setShowDocumentDetail(false);
-                      }}
-                      className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
-                    >
-                      <XCircle className="h-5 w-5" />
-                      <span>Reject</span>
-                    </button>
-                  </>
-                )}
-              </div>
+              <FileManager
+                files={uploadedFiles}
+                onFileDelete={handleDocumentDelete}
+                onFileView={(file) => {
+                  const document = documents.find(d => d.id === file.id);
+                  if (document) {
+                    setSelectedDocument(document);
+                    setShowDocumentDetail(true);
+                  }
+                }}
+                onRefresh={fetchDocuments}
+                allowUpload={false}
+                allowDelete={true}
+                bucketName="documents"
+                title="Client Documents"
+                emptyStateText="No client documents found"
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              />
             </div>
           </div>
         </div>

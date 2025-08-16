@@ -520,41 +520,47 @@ const generateSessionId = (): string => {
 // Image Upload and Storage Helpers
 export const uploadFileToStorage = async (file: File, folder: string, bucketName: string = 'public_images') => {
   try {
-    console.log('uploadFileToStorage: Starting upload for file with size:', file.size, 'bytes');
-    console.log('uploadFileToStorage: 50MB limit check:', 50 * 1024 * 1024);
+    console.log('📤 uploadFileToStorage: Starting upload for file:', file.name, 'Size:', file.size, 'bytes');
     
     // Check file size (50MB limit)
     if (file.size > 50 * 1024 * 1024) {
-      console.log('uploadFileToStorage: File size exceeds 50MB limit. Throwing error.');
       throw new Error('File size must be less than 50MB. Please compress your file and try again.');
     }
 
-    console.log('uploadFileToStorage: File passed size check, proceeding with upload...');
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 
+                         'application/pdf', 'application/msword', 
+                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error(`File type "${file.type}" is not supported. Please use JPG, PNG, PDF, or DOC files.`);
+    }
+
+    // Generate unique filename
     const fileExtension = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fileName = `${Date.now()}-${sanitizedName}`;
     const filePath = `${folder}/${fileName}`;
 
-    console.log('uploadFileToStorage: Uploading to path:', filePath);
+    console.log('📁 uploadFileToStorage: Uploading to path:', filePath);
+    
     const { data, error } = await supabase.storage
       .from(bucketName)
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false,
+        contentType: file.type
       });
 
     if (error) {
-      console.error('uploadFileToStorage: Supabase Storage API error:', error);
-      console.log('uploadFileToStorage: Error message from Supabase:', error.message);
-      console.error('Error uploading file:', error);
+      console.error('❌ uploadFileToStorage: Upload failed:', error.message);
       throw error;
     }
 
-    console.log('uploadFileToStorage: Upload successful, returning file path:', filePath);
-    // Return the file path (not the full URL)
+    console.log('✅ uploadFileToStorage: Upload successful, file path:', filePath);
     return filePath;
   } catch (error) {
-    console.error('uploadFileToStorage: Caught error during upload process:', error);
-    console.error('Error in uploadFileToStorage:', error);
+    console.error('💥 uploadFileToStorage: Error:', error);
     throw error;
   }
 };
@@ -562,32 +568,133 @@ export const uploadFileToStorage = async (file: File, folder: string, bucketName
 export const getPublicImageUrl = (filePath: string, bucketName: string = 'public_images') => {
   if (!filePath) return '';
 
-  // If path is already a full URL, return as is (for backward compatibility)
+  // If path is already a full URL, return as is
   if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
     return filePath;
   }
 
+  // Handle relative paths
+  const cleanPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+
   const { data } = supabase.storage
     .from(bucketName)
-    .getPublicUrl(filePath);
+    .getPublicUrl(cleanPath);
 
   return data.publicUrl;
 };
 
 export const deleteFileFromStorage = async (filePath: string, bucketName: string = 'public_images') => {
   try {
+    console.log('🗑️ deleteFileFromStorage: Deleting file:', filePath);
+    
+    // Clean the file path
+    const cleanPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+    
     const { error } = await supabase.storage
       .from(bucketName)
-      .remove([filePath]);
+      .remove([cleanPath]);
 
     if (error) {
-      console.error('Error deleting file:', error);
+      console.error('❌ deleteFileFromStorage: Delete failed:', error.message);
       throw error;
     }
 
+    console.log('✅ deleteFileFromStorage: File deleted successfully');
     return true;
   } catch (error) {
-    console.error('Error in deleteFileFromStorage:', error);
+    console.error('💥 deleteFileFromStorage: Error:', error);
+    throw error;
+  }
+};
+
+// Enhanced file management helpers
+export const getFileMetadata = async (filePath: string, bucketName: string = 'public_images') => {
+  try {
+    const cleanPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+    
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .list(cleanPath.split('/').slice(0, -1).join('/'), {
+        search: cleanPath.split('/').pop()
+      });
+
+    if (error) throw error;
+    
+    const fileInfo = data?.find(item => item.name === cleanPath.split('/').pop());
+    return fileInfo;
+  } catch (error) {
+    console.error('Error getting file metadata:', error);
+    return null;
+  }
+};
+
+export const validateFileUpload = (file: File, options: {
+  maxSize?: number;
+  allowedTypes?: string[];
+  allowedExtensions?: string[];
+} = {}) => {
+  const {
+    maxSize = 50 * 1024 * 1024, // 50MB default
+    allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'],
+    allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx']
+  } = options;
+
+  const errors: string[] = [];
+
+  // Check file size
+  if (file.size > maxSize) {
+    errors.push(`File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds maximum allowed size (${(maxSize / 1024 / 1024).toFixed(0)}MB)`);
+  }
+
+  // Check file type
+  if (!allowedTypes.includes(file.type)) {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    if (!extension || !allowedExtensions.includes(extension)) {
+      errors.push(`File type "${file.type}" is not supported. Allowed types: ${allowedTypes.join(', ')}`);
+    }
+  }
+
+  // Check file name
+  if (file.name.length > 255) {
+    errors.push('File name is too long. Maximum 255 characters allowed.');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+export const createFileRecord = async (
+  filePath: string,
+  originalFile: File,
+  metadata: {
+    client_id?: string;
+    consultant_id?: string;
+    category?: string;
+    description?: string;
+  }
+) => {
+  try {
+    const fileRecord = {
+      name: originalFile.name,
+      file_url: filePath,
+      file_size: originalFile.size,
+      mime_type: originalFile.type,
+      uploaded_at: new Date().toISOString(),
+      ...metadata
+    };
+
+    const { data, error } = await supabase
+      .from('documents')
+      .insert([fileRecord])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error creating file record:', error);
     throw error;
   }
 };
