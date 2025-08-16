@@ -437,19 +437,6 @@ const CountryManagement = () => {
     }));
   };
 
-  const filteredCountries = countries.filter(country => {
-    const matchesSearch = 
-      country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      country.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      country.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && country.is_active) ||
-      (statusFilter === 'inactive' && !country.is_active);
-    
-    return matchesSearch && matchesStatus;
-  });
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

@@ -414,21 +414,6 @@ const ServiceManagement = () => {
     }));
   };
 
-  const filteredServices = services.filter(service => {
-    const matchesSearch = 
-      service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.consultant?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
-    const matchesConsultant = consultantFilter === 'all' || service.consultant_id === consultantFilter;
-    const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && service.is_active) ||
-      (statusFilter === 'inactive' && !service.is_active);
-    
-    return matchesSearch && matchesCategory && matchesConsultant && matchesStatus;
-  });
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
