@@ -179,8 +179,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
       return;
     }
 
-    // Always proceed to payment step (even for $0 shipping)
-    // This ensures consistent flow and proper address collection
+    // Always proceed to payment step - all physical shipping is paid
     console.log('💳 Proceeding to payment step for shipping fee: $' + currentShippingItem.shipping_fee);
     setShowShippingAddressModal(false);
     setShowStripeCheckout(true);
@@ -191,14 +190,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
       console.log('💳 Payment successful:', paymentIntentId);
       if (!currentShippingItem) return;
 
-      // Update item with shipping address and payment info (no tracking number yet)
+      // Update item with shipping address and payment info
+      // Note: tracking_number will be set manually by consultant later
       const { error } = await supabase
         .from('virtual_mailbox_items')
         .update({
           shipping_option: 'physical',
           shipping_address: shippingAddress,
           payment_status: 'paid'
-          // Note: tracking_number will be set manually by consultant later
         })
         .eq('id', currentShippingItem.id);
 
@@ -546,6 +545,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                   )}
 
                   {viewMode === 'client' && item.status === 'sent' && item.payment_status === 'unpaid' && (
+                  {viewMode === 'client' && item.file_url && item.payment_status === 'unpaid' && (
                     <button
                       onClick={() => handleRequestPhysicalShipping(item)}
                       className="bg-orange-50 text-orange-600 px-4 py-2 rounded-lg font-medium hover:bg-orange-100 transition-colors flex items-center space-x-2"
@@ -553,6 +553,20 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                       <Truck className="h-4 w-4" />
                       <span>Physical Shipping</span>
                     </button>
+                  )}
+
+                  {viewMode === 'client' && item.payment_status === 'paid' && !item.tracking_number && (
+                    <div className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium flex items-center space-x-2">
+                      <Clock className="h-4 w-4" />
+                      <span>Shipping Requested</span>
+                    </div>
+                  )}
+
+                  {viewMode === 'client' && item.payment_status === 'paid' && item.tracking_number && (
+                    <div className="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium flex items-center space-x-2">
+                      <Truck className="h-4 w-4" />
+                      <span>Shipped: {item.tracking_number}</span>
+                    </div>
                   )}
 
                   <button
@@ -603,27 +617,27 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                   value={trackingForm.tracking_number}
                   onChange={(e) => setTrackingForm(prev => ({ ...prev, tracking_number: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Enter tracking number manually"
+                  placeholder="Örn: TT123456789TR veya UPS1Z999AA1234567890"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Leave empty if no tracking number is available
+                  Kargo firmasından aldığınız takip numarasını girin
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Document Status
+                  Belge Durumu
                 </label>
                 <select
                   value={trackingForm.status}
                   onChange={(e) => setTrackingForm(prev => ({ ...prev, status: e.target.value as any }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  <option value="pending">Pending - Not yet processed</option>
-                  <option value="sent">Sent - Document has been shipped</option>
-                  <option value="delivered">Delivered - Document reached client</option>
-                  <option value="viewed">Viewed - Client has viewed document</option>
-                  <option value="downloaded">Downloaded - Client has downloaded</option>
+                  <option value="pending">Beklemede - Henüz işlenmedi</option>
+                  <option value="sent">Gönderildi - Belge kargoya verildi</option>
+                  <option value="delivered">Teslim Edildi - Müşteriye ulaştı</option>
+                  <option value="viewed">Görüntülendi - Müşteri gördü</option>
+                  <option value="downloaded">İndirildi - Müşteri indirdi</option>
                 </select>
               </div>
 
@@ -636,7 +650,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                   <p>• Takip numarasını sadece belgeyi fiziksel olarak gönderdiğinizde girin</p>
                   <p>• Durumu belgenin mevcut halini yansıtacak şekilde güncelleyin</p>
                   <p>• Müşteri durum değişikliklerinden haberdar edilecektir</p>
-                  <p>• Boş bırakırsanız takip numarası "Henüz atanmadı" olarak görünecektir</p>
+                  <p>• Kargo firmasından aldığınız gerçek takip numarasını girin</p>
                 </div>
               </div>
 
@@ -656,7 +670,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
                 >
                   <Save className="h-5 w-5" />
-                  <span>Update Tracking</span>
+                  <span>Takip Bilgilerini Kaydet</span>
                 </button>
               </div>
             </form>
@@ -866,12 +880,12 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
               <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                 <div className="flex items-center space-x-2 mb-2">
                   <DollarSign className="h-5 w-5 text-blue-600" />
-                  <h4 className="font-medium text-blue-900">Shipping Cost</h4>
+                  <h4 className="font-medium text-blue-900">Kargo Ücreti</h4>
                 </div>
                 <div className="text-sm text-blue-800">
-                  <p>Document: <strong>{currentShippingItem.document_name}</strong></p>
-                  <p>Shipping Fee: <strong>${currentShippingItem.shipping_fee}</strong></p>
-                  <p>Estimated Delivery: <strong>5-10 business days</strong></p>
+                  <p>Belge: <strong>{currentShippingItem.document_name}</strong></p>
+                  <p>Kargo Ücreti: <strong>${currentShippingItem.shipping_fee}</strong></p>
+                  <p>Tahmini Teslimat: <strong>5-10 iş günü</strong></p>
                 </div>
               </div>
 
@@ -884,14 +898,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                   }}
                   className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
-                  Cancel
+                  İptal
                 </button>
                 <button
                   type="submit"
                   className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
                 >
                   <CreditCard className="h-5 w-5" />
-                  <span>Continue to Payment</span>
+                  <span>Ödemeye Geç</span>
                 </button>
               </div>
             </form>
