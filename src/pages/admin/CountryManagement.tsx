@@ -131,6 +131,7 @@ const CountryManagement = () => {
     const { data, error } = await supabase
       .from('countries')
       .select('*')
+      .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
     console.log('🌍 fetchCountries: Supabase query result:', { data: data?.length, error });

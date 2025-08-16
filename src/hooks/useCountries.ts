@@ -44,7 +44,7 @@ export const useCountries = (activeOnly: boolean = true) => {
         .from('countries')
         .select('*')
         .order('sort_order', { ascending: true })
-        .limit(50); // Ensure we get all countries
+        .limit(50);
 
       if (activeOnly) {
         query = query.eq('is_active', true);
