@@ -76,6 +76,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
   const [showShippingAddressModal, setShowShippingAddressModal] = useState(false);
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [currentShippingItem, setCurrentShippingItem] = useState<VirtualMailboxItem | null>(null);
+  
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     full_name: '',
     company_name: '',
@@ -137,6 +138,17 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
   };
 
   const handleRequestPhysicalShipping = (item: VirtualMailboxItem) => {
+    console.log('🚚 Physical shipping requested for:', item.document_name);
+    setCurrentShippingItem(item);
+    setShippingAddress(prev => ({
+      ...prev,
+      full_name: profile?.full_name || '',
+      email: profile?.email || ''
+    }));
+    setShowShippingAddressModal(true);
+  };
+
+  const handleRequestPhysicalShipping = (item: VirtualMailboxItem) => {
     setCurrentShippingItem(item);
     setShippingAddress(prev => ({
       ...prev,
@@ -158,6 +170,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
       return;
     }
 
+    console.log('📋 Address form submitted, opening payment modal');
     // Close address modal and open payment modal
     setShowShippingAddressModal(false);
     setShowStripeCheckout(true);
@@ -165,6 +178,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
 
   const handlePaymentSuccess = async (paymentIntentId: string) => {
     try {
+      console.log('💳 Payment successful:', paymentIntentId);
       if (!currentShippingItem) return;
 
       // Update item with shipping address and payment info
