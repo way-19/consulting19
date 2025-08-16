@@ -1,92 +1,62 @@
-import { loadStripe, Stripe } from '@stripe/stripe-js';
+// src/lib/stripe.ts
+import type { Stripe, StripeCardElement } from '@stripe/stripe-js';
+import { supabase } from './supabase';
 
-const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51QMSJJP6Qi3wZZ1TLOclz1K9XAJfECSPfwwIH1CxBiaexeN6shsDtR9PF7MyA5R1R8unGhsyKKT3t1RyYuCZ83gm00RGL54kae';
+type Meta = Record<string, any>;
 
-if (!stripePublishableKey) {
-  console.warn('Stripe publishable key not found. Stripe features will be disabled.');
-}
-
-export const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
-
-// Custom checkout integration - Building your own integration approach
-export const createCustomCheckout = async (
-  amount: number, 
-  currency: string = 'USD', 
-  metadata: any = {},
-  returnUrl: string = window.location.origin
-) => {
-  try {
-    const response = await fetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        amount: Math.round(amount * 100),
-        currency: currency.toLowerCase(),
-        metadata,
-        success_url: `${returnUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${returnUrl}/payment-cancelled`
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create checkout session');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error creating checkout session:', error);
-    throw error;
-  }
-};
-
-// Direct payment with card element (for custom forms)
-export const processDirectPayment = async (
+/**
+ * Client-side ödeme akışı:
+ * 1) Supabase Edge Function (create-payment-intent) ile client_secret al
+ * 2) stripe.confirmCardPayment ile kartı doğrula
+ */
+export async function processDirectPayment(
   stripe: Stripe,
-  cardElement: any,
+  cardElement: StripeCardElement,
   amount: number,
-  currency: string = 'USD',
-  metadata: any = {}
-) => {
+  currency: string,
+  metadata: Meta = {}
+): Promise<{ paymentIntent: Stripe.PaymentIntent | null }> {
+  if (!stripe) throw new Error('Stripe not initialized');
+
+  // 1) Ödeme niyeti oluştur (önce Supabase Edge Function dene)
+  let clientSecret: string | undefined;
+
   try {
-    // Create payment intent
-    const response = await fetch('/api/create-payment-intent', {
+    const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+      body: { amount, currency, metadata },
+    });
+    if (error) throw error;
+    clientSecret = data?.clientSecret || data?.client_secret;
+  } catch {
+    // Fallback: Next/Express API endpoint'iniz varsa deneyin
+    const res = await fetch('/api/create-payment-intent', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        amount: Math.round(amount * 100),
-        currency: currency.toLowerCase(),
-        metadata
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, currency, metadata }),
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to create payment intent');
+    if (res.ok) {
+      const json = await res.json();
+      clientSecret = json.clientSecret || json.client_secret;
     }
-
-    const { client_secret } = await response.json();
-
-    // Confirm payment with Stripe
-    const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
-      payment_method: {
-        card: cardElement,
-        billing_details: {
-          name: metadata.customer_name || 'Customer',
-          email: metadata.shipping_address?.email || metadata.customer_email // Use shipping email if available
-        }
-      }
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return { paymentIntent };
-  } catch (error) {
-    console.error('Error processing payment:', error);
-    throw error;
   }
-};
+
+  if (!clientSecret) {
+    throw new Error('Could not obtain payment intent client secret');
+  }
+
+  // 2) Kartla ödeme doğrulaması
+  const result = await stripe.confirmCardPayment(clientSecret, {
+    payment_method: {
+      card: cardElement,
+      billing_details: {
+        name: metadata.customer_name || 'Customer',
+      },
+    },
+  });
+
+  if (result.error) {
+    throw new Error(result.error.message || 'Payment failed');
+  }
+
+  return { paymentIntent: result.paymentIntent };
+}
