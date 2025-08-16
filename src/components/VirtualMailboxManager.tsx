@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from '../contexts/AuthContext';
 import { supabase, uploadFileToStorage, getPublicImageUrl, deleteFileFromStorage } from '../lib/supabase';
 import StripeCheckout from '../components/StripeCheckout'; // Import StripeCheckout
+import FileUpload, { UploadedFile } from '../components/common/FileUpload'; // Import FileUpload component
+import { useFileUpload } from '../hooks/useFileUpload'; // Import useFileUpload hook
 import { 
   ArrowLeft, 
   Search, 
@@ -124,6 +126,19 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
     'Official Letter', 'Certificate', 'Contract', 'Invoice', 'Bank Statement', 'Tax Document', 'Other'
   ];
 
+  // File upload state and functions
+  const { uploadFile, uploadState, clearUploadState } = useFileUpload({
+    bucketName: 'mailbox_documents', // Dedicated bucket for mailbox items
+    folder: 'consultant_uploads',
+    onUploadComplete: (file, filePath) => {
+      setDocumentForm(prev => ({ ...prev, file_url: getPublicImageUrl(filePath, 'mailbox_documents'), file_size: file.size }));
+      alert('File uploaded successfully! Remember to save the mailbox item.');
+    },
+    onUploadError: (file, error) => {
+      alert(`File upload failed for ${file.name}: ${error}`);
+    }
+  });
+
   useEffect(() => {
     if (profile?.id || clientId) {
       fetchData();
@@ -207,9 +222,10 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
         ...editingItem, // Keep existing fields if editing
         ...documentForm,
         consultant_id: profile?.id,
-        shipping_fee: selectedShippingOption === 'standard' ? 15.00 : 25.00, // Set fee based on option
+        // shipping_fee and shipping_option are set by client during payment, not consultant creation
+        shipping_fee: null, 
+        shipping_option: null,
         payment_status: 'unpaid', // Always unpaid initially
-        shipping_option: selectedShippingOption,
         shipping_address: null, // Address will be filled by client
         tracking_number: null, // Tracking will be filled by consultant
       };
@@ -327,29 +343,33 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       description: '',
       file_url: '',
       file_size: 0,
-      shipping_option: 'standard'
+      // shipping_option: 'standard' // Removed from consultant form
     });
     setEditingItem(null);
     setShowItemModal(false);
-    setSelectedShippingOption('standard');
+    clearUploadState(); // Clear file upload state
+    // setSelectedShippingOption('standard'); // Removed from consultant form
   };
 
-  const documentForm = {
-    document_type: editingItem?.document_type || '',
-    document_name: editingItem?.document_name || '',
-    description: editingItem?.description || '',
-    file_url: editingItem?.file_url || '',
-    file_size: editingItem?.file_size || 0,
-    shipping_option: editingItem?.shipping_option || 'standard'
-  };
+  const [documentForm, setDocumentForm] = useState({
+    document_type: '',
+    document_name: '',
+    description: '',
+    file_url: '',
+    file_size: 0,
+    // shipping_option: 'standard' // Removed from consultant form
+  });
 
-  const setDocumentForm = (updates: Partial<typeof documentForm>) => {
-    if (editingItem) {
-      setEditingItem(prev => ({ ...prev!, ...updates }));
-    } else {
-      // This part is for the add new item form, not editing
-      // For simplicity, we'll just update a local state for the form
-      // In a real app, you might have a dedicated form state for new items
+  // Function to handle file selection from FileUpload component
+  const handleFileSelect = async (files: File[]) => {
+    if (files.length > 0) {
+      const file = files[0];
+      // Automatically set document name if not already set
+      if (!documentForm.document_name) {
+        setDocumentForm(prev => ({ ...prev, document_name: file.name.split('.')[0] }));
+      }
+      // Upload the file
+      await uploadFile(file);
     }
   };
 
@@ -784,58 +804,24 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  File URL (Optional - for digital copy)
+                  Upload File (Optional - for digital copy)
                 </label>
-                <input
-                  type="text"
-                  value={documentForm.file_url}
-                  onChange={(e) => setDocumentForm(prev => ({ ...prev, file_url: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="https://example.com/document.pdf"
+                <FileUpload
+                  onFileSelect={handleFileSelect}
+                  acceptedTypes={['image/*', '.pdf', '.doc', '.docx']}
+                  maxFileSize={50}
+                  maxFiles={1}
+                  multiple={false}
+                  showPreview={true}
+                  dragDropText="Drag and drop file here or click to browse"
+                  browseText="Choose File"
+                  uploadProgress={uploadState.progress}
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  File Size (Bytes - Optional)
-                </label>
-                <input
-                  type="number"
-                  value={documentForm.file_size}
-                  onChange={(e) => setDocumentForm(prev => ({ ...prev, file_size: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Shipping Option *
-                </label>
-                <div className="flex space-x-4">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="shipping_option"
-                      value="standard"
-                      checked={selectedShippingOption === 'standard'}
-                      onChange={() => setSelectedShippingOption('standard')}
-                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
-                    />
-                    <span>Standard ($15.00)</span>
-                  </label>
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="shipping_option"
-                      value="express"
-                      checked={selectedShippingOption === 'express'}
-                      onChange={() => setSelectedShippingOption('express')}
-                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
-                    />
-                    <span>Express ($25.00)</span>
-                  </label>
-                </div>
+                {documentForm.file_url && (
+                  <p className="text-sm text-gray-600 mt-2">
+                    Current file: <a href={documentForm.file_url} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">{documentForm.file_url.split('/').pop()}</a>
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
@@ -1003,7 +989,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                     className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center space-x-2"
                   >
                     <CheckCircle className="h-5 w-5" />
-                    <span>Mark as Delivered</span>
+                    <span>Delivered</span>
                   </button>
                 )}
                 {viewMode === 'consultant' && (
