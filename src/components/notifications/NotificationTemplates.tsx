@@ -439,5 +439,3 @@ export const shouldSendNotification = (
   return true;
 };
 
-
-export { formatNotificationContent }
