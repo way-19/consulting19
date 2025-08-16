@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from "../contexts/AuthContext";
-import { supabase, uploadFileToStorage, getPublicImageUrl, deleteFileFromStorage } from '../../lib/supabase';
+import { supabase, uploadFileToStorage, getPublicImageUrl, deleteFileFromStorage } from '../lib/supabase';
 import StripeCheckout from '../components/StripeCheckout'; // Import StripeCheckout
 import { 
   ArrowLeft, 
