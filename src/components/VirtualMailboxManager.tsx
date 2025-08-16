@@ -348,7 +348,8 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
       document_type: '',
       document_name: '',
       description: '',
-      shipping_fee: 25.00
+      shipping_fee: 25.00,
+      file: null as File | null
     });
     setShowAddForm(false);
   };
@@ -637,6 +638,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
                       
                       {item.payment_status === 'paid' && item.file_url && (
                         <button
+                          onClick={() => handleViewDocument(item)}
+                          className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center space-x-2"
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span>View</span>
+                        </button>
+                      )}
+                      
                       {item.payment_status === 'paid' && !item.viewed_date && (
                         <button
                           onClick={() => handleViewDocument(item)}
@@ -1159,8 +1168,4 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({ clientId,
   );
 };
 
-
-
-
-
-export default VirtualMailboxManager
+export default VirtualMailboxManager;
