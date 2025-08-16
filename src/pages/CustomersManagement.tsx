@@ -1235,6 +1235,16 @@ const CustomersManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Virtual Mailbox Modal */}
+      <VirtualMailboxManager
+        isOpen={showVirtualMailbox}
+        onClose={() => {
+          setShowVirtualMailbox(false);
+          setSelectedClientForMailbox(null);
+        }}
+        clientId={selectedClientForMailbox?.id}
+      />
     </>
   );
 };
