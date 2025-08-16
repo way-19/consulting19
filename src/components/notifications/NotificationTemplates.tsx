@@ -14,7 +14,8 @@ import {
   Clock,
   Star,
   Shield,
-  Zap
+  Zap,
+  Settings
 } from 'lucide-react';
 
 export interface NotificationTemplate {
