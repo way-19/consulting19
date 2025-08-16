@@ -323,8 +323,32 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
           <button
             type="button"
             onClick={onCancel}
-      </div>
+            className="w-full bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-400 transition-colors"
+          >
+            İptal
+          </button>
+        </div>
+      </form>
     </div>
+  );
+};
+
+const StripeCheckout: React.FC<CheckoutFormProps> = (props) => {
+  if (!stripePromise) {
+    return (
+      <div className="max-w-md mx-auto p-6 bg-red-50 border border-red-200 rounded-lg">
+        <div className="flex items-center space-x-2">
+          <AlertTriangle className="h-5 w-5 text-red-500" />
+          <span className="text-red-700">Stripe configuration is missing</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Elements stripe={stripePromise}>
+      <CheckoutForm {...props} />
+    </Elements>
   );
 };
 
