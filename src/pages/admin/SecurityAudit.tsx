@@ -108,7 +108,9 @@ const SecurityAudit = () => {
         user:user_id (
           full_name,
           email,
-          legacy_role
+          legacy_role,
+          ip_address,
+          user_agent
         )
       `)
       .order('timestamp', { ascending: false })

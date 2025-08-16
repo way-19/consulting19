@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
+import { initializeGA, trackPageView } from './utils/analytics';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -59,9 +60,17 @@ export default function App() {
   const { loading } = useAuth();
   const location = useLocation();
 
+  // Initialize Google Analytics
+  React.useEffect(() => {
+    initializeGA();
+  }, []);
+
   // Scroll to top on route change
   React.useEffect(() => {
     window.scrollTo(0, 0);
+    
+    // Track page view with Google Analytics
+    trackPageView(location.pathname, document.title);
   }, [location.pathname]);
 
   if (loading) {

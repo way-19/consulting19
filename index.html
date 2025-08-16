@@ -5,6 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Consulting19 - Marketing Homepage with Countries &amp; Services</title>
+    
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      
+      // Initialize with environment variable
+      const measurementId = import.meta?.env?.VITE_GA_MEASUREMENT_ID || 'GA_MEASUREMENT_ID';
+      if (measurementId && measurementId !== 'GA_MEASUREMENT_ID') {
+        gtag('config', measurementId, {
+          page_title: document.title,
+          page_location: window.location.href
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

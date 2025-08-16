@@ -399,10 +399,16 @@ export const logAdminAction = async (
   targetTable?: string,
   targetId?: string,
   oldValues?: any,
-  newValues?: any
+  newValues?: any,
+  ipAddress?: string,
+  userAgent?: string
 ) => {
   const user = await getCurrentUser();
   if (!user) return;
+
+  // Get IP address and user agent if not provided
+  const finalIpAddress = ipAddress || await getClientIP();
+  const finalUserAgent = userAgent || navigator.userAgent;
 
   const { error } = await supabase
     .from('audit_logs')
@@ -412,7 +418,9 @@ export const logAdminAction = async (
       target_table: targetTable,
       target_id: targetId,
       old_values: oldValues,
-      new_values: newValues
+      new_values: newValues,
+      ip_address: finalIpAddress,
+      user_agent: finalUserAgent
     }]);
 
   if (error) {
@@ -442,6 +450,55 @@ export const updateSetting = async (key: string, value: any) => {
   }
   
   return true;
+};
+
+// Get client IP address (best effort)
+export const getClientIP = async (): Promise<string> => {
+  try {
+    // Try to get IP from a public service
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    return data.ip || 'unknown';
+  } catch (error) {
+    console.warn('Could not fetch client IP:', error);
+    return 'unknown';
+  }
+};
+
+// Enhanced audit logging with automatic IP and user agent detection
+export const logUserAction = async (
+  action: string,
+  targetTable?: string,
+  targetId?: string,
+  oldValues?: any,
+  newValues?: any
+) => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    const ipAddress = await getClientIP();
+    const userAgent = navigator.userAgent;
+
+    const { error } = await supabase
+      .from('audit_logs')
+      .insert([{
+        user_id: user.id,
+        action,
+        target_table: targetTable,
+        target_id: targetId,
+        old_values: oldValues,
+        new_values: newValues,
+        ip_address: ipAddress,
+        user_agent: userAgent
+      }]);
+
+    if (error) {
+      console.error('Error logging user action:', error);
+    }
+  } catch (error) {
+    console.error('Error in logUserAction:', error);
+  }
 };
 // Image Upload and Storage Helpers
 export const uploadFileToStorage = async (file: File, folder: string, bucketName: string = 'public_images') => {
