@@ -76,7 +76,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<VirtualMailboxItem | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showUploadSection, setShowUploadSection] = useState(true); // Default to true for testing
+  const [showUploadSection, setShowUploadSection] = useState(true);
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
@@ -123,7 +123,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
       let targetClientId = clientId;
       
       if (!targetClientId && profile?.role === 'client') {
-        // Get client record for current user
         const { data: clientData } = await supabase
           .from('clients')
           .select('id')
@@ -159,7 +158,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
 
   const handleViewDocument = async (item: VirtualMailboxItem) => {
     if (item.file_url) {
-      // Mark as viewed
       await supabase
         .from('virtual_mailbox_items')
         .update({ 
@@ -168,7 +166,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
         })
         .eq('id', item.id);
       
-      // Open document in new tab
       window.open(item.file_url, '_blank');
       await fetchMailboxItems();
     }
@@ -176,7 +173,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
 
   const handleDownloadDocument = async (item: VirtualMailboxItem) => {
     if (item.file_url) {
-      // Mark as downloaded
       await supabase
         .from('virtual_mailbox_items')
         .update({ 
@@ -185,7 +181,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
         })
         .eq('id', item.id);
       
-      // Trigger download
       const link = document.createElement('a');
       link.href = item.file_url;
       link.download = item.document_name;
@@ -209,7 +204,6 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
     if (!selectedItem) return;
 
     try {
-      // Update mailbox item with payment and shipping info
       await supabase
         .from('virtual_mailbox_items')
         .update({
@@ -217,7 +211,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
           shipping_fee: shippingOptions.find(opt => opt.value === selectedShippingOption)?.price || 15,
           shipping_option: selectedShippingOption,
           shipping_address: shippingAddress,
-          status: 'pending' // Consultant will process the forwarding
+          status: 'pending'
         })
         .eq('id', selectedItem.id);
 
@@ -251,17 +245,14 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
       setUploadingFiles(true);
       
       for (const file of selectedFiles) {
-        // Update progress
         setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
         
-        // Upload file to storage
         const { path, publicUrl } = await uploadFileToStorage('documents', file, {
           pathPrefix: 'mailbox'
         });
         
         setUploadProgress(prev => ({ ...prev, [file.name]: 50 }));
         
-        // Create mailbox item
         const { error } = await supabase
           .from('virtual_mailbox_items')
           .insert([{
@@ -282,11 +273,9 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
         setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
       }
 
-      // Reset upload state
       setSelectedFiles([]);
       setUploadProgress({});
       
-      // Refresh mailbox items
       await fetchMailboxItems();
       
       alert(`${selectedFiles.length} document(s) uploaded successfully!`);
@@ -362,7 +351,7 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
                   <RefreshCw className="h-4 w-4" />
                   <span>Refresh</span>
                 </button>
-                {profile?.role === 'consultant' && (
+                {profile?.role === 'consultant' && clientId && (
                   <button
                     onClick={() => setShowUploadSection(!showUploadSection)}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
@@ -656,29 +645,215 @@ const VirtualMailboxManager: React.FC<VirtualMailboxManagerProps> = ({
 
       {/* Stripe Payment Modal for Forwarding */}
       {showPaymentModal && selectedItem && (
-        <StripeCheckout
-          isOpen={showPaymentModal}
-          onClose={() => {
-            setShowPaymentModal(false);
-            setSelectedItem(null);
-          }}
-          amount={shippingOptions.find(opt => opt.value === selectedShippingOption)?.price || 15}
-          currency="USD"
-          orderId={selectedItem.id}
-          orderDetails={{
-            serviceName: `Document Forwarding - ${selectedItem.document_name}`,
-            consultantName: 'Document Forwarding Service',
-            deliveryTime: selectedShippingOption === 'express' ? 5 : 14
-          }}
-          onSuccess={handlePaymentSuccess}
-          onError={(error) => {
-            console.error('Payment error:', error);
-            alert('Payment failed: ' + error);
-          }}
-          shippingAddress={shippingAddress}
-          onAddressChange={setShippingAddress}
-          showAddressForm={true}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Request Document Forwarding</h2>
+                <button
+                  onClick={() => {
+                    setShowPaymentModal(false);
+                    setSelectedItem(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Document Info */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-2">Document to Forward</h4>
+                <p className="text-blue-800">{selectedItem.document_name}</p>
+                <p className="text-sm text-blue-700">{selectedItem.document_type}</p>
+              </div>
+
+              {/* Shipping Options */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Shipping Option
+                </label>
+                <div className="space-y-3">
+                  {shippingOptions.map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        selectedShippingOption === option.value
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-200 hover:border-purple-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="shipping"
+                        value={option.value}
+                        checked={selectedShippingOption === option.value}
+                        onChange={(e) => setSelectedShippingOption(e.target.value as 'normal' | 'express')}
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500"
+                      />
+                      <option.icon className="h-5 w-5 text-gray-600" />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-gray-900">{option.label}</span>
+                          <span className="font-bold text-green-600">${option.price}</span>
+                        </div>
+                        <p className="text-sm text-gray-600">{option.description}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Shipping Address Form */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Shipping Address
+                </label>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <input
+                        type="text"
+                        required
+                        value={shippingAddress.full_name}
+                        onChange={(e) => setShippingAddress(prev => ({ ...prev, full_name: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Full Name *"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="tel"
+                        required
+                        value={shippingAddress.phone}
+                        onChange={(e) => setShippingAddress(prev => ({ ...prev, phone: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Phone Number *"
+                      />
+                    </div>
+                  </div>
+
+                  <input
+                    type="email"
+                    required
+                    value={shippingAddress.email}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Email Address *"
+                  />
+
+                  <input
+                    type="text"
+                    required
+                    value={shippingAddress.address_line_1}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_1: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Address Line 1 *"
+                  />
+
+                  <input
+                    type="text"
+                    value={shippingAddress.address_line_2 || ''}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, address_line_2: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Address Line 2 (Optional)"
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input
+                      type="text"
+                      required
+                      value={shippingAddress.city}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="City *"
+                    />
+                    <input
+                      type="text"
+                      required
+                      value={shippingAddress.state_province}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, state_province: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="State/Province *"
+                    />
+                    <input
+                      type="text"
+                      required
+                      value={shippingAddress.postal_code}
+                      onChange={(e) => setShippingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Postal Code *"
+                    />
+                  </div>
+
+                  <input
+                    type="text"
+                    required
+                    value={shippingAddress.country}
+                    onChange={(e) => setShippingAddress(prev => ({ ...prev, country: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Country *"
+                  />
+                </div>
+              </div>
+
+              {/* Total Cost */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700">Shipping Cost:</span>
+                  <span className="text-2xl font-bold text-green-600">
+                    ${shippingOptions.find(opt => opt.value === selectedShippingOption)?.price}
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => {
+                    setShowPaymentModal(false);
+                    setSelectedItem(null);
+                  }}
+                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <StripeCheckout
+                  isOpen={false}
+                  onClose={() => {}}
+                  amount={shippingOptions.find(opt => opt.value === selectedShippingOption)?.price || 15}
+                  currency="USD"
+                  orderId={selectedItem.id}
+                  orderDetails={{
+                    serviceName: `Document Forwarding - ${selectedItem.document_name}`,
+                    consultantName: 'Document Forwarding Service',
+                    deliveryTime: selectedShippingOption === 'express' ? 5 : 14
+                  }}
+                  onSuccess={handlePaymentSuccess}
+                  onError={(error) => {
+                    console.error('Payment error:', error);
+                    alert('Payment failed: ' + error);
+                  }}
+                  shippingAddress={shippingAddress}
+                  onAddressChange={setShippingAddress}
+                  showAddressForm={false}
+                />
+                <button
+                  onClick={() => {
+                    // Trigger Stripe payment here
+                    alert('Payment integration will be implemented here');
+                  }}
+                  className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <CreditCard className="h-5 w-5" />
+                  <span>Pay & Request Forwarding</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
