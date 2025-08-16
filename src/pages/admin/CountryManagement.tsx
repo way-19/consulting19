@@ -170,7 +170,7 @@ const CountryManagement = () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, country')
-      .eq('role', 'consultant')
+      .eq('legacy_role', 'consultant')
       .eq('is_active', true);
 
     console.log('👥 fetchConsultants: Supabase query result:', { data: data?.length, error });
